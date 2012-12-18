@@ -33,6 +33,7 @@ public class AppTest
      */
     public void testApp()
     {
+    	System.out.println("Completed the test test...");
         assertTrue( true );
     }
 }
