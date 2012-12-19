@@ -263,33 +263,4 @@ public class SBMLWriter extends XMLWriter {
     }
     
 
-    public static void main(String[] args) throws Exception
-    {
-    	File exampleSrc = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes");
-    	File nml2DefSrc = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes");
-        //Note: only works with this example at the moment!!
-    	
-        File xml = new File(exampleSrc, "LEMS_NML2_Ex9_FN.xml");
-        File sbmlFile = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.sbml");
-
-
-
-        FileInclusionReader fir = new FileInclusionReader(xml);
-        fir.addSearchPaths(nml2DefSrc.getAbsolutePath());
-        Sim sim = new Sim(fir.read());
-            
-        sim.readModel();
-		Lems lems = sim.getLems();
-
-        SBMLWriter sbmlw = new SBMLWriter(lems);
-        String sbml = sbmlw.getMainScript();
-
-        System.out.println(sbml);
-                    
-        FileUtil.writeStringToFile(sbml, sbmlFile);
-
-        System.out.println("Written to: "+sbmlFile.getAbsolutePath());
-
-
-    }
 }

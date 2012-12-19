@@ -6,3 +6,5 @@
 *.ear
 
 target
+
+src/test/resources/tmp
