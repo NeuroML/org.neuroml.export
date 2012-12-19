@@ -254,7 +254,7 @@ public class SBMLWriter extends XMLWriter {
 
         endElement(main, "model");
         endElement(main, "sbml");
-        System.out.println(main);
+        //System.out.println(main);
         return main.toString();
     }
 

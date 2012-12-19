@@ -1,4 +1,4 @@
-package org.neuroml.export.sbml;
+package org.neuroml.export.xpp;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,22 +6,18 @@ import java.io.IOException;
 import org.lemsml.jlems.expression.ParseError;
 import org.lemsml.jlems.sim.ContentError;
 import org.lemsml.jlems.sim.ParseException;
-import org.lemsml.jlems.sim.Sim;
 import org.lemsml.jlems.type.BuildException;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.xml.XMLException;
-import org.lemsml.jlemsio.reader.FileInclusionReader;
 import org.lemsml.jlemsio.util.FileUtil;
-import org.neuroml.export.Main;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 
 import junit.framework.TestCase;
 
-public class SBMLWriterTest extends TestCase {
+public class XppWriterTest extends TestCase {
 
 	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException {
-
         //Note: only works with this example at the moment!!
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
@@ -30,18 +26,18 @@ public class SBMLWriterTest extends TestCase {
         
 		Lems lems = Utils.loadLemsFile(exampleFile);
 
-        SBMLWriter sbmlw = new SBMLWriter(lems);
-        String sbml = sbmlw.getMainScript();
+		XppWriter xppw = new XppWriter(lems);
+        String ode = xppw.getMainScript();
 
-        //System.out.println(sbml);
+        //System.out.println(ode);
 
-        File sbmlFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll("xml", "sbml"));
-        System.out.println("Writing file to: "+sbmlFile.getAbsolutePath());
+        File odeFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll("xml", "ode"));
+        System.out.println("Writing to: "+odeFile.getAbsolutePath());
         
-        FileUtil.writeStringToFile(sbml, sbmlFile);
+        FileUtil.writeStringToFile(ode, odeFile);
 
         
-        assertTrue(sbmlFile.exists());
+        assertTrue(odeFile.exists());
 	}
 
 }

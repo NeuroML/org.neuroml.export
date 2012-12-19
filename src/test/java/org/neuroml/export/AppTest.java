@@ -1,6 +1,8 @@
 package org.neuroml.export;
 
 
+import java.io.File;
+
 import org.lemsml.jlems.type.Dimension;
 import org.neuroml.model.IzhikevichCell;
 import org.neuroml.model.Neuroml;
@@ -62,4 +64,23 @@ public class AppTest extends TestCase
     	
 		/*assertTrue("Dimensions match", current.matches(current2));*/
     }
+    
+    /*
+     * There probably is a better place for these...
+     */    
+
+    public static File getLemsExamplesDir()
+    {
+        return new File("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes");
+    }
+    
+    public static File getTempDir()
+    {
+	    String tempDirName = System.getProperty("user.dir") + File.separator + "src/test/resources/tmp";
+	    File tempDir = new File(tempDirName);
+	    if (!tempDir.exists())
+	    	tempDir.mkdir();
+	    return tempDir;
+    }
+    
 }
