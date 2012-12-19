@@ -19,15 +19,19 @@ public class SBMLWriterTest extends TestCase {
 
 	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException {
 
-    	File exampleSrc = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes");
-    	File nml2DefSrc = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes");
+    	//File exampleSrc = new File("/home/padraig/NeuroML2/NeuroML2CoreTypes");
+    	File nml2DefSrc = new File("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes");
         //Note: only works with this example at the moment!!
+
+       
     	
-        File xml = new File(exampleSrc, "LEMS_NML2_Ex9_FN.xml");
+        File xml = new File("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
         String tempDir = System.getProperty("user.dir") + File.separator + "src/test/resources/tmp";
         File tgtDir = new File(tempDir);
         if (!tgtDir.exists())
         	tgtDir.mkdir();
+        
+        
         
         File sbmlFile = new File(tgtDir,"LEMS_NML2_Ex9_FN.sbml");
 
