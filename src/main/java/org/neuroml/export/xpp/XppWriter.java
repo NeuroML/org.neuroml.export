@@ -53,17 +53,15 @@ public class XppWriter extends BaseWriter {
 		StringBuilder sb = new StringBuilder();
 		addComment(sb,"XPP export for:\n\n"+lems.textSummary(false, false));
 
-		Target dr = lems.getTarget();
 
-		Component simSetCpt = dr.getComponent();
-		E.info("simSetCpt: "+simSetCpt.getAllChildren());
-		Component simCpt = null;
-		for (Component c : simSetCpt.getAllChildren()) {
-			if (c.getTypeName().equals("Simulation"))
-				simCpt = c;
-		}
-		E.info("simCpt: "+simCpt);
-		String targetId = simCpt.getStringValue("target");
+        Target target = lems.getTarget();
+        
+        Component simCpt = target.getComponent();
+        E.info("simCpt: "+simCpt);
+        String simId = simCpt.getID();
+
+        
+        String targetId = simCpt.getStringValue("target");
 
 		Component tgtNet = lems.getComponent(targetId);
 		addComment(sb,"Adding simulation "+simCpt+" of network: "+tgtNet.summary());

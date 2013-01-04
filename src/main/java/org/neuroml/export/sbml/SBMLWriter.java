@@ -4,17 +4,15 @@
 package org.neuroml.export.sbml;
 
 
-import java.io.File;
 import java.util.ArrayList;
-import org.neuroml.export.base.BaseWriter;
 import org.neuroml.export.base.XMLWriter;
-import org.neuroml.export.xpp.XppWriter;
 
 import org.lemsml.jlems.type.dynamics.OnCondition;
 import org.lemsml.jlems.type.dynamics.OnStart;
 import org.lemsml.jlems.type.dynamics.StateAssignment;
 import org.lemsml.jlems.type.dynamics.StateVariable;
 import org.lemsml.jlems.type.dynamics.TimeDerivative;
+import org.lemsml.jlems.expression.MathMLWriter;
 //import org.lemsml.jlems.expression.;
 import org.lemsml.jlems.expression.ParseError;
 import org.lemsml.jlems.expression.ParseTree;
@@ -26,9 +24,10 @@ import org.lemsml.jlems.type.Target;
 import org.lemsml.jlems.type.FinalParam;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.sim.ContentError;
+/*
 import org.lemsml.jlems.sim.Sim;
 import org.lemsml.jlemsio.reader.FileInclusionReader;
-import org.lemsml.jlemsio.util.FileUtil;
+import org.lemsml.jlemsio.util.FileUtil;*/
 
 public class SBMLWriter extends XMLWriter {
 
@@ -64,17 +63,10 @@ public class SBMLWriter extends XMLWriter {
         endElement(main, "notes");
 
 
-        Target dr = lems.getTarget();
+        Target target = lems.getTarget();
         
-        Component simSetCpt = dr.getComponent();
-        E.info("simSetCpt: "+simSetCpt.getAllChildren());
-        Component simCpt = null;
-        for (Component c : simSetCpt.getAllChildren()) {
-        	if (c.getTypeName().equals("Simulation"))
-        		simCpt = c;
-        }
-        E.info("simCpt: "+simCpt);
-
+        Component simCpt = target.getComponent();
+        
         String targetId = simCpt.getStringValue("target");
 
         Component tgtNet = lems.getComponent(targetId);
@@ -187,6 +179,8 @@ public class SBMLWriter extends XMLWriter {
 
             for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
                 startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
+                MathMLWriter mmlw = new MathMLWriter();
+                E.info("TD: "+mmlw.generateMathML(td.getParseTree()));
                 processMathML(main, td.getParseTree());
                 endElement(main, "rateRule");
 
