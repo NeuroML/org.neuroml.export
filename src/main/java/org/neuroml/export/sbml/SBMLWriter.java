@@ -180,7 +180,7 @@ public class SBMLWriter extends XMLWriter {
             for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
                 startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
                 MathMLWriter mmlw = new MathMLWriter();
-                E.info("TD: "+mmlw.generateMathML(td.getParseTree()));
+                E.info("TD: "+mmlw.serialize(td.getParseTree()));
                 processMathML(main, td.getParseTree());
                 endElement(main, "rateRule");
 

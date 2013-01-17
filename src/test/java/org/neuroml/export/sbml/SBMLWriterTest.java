@@ -6,13 +6,10 @@ import java.io.IOException;
 import org.lemsml.jlems.expression.ParseError;
 import org.lemsml.jlems.sim.ContentError;
 import org.lemsml.jlems.sim.ParseException;
-import org.lemsml.jlems.sim.Sim;
 import org.lemsml.jlems.type.BuildException;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.xml.XMLException;
-import org.lemsml.jlemsio.reader.FileInclusionReader;
 import org.lemsml.jlemsio.util.FileUtil;
-import org.neuroml.export.Main;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 

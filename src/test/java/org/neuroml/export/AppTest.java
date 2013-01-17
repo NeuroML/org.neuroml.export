@@ -3,13 +3,13 @@ package org.neuroml.export;
 
 import java.io.File;
 
-import org.lemsml.jlems.type.Dimension;
-import org.neuroml.model.IzhikevichCell;
-import org.neuroml.model.Neuroml;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.lemsml.jlems.type.Dimension;
+import org.neuroml.model.IzhikevichCell;
+import org.neuroml.model.Neuroml;
 
 /**
  * Unit test for simple App.
@@ -64,6 +64,7 @@ public class AppTest extends TestCase
     	
 		/*assertTrue("Dimensions match", current.matches(current2));*/
     }
+    
     
     /*
      * There probably is a better place for these...

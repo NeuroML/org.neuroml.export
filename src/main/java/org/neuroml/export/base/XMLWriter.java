@@ -202,9 +202,9 @@ public abstract class XMLWriter extends BaseWriter {
 
 		startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
 
-		addComment(main,"Complete export to MathML not yet implemented!");
+		//addComment(main,"Complete export to MathML not yet implemented!");
 		MathMLWriter mmlw = new MathMLWriter();
-		addTextElement(main,"ci", mmlw.generateMathML(pt));
+		main.append(mmlw.serialize(pt));
 		endElement(main,"math");
 	}
 
