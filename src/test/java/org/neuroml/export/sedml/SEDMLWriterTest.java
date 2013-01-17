@@ -14,10 +14,12 @@ import org.lemsml.jlems.xml.XMLException;
 import org.lemsml.jlemsio.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
+import org.neuroml.export.sbml.SBMLWriter;
+import org.xml.sax.SAXException;
 
 public class SEDMLWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException {
+	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";    	
     	
@@ -38,6 +40,8 @@ public class SEDMLWriterTest extends TestCase {
         FileUtil.writeStringToFile(sedml, sedmlFile);
 
         assertTrue(sedmlFile.exists());
+        
+        Utils.testValidity(sedmlFile, SEDMLWriter.PREF_SEDML_SCHEMA);
 	}
 
 

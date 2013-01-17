@@ -1,22 +1,16 @@
 package org.neuroml.export.xpp;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.run.ActionBlock;
-import org.lemsml.jlems.run.ExpressionDerivedVariable;
-import org.lemsml.jlems.run.PathDerivedVariable;
-import org.lemsml.jlems.run.VariableAssignment;
-import org.lemsml.jlems.run.VariableROC;
-import org.lemsml.jlems.sim.LemsProcess;
-import org.lemsml.jlems.sim.Sim;
+import org.lemsml.jlems.logging.E;
+import org.lemsml.jlems.sim.ContentError;
 import org.lemsml.jlems.type.Component;
-import org.lemsml.jlems.type.Target;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.type.LemsCollection;
 import org.lemsml.jlems.type.ParamValue;
 import org.lemsml.jlems.type.Parameter;
+import org.lemsml.jlems.type.Target;
 import org.lemsml.jlems.type.Unit;
 import org.lemsml.jlems.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.type.dynamics.Dynamics;
@@ -24,12 +18,7 @@ import org.lemsml.jlems.type.dynamics.OnStart;
 import org.lemsml.jlems.type.dynamics.StateAssignment;
 import org.lemsml.jlems.type.dynamics.StateVariable;
 import org.lemsml.jlems.type.dynamics.TimeDerivative;
-import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.logging.E;
-import org.lemsml.jlemsio.reader.FileInclusionReader;
-import org.lemsml.jlemsio.util.FileUtil;
-
-import org.neuroml.export.base.*;
+import org.neuroml.export.base.BaseWriter;
 
 public class XppWriter extends BaseWriter {
 
@@ -51,7 +40,8 @@ public class XppWriter extends BaseWriter {
 
 	public String getMainScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
-		addComment(sb,"XPP export for:\n\n"+lems.textSummary(false, false));
+		addComment(sb,"XPP export for:\n\nPlease note that this is a work in progress " +
+				"and only works for a limited subset of LEMS/NeuroML 2!!\n\n"+lems.textSummary(false, false));
 
 
         Target target = lems.getTarget();

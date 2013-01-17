@@ -15,6 +15,8 @@ import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.sim.ContentError;
 
 public class SEDMLWriter extends XMLWriter {
+	
+	public static final String PREF_SEDML_SCHEMA = "http://sourceforge.net/apps/trac/neuroml/export/1021/NeuroML2/Schemas/SED-ML/sed-ml-L1-V1.xsd";
 
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
@@ -45,7 +47,7 @@ public class SEDMLWriter extends XMLWriter {
             "level=1",
             "version=1",
             "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:schemaLocation=http://sed-ml.org/    ../Schemas/SED-ML/sed-ml-L1-V1.xsd"};
+            "xsi:schemaLocation=http://sed-ml.org/   "+PREF_SEDML_SCHEMA};
         
 
         startElement(main, "sedML", attrs);

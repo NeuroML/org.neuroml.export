@@ -12,12 +12,13 @@ import org.lemsml.jlems.xml.XMLException;
 import org.lemsml.jlemsio.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
+import org.xml.sax.SAXException;
 
 import junit.framework.TestCase;
 
 public class SBMLWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException {
+	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException {
 
         //Note: only works with this example at the moment!!
 
@@ -36,9 +37,10 @@ public class SBMLWriterTest extends TestCase {
         System.out.println("Writing file to: "+sbmlFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(sbml, sbmlFile);
-
         
         assertTrue(sbmlFile.exists());
+        
+        Utils.testValidity(sbmlFile, SBMLWriter.PREF_SBML_SCHEMA);
 	}
 
 }

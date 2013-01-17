@@ -31,6 +31,8 @@ import org.lemsml.jlemsio.util.FileUtil;*/
 
 public class SBMLWriter extends XMLWriter {
 
+    public static final String PREF_SBML_SCHEMA = "http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd";
+
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
@@ -54,7 +56,7 @@ public class SBMLWriter extends XMLWriter {
             "level=2",
             "version=2",
             "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:schemaLocation=http://www.sbml.org/sbml/level2/version2 http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd"};
+            "xsi:schemaLocation=http://www.sbml.org/sbml/level2/version2 "+PREF_SBML_SCHEMA};
         startElement(main, "sbml", attrs);
         startElement(main, "notes");
         startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
@@ -180,20 +182,20 @@ public class SBMLWriter extends XMLWriter {
             for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
                 startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
                 MathMLWriter mmlw = new MathMLWriter();
-                E.info("TD: "+mmlw.serialize(td.getParseTree()));
+                //E.info("TD: "+mmlw.serialize(td.getParseTree()));
                 processMathML(main, td.getParseTree());
                 endElement(main, "rateRule");
 
             }
-            /*
+            
             for(OnStart os: type.getDynamics().getOnStarts()){
-            for(StateAssignment sa: os.getStateAssignments()){
-            startElement(main,"assignmentRule", "variable="+sa.getStateVariable().getName());
-            processMathML(main, sa.getEvaluable());
-            endElement(main,"assignmentRule");
-
+	            for(StateAssignment sa: os.getStateAssignments()){
+	            startElement(main,"assignmentRule", "variable="+sa.getStateVariable().getName());
+	            processMathML(main, sa.getParseTree());
+	            endElement(main,"assignmentRule");
+	
+	            }
             }
-            }*/
         }
 
 
