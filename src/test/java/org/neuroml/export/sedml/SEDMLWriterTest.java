@@ -14,7 +14,6 @@ import org.lemsml.jlems.xml.XMLException;
 import org.lemsml.jlemsio.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
-import org.neuroml.export.sbml.SBMLWriter;
 import org.xml.sax.SAXException;
 
 public class SEDMLWriterTest extends TestCase {

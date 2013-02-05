@@ -47,9 +47,11 @@ public class AppTest extends TestCase
         iz1.setB("0.2");
         iz1.setC("-50");
         iz1.setD("2");
+        /*
         iz1.setIamp("2");
         iz1.setIdel("100 ms");
         iz1.setIdur("100 ms");
+        */
         nml2.getIzhikevichCell().add(iz1);
         
     	System.out.println("Completed the NeuroML test, created: "+iz1+"...");

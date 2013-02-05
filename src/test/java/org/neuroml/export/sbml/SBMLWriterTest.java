@@ -22,7 +22,7 @@ public class SBMLWriterTest extends TestCase {
 
         //Note: only works with this example at the moment!!
 
-    	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+    	String exampleFilename = "LEMS_NML2_Ex9_FN.xml"; 
     	
         File exampleFile = new File(AppTest.getLemsExamplesDir(), exampleFilename);
         

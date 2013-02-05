@@ -17,7 +17,6 @@ import org.lemsml.jlems.expression.MathMLWriter;
 import org.lemsml.jlems.expression.ParseError;
 import org.lemsml.jlems.expression.ParseTree;
 import org.lemsml.jlems.expression.Parser;
-import org.lemsml.jlems.logging.E;
 import org.lemsml.jlems.type.Component;
 import org.lemsml.jlems.type.ComponentType;
 import org.lemsml.jlems.type.Target;
@@ -40,9 +39,9 @@ public class SBMLWriter extends XMLWriter {
         super(l);
     }
 
-    private String getPopPrefix(Component pop) {
+    /*private String getPopPrefix(Component pop) {
         return pop.getID() + "_";
-    }
+    }*/
 
     public String getMainScript() throws ContentError {
 
@@ -181,7 +180,7 @@ public class SBMLWriter extends XMLWriter {
 
             for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
                 startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
-                MathMLWriter mmlw = new MathMLWriter();
+                //MathMLWriter mmlw = new MathMLWriter();
                 //E.info("TD: "+mmlw.serialize(td.getParseTree()));
                 processMathML(main, td.getParseTree());
                 endElement(main, "rateRule");

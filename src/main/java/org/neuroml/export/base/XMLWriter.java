@@ -4,7 +4,6 @@ import org.lemsml.jlems.eval.DoubleEvaluator;
 import org.lemsml.jlems.expression.*;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.util.*;
 
 
 public abstract class XMLWriter extends BaseWriter {
