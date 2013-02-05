@@ -9,7 +9,7 @@ import junit.framework.TestSuite;
 
 import org.lemsml.jlems.type.Dimension;
 import org.neuroml.model.IzhikevichCell;
-import org.neuroml.model.Neuroml;
+import org.neuroml.model.NeuroMLDocument;
 
 /**
  * Unit test for simple App.
@@ -36,7 +36,7 @@ public class AppTest extends TestCase
 
     public void testApp()
     {
-    	Neuroml nml2 = new Neuroml();
+    	NeuroMLDocument nml2 = new NeuroMLDocument();
         nml2.setId("SomeCells");
 
         IzhikevichCell iz1 = new IzhikevichCell();

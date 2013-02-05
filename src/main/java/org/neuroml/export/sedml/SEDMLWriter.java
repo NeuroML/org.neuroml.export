@@ -3,14 +3,10 @@ package org.neuroml.export.sedml;
 
 import org.neuroml.export.base.XMLWriter;
 
-import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.expression.ParseTree;
 import org.lemsml.jlems.expression.Parser;
 import org.lemsml.jlems.logging.E;
 import org.lemsml.jlems.type.Component;
-import org.lemsml.jlems.type.ComponentType;
 import org.lemsml.jlems.type.Target;
-import org.lemsml.jlems.type.FinalParam;
 import org.lemsml.jlems.type.Lems;
 import org.lemsml.jlems.sim.ContentError;
 
@@ -220,7 +216,7 @@ public class SEDMLWriter extends XMLWriter {
                         String var = ref.split("/")[1];
 
                         String genId = dispId+"_"+lineComp.getID();
-                        String varFull = pop+"_"+num+"_"+var;
+                        //String varFull = pop+"_"+num+"_"+var;
                         //<curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
                         startEndElement(main,
                                      "curve",

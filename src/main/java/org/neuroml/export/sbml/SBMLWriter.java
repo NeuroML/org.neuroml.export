@@ -12,7 +12,7 @@ import org.lemsml.jlems.type.dynamics.OnStart;
 import org.lemsml.jlems.type.dynamics.StateAssignment;
 import org.lemsml.jlems.type.dynamics.StateVariable;
 import org.lemsml.jlems.type.dynamics.TimeDerivative;
-import org.lemsml.jlems.expression.MathMLWriter;
+//import org.lemsml.jlems.expression.MathMLWriter;
 //import org.lemsml.jlems.expression.;
 import org.lemsml.jlems.expression.ParseError;
 import org.lemsml.jlems.expression.ParseTree;
