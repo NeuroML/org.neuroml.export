@@ -125,6 +125,7 @@ public class SBMLWriter extends XMLWriter {
                 startEndElement(main,
                         "parameter",
                         "id=" + sv.getName(),
+                        "value=0",
                         "constant=false");
 
             }
