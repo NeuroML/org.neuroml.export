@@ -3,15 +3,15 @@ package org.neuroml.export;
 import java.io.File;
 import java.io.IOException;
 
-import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.sim.ParseException;
-import org.lemsml.jlems.sim.Sim;
-import org.lemsml.jlems.type.BuildException;
-import org.lemsml.jlems.type.Lems;
-import org.lemsml.jlems.xml.XMLException;
-import org.lemsml.jlemsio.reader.FileInclusionReader;
-import org.lemsml.jlems.logging.E;
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.ParseException;
+import org.lemsml.jlems.core.sim.Sim;
+import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.io.reader.FileInclusionReader;
+import org.lemsml.jlems.core.logging.E;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;

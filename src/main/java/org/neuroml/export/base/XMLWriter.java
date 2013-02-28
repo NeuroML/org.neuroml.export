@@ -1,9 +1,9 @@
 package org.neuroml.export.base;
 
-import org.lemsml.jlems.eval.DoubleEvaluator;
-import org.lemsml.jlems.expression.*;
-import org.lemsml.jlems.type.Lems;
-import org.lemsml.jlems.sim.ContentError;
+import org.lemsml.jlems.core.eval.DoubleEvaluator;
+import org.lemsml.jlems.core.expression.*;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.sim.ContentError;
 
 
 public abstract class XMLWriter extends BaseWriter {

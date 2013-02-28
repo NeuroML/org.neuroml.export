@@ -5,13 +5,13 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.sim.ParseException;
-import org.lemsml.jlems.type.BuildException;
-import org.lemsml.jlems.type.Lems;
-import org.lemsml.jlems.xml.XMLException;
-import org.lemsml.jlemsio.util.FileUtil;
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.ParseException;
+import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 import org.xml.sax.SAXException;

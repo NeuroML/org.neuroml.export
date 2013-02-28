@@ -3,12 +3,11 @@ package org.neuroml.export.sedml;
 
 import org.neuroml.export.base.XMLWriter;
 
-import org.lemsml.jlems.expression.Parser;
-import org.lemsml.jlems.logging.E;
-import org.lemsml.jlems.type.Component;
-import org.lemsml.jlems.type.Target;
-import org.lemsml.jlems.type.Lems;
-import org.lemsml.jlems.sim.ContentError;
+import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.sim.ContentError;
 
 public class SEDMLWriter extends XMLWriter {
 	
@@ -33,8 +32,6 @@ public class SEDMLWriter extends XMLWriter {
     }*/
 
     public String getMainScript() throws ContentError {
-
-        Parser p = new Parser();
 
         StringBuilder main = new StringBuilder();
         main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
@@ -210,10 +207,10 @@ public class SEDMLWriter extends XMLWriter {
                 for (Component lineComp : dispComp.getAllChildren()) {
                     if (lineComp.getName().indexOf("Line") >= 0) {
                         //trace=StateMonitor(hhpop,'v',record=[0])
-                        String ref = lineComp.getStringValue("quantity");
-                        String pop = ref.split("/")[0].split("\\[")[0];
-                        String num = ref.split("\\[")[1].split("\\]")[0];
-                        String var = ref.split("/")[1];
+                        ////String ref = lineComp.getStringValue("quantity");
+                        ////String pop = ref.split("/")[0].split("\\[")[0];
+                        ////String num = ref.split("\\[")[1].split("\\]")[0];
+                        ////String var = ref.split("/")[1];
 
                         String genId = dispId+"_"+lineComp.getID();
                         //String varFull = pop+"_"+num+"_"+var;
@@ -243,7 +240,7 @@ public class SEDMLWriter extends XMLWriter {
         return main.toString();
     }
 
-    private String getSuitableId(String str) {
+    /*private String getSuitableId(String str) {
         return str.replace(" ", "_").replace(".", "").replace("(", "_").replace(")", "_").replace("*", "mult").replace("+", "plus").replace("/", "div");
-    }
+    }*/
 }

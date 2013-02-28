@@ -2,22 +2,22 @@ package org.neuroml.export.xpp;
 
 import java.util.ArrayList;
 
-import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.logging.E;
-import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.type.Component;
-import org.lemsml.jlems.type.Lems;
-import org.lemsml.jlems.type.LemsCollection;
-import org.lemsml.jlems.type.ParamValue;
-import org.lemsml.jlems.type.Parameter;
-import org.lemsml.jlems.type.Target;
-import org.lemsml.jlems.type.Unit;
-import org.lemsml.jlems.type.dynamics.DerivedVariable;
-import org.lemsml.jlems.type.dynamics.Dynamics;
-import org.lemsml.jlems.type.dynamics.OnStart;
-import org.lemsml.jlems.type.dynamics.StateAssignment;
-import org.lemsml.jlems.type.dynamics.StateVariable;
-import org.lemsml.jlems.type.dynamics.TimeDerivative;
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.LemsCollection;
+import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Parameter;
+import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.Unit;
+import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
+import org.lemsml.jlems.core.type.dynamics.Dynamics;
+import org.lemsml.jlems.core.type.dynamics.OnStart;
+import org.lemsml.jlems.core.type.dynamics.StateAssignment;
+import org.lemsml.jlems.core.type.dynamics.StateVariable;
+import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.neuroml.export.base.BaseWriter;
 
 public class XppWriter extends BaseWriter {

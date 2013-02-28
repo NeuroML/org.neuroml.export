@@ -1,9 +1,9 @@
 package org.neuroml.export.base;
 
 
-import org.lemsml.jlems.expression.ParseError;
-import org.lemsml.jlems.sim.ContentError;
-import org.lemsml.jlems.type.Lems;;
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Lems;
 
 public abstract class BaseWriter {
 
