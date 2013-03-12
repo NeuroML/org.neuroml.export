@@ -6,6 +6,7 @@ import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
@@ -36,13 +37,10 @@ public class XppWriter extends BaseWriter {
 	}
 
 
-
-
 	public String getMainScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
-		addComment(sb,"XPP export for:\n\nPlease note that this is a work in progress " +
+		addComment(sb,"XPP export from LEMS\n\nPlease note that this is a work in progress " +
 				"and only works for a limited subset of LEMS/NeuroML 2!!\n\n"+lems.textSummary(false, false));
-
 
         Target target = lems.getTarget();
         
@@ -57,58 +55,75 @@ public class XppWriter extends BaseWriter {
 		addComment(sb,"Adding simulation "+simCpt+" of network: "+tgtNet.summary());
 
 		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
-
-		for(Component pop: pops) {
-			String compRef = pop.getStringValue("component");
-			Component popComp = lems.getComponent(compRef);
-			addComment(sb,"   Population "+pop.getID()+" contains components of: "+popComp+" ");
-
-			String prefix = popComp.getID()+"_";
+        E.info("pops: "+pops);
+		
+		if (pops==null || pops.isEmpty()) {
+	        E.info("Adding component: "+tgtNet);
+			addComment(sb,"   Adding: "+tgtNet+"\n" );
 
 			CompInfo compInfo = new CompInfo();
 			ArrayList<String> stateVars = new ArrayList<String>();
 
-			getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
+			getCompEqns(compInfo, tgtNet, null, stateVars, "");
 
+			sb.append("# Initial values\n"+compInfo.initInfo.toString()+"\n");
 
-			///sb.append(prefix+"eqs=Equations('''\n");
-			sb.append(compInfo.eqns.toString());
-			///sb.append("''')\n\n");
+			sb.append("# Main parameters\n"+compInfo.params.toString());
 
-			sb.append("\n"+compInfo.params.toString());
-			String flags = "";//,implicit=True, freeze=True
+			sb.append("# Main equations\n"+compInfo.eqns.toString()+"\n");
+			
+		} else {
+	
+			for(Component pop: pops) {
+				String compRef = pop.getStringValue("component");
+				Component popComp = lems.getComponent(compRef);
+				addComment(sb,"   Population "+pop.getID()+" contains components of: "+popComp+" ");
+				sb.append("\n\n");
+	
+				String prefix = popComp.getID()+"_";
+	
+				CompInfo compInfo = new CompInfo();
+				ArrayList<String> stateVars = new ArrayList<String>();
+	
+				getCompEqns(compInfo, popComp, popComp.getID(), stateVars, "");
 
-			/////sb.append(pop.getID()+" = NeuronGroup("+pop.getStringValue("size")+", model="+prefix+"eqs"+flags+")\n");
+				sb.append("# Initial values\n"+compInfo.initInfo.toString()+"\n");
 
-
-			sb.append(compInfo.initInfo.toString());
-		}
-
-		StringBuilder toTrace = new StringBuilder();
-		StringBuilder toPlot = new StringBuilder();
-
-		for(Component dispComp: simCpt.getAllChildren()){
-			if(dispComp.getName().indexOf("Display")>=0){
-				toTrace.append("# Display: "+dispComp+"\n");
-				for(Component lineComp: dispComp.getAllChildren()){
-					if(lineComp.getName().indexOf("Line")>=0){
-						//trace=StateMonitor(hhpop,'v',record=[0])
-						String trace = "trace_"+lineComp.getID();
-						String ref = lineComp.getStringValue("quantity");
-						String pop = ref.split("/")[0].split("\\[")[0];
-						String num = ref.split("\\[")[1].split("\\]")[0];
-						String var = ref.split("/")[1];
-
-						//if (var.equals("v")){
-
-						toTrace.append(trace+" = StateMonitor("+pop+",'"+var+"',record=["+num+"]) # "+lineComp.summary()+"\n");
-						toPlot.append("plot("+trace+".times/second,"+trace+"["+num+"])\n");
-						//}
+				sb.append("# Main parameters\n"+compInfo.params.toString());
+	
+				sb.append("# Main equations\n"+compInfo.eqns.toString()+"\n");
+	
+	
+			}
+	
+			StringBuilder toTrace = new StringBuilder();
+			StringBuilder toPlot = new StringBuilder();
+	
+			for(Component dispComp: simCpt.getAllChildren()){
+				if(dispComp.getName().indexOf("Display")>=0){
+					toTrace.append("# Display: "+dispComp+"\n");
+					for(Component lineComp: dispComp.getAllChildren()){
+						if(lineComp.getName().indexOf("Line")>=0){
+							/*
+							//trace=StateMonitor(hhpop,'v',record=[0])
+							String trace = "trace_"+lineComp.getID();
+							String ref = lineComp.getStringValue("quantity");
+							String pop = ref.split("/")[0].split("\\[")[0];
+							String num = ref.split("\\[")[1].split("\\]")[0];
+							String var = ref.split("/")[1];
+	
+							//if (var.equals("v")){
+	
+							toTrace.append(trace+" = StateMonitor("+pop+",'"+var+"',record=["+num+"]) # "+lineComp.summary()+"\n");
+							toPlot.append("plot("+trace+".times/second,"+trace+"["+num+"])\n");
+							//}
+							*/
+						}
 					}
 				}
 			}
+			//////sb.append(toTrace);
 		}
-		//////sb.append(toTrace);
 
 		float len = (float)simCpt.getParamValue("length").value;
 		float dt = (float)simCpt.getParamValue("step").value;
@@ -117,7 +132,7 @@ public class XppWriter extends BaseWriter {
 		//if (dt.endsWith("s")) dt=dt.substring(0, dt.length()-1)+"*second";  //TODO: Fix!!!
 
 		sb.append("@ total="+len+",dt="+dt+",maxstor=10000\n");
-		sb.append("@ xhi="+len+",yhi=1.5,ylo=-1.5,nplot=2,yp2=W\n");
+		sb.append("@ xhi="+len+",yhi=1.5,ylo=-1.5\n");
 
 
 		return sb.toString();
@@ -151,6 +166,15 @@ public class XppWriter extends BaseWriter {
 				units = "";
 			compInfo.params.append("par "+prefix+p.getName()+"="+(float)pv.getDoubleValue()+units+" \n");
 		}
+		
+		for(Constant c: comp.getComponentType().getConstants())
+		{
+
+			String units = "";
+			if (units.indexOf(Unit.NO_UNIT)>=0)
+				units = "";
+			compInfo.params.append("par "+prefix+c.getName()+"="+(float)c.getValue()+units+" \n");
+		}
 
 		if (ps.size()>0)
 			compInfo.params.append("\n");
@@ -166,7 +190,7 @@ public class XppWriter extends BaseWriter {
 			//String expr = ((DVal)td.getRateexp().getRoot()).toString(prefix, stateVars);
 			String expr = td.getValueExpression();
 			expr = expr.replace("^", "**");
-			compInfo.eqns.append(""+localName+"' = "+expr+"\n");
+			compInfo.eqns.append(""+localName+"' = "+expr+" \n");
 		}
 
 		for(StateVariable svar: dyn.getStateVariables())
@@ -175,7 +199,7 @@ public class XppWriter extends BaseWriter {
 			if (!stateVars.contains(localName)) // i.e. no TimeDerivative of StateVariable
 			{
 				stateVars.add(localName);
-				compInfo.eqns.append(""+localName+"' = 0\n");
+				//////compInfo.eqns.append(""+localName+"' = 0\n");
 			}
 		}
 
@@ -243,12 +267,16 @@ public class XppWriter extends BaseWriter {
 		for(DerivedVariable edv: expDevVar)
 		{
 			//String expr = ((DVal)edv.getRateexp().getRoot()).toString(prefix, stateVars);
-			String expr = edv.getFunc();
+			String expr = edv.getValueExpression();
 			expr = expr.replace("^", "**");
-			compInfo.eqns.append(prefix+edv.getValue()+" = "+expr+" : 1\n");
+			compInfo.eqns.append(prefix+edv.getName()+" = "+expr+" \n");
 		}
 
 		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
+		
+		String popPrefix = popName+".";
+		if (popName==null || popName.length()==0)
+			popPrefix = "";
 
 		for(OnStart os: initBlocks)
 		{
@@ -256,7 +284,7 @@ public class XppWriter extends BaseWriter {
 
 			for(StateAssignment va: assigs)
 			{
-				compInfo.initInfo.append(popName+"."+prefix+va.getStateVariable().getName()+" = "+va.getValueExpression()+"\n");
+				compInfo.initInfo.append("init "+popPrefix+prefix+va.getStateVariable().getName()+"="+va.getValueExpression()+" \n");
 			}
 		}
 

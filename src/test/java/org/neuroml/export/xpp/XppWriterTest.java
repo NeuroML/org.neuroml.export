@@ -24,6 +24,8 @@ public class XppWriterTest extends TestCase {
     	
         File exampleFile = new File(AppTest.getLemsExamplesDir(), exampleFilename);
         
+        ///exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/Simple3Species_SBML.xml");
+        
 		Lems lems = Utils.loadLemsFile(exampleFile);
 
 		XppWriter xppw = new XppWriter(lems);
@@ -31,7 +33,7 @@ public class XppWriterTest extends TestCase {
 
         //System.out.println(ode);
 
-        File odeFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll("xml", "ode"));
+        File odeFile = new File(AppTest.getTempDir(),exampleFile.getName().replaceAll("xml", "ode"));
         System.out.println("Writing to: "+odeFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(ode, odeFile);
