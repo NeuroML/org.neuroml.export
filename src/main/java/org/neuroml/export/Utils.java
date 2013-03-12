@@ -34,13 +34,19 @@ public class Utils {
     	// TODO: get this from jar
     	return new File("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes");
     }
-	
-	public static Lems loadLemsFile(File lemsFile) throws ContentError, ParseError, ParseException, BuildException, XMLException {
+
+	public static Sim loadLemsFileToSim(File lemsFile) throws ContentError, ParseError, ParseException, BuildException, XMLException {
 		FileInclusionReader fir = new FileInclusionReader(lemsFile);
         fir.addSearchPaths(getNeuroML2CompTypeDefDir().getAbsolutePath());
         Sim sim = new Sim(fir.read());
             
         sim.readModel();
+		return sim;
+		
+	}
+	
+	public static Lems loadLemsFile(File lemsFile) throws ContentError, ParseError, ParseException, BuildException, XMLException {
+		Sim sim = loadLemsFileToSim(lemsFile);
 		return sim.getLems();
 		
 	}
