@@ -95,5 +95,51 @@ public class Utils {
         }
         return nml2string;
     }
+    
+
+    public static String replaceInFunction(String expr, String oldVar, String newVar) {
+        String orig = new String(expr);
+
+        if (expr.trim().equals(oldVar)) {
+            return newVar;
+        }
+
+        //String new_ = toReplace.get(old);
+        String[] pres = new String[]{"\\(", "\\+", "-", "\\*", "/", "\\^", " ", "<", ">"};
+        String[] posts = new String[]{"\\)", "\\+", "-", "\\*", "/", "\\^", " ", "<", ">"};
+
+        for (String pre : pres) {
+            for (String post : posts) {
+
+                String o = pre + oldVar + post;
+                String n = pre + " " + newVar + " " + post;
+                //E.info("Replacing "+o+" with "+n+": "+expr);
+                expr = expr.replaceAll(o, n);
+            }
+        }
+        expr = expr.trim();
+
+        for (String pre : pres) {
+            String o = pre + oldVar;
+            String n = pre + " " + newVar;
+            if (expr.endsWith(o)) {
+                expr = expr.substring(0, expr.length() - o.length()) + n;
+            }
+        }
+        for (String post : posts) {
+            String o = oldVar + post;
+            String n = newVar + " " + post;
+            if (expr.startsWith(o)) {
+                expr = n + expr.substring(o.length());
+            }
+        }
+
+        expr = expr.replaceAll("  ", " ");
+
+        if (!expr.equals(orig)) {
+            //E.info("----------  Changed "+orig+" to "+ expr);
+        }
+        return expr;
+    }
 
 }

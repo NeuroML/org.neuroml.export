@@ -20,6 +20,7 @@ import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
+import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
 
@@ -96,11 +97,12 @@ public class BrianWriter extends BaseWriter {
 
                 for(Component dispComp: simCpt.getAllChildren()){
                         if(dispComp.getName().indexOf("Display")>=0){
-                                toTrace.append("# Display: "+dispComp+"\n");
+                            toTrace.append("\n# Display: "+dispComp+"\n");
+                            toPlot.append("\n# Display: "+dispComp+"\nfigure(\""+dispComp.getTextParam("title")+"\")\n");
                                 for(Component lineComp: dispComp.getAllChildren()){
                                         if(lineComp.getName().indexOf("Line")>=0){
                                                 //trace=StateMonitor(hhpop,'v',record=[0])
-                                                String trace = "trace_"+lineComp.getID();
+                                                String trace = "trace_"+dispComp.getID()+"_"+lineComp.getID();
                                                 String ref = lineComp.getStringValue("quantity");
                                                 String pop = ref.split("/")[0].split("\\[")[0];
                                                 String num = ref.split("\\[")[1].split("\\]")[0];
@@ -109,7 +111,7 @@ public class BrianWriter extends BaseWriter {
                                                 //if (var.equals("v")){
 
                                                         toTrace.append(trace+" = StateMonitor("+pop+",'"+var+"',record=["+num+"]) # "+lineComp.summary()+"\n");
-                                                        toPlot.append("plot("+trace+".times/second,"+trace+"["+num+"])\n");
+                                                        toPlot.append("plot("+trace+".times/second,"+trace+"["+num+"], color=\""+lineComp.getStringValue("color")+"\")\n");
                                                 //}
                                         }
                                 }
@@ -126,7 +128,7 @@ public class BrianWriter extends BaseWriter {
                 
                 if (dt.endsWith("s")) dt=dt.substring(0, dt.length()-1)+"*second";  //TODO: Fix!!!
 
-                sb.append("defaultclock.dt = "+dt+"\n");
+                sb.append("\ndefaultclock.dt = "+dt+"\n");
                 sb.append("run("+len+")\n");
 
                 sb.append(toPlot);
@@ -281,7 +283,23 @@ public class BrianWriter extends BaseWriter {
 
         			for(StateAssignment va: assigs)
         			{
-                        compInfo.initInfo.append(popName+"."+prefix+va.getStateVariable().getName()+" = "+va.getValueExpression()+"\n");
+        				String initVal = va.getValueExpression();
+        				for(DerivedVariable edv: expDevVar)
+                		{
+        					if (edv.getName().equals(initVal)) {
+        						String expr = edv.getValueExpression();
+        	        			expr = expr.replace("^", "**");
+        						initVal = expr;
+        						
+        						for(StateAssignment va2: assigs)
+        	        			{
+            						String expr2 = va2.getValueExpression();
+            	        			expr2 = expr2.replace("^", "**");
+        							initVal = Utils.replaceInFunction(initVal, va2.getStateVariable().getName(), expr2);
+        	        			}
+        					}
+                		}
+                        compInfo.initInfo.append(popName+"."+prefix+va.getStateVariable().getName()+" = "+initVal+"\n");
         			}
 
                 }
