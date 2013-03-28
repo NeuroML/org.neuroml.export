@@ -831,12 +831,12 @@ public class NeuronWriter extends BaseWriter {
 
         writeModBlock(mod, "PROCEDURE rates()", ratesMethod.toString());
 
-        for (String compK : paramMappings.keySet()) {
+        //for (String compK : paramMappings.keySet()) {
             //E.info("  Maps for "+compK);
             ////for (String orig : paramMappings.get(compK).keySet()) {
                 //E.info("      "+orig+" -> "+paramMappings.get(compK).get(orig));
             ////}
-        }
+        //}
         //System.out.println("----  paramMappings: "+paramMappings);
 
         return mod.toString();
@@ -1207,8 +1207,9 @@ public class NeuronWriter extends BaseWriter {
                         // since synapse currents differ in sign from NEURON
                         synFactor = "-1 * ";
                     }
-
-                    if (true /*TODOdv.get == null*/) {
+                    
+                    int u=7;
+                    if (1<u /*TODOdv.get == null*/) {
                         //if (cond.)
                         block.append(prefix + dv.getName() + " = "+synFactor + rate + " ? evaluable\n\n");
                     } else {
@@ -1394,9 +1395,9 @@ public class NeuronWriter extends BaseWriter {
 
 
         File expDir = new File("../../temp/mods/");
-        for (File f : expDir.listFiles()) {
+        //for (File f : expDir.listFiles()) {
             //f.delete();
-        }
+        //}
 
         for (File nml2Channel : nml2Channels) {
             String nml2Content = FileUtil.readStringFromFile(nml2Channel);

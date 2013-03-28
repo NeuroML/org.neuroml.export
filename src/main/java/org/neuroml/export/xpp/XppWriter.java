@@ -46,7 +46,6 @@ public class XppWriter extends BaseWriter {
         
         Component simCpt = target.getComponent();
         E.info("simCpt: "+simCpt);
-        String simId = simCpt.getID();
 
         
         String targetId = simCpt.getStringValue("target");
@@ -80,7 +79,7 @@ public class XppWriter extends BaseWriter {
 				addComment(sb,"   Population "+pop.getID()+" contains components of: "+popComp+" ");
 				sb.append("\n\n");
 	
-				String prefix = popComp.getID()+"_";
+				//String prefix = popComp.getID()+"_";
 	
 				CompInfo compInfo = new CompInfo();
 				ArrayList<String> stateVars = new ArrayList<String>();
@@ -97,7 +96,7 @@ public class XppWriter extends BaseWriter {
 			}
 	
 			StringBuilder toTrace = new StringBuilder();
-			StringBuilder toPlot = new StringBuilder();
+			//StringBuilder toPlot = new StringBuilder();
 	
 			for(Component dispComp: simCpt.getAllChildren()){
 				if(dispComp.getName().indexOf("Display")>=0){
@@ -151,11 +150,12 @@ public class XppWriter extends BaseWriter {
 	public void getCompEqns(CompInfo compInfo, Component comp, String popName, ArrayList<String> stateVars, String prefix) throws ContentError, ParseError
 	{
 		LemsCollection<Parameter> ps = comp.getComponentType().getDimParams();
-
+		/*
 		String localPrefix = comp.getID()+"_";
 
 		if (comp.getID()==null)
 			localPrefix = comp.getName()+"_";
+			*/
 
 		for(Parameter p: ps)
 		{

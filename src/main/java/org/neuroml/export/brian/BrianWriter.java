@@ -57,7 +57,6 @@ public class BrianWriter extends BaseWriter {
                 
                 Component simCpt = target.getComponent();
                 E.info("simCpt: "+simCpt);
-                String simId = simCpt.getID();
 
                 
                 String targetId = simCpt.getStringValue("target");
@@ -153,11 +152,12 @@ public class BrianWriter extends BaseWriter {
         public void getCompEqns(CompInfo compInfo, Component comp, String popName, ArrayList<String> stateVars, String prefix) throws ContentError, ParseError
         {
                 LemsCollection<Parameter> ps = comp.getComponentType().getDimParams();
-
+                /*
                 String localPrefix = comp.getID()+"_";
 
                 if (comp.getID()==null)
                         localPrefix = comp.getName()+"_";
+                        */
 
                 for(Constant c: comp.getComponentType().getConstants())
                 {
@@ -281,7 +281,7 @@ public class BrianWriter extends BaseWriter {
 
         			for(StateAssignment va: assigs)
         			{
-                        //compInfo.initInfo.append(popName+"."+prefix+va.getStateVariable().getName()+" = "+va.getValueExpression()+"\n");
+                        compInfo.initInfo.append(popName+"."+prefix+va.getStateVariable().getName()+" = "+va.getValueExpression()+"\n");
         			}
 
                 }
