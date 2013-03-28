@@ -18,13 +18,13 @@ import junit.framework.TestCase;
 public class BrianWriterTest extends TestCase {
 
 	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException {
-        //Note: only works with this example at the moment!!
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	
         File exampleFile = new File(AppTest.getLemsExamplesDir(), exampleFilename);
-        
+
         //exampleFile = new File("/home/padraig/neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecar.xml");
+        //exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_SBML.xml");
         
 		Lems lems = Utils.loadLemsFile(exampleFile);
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
