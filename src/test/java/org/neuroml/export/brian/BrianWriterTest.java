@@ -24,7 +24,7 @@ public class BrianWriterTest extends TestCase {
     	
         File exampleFile = new File(AppTest.getLemsExamplesDir(), exampleFilename);
         
-        exampleFile = new File("/home/padraig/neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecar.xml");
+        //exampleFile = new File("/home/padraig/neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecar.xml");
         
 		Lems lems = Utils.loadLemsFile(exampleFile);
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
