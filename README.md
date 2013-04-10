@@ -6,4 +6,3 @@ Based on code at https://sourceforge.net/apps/trac/neuroml/browser/NeuroML2/src/
 
 Current targets: NEURON, SBML, Brian, XPP, Matlab...
 
-Work in progress. Not yet stable!
