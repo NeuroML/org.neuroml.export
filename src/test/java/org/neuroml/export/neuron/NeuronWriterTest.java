@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
@@ -20,19 +21,26 @@ public class NeuronWriterTest extends TestCase {
 
 	public void testGetMainScript() throws ContentError, ParseError,
 			ParseException, BuildException, XMLException, IOException {
-		// Note: only works with this example at the moment!!
+		
 
-		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+    	MinimalMessageHandler.setVeryMinimal(true);
+
+		String exampleFileName = "LEMS_NML2_Ex9_FN.xml";
 
 		File exampleFile = new File(AppTest.getLemsExamplesDir(),
-				exampleFilename);
+				exampleFileName);
+		
+		//exampleFile = new File("/home/padraig/Dropbox/work/calmod/Calmodulin_LEMS.xml");
+		exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
 
 		Lems lems = Utils.loadLemsFile(exampleFile);
 
 		NeuronWriter nw = new NeuronWriter(lems);
 
 
-        File mainFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll("xml", "_nrn.py"));
+        File mainFile = new File(AppTest.getTempDir(),exampleFile.getName().replaceAll(".xml", "_nrn.py"));
+        
+        E.info("Generating NEURON from "+exampleFile);
 
 		ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
 

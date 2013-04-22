@@ -20,6 +20,7 @@ import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.core.sim.LemsProcess;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
@@ -44,6 +45,8 @@ public class NeuronWriter extends BaseWriter {
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
     final static String V_COPY_PREFIX = "copy_";
+    
+    final static String DUMMY_POPULATION_PREFIX = "population_";
 
     //TODO Move to central nml2 file
     public final static String ION_CHANNEL_COMP_TYPE = "baseIonChannel";
@@ -168,28 +171,55 @@ public class NeuronWriter extends BaseWriter {
         
         String targetId = simCpt.getStringValue("target");
 
-        Component tgtNet = lems.getComponent(targetId);
+        Component targetComp = lems.getComponent(targetId);
+        String info = "Adding simulation " + simCpt + " of network/component: " + targetComp.summary();
+        
+        E.info(info);
 
-        addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary());
+        addComment(main, info);
 
-        ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+        ArrayList<Component> popsOrComponents = targetComp.getChildrenAL("populations");
+
+        E.info("popsOrComponents: "+popsOrComponents);
 
         HashMap<String, Integer> compMechsCreated = new HashMap<String, Integer>();
         HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
+        
+        boolean simulatingNetwork = true;
+        
+        if (popsOrComponents.isEmpty()) {
+        	popsOrComponents.add(targetComp);
+        	simulatingNetwork = false;
+        }
 
-        for (Component pop : pops) {
-            String compRef = pop.getStringValue("component");
+        for (Component popsOrComponent : popsOrComponents) {
+        	
+        	String compReference = null;
+        	String popName = null;
+        	int number;
+        	Component popComp = null;
+        	
+        	if (popsOrComponent.getComponentType().getName().equals("population")) {
+        		compReference = popsOrComponent.getStringValue("component");
+        		number = Integer.parseInt(popsOrComponent.getStringValue("size"));
+                popComp = lems.getComponent(compReference);
+                popName = popsOrComponent.getID();
+        	} else {
+        		compReference = popsOrComponent.getComponentType().getName();
+        		number = 1;
+                popComp = popsOrComponent;
+                popName = DUMMY_POPULATION_PREFIX+popComp.getName();
+        	}
+        	
 
-            Component popComp = lems.getComponent(compRef);
             String mechName = popComp.getComponentType().getName();
 
-            int num = Integer.parseInt(pop.getStringValue("size"));
 
-            main.append("print \"Population " + pop.getID() + " contains " + num + " instance(s) of component: "
+            main.append("print \"Population " + popName + " contains " + number + " instance(s) of component: "
                     + popComp.getID() + " of type: " + popComp.getComponentType().getName() + " \"\n\n");
 
-            for (int i = 0; i < num; i++) {
-                String instName = pop.getID() + "_" + i;
+            for (int i = 0; i < number; i++) {
+                String instName = popName + "_" + i;
                 main.append(instName + " = h.Section()\n");
                 double defaultRadius = 5;
                 main.append(instName + ".L = " + defaultRadius * 2 + "\n");
@@ -267,27 +297,37 @@ public class NeuronWriter extends BaseWriter {
                         //trace=StateMonitor(hhpop,'v',record=[0])
                         /////String trace = "trace_" + lineComp.getID();
                         String ref = lineComp.getStringValue("quantity");
-                        String pop = ref.split("/")[0].split("\\[")[0];
-                        String num = ref.split("\\[")[1].split("\\]")[0];
-                        String var = ref.split("/")[1];
 
+                        toRec.append("#   Line, recording: " + ref + "\n");
+                        String pop = null;
+                        String num = null;
+                        String var = null;
                         Component popComp = null;
-                        ArrayList<Component> allPops = tgtNet.getChildrenAL("populations");
-                        for (Component c : allPops) {
-                            if (c.getID().equals(pop)) {
-                                //E.info("--- "+c.getStringValue("component"));
-                                popComp = lems.getComponent(c.getStringValue("component"));
-                            }
+                        
+                        if (ref.indexOf("/")<0 && !simulatingNetwork) {
+
+                        	popComp = targetComp;
+                        	var = ref;
+                        	num = "0";
+	                        pop = DUMMY_POPULATION_PREFIX+popComp.getName();
+
+	                      
+                        	
+                        } else {
+	                        pop = ref.split("/")[0].split("\\[")[0];
+	                        num = ref.split("\\[")[1].split("\\]")[0];
+	                        var = ref.split("/")[1];
+	
+
+	                        for (Component popsOrComponent : popsOrComponents) {
+	                            if (popsOrComponent.getID().equals(pop)) {
+	                                popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
+	                            }
+	                        }
                         }
+	
+                        System.out.println("Recording " + var + " on cell " + num + " in " + pop + " of type " + popComp);
 
-                        //System.out.println("Recording " + var + " on cell " + num + " in " + pop + " of type " + popComp);
-                       //// String objName = var + "rec";
-                        //toRec.append(objName+" = h.Vector()\n");
-                        ////String varFull = popComp.getName() + "_" + pop + "_" + num + "._ref_" + var;
-                        //toRec.append(objName+".record("+varFull+")\n");
-
-                        //toPlot.append("pylab.plot(trec, "+objName+")\n");
-                        //toPlot.append("sampleGraph.addexpr(\""+varFull+"\", \""+varFull+"\", 1, 1, 0.8, 0.9, 2)\n");
                         String varRef = popComp.getName() + "[" + num + "]." + var;
 
                         varRef = pop + "_" + num;
@@ -297,11 +337,7 @@ public class NeuronWriter extends BaseWriter {
 
                         if (var.equals(NEURON_VOLTAGE)) {
                             varRef = compMechNamesHoc.get(pop + "_" + num) + "." + V_COPY_PREFIX + var;
-                            /*varRef = "v";
-                            String instName = pop + "_" + num;
-                            varRef = "\"+"+instName+".name() + \".v";*/
-                            //varRef = "v";
-                            //toPlot.append(instName + ".push()\n");
+
                         }
 
                         String dispGraph = "display_" + dispId;
@@ -323,6 +359,7 @@ public class NeuronWriter extends BaseWriter {
                         if (plotColour > 10) {
                             plotColour = 1;
                         }
+                    
 
                     }
                 }
@@ -556,7 +593,7 @@ public class NeuronWriter extends BaseWriter {
 
         ArrayList<String> regimeNames = new ArrayList<String>();
         Hashtable<String, Integer> flagsVsRegimes = new Hashtable<String, Integer>();
-        if (comp.getComponentType().hasBehavior()) {
+        if (comp.getComponentType().hasDynamics()) {
 
             int regimeFlag = 5000;
             for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
@@ -709,8 +746,8 @@ public class NeuronWriter extends BaseWriter {
 
 
         /*
-        if (comp.getComponentType().hasBehavior()) {
-            for (Regime regime: comp.getComponentType().getBehavior().getRegimes()) {
+        if (comp.getComponentType().hasDynamics()) {
+            for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
                 String regimeStateName = "regime_"+regime.name;
                 blockNetReceive.append(": Conditions for "+regimeStateName);
                 int regimeFlag = flagsVsRegimes.get(regime.name);
@@ -806,7 +843,7 @@ public class NeuronWriter extends BaseWriter {
 
         HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 
-        if (comp.getComponentType().hasBehavior()) {
+        if (comp.getComponentType().hasDynamics()) {
 
             for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
                 String regimeStateName = REGIME_PREFIX+regime.name;
@@ -948,7 +985,7 @@ public class NeuronWriter extends BaseWriter {
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
 
-        if (comp.getComponentType().hasBehavior()) {
+        if (comp.getComponentType().hasDynamics()) {
 
             for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
                 String regimeStateName = REGIME_PREFIX+regime.name;
@@ -1005,7 +1042,7 @@ public class NeuronWriter extends BaseWriter {
 
         StringBuilder ratesMethodFinal = new StringBuilder();
 
-        if (comp.getComponentType().hasBehavior()) {
+        if (comp.getComponentType().hasDynamics()) {
 
             Hashtable<String, String> rateNameVsRateExpr = new Hashtable<String, String>();
 
@@ -1121,7 +1158,7 @@ public class NeuronWriter extends BaseWriter {
             parseDerivedVars(childComp, prefixNew, rangeVars, ratesMethod, blockNeuron, blockParameter, blockAssigned, blockBreakpoint, paramMappings);
         }
         //ratesMethod.append("? Looking at"+comp+"\n");
-        if (comp.getComponentType().hasBehavior()) {
+        if (comp.getComponentType().hasDynamics()) {
 
             StringBuilder blockForEqns = ratesMethod;
             if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)) {
