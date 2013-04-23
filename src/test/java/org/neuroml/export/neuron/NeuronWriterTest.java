@@ -31,7 +31,7 @@ public class NeuronWriterTest extends TestCase {
 				exampleFileName);
 
 		//exampleFile = new File("/home/padraig/Dropbox/work/calmod/Calmodulin_LEMS.xml");
-		exampleFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
+		//exampleFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
 
 		Lems lems = Utils.loadLemsFile(exampleFile);
 
