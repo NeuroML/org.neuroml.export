@@ -21,7 +21,7 @@ public class NeuronWriterTest extends TestCase {
 
 	public void testGetMainScript() throws ContentError, ParseError,
 			ParseException, BuildException, XMLException, IOException {
-		
+
 
     	MinimalMessageHandler.setVeryMinimal(true);
 
@@ -29,9 +29,9 @@ public class NeuronWriterTest extends TestCase {
 
 		File exampleFile = new File(AppTest.getLemsExamplesDir(),
 				exampleFileName);
-		
+
 		//exampleFile = new File("/home/padraig/Dropbox/work/calmod/Calmodulin_LEMS.xml");
-		exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
+		exampleFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
 
 		Lems lems = Utils.loadLemsFile(exampleFile);
 
@@ -39,7 +39,7 @@ public class NeuronWriterTest extends TestCase {
 
 
         File mainFile = new File(AppTest.getTempDir(),exampleFile.getName().replaceAll(".xml", "_nrn.py"));
-        
+
         E.info("Generating NEURON from "+exampleFile);
 
 		ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
