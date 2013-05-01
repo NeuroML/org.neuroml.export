@@ -32,13 +32,12 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLElements;
 
 public class NeuronWriter extends BaseWriter {
 
     final static String NEURON_VOLTAGE = "v";
     final static String NEURON_TEMP = "celsius";
-    final static String NML2_TEMP = "temperature";
-    final static String NML2_TEMP_DIM = "temperature";
     
     //final static String HIGH_CONDUCTANCE_PARAM = "highConductance";
     final static String RESERVED_STATE_SUFFIX = "I";
@@ -48,27 +47,6 @@ public class NeuronWriter extends BaseWriter {
     
     final static String DUMMY_POPULATION_PREFIX = "population_";
 
-    //TODO Move to central nml2 file
-    public final static String ION_CHANNEL_COMP_TYPE = "baseIonChannel";
-    public final static String BASE_CELL_COMP_TYPE = "baseCell";
-    public final static String BASE_CELL_CAP_COMP_TYPE = "baseCellMembPotCap";
-    public final static String BASE_GATE_COMP_TYPE = "baseGate";
-    public final static String BASE_CONC_DEP_RATE_COMP_TYPE = "baseVoltageConcDepRate";
-    public final static String BASE_CONC_DEP_VAR_COMP_TYPE = "baseVoltageConcDepVariable";
-
-    public final static String CONC_MODEL_COMP_TYPE = "concentrationModel";
-    public final static String CONC_MODEL_SURF_AREA = "surfaceArea";
-    public final static String CONC_MODEL_CA_CURR_DENS = "iCa";
-    public final static String CONC_MODEL_INIT_CONC = "initialConcentration";
-    public final static String CONC_MODEL_INIT_EXT_CONC = "initialExtConcentration";
-    public final static String CONC_MODEL_CONC_STATE_VAR = "concentration";
-
-    public final static String BASE_POINT_CURR_COMP_TYPE = "basePointCurrent";
-    public final static String BASE_SYNAPSE_COMP_TYPE = "baseSynapse";
-    public final static String POINT_CURR_CURRENT = "i";
-    public final static String SYNAPSE_PORT_IN = "in";
-
-    public final static String ABSTRACT_CELL_COMP_TYPE_CAP__I_MEMB = "iMemb";
 
     ArrayList<File> allGeneratedFiles = new ArrayList<File>();
     static final int commentOffset = 40;
@@ -147,7 +125,7 @@ public class NeuronWriter extends BaseWriter {
             newExpr = Utils.replaceInFunction(newExpr, origName, newName);
         }
 
-        newExpr = Utils.replaceInFunction(newExpr, NML2_TEMP, NEURON_TEMP);
+        newExpr = Utils.replaceInFunction(newExpr, NeuroMLElements.TEMPERATURE, NEURON_TEMP);
 
         return newExpr;
     }
@@ -225,7 +203,7 @@ public class NeuronWriter extends BaseWriter {
                 main.append(instName + ".L = " + defaultRadius * 2 + "\n");
                 main.append(instName + "(0.5).diam = " + defaultRadius * 2 + "\n");
 
-                if (popComp.getComponentType().isOrExtends(BASE_CELL_CAP_COMP_TYPE)) {
+                if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)) {
                     double capTotSI = popComp.getParamValue("C").getDoubleValue();
                     double area = 4 * Math.PI * defaultRadius * defaultRadius;
                     double specCapNeu = 10e13 * capTotSI / area;
@@ -429,7 +407,7 @@ public class NeuronWriter extends BaseWriter {
 
         HashMap<String, HashMap<String, String>> paramMappings = new HashMap<String, HashMap<String, String>>();
 
-        if (comp.getComponentType().isOrExtends(BASE_CELL_COMP_TYPE)) {
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE)) {
             HashMap<String, String> paramMappingsComp = new HashMap<String, String>();
             ///paramMappingsComp.put(NEURON_VOLTAGE, getStateVarName(NEURON_VOLTAGE));
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
@@ -455,7 +433,7 @@ public class NeuronWriter extends BaseWriter {
 
         boolean hasCaDependency = false;
 
-        if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)) {
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
             mechName = comp.getID();
             blockNeuron.append("SUFFIX " + mechName + "\n");
 
@@ -465,12 +443,12 @@ public class NeuronWriter extends BaseWriter {
             }
 
             for (Component child1: comp.getAllChildren()) {
-                if (child1.getComponentType().isOrExtends(BASE_GATE_COMP_TYPE)) {
+                if (child1.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE)) {
                     //blockNeuron.append("? Checking " + child1 + "\n");
                     for (Component child2: child1.getAllChildren()) {
                         //blockNeuron.append("? Checking " + child2 + "\n");
-                        if (child2.getComponentType().isOrExtends(BASE_CONC_DEP_VAR_COMP_TYPE) ||
-                            child2.getComponentType().isOrExtends(BASE_CONC_DEP_RATE_COMP_TYPE)) {
+                        if (child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) ||
+                            child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE)) {
                             hasCaDependency = true;
 
                         }
@@ -487,7 +465,7 @@ public class NeuronWriter extends BaseWriter {
 
             blockParameter.append("\ngmax = 0                                : Will be set when ion channel mechanism placed on cell!\n");
 
-        } else if (comp.getComponentType().isOrExtends(CONC_MODEL_COMP_TYPE)) {
+        } else if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE)) {
             mechName = comp.getID();
             blockNeuron.append("SUFFIX " + mechName + "\n");
 
@@ -507,26 +485,26 @@ public class NeuronWriter extends BaseWriter {
             
             blockAssigned.append("area (um2)\n");
 
-            ratesMethod.append(CONC_MODEL_SURF_AREA + " = area\n\n");
-            ratesMethod.append(CONC_MODEL_CA_CURR_DENS + " = -10000 * ica * "+CONC_MODEL_SURF_AREA+" : To correct units...\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = area\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_CURR_DENS + " = -10000 * ica * "+NeuroMLElements.CONC_MODEL_SURF_AREA+" : To correct units...\n\n");
 
-            locals.add(CONC_MODEL_SURF_AREA);
-            locals.add(CONC_MODEL_CA_CURR_DENS);
+            locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
+            locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
 
-            blockNeuron.append("GLOBAL "+CONC_MODEL_INIT_CONC + "\n");
-            blockNeuron.append("GLOBAL "+CONC_MODEL_INIT_EXT_CONC + "\n");
-            blockParameter.append(CONC_MODEL_INIT_CONC + " (mM)\n");
-            blockParameter.append(CONC_MODEL_INIT_EXT_CONC + " (mM)\n");
+            blockNeuron.append("GLOBAL "+NeuroMLElements.CONC_MODEL_INIT_CONC + "\n");
+            blockNeuron.append("GLOBAL "+NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + "\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_CONC + " (mM)\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + " (mM)\n");
 
-            blockInitial.append(CONC_MODEL_INIT_CONC+" = cai" + "\n");
-            blockInitial.append(CONC_MODEL_INIT_EXT_CONC+" = cao" + "\n");
+            blockInitial.append(NeuroMLElements.CONC_MODEL_INIT_CONC+" = cai" + "\n");
+            blockInitial.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC+" = cao" + "\n");
             
         } 
         else {
             blockNeuron.append("POINT_PROCESS " + mechName);
         }
 
-        if (comp.getComponentType().isOrExtends(BASE_SYNAPSE_COMP_TYPE))
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
             blockNetReceiveParams = "weight (uS)";
             blockAssigned.append("? Standard Assigned variables with baseSynapse\n");
@@ -547,7 +525,7 @@ public class NeuronWriter extends BaseWriter {
         parseParameters(comp, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
 
 
-        if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)) {
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
             blockAssigned.append("? Standard Assigned variables with ionChannel\n");
             blockAssigned.append("v (mV)\n");
             blockAssigned.append("celsius (degC)\n");
@@ -573,7 +551,7 @@ public class NeuronWriter extends BaseWriter {
 
         //ratesMethod.append("? + \n");
 
-        if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)) {
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
 
             blockBreakpoint.append("g = gmax * fopen     : Overwriting evaluation of g, assuming gmax set externally\n\n");
 
@@ -729,7 +707,7 @@ public class NeuronWriter extends BaseWriter {
         }
 
         for (OnEvent oe : comp.getComponentType().getDynamics().getOnEvents()) {
-            if (oe.getPortName().equals(SYNAPSE_PORT_IN))
+            if (oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
             {
                 for (StateAssignment sa : oe.getStateAssignments()) {
                     blockNetReceive.append("state_discontinuity("+sa.getStateVariable().getName() + ", "+ checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings)+")\n");
@@ -738,10 +716,10 @@ public class NeuronWriter extends BaseWriter {
         }
         
 
-        if (comp.getComponentType().isOrExtends(CONC_MODEL_COMP_TYPE) &&
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
             comp.getComponentType().getDynamics().getTimeDerivatives().isEmpty())
         {
-            blockBreakpoint.append("\ncai = "+CONC_MODEL_CONC_STATE_VAR+"\n\n");
+            blockBreakpoint.append("\ncai = "+NeuroMLElements.CONC_MODEL_CONC_STATE_VAR+"\n\n");
         }
 
 
@@ -780,7 +758,7 @@ public class NeuronWriter extends BaseWriter {
 
                 blockBreakpoint.append("\n" + V_COPY_PREFIX + NEURON_VOLTAGE + " = " + NEURON_VOLTAGE);
 
-                if (comp.getComponentType().isOrExtends(BASE_CELL_CAP_COMP_TYPE)) {
+                if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)) {
                     //blockBreakpoint.append("\ni = -1 * " + ABSTRACT_CELL_COMP_TYPE_CAP__I_MEMB + "");
                     blockBreakpoint.append("\ni = " + getStateVarName(NEURON_VOLTAGE) + " * C");
                 } else {
@@ -938,10 +916,10 @@ public class NeuronWriter extends BaseWriter {
                 }
                 blockNeuron.append(range + ": exposure");
 
-                if (comp.getComponentType().isOrExtends(BASE_POINT_CURR_COMP_TYPE) &&
-                    exp.getName().equals(POINT_CURR_CURRENT))
+                if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
+                    exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
                 {
-                    blockNeuron.append("\n\nNONSPECIFIC_CURRENT "+POINT_CURR_CURRENT+"\n");
+                    blockNeuron.append("\n\nNONSPECIFIC_CURRENT "+NeuroMLElements.POINT_CURR_CURRENT+"\n");
                 }
             }
         }
@@ -962,7 +940,7 @@ public class NeuronWriter extends BaseWriter {
             }*/
         }
 
-        if (comp.getComponentType().isOrExtends(BASE_CELL_COMP_TYPE)) {
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE)) {
             blockNeuron.append("\nRANGE " + V_COPY_PREFIX + NEURON_VOLTAGE + "                           : copy of v on section\n");
         }
 
@@ -1066,8 +1044,8 @@ public class NeuronWriter extends BaseWriter {
 
                     String line = prefix + stateVarToUse + "' = " + rateName + " " + rateUnits;
 
-                    if (comp.getComponentType().isOrExtends(CONC_MODEL_COMP_TYPE) &&
-                        td.getStateVariable().getName().equals(CONC_MODEL_CONC_STATE_VAR))
+                    if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
+                        td.getStateVariable().getName().equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
                     {
                         line = line+ "\ncai = "+td.getStateVariable().getName();
                     }
@@ -1161,7 +1139,7 @@ public class NeuronWriter extends BaseWriter {
         if (comp.getComponentType().hasDynamics()) {
 
             StringBuilder blockForEqns = ratesMethod;
-            if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)) {
+            if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
                 blockForEqns = blockBreakpoint;
             }
             for (DerivedVariable dv : comp.getComponentType().getDynamics().getDerivedVariables()) {
@@ -1194,8 +1172,8 @@ public class NeuronWriter extends BaseWriter {
                     String rate = checkForStateVarsAndNested(dv.getValueExpression(), comp, paramMappings);
 
                     String synFactor = "";
-                    if (comp.getComponentType().isOrExtends(BASE_POINT_CURR_COMP_TYPE) &&
-                    dv.getName().equals(POINT_CURR_CURRENT))
+                    if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
+                    dv.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
                     {
                         // since synapse currents differ in sign from NEURON
                         synFactor = "-1 * ";
@@ -1325,7 +1303,7 @@ public class NeuronWriter extends BaseWriter {
 
     private static float convertToNeuronUnits(float val, String dimensionName) {
         float newVal = val * getNeuronUnitFactor(dimensionName);
-        if (dimensionName.equals(NML2_TEMP_DIM))
+        if (dimensionName.equals(NeuroMLElements.TEMPERATURE_DIM))
             newVal = newVal - 273.15f;
         return newVal;
     }
@@ -1404,16 +1382,16 @@ public class NeuronWriter extends BaseWriter {
 
             for (Component comp : sim.getLems().components.getContents()) {
                 E.info("Component: " + comp);
-                E.info("baseIonChannel: " + comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE));
-                E.info("baseCell: " + comp.getComponentType().isOrExtends(BASE_CELL_COMP_TYPE));
-                E.info("concentrationModel: " + comp.getComponentType().isOrExtends(CONC_MODEL_COMP_TYPE));
-                E.info("basePointCurrent: " + comp.getComponentType().isOrExtends(BASE_POINT_CURR_COMP_TYPE));
+                E.info("baseIonChannel: " + comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE));
+                E.info("baseCell: " + comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE));
+                E.info("concentrationModel: " + comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE));
+                E.info("basePointCurrent: " + comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE));
 
-                if (comp.getComponentType().isOrExtends(ION_CHANNEL_COMP_TYPE)
-                        || comp.getComponentType().isOrExtends(BASE_CELL_COMP_TYPE)
-                        || comp.getComponentType().isOrExtends(CONC_MODEL_COMP_TYPE)
-                        || comp.getComponentType().isOrExtends(BASE_POINT_CURR_COMP_TYPE)) {
-                    E.info(comp + " is an " + ION_CHANNEL_COMP_TYPE + " or  " + BASE_CELL_COMP_TYPE + " or  " + CONC_MODEL_COMP_TYPE+ " or  " + BASE_POINT_CURR_COMP_TYPE);
+                if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)
+                        || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE)
+                        || comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE)
+                        || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE)) {
+                    E.info(comp + " is an " + NeuroMLElements.ION_CHANNEL_COMP_TYPE + " or  " + NeuroMLElements.BASE_CELL_COMP_TYPE + " or  " + NeuroMLElements.CONC_MODEL_COMP_TYPE+ " or  " + NeuroMLElements.BASE_POINT_CURR_COMP_TYPE);
                     String mod = generateModFile(comp);
 
                     File expFile = new File(expDir, comp.getID() + ".mod");
