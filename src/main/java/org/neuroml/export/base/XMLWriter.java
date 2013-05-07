@@ -14,8 +14,8 @@ public abstract class XMLWriter extends BaseWriter {
 	String commPre = "<!--";
 	String commPost = "-->";
 
-	public XMLWriter(Lems l) {
-		super(l);
+	public XMLWriter(Lems lems, String format) {
+		super(lems, format);
 	}
 
 	@Override

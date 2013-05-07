@@ -28,12 +28,14 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
+import com.sun.tools.xjc.reader.Util;
+
 public class BrianWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
 
 	public BrianWriter(Lems lems) {
-		super(lems);
+		super(lems, "Brian");
 	}
 
 	@Override
@@ -52,6 +54,8 @@ public class BrianWriter extends BaseWriter {
 		StringBuilder sb = new StringBuilder();
 		addComment(sb, "Brian simulator compliant Python export for:\n\n"
 				+ lems.textSummary(false, false));
+		
+		addComment(sb, Utils.getHeaderComment(format));
 
 		sb.append("from brian import *\n\n");
 		sb.append("from math import *\n\n");
@@ -309,7 +313,7 @@ public class BrianWriter extends BaseWriter {
 						for (StateAssignment va2 : assigs) {
 							String expr2 = va2.getValueExpression();
 							expr2 = expr2.replace("^", "**");
-							initVal = Utils.replaceInFunction(initVal, va2
+							initVal = Utils.replaceInExpression(initVal, va2
 									.getStateVariable().getName(), expr2);
 						}
 					}
@@ -336,9 +340,9 @@ public class BrianWriter extends BaseWriter {
     public static void main(String[] args) throws Exception {
 
     	
-        File exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_SBML.xml");
+        File exampleFile = new File("/home/padraig/org.neuroml.import/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_LEMS.xml");
         
-		Lems lems = Utils.loadLemsFile(exampleFile);
+		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
 
         BrianWriter bw = new BrianWriter(lems);

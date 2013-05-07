@@ -6,27 +6,28 @@ import java.io.IOException;
 import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.run.ConnectionError;
+import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
+import org.neuroml.model.util.NeuroML2Validator;
+import org.neuroml.model.util.NeuroMLElements;
 import org.xml.sax.SAXException;
 
 public class SEDMLWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException {
+	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
 
-    	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";    	
+    	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";    
     	
-        File exampleFile = new File(AppTest.getLemsExamplesDir(), exampleFilename);
-
-        System.out.println("Generating SED-ML from: "+exampleFile);
-        
-		Lems lems = Utils.loadLemsFile(exampleFile);
+    	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
 		SEDMLWriter sedmlw = new SEDMLWriter(lems, exampleFilename, SEDMLWriter.ModelFormat.SBML);
         String sedml = sedmlw.getMainScript();
@@ -40,7 +41,7 @@ public class SEDMLWriterTest extends TestCase {
 
         assertTrue(sedmlFile.exists());
         
-        Utils.testValidity(sedmlFile, SEDMLWriter.PREF_SEDML_SCHEMA);
+        NeuroML2Validator.testValidity(sedmlFile, SEDMLWriter.PREF_SEDML_SCHEMA);
 	}
 
 

@@ -22,7 +22,7 @@ public class SEDMLWriter extends XMLWriter {
     public enum ModelFormat {NEUROML2, SBML, CELLML};
 
     public SEDMLWriter(Lems l, String originalFilename, ModelFormat modelFormat) {
-        super(l);
+        super(l, "SED-ML");
         this.originalFilename = originalFilename;
         this.modelFormat = modelFormat;
     }

@@ -5,6 +5,8 @@ package org.neuroml.export.sbml;
 
 
 import java.util.ArrayList;
+
+import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
@@ -36,7 +38,7 @@ public class SBMLWriter extends XMLWriter {
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
     public SBMLWriter(Lems l) {
-        super(l);
+        super(l, "SBML");
     }
 
     /*private String getPopPrefix(Component pop) {
@@ -59,7 +61,8 @@ public class SBMLWriter extends XMLWriter {
         startElement(main, "sbml", attrs);
         startElement(main, "notes");
         startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-        main.append("\nSBML export for:\n" + lems.textSummary(false, false) + "\n");
+        main.append("\n"+Utils.getHeaderComment(format) + "\n");
+        main.append("\nExport of model:\n" + lems.textSummary(false, false) + "\n");
         endElement(main, "p");
         endElement(main, "notes");
 

@@ -2,14 +2,29 @@ package org.neuroml.export;
 
 
 import java.io.File;
+import java.io.IOException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.run.ConnectionError;
+import org.lemsml.jlems.core.run.RuntimeError;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.ParseException;
+import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Dimension;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.io.util.FileUtil;
+import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.model.IzhikevichCell;
 import org.neuroml.model.NeuroMLDocument;
+
+import org.neuroml.model.util.NeuroML2Validator;
+import org.neuroml.model.util.NeuroMLElements;
+import org.lemsml.jlems.core.xml.XMLElementReader;
 
 /**
  * Unit test for simple App.
@@ -32,6 +47,30 @@ public class AppTest extends TestCase
     public static Test suite()
     {
         return new TestSuite( AppTest.class );
+    }
+    
+    public void testReplaceInFunction()
+    {
+    	assertEquals("x + y - z", replaceExpr("a+b-c"));
+    	assertEquals("x ^rr", replaceExpr("a^rr"));
+    }
+    
+    private String replaceExpr(String oldExpr) {
+
+    	String a = "a";
+    	String b = "b";
+    	String c = "c";
+
+    	String x = "x";
+    	String y = "y";
+    	String z = "z";
+
+    	String ret = Utils.replaceInExpression(oldExpr, a, x);
+    	ret = Utils.replaceInExpression(ret, b, y);
+    	ret = Utils.replaceInExpression(ret, c, z);
+    	System.out.println("Converted {"+oldExpr+"} to {"+ret+"}");
+    	
+    	return ret;
     }
 
     public void testApp()
@@ -66,15 +105,43 @@ public class AppTest extends TestCase
     	
 		/*assertTrue("Dimensions match", current.matches(current2));*/
     }
-    
-    
-    /*
-     * There probably is a better place for these...
-     */    
 
-    public static File getLemsExamplesDir()
+    public void testVersions() throws IOException
     {
-        return new File("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes");
+    	System.out.println("Running a test on version usage, making all references to versions are: v"+Main.ORG_NEUROML_EXPORT_VERSION+"...");
+
+    	String jnmlPom = FileUtil.readStringFromFile(new File("pom.xml"));
+
+    	XMLElementReader xer = new XMLElementReader(jnmlPom);
+    	assertEquals(Main.ORG_NEUROML_EXPORT_VERSION, xer.getRootElement().getElement("version").getBody());
+    	
+    }
+
+
+    public static String getLemsExamplesResourcesDir()
+    {
+        return new String("/NeuroML2CoreTypes");
+    }
+    public static String getNeuroMLExamplesResourcesDir()
+    {
+        return new String("/examples");
+    }
+
+    public static Lems readLemsFileFromExamples(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError
+    {
+    	NeuroML2Validator nmlv = new NeuroML2Validator();
+    	
+		String content = JUtil.getRelativeResource(nmlv.getClass(), AppTest.getLemsExamplesResourcesDir()+"/"+exampleFilename);
+		
+		return Utils.readLemsNeuroMLFile(content).getLems();
+    }
+    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError
+    {
+    	NeuroML2Validator nmlv = new NeuroML2Validator();
+    	
+		String content = JUtil.getRelativeResource(nmlv.getClass(), AppTest.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
+		
+		return Utils.readLemsNeuroMLFile(content).getLems();
     }
     
     public static File getTempDir()

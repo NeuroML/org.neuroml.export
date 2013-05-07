@@ -26,7 +26,7 @@ public class XppWriter extends BaseWriter {
 
 	public XppWriter(Lems lems)
 	{
-		super(lems);
+		super(lems, "XPP");
 	}
 
 	@Override

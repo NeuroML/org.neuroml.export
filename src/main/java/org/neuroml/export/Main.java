@@ -1,13 +1,8 @@
 package org.neuroml.export;
 
-/**
- * Hello world!
- *
- */
+
 public class Main 
 {
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
-    }
+
+    public static String ORG_NEUROML_EXPORT_VERSION = "1.0.9";
 }

@@ -49,7 +49,7 @@ public class GraphWriter extends BaseWriter {
 
 
     public GraphWriter(Lems lems) {
-        super(lems);
+        super(lems, "GraphViz");
     }
 
     protected void addComment(StringBuilder sb, String comment) {
@@ -467,7 +467,7 @@ public class GraphWriter extends BaseWriter {
 
         rootCompType = new ComponentType("neuroml");
 
-		Lems lems = Utils.loadLemsFile(xml);
+		Lems lems = Utils.readLemsNeuroMLFile(xml).getLems();
 
         lems.addComponentType(rootCompType);
 

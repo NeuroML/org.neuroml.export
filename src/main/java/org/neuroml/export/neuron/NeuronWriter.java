@@ -32,6 +32,7 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLElements;
 
 public class NeuronWriter extends BaseWriter {
@@ -54,7 +55,7 @@ public class NeuronWriter extends BaseWriter {
     static boolean debug = false;
 
     public NeuronWriter(Lems l) {
-        super(l);
+        super(l, "NEURON");
     }
 
     @Override
@@ -122,10 +123,10 @@ public class NeuronWriter extends BaseWriter {
         //E.info("Making mappings in "+newExpr+" for "+comp+": "+paramMappingsComp);
         for (String origName : paramMappingsComp.keySet()) {
             String newName = paramMappingsComp.get(origName);
-            newExpr = Utils.replaceInFunction(newExpr, origName, newName);
+            newExpr = Utils.replaceInExpression(newExpr, origName, newName);
         }
 
-        newExpr = Utils.replaceInFunction(newExpr, NeuroMLElements.TEMPERATURE, NEURON_TEMP);
+        newExpr = Utils.replaceInExpression(newExpr, NeuroMLElements.TEMPERATURE, NEURON_TEMP);
 
         return newExpr;
     }
@@ -1169,7 +1170,10 @@ public class NeuronWriter extends BaseWriter {
 
                 if (dv.getValueExpression() != null) {
 
+                    //block.append("? DV was: " + dv.getValueExpression() + "\n");
+
                     String rate = checkForStateVarsAndNested(dv.getValueExpression(), comp, paramMappings);
+                    //block.append("? DV is: " + rate + "\n");
 
                     String synFactor = "";
                     if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
@@ -1222,10 +1226,16 @@ public class NeuronWriter extends BaseWriter {
                     block.append("? DerivedVariable is based on path: " + dv.getPath() + " from " + firstChild + ": " + child + "\n");
 
                     if (child == null && dv.getPath().indexOf("synapse") < 0) {
-                        String alt = "/////////////TODO!!!";//dv.getOnAbsent();
-                        block.append("? Path not present in component, using: " + alt + "\n\n");
+                        String alt = "???";
+                        if (dv.getReduce().equals("multiply")) {
+                            alt = "1";
+                        }
+                        else if (dv.getReduce().equals("add")) {
+                            alt = "0";
+                        }
+                        block.append("? Path not present in component, using factor: " + alt + "\n\n");
                         String rate = checkForStateVarsAndNested(alt, comp, paramMappings);
-                        block.append(prefix + dv.getName() + " = " + rate + " ? onAbsent\n\n");
+                        block.append(prefix + dv.getName() + " = " + rate + " \n\n");
                     } else {
                         String var = prefix + dv.getPath().replaceAll("/", "_");
                         if (var.indexOf("[*]") >= 0 && var.indexOf("syn") >= 0) {
@@ -1373,7 +1383,7 @@ public class NeuronWriter extends BaseWriter {
         for (File nml2Channel : nml2Channels) {
             String nml2Content = FileUtil.readStringFromFile(nml2Channel);
             //System.out.println("nml2Content: "+nml2Content);
-            String lemsified = Utils.convertNeuroML2ToLems(nml2Content);
+            String lemsified = NeuroMLConverter.convertNeuroML2ToLems(nml2Content);
             //System.out.println("lemsified: "+lemsified);
 
             LemsProcess sim = new Sim(lemsified);
