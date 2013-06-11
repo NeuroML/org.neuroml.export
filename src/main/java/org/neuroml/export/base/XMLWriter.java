@@ -4,6 +4,7 @@ import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.neuroml.model.NeuroMLDocument;
 
 
 public abstract class XMLWriter extends BaseWriter {
@@ -16,6 +17,9 @@ public abstract class XMLWriter extends BaseWriter {
 
 	public XMLWriter(Lems lems, String format) {
 		super(lems, format);
+	}
+	public XMLWriter(NeuroMLDocument nmlDocument, String format) {
+		super(nmlDocument, format);
 	}
 
 	@Override

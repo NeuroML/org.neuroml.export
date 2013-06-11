@@ -4,5 +4,5 @@ package org.neuroml.export;
 public class Main 
 {
 
-    public static String ORG_NEUROML_EXPORT_VERSION = "1.0.9";
+    public static String ORG_NEUROML_EXPORT_VERSION = "1.1.0";
 }

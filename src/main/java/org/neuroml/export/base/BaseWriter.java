@@ -4,14 +4,21 @@ package org.neuroml.export.base;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.model.NeuroMLDocument;
 
 public abstract class BaseWriter {
 
 	protected Lems lems;
+	protected NeuroMLDocument nmlDocument;
 	protected String format;
 
 	public BaseWriter(Lems lems, String format) {
 		this.lems = lems;
+		this.format = format;
+	}
+	
+	public BaseWriter(NeuroMLDocument nmlDocument, String format) {
+		this.nmlDocument = nmlDocument;
 		this.format = format;
 	}
 
