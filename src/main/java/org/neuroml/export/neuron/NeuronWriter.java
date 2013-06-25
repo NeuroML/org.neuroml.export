@@ -37,6 +37,8 @@ import org.neuroml.model.util.NeuroMLElements;
 
 public class NeuronWriter extends BaseWriter {
 
+    final static String NEURON_FORMAT = "NEURON";
+    
     final static String NEURON_VOLTAGE = "v";
     final static String NEURON_TEMP = "celsius";
     
@@ -53,9 +55,11 @@ public class NeuronWriter extends BaseWriter {
     static final int commentOffset = 40;
 
     static boolean debug = false;
+    
+    
 
     public NeuronWriter(Lems l) {
-        super(l, "NEURON");
+        super(l, NEURON_FORMAT);
     }
 
     @Override
@@ -137,7 +141,7 @@ public class NeuronWriter extends BaseWriter {
         reset();
         StringBuilder main = new StringBuilder();
 
-        addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false));
+        addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false)+"\n\n"+Utils.getHeaderComment(format));
 
         main.append("import neuron\n");
         main.append("h = neuron.h\n");
@@ -390,8 +394,12 @@ public class NeuronWriter extends BaseWriter {
         StringBuilder mod = new StringBuilder();
 
         String mechName = comp.getComponentType().getName();
+        
 
         mod.append("TITLE Mod file for component: " + comp + "\n\n");
+
+        mod.append("COMMENT\n\n"+Utils.getHeaderComment(NEURON_FORMAT)+"\n\nENDCOMMENT\n\n");
+        
         StringBuilder blockNeuron = new StringBuilder();
         StringBuilder blockUnits = new StringBuilder();
         StringBuilder blockParameter = new StringBuilder();
