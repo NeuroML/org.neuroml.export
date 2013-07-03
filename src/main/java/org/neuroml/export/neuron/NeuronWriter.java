@@ -1311,7 +1311,7 @@ public class NeuronWriter extends BaseWriter {
         } else if (dimensionName.equals("charge_per_mole")) {
             return "(coulomb)";
         } else if (dimensionName.equals("temperature")) {
-            return "(degC)";
+            return "(K)";
         } else if (dimensionName.equals("idealGasConstantDims")) {
 	    return "(millijoule / K)";
         } else if (dimensionName.equals(Dimension.NO_DIMENSION)) {
@@ -1323,8 +1323,6 @@ public class NeuronWriter extends BaseWriter {
 
     private static float convertToNeuronUnits(float val, String dimensionName) {
         float newVal = val * getNeuronUnitFactor(dimensionName);
-        if (dimensionName.equals(NeuroMLElements.TEMPERATURE_DIM))
-            newVal = newVal - 273.15f;
         return newVal;
     }
 
