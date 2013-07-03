@@ -1312,6 +1312,8 @@ public class NeuronWriter extends BaseWriter {
             return "(coulomb)";
         } else if (dimensionName.equals("temperature")) {
             return "(degC)";
+        } else if (dimensionName.equals("idealGasConstantDims")) {
+	    return "(millijoule / K)";
         } else if (dimensionName.equals(Dimension.NO_DIMENSION)) {
             return "";
         } else {
@@ -1350,6 +1352,8 @@ public class NeuronWriter extends BaseWriter {
             return 1f;
         } else if (dimensionName.equals("charge_per_mole")) {
             return 1f;
+        } else if (dimensionName.equals("idealGasConstantDims")) {
+	    return 1000f;
         }
         return 1f;
     }
