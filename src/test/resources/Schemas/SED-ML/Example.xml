@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sedML xmlns="http://sed-ml.org/" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xsi:schemaLocation="http://sed-ml.org/   sed-ml-L1-V1.xsd" version="1" level="1">
+           
+    <notes>
+        <p xmlns="http://www.w3.org/1999/xhtml">
+        Test example of a NeuroML file with SED-ML
+        </p> 
+    </notes>
+           
+    <listOfSimulations>
+        <uniformTimeCourse id="utc1" initialTime="0" outputStartTime="0" outputEndTime="100.0" numberOfPoints="10000">
+            <algorithm kisaoID="KISAO:0000030" />
+        </uniformTimeCourse>
+    </listOfSimulations>
+
+    <listOfModels>
+        <model language="urn:sedml:language:neuroml" source="Ex1_Simple.ncx" id="Ex1_Simple"/>
+    </listOfModels>
+
+    <listOfTasks>
+        <task simulationReference="Sim_45" id="RUN_Sim_45" modelReference="Ex1_Simple"/>
+    </listOfTasks>
+
+    <listOfDataGenerators> 
+        <dataGenerator id="time" name="time">
+            <listOfVariables>
+                <variable id="var_time_0" taskReference="task1" symbol="urn:sedml:symbol:time" />
+            </listOfVariables>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <ci> var_time_0 </ci>
+            </math>
+        </dataGenerator>
+        <dataGenerator id="v_1" name="v">
+            <listOfVariables>
+                <variable id="v" name="v" taskReference="task1" target="/neuroml/something/v" />
+            </listOfVariables>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <ci> s1 </ci>
+            </math>
+        </dataGenerator>
+    </listOfDataGenerators>
+
+    <listOfOutputs>
+        <plot2D id="plot1">
+            <listOfCurves>
+                <curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
+            </listOfCurves>
+        </plot2D>
+    </listOfOutputs>
+
+</sedML>

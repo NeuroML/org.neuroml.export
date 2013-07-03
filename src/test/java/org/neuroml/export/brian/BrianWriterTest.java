@@ -20,9 +20,20 @@ import junit.framework.TestCase;
 
 public class BrianWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+    	generateMainScript(exampleFilename);
+	}
+	/*
+	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
+    	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
+    	generateMainScript(exampleFilename);
+	}*/
+	
+	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 

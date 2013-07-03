@@ -32,6 +32,7 @@ public class SBMLWriterTest extends TestCase {
         generateSBMLAndTestScript(lems, exampleFilename);
         
 	}
+	/*
 	public void testGetMainScript2() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex0_IaF.xml"; 
@@ -39,7 +40,7 @@ public class SBMLWriterTest extends TestCase {
 
         generateSBMLAndTestScript(lems, exampleFilename);
         
-	}
+	}*/
         
     public void generateSBMLAndTestScript(Lems lems, String exampleFileName)  throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
 
@@ -48,14 +49,15 @@ public class SBMLWriterTest extends TestCase {
         String sbml = sbmlw.getMainScript();
 
         File sbmlFile = new File(AppTest.getTempDir(),exampleFileName.replaceAll("xml", "sbml"));
-        System.out.println("Writing file to: "+sbmlFile.getAbsolutePath());
+        System.out.println("Writing SBML file to: "+sbmlFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(sbml, sbmlFile);
         
         assertTrue(sbmlFile.exists());
         
         
-        NeuroML2Validator.testValidity(sbmlFile, SBMLWriter.PREF_SBML_SCHEMA);
+        NeuroML2Validator.testValidity(sbmlFile, SBMLWriter.LOCAL_SBML_SCHEMA);
+        System.out.println("File is valid SBML");
         
         File testSbmlFile = new File(AppTest.getTempDir(),exampleFileName.replaceAll("xml", "sh"));
 
@@ -79,7 +81,7 @@ public class SBMLWriterTest extends TestCase {
         			 "# Uses SBMLSimulator: http://www.ra.cs.uni-tuebingen.de/software/SBMLsimulator/downloads/index.html\n"+
         		     "java -jar ~/SBMLsimulator/SBMLsimulator-1.0-rc2-full.jar --gui=true --sim-end-time="+len+" --sbml-input-file="+sbmlFile.getAbsolutePath();
 
-        System.out.println("Writing file to: "+testSbmlFile.getAbsolutePath());
+        System.out.println("Writing shell script to test SBML: "+testSbmlFile.getAbsolutePath());
         FileUtil.writeStringToFile(run, testSbmlFile);
         
         assertTrue(testSbmlFile.exists());

@@ -1,6 +1,6 @@
 /NML2_Overview.gv
 /.pydevproject
-*.xml~
+*.*~
 *.class
 
 # Package Files #

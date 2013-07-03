@@ -44,7 +44,7 @@ public class NeuronWriterTest extends TestCase {
 		//TODO: Find in jar!!
 		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_SynapseTypes.nml");
 
-    	testComponentToMod(exampleFile, "nmdaSyn");
+    	testComponentToMod(exampleFile, "blockStpSynDepFac");
 	}
 	
 	public void testComponentToMod(File exampleFile, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException

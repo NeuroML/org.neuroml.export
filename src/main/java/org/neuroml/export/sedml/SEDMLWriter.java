@@ -10,8 +10,9 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
 
 public class SEDMLWriter extends XMLWriter {
-	
+
 	public static final String PREF_SEDML_SCHEMA = "http://sourceforge.net/apps/trac/neuroml/export/1021/NeuroML2/Schemas/SED-ML/sed-ml-L1-V1.xsd";
+	public static final String LOCAL_SEDML_SCHEMA = "src/test/resources/Schemas/SED-ML/sed-ml-L1-V1.xsd";
 
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";

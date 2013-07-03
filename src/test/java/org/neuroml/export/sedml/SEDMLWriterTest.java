@@ -41,7 +41,8 @@ public class SEDMLWriterTest extends TestCase {
 
         assertTrue(sedmlFile.exists());
         
-        NeuroML2Validator.testValidity(sedmlFile, SEDMLWriter.PREF_SEDML_SCHEMA);
+        NeuroML2Validator.testValidity(sedmlFile, SEDMLWriter.LOCAL_SEDML_SCHEMA);
+        System.out.println("File is valid SED-ML");
 	}
 
 

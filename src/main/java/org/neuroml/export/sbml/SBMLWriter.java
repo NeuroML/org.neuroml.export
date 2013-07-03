@@ -33,6 +33,7 @@ import org.lemsml.jlemsio.util.FileUtil;*/
 public class SBMLWriter extends XMLWriter {
 
     public static final String PREF_SBML_SCHEMA = "http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd";
+    public static final String LOCAL_SBML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
 
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";

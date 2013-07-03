@@ -1,14 +1,15 @@
 package org.neuroml.export.brian;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.*;
-import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
@@ -23,12 +24,11 @@ import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
-import com.sun.tools.xjc.reader.Util;
 
 public class BrianWriter extends BaseWriter {
 	
@@ -173,7 +173,7 @@ public class BrianWriter extends BaseWriter {
 		if (dt.endsWith("s"))
 			dt = dt.substring(0, dt.length() - 1) + "*second"; // TODO: Fix!!!
 
-		sb.append("\n##########  defaultclock.dt = " + dt + "\n");
+		sb.append("\ndefaultclock.dt = " + dt + "\n");
 		sb.append("run(" + len + ")\n");
 
 		sb.append(toPlot);
@@ -186,27 +186,57 @@ public class BrianWriter extends BaseWriter {
 
 	private String getBrianSIUnits(Dimension dim) {
 		if (dim.getName().equals("voltage"))
-			return "V";
+			return "volt";
 		if (dim.getName().equals("conductance"))
-			return "S";
+			return "siemens";
 		if (dim.getName().equals("time"))
 			return "second";
 		if (dim.getName().equals("per_time"))
 			return "1/second";
-		return null;
+		if (dim.getName().equals("capacitance"))
+			return "farad";
+		if (dim.getName().equals("current"))
+			return "amp";
+		return "NotRecognised__"+dim.getName()+"???";
 	}
 
-	public void getCompEqns(CompInfo compInfo, Component comp, String popName,
+	public void getCompEqns(CompInfo compInfo, Component compOrig, String popName,
 			ArrayList<String> stateVars, String prefix) throws ContentError,
 			ParseError {
-		LemsCollection<Parameter> ps = comp.getComponentType().getDimParams();
+
+        ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
+
+        ComponentType ctFlat;
+        Component cpFlat;
+		try {
+			ctFlat = cf.getFlatType();
+			cpFlat = cf.getFlatComponent();
+
+			lems.addComponentType(ctFlat);
+			lems.addComponent(cpFlat);
+		
+	        String typeOut = XMLSerializer.serialize(ctFlat);
+	        String cptOut = XMLSerializer.serialize(cpFlat);
+	      
+	        E.info("Flat type: \n" + typeOut);
+	        E.info("Flat cpt: \n" + cptOut);
+	        
+			lems.resolve(ctFlat);
+			lems.resolve(cpFlat);
+
+	        
+		} catch (ConnectionError e) {
+			throw new ParseError("Error when flattening component: "+compOrig, e);
+		}
+		
+		LemsCollection<Parameter> ps = ctFlat.getDimParams();
 		/*
 		 * String localPrefix = comp.getID()+"_";
 		 * 
 		 * if (comp.getID()==null) localPrefix = comp.getName()+"_";
 		 */
 
-		for (Constant c : comp.getComponentType().getConstants()) {
+		for (Constant c : ctFlat.getConstants()) {
 			String units = "";
 			if (!c.getDimension().getName().equals(Dimension.NO_DIMENSION))
 				units = " * " + getBrianSIUnits(c.getDimension());
@@ -216,38 +246,42 @@ public class BrianWriter extends BaseWriter {
 		}
 
 		for (Parameter p : ps) {
-			ParamValue pv = comp.getParamValue(p.getName());
-			// ////////////String units =
-			// "*"+getBrianUnits(pv.getDimensionName());
-			String units = "";
+			ParamValue pv = cpFlat.getParamValue(p.getName());
+			String units = " * "+getBrianSIUnits(p.getDimension());
 			if (units.indexOf(Unit.NO_UNIT) >= 0)
 				units = "";
-			compInfo.params.append(prefix + p.getName() + " = "
-					+ (float) pv.getDoubleValue() + units + " \n");
+			String val = pv==null ? "???" : (float)pv.getDoubleValue()+"";
+			compInfo.params.append(prefix + p.getName() + " = " + val + units + " \n");
 		}
 
 		if (ps.size() > 0)
 			compInfo.params.append("\n");
 
-		Dynamics dyn = comp.getComponentType().getDynamics();
+		Dynamics dyn = ctFlat.getDynamics();
 		LemsCollection<TimeDerivative> tds = dyn.getTimeDerivatives();
 
 		for (TimeDerivative td : tds) {
 			String localName = prefix + td.getStateVariable().name;
 			stateVars.add(localName);
+			String units = " "+getBrianSIUnits(td.getStateVariable().getDimension());
+			if (units.indexOf(Unit.NO_UNIT) >= 0)
+				units = " 1";
 			String expr = td.getValueExpression();
 			expr = expr.replace("^", "**");
 			compInfo.eqns.append("    d" + localName + "/dt = " + expr
-					+ " : 1\n");
+					+ " : "+units+"\n");
 		}
 
 		for (StateVariable svar : dyn.getStateVariables()) {
 			String localName = prefix + svar.getName();
+			String units = " "+getBrianSIUnits(svar.getDimension());
+			if (units.indexOf(Unit.NO_UNIT) >= 0)
+				units = " 1";
 			if (!stateVars.contains(localName)) // i.e. no TimeDerivative of
 												// StateVariable
 			{
 				stateVars.add(localName);
-				compInfo.eqns.append("d" + localName + "/dt = 0 : 1\n");
+				compInfo.eqns.append("    d" + localName + "/dt = 0 * 1/second : "+units+"\n");
 			}
 		}
 
@@ -291,10 +325,18 @@ public class BrianWriter extends BaseWriter {
 		for (DerivedVariable edv : expDevVar) {
 			// String expr = ((DVal)edv.getRateexp().getRoot()).toString(prefix,
 			// stateVars);
+			String units = " "+getBrianSIUnits(edv.getDimension());
+			if (units.indexOf(Unit.NO_UNIT) >= 0)
+				units = " 1";
+			
 			String expr = edv.getValueExpression();
+			if (expr.startsWith("0 "))
+				expr = "(0 *"+units+") "+ expr.substring(2);
+			if (expr.equals("0"))
+				expr = expr+" * "+units;
 			expr = expr.replace("^", "**");
 			compInfo.eqns.append("    " + prefix + edv.getName() + " = " + expr
-					+ " : 1\n");
+					+ " : "+units+"\n");
 		}
 
 		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
@@ -313,10 +355,13 @@ public class BrianWriter extends BaseWriter {
 						for (StateAssignment va2 : assigs) {
 							String expr2 = va2.getValueExpression();
 							expr2 = expr2.replace("^", "**");
-							initVal = Utils.replaceInExpression(initVal, va2
-									.getStateVariable().getName(), expr2);
+							initVal = Utils.replaceInExpression(initVal, va2.getStateVariable().getName(), expr2);
 						}
 					}
+				}
+
+				for (DerivedVariable edv : expDevVar) {
+					initVal = Utils.replaceInExpression(initVal, edv.getName(), popName + "." + prefix + edv.getName());
 				}
 				compInfo.initInfo.append(popName + "." + prefix
 						+ va.getStateVariable().getName() + " = " + initVal
@@ -325,13 +370,14 @@ public class BrianWriter extends BaseWriter {
 
 		}
 
-		for (Component child : comp.getAllChildren()) {
+		/*
+		for (Component child : cp.getAllChildren()) {
 			String childPre = child.getID() + "_";
 			if (child.getID() == null)
 				childPre = child.getName() + "_";
 
 			getCompEqns(compInfo, child, popName, stateVars, prefix + childPre);
-		}
+		}*/
 
 		return;
 
