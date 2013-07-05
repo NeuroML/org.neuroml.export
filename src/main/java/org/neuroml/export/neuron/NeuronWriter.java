@@ -130,8 +130,6 @@ public class NeuronWriter extends BaseWriter {
             newExpr = Utils.replaceInExpression(newExpr, origName, newName);
         }
 
-        newExpr = Utils.replaceInExpression(newExpr, NeuroMLElements.TEMPERATURE, NEURON_TEMP);
-
         return newExpr;
     }
 
@@ -518,6 +516,8 @@ public class NeuronWriter extends BaseWriter {
             blockNetReceiveParams = "weight (uS)";
             blockAssigned.append("? Standard Assigned variables with baseSynapse\n");
             blockAssigned.append("v (mV)\n");
+            blockAssigned.append(NEURON_TEMP + " (degC)\n");
+            blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
         }
         else
         {
@@ -537,7 +537,8 @@ public class NeuronWriter extends BaseWriter {
         if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
             blockAssigned.append("? Standard Assigned variables with ionChannel\n");
             blockAssigned.append("v (mV)\n");
-            blockAssigned.append("celsius (degC)\n");
+            blockAssigned.append(NEURON_TEMP + " (degC)\n");
+            blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
 
             String species = comp.getTextParam("species");
             if (species != null) {
@@ -669,6 +670,10 @@ public class NeuronWriter extends BaseWriter {
         //blockDerivative.insert(0, localsLine);
 
         blockInitial.append("rates()\n");
+        
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE) || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
+        	blockInitial.append("\n" + NeuroMLElements.TEMPERATURE + " = " + NEURON_TEMP + " + 273.15\n");
+        }
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, paramMappings);
 
