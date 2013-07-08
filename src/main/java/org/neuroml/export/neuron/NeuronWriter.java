@@ -1044,9 +1044,11 @@ public class NeuronWriter extends BaseWriter {
             Hashtable<String, String> rateNameVsRateExpr = new Hashtable<String, String>();
 
             for (TimeDerivative td : comp.getComponentType().getDynamics().getTimeDerivatives()) {
+            	
                
                 String rateName = RATE_PREFIX + prefix + td.getStateVariable().getName();
                 String rateUnits = getDerivativeUnit(td.getStateVariable().getDimension().getName());
+                
                 blockAssigned.append(rateName + " " + rateUnits + "\n");
 
                 //ratesMethod.append(rateName + " = " + checkForStateVarsAndNested(td.getEvaluable().toString(), comp, paramMappings) + " ? \n");
@@ -1092,9 +1094,11 @@ public class NeuronWriter extends BaseWriter {
 	                            }
 	
 	                            String rateExprPart = rateNameVsRateExpr.get(rateName);
-	                            if (blockAssigned.indexOf("\n"+rateName + "\n")<0) 
+
+	                            String rateUnits = getDerivativeUnit(sa.getStateVariable().getDimension().getName());
+	                            if (blockAssigned.indexOf("\n"+rateName + " " + rateUnits + "\n")<0) 
 	                            {
-	                                blockAssigned.append("\n"+rateName + "\n");
+	                                blockAssigned.append("\n"+rateName + " " + rateUnits + "\n");
 	                            }
 	                            rateExprPart = rateExprPart+" + "+REGIME_PREFIX+regime.getName()+" * (10000000 * ("+sa.getValueExpression()+" - "+NEURON_VOLTAGE+"))";
 	                            
