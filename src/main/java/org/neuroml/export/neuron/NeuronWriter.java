@@ -130,8 +130,6 @@ public class NeuronWriter extends BaseWriter {
             newExpr = Utils.replaceInExpression(newExpr, origName, newName);
         }
 
-        newExpr = Utils.replaceInExpression(newExpr, NeuroMLElements.TEMPERATURE, NEURON_TEMP);
-
         return newExpr;
     }
 
@@ -518,6 +516,8 @@ public class NeuronWriter extends BaseWriter {
             blockNetReceiveParams = "weight (uS)";
             blockAssigned.append("? Standard Assigned variables with baseSynapse\n");
             blockAssigned.append("v (mV)\n");
+            blockAssigned.append(NEURON_TEMP + " (degC)\n");
+            blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
         }
         else
         {
@@ -537,7 +537,8 @@ public class NeuronWriter extends BaseWriter {
         if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
             blockAssigned.append("? Standard Assigned variables with ionChannel\n");
             blockAssigned.append("v (mV)\n");
-            blockAssigned.append("celsius (degC)\n");
+            blockAssigned.append(NEURON_TEMP + " (degC)\n");
+            blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
 
             String species = comp.getTextParam("species");
             if (species != null) {
@@ -669,6 +670,10 @@ public class NeuronWriter extends BaseWriter {
         //blockDerivative.insert(0, localsLine);
 
         blockInitial.append("rates()\n");
+        
+        if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE) || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
+        	blockInitial.append("\n" + NeuroMLElements.TEMPERATURE + " = " + NEURON_TEMP + " + 273.15\n");
+        }
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, paramMappings);
 
@@ -1036,11 +1041,8 @@ public class NeuronWriter extends BaseWriter {
             for (TimeDerivative td : comp.getComponentType().getDynamics().getTimeDerivatives()) {
                
                 String rateName = RATE_PREFIX + prefix + td.getStateVariable().getName();
-                blockAssigned.append(rateName + "\n");
-
-                String rateUnits = getNeuronUnit(td.getStateVariable().getDimension().getName());
-                rateUnits = rateUnits.replaceAll("\\)", "/ms)");
-                rateUnits = "";
+                String rateUnits = getDerivativeUnit(td.getStateVariable().getDimension().getName());
+                blockAssigned.append(rateName + " " + rateUnits + "\n");
 
                 //ratesMethod.append(rateName + " = " + checkForStateVarsAndNested(td.getEvaluable().toString(), comp, paramMappings) + " ? \n");
                 String rateExpr = checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings);
@@ -1051,7 +1053,7 @@ public class NeuronWriter extends BaseWriter {
                     String stateVarToUse = getStateVarName(td.getStateVariable().getName());
                     
 
-                    String line = prefix + stateVarToUse + "' = " + rateName + " " + rateUnits;
+                    String line = prefix + stateVarToUse + "' = " + rateName;
 
                     if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
                         td.getStateVariable().getName().equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
@@ -1072,25 +1074,22 @@ public class NeuronWriter extends BaseWriter {
             for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
                 for (TimeDerivative td: regime.getTimeDerivatives()){
                     String rateName = RATE_PREFIX + prefix + td.getStateVariable().getName();
+                    String rateUnits = getDerivativeUnit(td.getStateVariable().getDimension().getName());
                     if (!rateNameVsRateExpr.containsKey(rateName)) {
                         rateNameVsRateExpr.put(rateName, "0");
                     }
 
                     String rateExprPart = rateNameVsRateExpr.get(rateName);
-                    if (blockAssigned.indexOf("\n"+rateName + "\n")<0) 
+                    if (blockAssigned.indexOf("\n"+rateName + " " + rateUnits + "\n")<0) 
                     {
-                        blockAssigned.append("\n"+rateName + "\n");
+                        blockAssigned.append("\n"+rateName + " " + rateUnits + "\n");
                     }
                     rateExprPart = rateExprPart+" + "+REGIME_PREFIX+regime.getName()+" * ("+checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings)+")";
                     
                     rateNameVsRateExpr.put(rateName, rateExprPart);
                     
-                    String rateUnits = getNeuronUnit(td.getStateVariable().getDimension().getName());
-                    rateUnits = rateUnits.replaceAll("\\)", "/ms)");
-                    rateUnits = "";
-
                     if (!td.getStateVariable().getName().equals(NEURON_VOLTAGE)) {
-                        String line = prefix + getStateVarName(td.getStateVariable().getName()) + "' = " + rateName + " " + rateUnits;
+                        String line = prefix + getStateVarName(td.getStateVariable().getName()) + "' = " + rateName;
 
                         if (blockDerivative.toString().indexOf(line)<0)
                             blockDerivative.append(line+" \n");
@@ -1311,7 +1310,9 @@ public class NeuronWriter extends BaseWriter {
         } else if (dimensionName.equals("charge_per_mole")) {
             return "(coulomb)";
         } else if (dimensionName.equals("temperature")) {
-            return "(degC)";
+            return "(K)";
+        } else if (dimensionName.equals("idealGasConstantDims")) {
+	    return "(millijoule / K)";
         } else if (dimensionName.equals(Dimension.NO_DIMENSION)) {
             return "";
         } else {
@@ -1321,8 +1322,6 @@ public class NeuronWriter extends BaseWriter {
 
     private static float convertToNeuronUnits(float val, String dimensionName) {
         float newVal = val * getNeuronUnitFactor(dimensionName);
-        if (dimensionName.equals(NeuroMLElements.TEMPERATURE_DIM))
-            newVal = newVal - 273.15f;
         return newVal;
     }
 
@@ -1350,8 +1349,19 @@ public class NeuronWriter extends BaseWriter {
             return 1f;
         } else if (dimensionName.equals("charge_per_mole")) {
             return 1f;
+        } else if (dimensionName.equals("idealGasConstantDims")) {
+	    return 1000f;
         }
         return 1f;
+    }
+
+    private static String getDerivativeUnit(String dimensionName) {
+	String unit = getNeuronUnit(dimensionName);
+	if (unit.equals("")) {
+	    return "(/ms)";
+	} else {
+	    return unit.replaceAll("\\)", "/ms)");
+	}
     }
 
     public static void writeModBlock(StringBuilder main, String blockName, String contents) {
