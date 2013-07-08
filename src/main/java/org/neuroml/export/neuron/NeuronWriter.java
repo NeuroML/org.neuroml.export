@@ -613,7 +613,7 @@ public class NeuronWriter extends BaseWriter {
 
                     blockNetReceive.append("if ("+regimeStateName+" == 1 && flag == "+regimeFlag+") { : Setting actions for "+regimeStateName+"\n");
 
-                    if (debug) blockNetReceive.append("\n        printf(\"+++++++ Start "+regimeStateName+" at time: %g, v: %g\\n\", t, v)\n");
+                    if (debug) blockNetReceive.append("\n        printf(\"+++++++ Start condition ("+oc.test+") for "+regimeStateName+" at time: %g, v: %g\\n\", t, v)\n");
 
                     blockNetReceive.append("\n        : State assignments\n");
                     for (StateAssignment sa : oc.getStateAssignments()) {
@@ -639,7 +639,7 @@ public class NeuronWriter extends BaseWriter {
                         }
                     }
 
-                    if (debug) blockNetReceive.append("\n        printf(\"+++++++ End "+regimeStateName+" at time: %g, v: %g\\n\", t, v)\n");
+                    if (debug) blockNetReceive.append("\n        printf(\"+++++++ End condition ("+oc.test+") for "+regimeStateName+" at time: %g, v: %g\\n\", t, v)\n");
                     blockNetReceive.append("}\n");
                     
                 }
@@ -796,7 +796,12 @@ public class NeuronWriter extends BaseWriter {
             blockBreakpoint.insert(0, "rates()\n");
         }
 
+        for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
+        	String reg = "regime_"+regime.getName();
+            if (debug) blockBreakpoint.insert(0, "printf(\"     "+reg+": %g\\n\", "+reg+")\n");
+        }
         if (debug) blockBreakpoint.insert(0, "printf(\"+++++++ Entering BREAKPOINT in "+comp.getName()+" at time: %g, v: %g\\n\", t, v)\n");
+        
         writeModBlock(mod, "BREAKPOINT", blockBreakpoint_regimes.toString()+"\n"+blockBreakpoint.toString());
 
         if (blockNetReceive.length() > 0) {
@@ -1070,7 +1075,33 @@ public class NeuronWriter extends BaseWriter {
 
 
             for (Regime regime: comp.getComponentType().getDynamics().getRegimes()) {
-                for (TimeDerivative td: regime.getTimeDerivatives()){
+            	
+                if (regime.getTimeDerivatives().size()==0) {
+                	// need to hold voltage fixed
+
+                	for (OnEntry oe: regime.getOnEntrys()){
+                        for (StateAssignment sa: oe.getStateAssignments()){
+
+	                        if (sa.getStateVariable().getName().equals(NEURON_VOLTAGE)) {
+	                            String rateName = RATE_PREFIX + prefix + sa.getStateVariable().getName();
+	                        	
+	                            if (!rateNameVsRateExpr.containsKey(rateName)) {
+	                                rateNameVsRateExpr.put(rateName, "0");
+	                            }
+	
+	                            String rateExprPart = rateNameVsRateExpr.get(rateName);
+	                            if (blockAssigned.indexOf("\n"+rateName + "\n")<0) 
+	                            {
+	                                blockAssigned.append("\n"+rateName + "\n");
+	                            }
+	                            rateExprPart = rateExprPart+" + "+REGIME_PREFIX+regime.getName()+" * (10000000 * ("+sa.getValueExpression()+" - "+NEURON_VOLTAGE+"))";
+	                            
+	                            rateNameVsRateExpr.put(rateName, rateExprPart);
+	                        }
+                        }
+                    }
+                }
+            	for (TimeDerivative td: regime.getTimeDerivatives()){
                     String rateName = RATE_PREFIX + prefix + td.getStateVariable().getName();
                     if (!rateNameVsRateExpr.containsKey(rateName)) {
                         rateNameVsRateExpr.put(rateName, "0");

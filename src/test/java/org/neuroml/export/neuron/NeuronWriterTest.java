@@ -38,13 +38,23 @@ public class NeuronWriterTest extends TestCase {
 
     	testComponentToMod(exampleFile, "na");
 	}
-	
+
 	public void testSynapse() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
 		//TODO: Find in jar!!
 		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_SynapseTypes.nml");
 
     	testComponentToMod(exampleFile, "blockStpSynDepFac");
+	}
+	public void testIaFCells() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
+		//TODO: Find in jar!!
+		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_AbstractCells.nml");
+
+    	testComponentToMod(exampleFile, "iafTau");
+    	testComponentToMod(exampleFile, "iafTauRef");
+    	testComponentToMod(exampleFile, "iaf");
+    	testComponentToMod(exampleFile, "iafRef");
 	}
 	
 	public void testComponentToMod(File exampleFile, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException
@@ -70,10 +80,6 @@ public class NeuronWriterTest extends TestCase {
 			ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	MinimalMessageHandler.setVeryMinimal(true);
-
-		//exampleFile = new File("/home/padraig/Dropbox/work/calmod/Calmodulin_LEMS.xml");
-		//exampleFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
-
 
 		NeuronWriter nw = new NeuronWriter(lems);
 
