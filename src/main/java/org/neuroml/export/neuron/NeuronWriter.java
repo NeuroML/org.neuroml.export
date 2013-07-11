@@ -20,7 +20,6 @@ import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.core.sim.LemsProcess;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.Component;
-import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
@@ -719,15 +718,8 @@ public class NeuronWriter extends BaseWriter {
             }
             conditionFlag++;
         }
-
-        for (OnEvent oe : comp.getComponentType().getDynamics().getOnEvents()) {
-            if (oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
-            {
-                for (StateAssignment sa : oe.getStateAssignments()) {
-                    blockNetReceive.append("state_discontinuity("+sa.getStateVariable().getName() + ", "+ checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings)+")\n");
-                }
-            }
-        }
+        
+        parseOnEvent(comp, blockNetReceive, paramMappings);
         
 
         if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
@@ -882,6 +874,25 @@ public class NeuronWriter extends BaseWriter {
             parseOnStart(childComp, prefixNew, blockInitial, blockInitial_v, paramMappings);
         }
 
+    }
+    
+    private static void parseOnEvent(Component comp,
+            StringBuilder blockNetReceive,
+            HashMap<String, HashMap<String, String>> paramMappings) throws ContentError {
+    		// Add appropriate state discontinuities for synaptic events in NET_RECEIVE block. Do this for all child elements as well, in case the spike event is meant to be relayed down from the parent synaptic mechanism to a child plasticityMechanism.  
+    	for (OnEvent oe : comp.getComponentType().getDynamics().getOnEvents()) {
+            if (oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
+            {
+                for (StateAssignment sa : oe.getStateAssignments()) {
+                    blockNetReceive.append("state_discontinuity("+checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "+ checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings)+")\n");
+                }
+            }
+        }
+        for (Component childComp : comp.getAllChildren()) {
+        	if (childComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PLASTICITY_MECHANISM_COMP_TYPE)) {
+        		parseOnEvent(childComp, blockNetReceive, paramMappings);
+        	}
+        }
     }
 
     private static void parseParameters(Component comp,
