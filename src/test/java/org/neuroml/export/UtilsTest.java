@@ -15,7 +15,7 @@ import org.neuroml.model.util.NeuroMLConverter;
 import junit.framework.TestCase;
 
 public class UtilsTest extends TestCase {
-
+/*
 	private void loadNeuroMLExample(String filename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
 		
 		NeuroML2Validator nmlv = new NeuroML2Validator();
@@ -42,6 +42,15 @@ public class UtilsTest extends TestCase {
 			loadNeuroMLExample(filename);
 		}
 		
+	}*/
+	
+	public void testGetMagnitudeInSI() throws ParseError, ContentError {
+		System.out.println("Testing: getMagnitudeInSI()");
+		
+		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
+		
+		assertEquals(50.0, Utils.getMagnitudeInSI("50 Hz"), 1e-6);
 	}
+	
 
 }

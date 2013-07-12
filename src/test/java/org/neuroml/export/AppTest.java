@@ -118,20 +118,11 @@ public class AppTest extends TestCase
     }
 
 
-    public static String getLemsExamplesResourcesDir()
-    {
-        return new String("/NeuroML2CoreTypes");
-    }
-    public static String getNeuroMLExamplesResourcesDir()
-    {
-        return new String("/examples");
-    }
-
     public static Lems readLemsFileFromExamples(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError
     {
     	NeuroML2Validator nmlv = new NeuroML2Validator();
     	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), AppTest.getLemsExamplesResourcesDir()+"/"+exampleFilename);
+		String content = JUtil.getRelativeResource(nmlv.getClass(), Main.getLemsExamplesResourcesDir()+"/"+exampleFilename);
 		
 		return Utils.readLemsNeuroMLFile(content).getLems();
     }
@@ -139,7 +130,7 @@ public class AppTest extends TestCase
     {
     	NeuroML2Validator nmlv = new NeuroML2Validator();
     	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), AppTest.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
+		String content = JUtil.getRelativeResource(nmlv.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
 		
 		return Utils.readLemsNeuroMLFile(content).getLems();
     }

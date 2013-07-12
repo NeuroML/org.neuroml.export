@@ -18,6 +18,7 @@ import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.Main;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.xml.sax.SAXException;
@@ -28,7 +29,7 @@ public class SVGWriterTest extends TestCase {
 
     	String exampleFilename = "NML2_FullCell.nml";    
 
-		String content = JUtil.getRelativeResource(this.getClass(), AppTest.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
+		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
 		NeuroMLConverter nmlc = new NeuroMLConverter();
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
 
