@@ -1,4 +1,4 @@
-package org.neuroml.export.brian;
+package org.neuroml.export.matlab;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,20 +30,21 @@ import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
 
-public class BrianWriter extends BaseWriter {
+public class MatlabWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
 
-	public BrianWriter(Lems lems) {
-		super(lems, "Brian");
+	public MatlabWriter(Lems lems) {
+		super(lems, "MATLAB");
 	}
 
+	String comm = "% ";
+	String commPre = "%{";
+	String commPost = "}%";
+		
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
 
-		String comm = "# ";
-		String commPre = "'''";
-		String commPost = "'''";
 		if (comment.indexOf("\n") < 0)
 			sb.append(comm + comment + "\n");
 		else
@@ -52,13 +53,13 @@ public class BrianWriter extends BaseWriter {
 
 	public String getMainScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
-		addComment(sb, "Brian simulator compliant Python export for:\n\n"
+		StringBuilder typeDefinitions = new StringBuilder();
+		
+		addComment(sb, this.format+" simulator compliant Python export for:\n\n"
 				+ lems.textSummary(false, false));
 		
 		addComment(sb, Utils.getHeaderComment(format));
 
-		sb.append("from brian import *\n\n");
-		sb.append("from math import *\n\n");
 
 		Target target = lems.getTarget();
 
@@ -70,7 +71,11 @@ public class BrianWriter extends BaseWriter {
 		Component tgtNet = lems.getComponent(targetId);
 		addComment(sb, "Adding simulation " + simCpt + " of network: " + tgtNet.summary());
 
+		sb.append("\nfunction integrate"+simCpt.getID()+"()");
+
 		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+		
+		String mainEqns = null;
 
 		if (pops.size()>0) {
 			for (Component pop : pops) {
@@ -87,19 +92,22 @@ public class BrianWriter extends BaseWriter {
 				getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
 	
 				sb.append("\n" + compInfo.params.toString());
+				mainEqns = prefix + "eqns";
 	
-				sb.append(prefix + "eqs=Equations('''\n");
-				sb.append(compInfo.eqns.toString());
-				sb.append("''')\n\n");
+				typeDefinitions.append("function y = "+mainEqns+"\n");
+				typeDefinitions.append(compInfo.eqns.toString());
+				typeDefinitions.append("end\n\n");
 	
 				String flags = "";// ,implicit=True, freeze=True
-				sb.append(pop.getID() + " = NeuronGroup("
+				sb.append("%Brian: "+pop.getID() + " = NeuronGroup("
 						+ pop.getStringValue("size") + ", model=" + prefix + "eqs"
 						+ flags + ")\n");
+				
 	
 				sb.append(compInfo.initInfo.toString());
 			}
 		} else {
+			// NOT CHANGED FROM BRIAN YET
 			String prefix = "";
 			
 			CompInfo compInfo = new CompInfo();
@@ -126,8 +134,8 @@ public class BrianWriter extends BaseWriter {
 
 		for (Component dispComp : simCpt.getAllChildren()) {
 			if (dispComp.getName().indexOf("Display") >= 0) {
-				toTrace.append("\n# Display: " + dispComp + "\n");
-				toPlot.append("\n# Display: " + dispComp + "\nfigure(\""
+				//Trace.append("\n"+comm+" Display: " + dispComp + "\n");
+				toPlot.append("\n"+comm+" Display: " + dispComp + "\nfigure(\""
 						+ dispComp.getTextParam("title") + "\")\n");
 				for (Component lineComp : dispComp.getAllChildren()) {
 					if (lineComp.getName().indexOf("Line") >= 0) {
@@ -150,9 +158,9 @@ public class BrianWriter extends BaseWriter {
 
 						// if (var.equals("v")){
 
-						toTrace.append(trace + " = StateMonitor(" + pop + ",'"
-								+ var + "',record=[" + num + "]) # "
-								+ lineComp.summary() + "\n");
+						//toTrace.append(trace + " = StateMonitor(" + pop + ",'"
+						//		+ var + "',record=[" + num + "])  "
+						//		+ lineComp.summary() + "\n");
 						toPlot.append("plot(" + trace + ".times/second,"
 								+ trace + "[" + num + "], color=\""
 								+ lineComp.getStringValue("color") + "\")\n");
@@ -166,24 +174,30 @@ public class BrianWriter extends BaseWriter {
 		String len = simCpt.getStringValue("length");
 		String dt = simCpt.getStringValue("step");
 
-		len = len.replaceAll("ms", "*msecond");
-		len = len.replaceAll("0s", "0*second"); // TODO: Fix!!!
-		dt = dt.replaceAll("ms", "*msecond");
+		len = len.replaceAll("ms", "*1000");
+		dt = dt.replaceAll("ms", "*1000");
 
-		if (dt.endsWith("s"))
-			dt = dt.substring(0, dt.length() - 1) + "*second"; // TODO: Fix!!!
 
-		sb.append("\ndefaultclock.dt = " + dt + "\n");
-		sb.append("run(" + len + ")\n");
+		//sb.append("\ndefaultclock.dt = " + dt + "\n");
+		//sb.append("run(" + len + ")\n");
+		
+		sb.append("\nt = linspace(0, "+len+", "+len+");\n");
+
+
+		sb.append("intpars = odeset('MaxStep', 1e-2 ,'RelTol', 1e-6)\n");
+
+		sb.append("[t y] = ode45(@(t, X) "+mainEqns+"(t, X, pars), t , x0, intpars)\n\n");
 
 		sb.append(toPlot);
 
-		sb.append("show()\n");
+		sb.append("\nend");
+		sb.append("\n\n"+typeDefinitions.toString());
 
 		System.out.println(sb);
 		return sb.toString();
 	}
 
+	/*
 	private String getBrianSIUnits(Dimension dim) {
 		if (dim.getName().equals("voltage"))
 			return "volt";
@@ -198,7 +212,7 @@ public class BrianWriter extends BaseWriter {
 		if (dim.getName().equals("current"))
 			return "amp";
 		return "NotRecognised__"+dim.getName()+"???";
-	}
+	}*/
 
 	public void getCompEqns(CompInfo compInfo, Component compOrig, String popName,
 			ArrayList<String> stateVars, String prefix) throws ContentError,
@@ -237,21 +251,16 @@ public class BrianWriter extends BaseWriter {
 		 */
 
 		for (Constant c : ctFlat.getConstants()) {
-			String units = "";
-			if (!c.getDimension().getName().equals(Dimension.NO_DIMENSION))
-				units = " * " + getBrianSIUnits(c.getDimension());
 
-			compInfo.params.append(prefix + c.getName() + " = "
-					+ (float) c.getValue() + units + " \n");
+			compInfo.params.append("    "+prefix + c.getName() + " = "
+					+ (float) c.getValue()+ "; \n");
 		}
 
 		for (Parameter p : ps) {
 			ParamValue pv = cpFlat.getParamValue(p.getName());
-			String units = " * "+getBrianSIUnits(p.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
-				units = "";
+
 			String val = pv==null ? "???" : (float)pv.getDoubleValue()+"";
-			compInfo.params.append(prefix + p.getName() + " = " + val + units + " \n");
+			compInfo.params.append("    "+prefix + p.getName() + " = " + val + "; \n");
 		}
 
 		if (ps.size() > 0)
@@ -263,25 +272,22 @@ public class BrianWriter extends BaseWriter {
 		for (TimeDerivative td : tds) {
 			String localName = prefix + td.getStateVariable().name;
 			stateVars.add(localName);
-			String units = " "+getBrianSIUnits(td.getStateVariable().getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
-				units = " 1";
+
 			String expr = td.getValueExpression();
 			expr = expr.replace("^", "**");
-			compInfo.eqns.append("    d" + localName + "/dt = " + expr
-					+ " : "+units+"\n");
+			compInfo.eqns.append("    d" + localName + "_dt = " + expr
+					+ " "+";\n");
 		}
 
 		for (StateVariable svar : dyn.getStateVariables()) {
 			String localName = prefix + svar.getName();
-			String units = " "+getBrianSIUnits(svar.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
-				units = " 1";
+
+
 			if (!stateVars.contains(localName)) // i.e. no TimeDerivative of
 												// StateVariable
 			{
 				stateVars.add(localName);
-				compInfo.eqns.append("    d" + localName + "/dt = 0 * 1/second : "+units+"\n");
+				compInfo.eqns.append("    d" + localName + "_dt = 0 "+";\n");
 			}
 		}
 
@@ -290,18 +296,13 @@ public class BrianWriter extends BaseWriter {
 		for (DerivedVariable edv : expDevVar) {
 			// String expr = ((DVal)edv.getRateexp().getRoot()).toString(prefix,
 			// stateVars);
-			String units = " "+getBrianSIUnits(edv.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
-				units = " 1";
+
 			
 			String expr = edv.getValueExpression();
-			if (expr.startsWith("0 "))
-				expr = "(0 *"+units+") "+ expr.substring(2);
-			if (expr.equals("0"))
-				expr = expr+" * "+units;
+
 			expr = expr.replace("^", "**");
 			compInfo.eqns.append("    " + prefix + edv.getName() + " = " + expr
-					+ " : "+units+"\n");
+					+ " "+";\n");
 		}
 
 		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
@@ -343,17 +344,17 @@ public class BrianWriter extends BaseWriter {
     public static void main(String[] args) throws Exception {
 
     	
-        File exampleFile = new File("/home/padraig/org.neuroml.import/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_LEMS.xml");
+        File exampleFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
 
-        BrianWriter bw = new BrianWriter(lems);
+        MatlabWriter mw = new MatlabWriter(lems);
 
-        String br = bw.getMainScript();
+        String br = mw.getMainScript();
 
 
-        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian.py"));
+        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", ".m"));
         System.out.println("Writing to: "+brFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(br, brFile);
