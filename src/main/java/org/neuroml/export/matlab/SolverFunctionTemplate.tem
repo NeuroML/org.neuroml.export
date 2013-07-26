@@ -1,0 +1,22 @@
+function integrate_${ID}()
+ 
+    %unpacked pars 
+${unpackedParValPairs}
+
+    %pack parameters into array
+    pars = ${parameterArray};
+
+    % initial state, hopefully in terms of literals or pars
+    x0 = ${initCondArray};
+
+    % total duration and time resolution for timeseries
+    t = ${t0}:${dt}:${tf};
+
+
+    % actual integration
+    intpars = odeset('MaxStep', 1e-1 ,'RelTol', 1e-6);
+    [t y] = ode45(@(t, x) ${dynFunctionName}(t, x, pars), t , x0, intpars);
+
+    plot(t, y(:,1), '-o');
+
+end

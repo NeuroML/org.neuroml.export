@@ -1,8 +1,17 @@
 package org.neuroml.export.matlab;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Scanner;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
@@ -11,18 +20,15 @@ import org.lemsml.jlems.core.sim.*;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
-import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
-import org.lemsml.jlems.core.type.Target;
-import org.lemsml.jlems.core.type.Unit;
-import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
-import org.lemsml.jlems.core.type.dynamics.StateVariable;
+import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
@@ -34,108 +40,268 @@ public class MatlabWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
 
-	public MatlabWriter(Lems lems) {
+	public MatlabWriter(Lems lems) throws FileNotFoundException {
 		super(lems, "MATLAB");
+		System.out.println(System.getProperty("user.dir"));
 	}
 
 	String comm = "% ";
 	String commPre = "%{";
-	String commPost = "}%";
+	String commPost = "%}";
+
+	String startIndex = "(";
+	String endIndex = ")";
+	Integer idxBase = 1;
+	String assignmentOp = " = ";
+		
+	String parArrayName = "pars";
+	String stateArrayName = "state";
+	String derivsArrayName = "dstate";
+	String dynFunctionName = "dXdt";
+	String timeScalarName = "t";
+	
+	String[] dynFunctionArgs = new String[]{timeScalarName, stateArrayName, parArrayName};
+	String dynFunctionHeader = "function " + derivsArrayName
+			+ " = " + dynFunctionName + "(" + StringUtils.join(dynFunctionArgs, ',') + ")\n"	;
+	String dynBlockInitializers = derivsArrayName + " = zeros(length("+stateArrayName+"),1)";
+
+	String indenter = "    ";
+	String functionCloser = "\nend\n";
+	String lineCloser = ";\n";
 		
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
-
 		if (comment.indexOf("\n") < 0)
 			sb.append(comm + comment + "\n");
 		else
 			sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
 
+	private String indexed(String s, int i){
+		return s + startIndex + i + endIndex; 
+	}
+
+	private String dynBlockEncloseInBoiler(StringBuilder parsEqs){
+		return dynFunctionHeader + parsEqs + functionCloser;
+	}
+	
+	private String assembleLine(String li){
+		return indenter + li + lineCloser;
+	}
+
+	private String unpackIntoNames(List<String>intoNames, String containerName){
+		ListIterator<String> it = intoNames.listIterator();
+		StringBuilder sb = new StringBuilder();
+
+		while(it.hasNext()){
+			Integer i = it.nextIndex();
+			String into = intoNames.get(i);
+			sb.append(assembleLine(into + assignmentOp + indexed(containerName, i + idxBase)));
+			it.next();
+		}
+		return sb.toString();
+	}
+
+	private String indexedArrayFromList(List<String>fromNames, String containerName){
+		ListIterator<String> it = fromNames.listIterator();
+		StringBuilder sb = new StringBuilder();
+
+		while(it.hasNext()){
+			Integer i = it.nextIndex();
+			String from = fromNames.get(i);
+			sb.append(assembleLine(indexed(containerName, i + idxBase) + assignmentOp + from));
+			it.next();
+		}
+		return sb.toString();
+	}
+
+	public String joinNamesExprs(List<String> names, List<String> exprs){
+		ListIterator<String> it = names.listIterator();
+		StringBuilder sb = new StringBuilder();
+
+		while(it.hasNext()){
+			Integer i = it.nextIndex();
+			sb.append(assembleLine(names.get(i) + assignmentOp + exprs.get(i)));
+			it.next();
+		}
+		return sb.toString();
+	}
+
 	public String getMainScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
-		StringBuilder typeDefinitions = new StringBuilder();
+		StringBuilder dynBlock = new StringBuilder();
 		
-		addComment(sb, this.format+" simulator compliant Python export for:\n\n"
+		addComment(sb, this.format+" simulator compliant export for:\n\n"
 				+ lems.textSummary(false, false));
 		
 		addComment(sb, Utils.getHeaderComment(format));
-
 
 		Target target = lems.getTarget();
 
 		Component simCpt = target.getComponent();
 		E.info("simCpt: " + simCpt);
-
 		String targetId = simCpt.getStringValue("target");
-
 		Component tgtNet = lems.getComponent(targetId);
 		addComment(sb, "Adding simulation " + simCpt + " of network: " + tgtNet.summary());
 
-		sb.append("\nfunction integrate"+simCpt.getID()+"()");
-
 		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 		
-		String mainEqns = null;
-
+		ComponentType ctFlat = null;
+		Component cpFlat = null;
 		if (pops.size()>0) {
 			for (Component pop : pops) {
 				String compRef = pop.getStringValue("component");
 				Component popComp = lems.getComponent(compRef);
 				addComment(sb, "   Population " + pop.getID()
 						+ " contains components of: " + popComp + " ");
-	
-				String prefix = popComp.getID() + "_";
-	
-				CompInfo compInfo = new CompInfo();
-				ArrayList<String> stateVars = new ArrayList<String>();
-	
-				getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
-	
-				sb.append("\n" + compInfo.params.toString());
-				mainEqns = prefix + "eqns";
-	
-				typeDefinitions.append("function y = "+mainEqns+"\n");
-				typeDefinitions.append(compInfo.eqns.toString());
-				typeDefinitions.append("end\n\n");
-	
-				String flags = "";// ,implicit=True, freeze=True
-				sb.append("%Brian: "+pop.getID() + " = NeuronGroup("
-						+ pop.getStringValue("size") + ", model=" + prefix + "eqs"
-						+ flags + ")\n");
-				
-	
-				sb.append(compInfo.initInfo.toString());
+				ctFlat = getFlattenedCompType(popComp);
+				cpFlat = getFlattenedComp(popComp);
+				dynBlock.append(generateDynamicsBlock(cpFlat, ctFlat));
 			}
-		} else {
-			// NOT CHANGED FROM BRIAN YET
-			String prefix = "";
-			
-			CompInfo compInfo = new CompInfo();
-			ArrayList<String> stateVars = new ArrayList<String>();
-
-			getCompEqns(compInfo, tgtNet, DEFAULT_POP, stateVars, "");
-
-			sb.append("\n" + compInfo.params.toString());
-
-			sb.append(prefix + "eqs=Equations('''\n");
-			sb.append(compInfo.eqns.toString());
-			sb.append("''')\n\n");
-
-			String flags = "";// ,implicit=True, freeze=True
-			sb.append(DEFAULT_POP + " = NeuronGroup("
-					+ "1" + ", model=" + prefix + "eqs"
-					+ flags + ")\n");
-
-			sb.append(compInfo.initInfo.toString());
+		}else{
+			throw new ParseError("can't yet handle models with no defined population");
 		}
+		sb.append(generateSolverBlock(simCpt, ctFlat, cpFlat));
+		//sb.append(plotterBlockEncloseInBoiler(generatePlotterBlock(cpFlat, ctFlat)));
+		sb.append("\n\n"+dynBlockEncloseInBoiler(dynBlock).toString());
 
-		StringBuilder toTrace = new StringBuilder();
-		StringBuilder toPlot = new StringBuilder();
+		System.out.println(sb);
+		return sb.toString();
+	}
 
-		for (Component dispComp : simCpt.getAllChildren()) {
+
+	public List<String> getConstantNameList(ComponentType compt){
+		List<String> cNames = new ArrayList<String>();
+		for (Constant c : compt.getConstants()) {
+			cNames.add(c.getName());
+		}
+		return cNames;
+	}
+
+	public List<String> getConstantValueList(ComponentType compt){
+		List<String> cVals = new ArrayList<String>();
+		for (Constant c : compt.getConstants()) {
+			cVals.add(Double.toString(c.getValue()));
+		}
+		return cVals;
+	}
+
+	public List<String> getStateVariableList(ComponentType compt)
+		throws ContentError{
+		List<String> svs = new ArrayList<String>();
+		for (TimeDerivative td : compt.getDynamics().getTimeDerivatives()) {
+			svs.add(td.getStateVariable().name);
+		}
+		return svs;
+	}
+
+	public List<String> getDynamics(ComponentType compt)
+		throws ContentError{
+		List<String> dyn = new ArrayList<String>();
+		for (TimeDerivative td : compt.getDynamics().getTimeDerivatives()) {
+			dyn.add(td.getValueExpression());
+		}
+		return dyn;
+	}
+
+	public List<String> getDerivedVariableNameList(ComponentType compt)
+		throws ContentError{
+		List<String> derV = new ArrayList<String>();
+		for (DerivedVariable d : compt.getDynamics().getDerivedVariables()) {
+			derV.add(d.getName());
+		}
+		return derV;
+	}
+
+	public List<String> getDerivedVariableExprList(ComponentType compt)
+		throws ContentError{
+		List<String> derV = new ArrayList<String>();
+		for (DerivedVariable d : compt.getDynamics().getDerivedVariables()) {
+			derV.add(d.getValueExpression());
+		}
+		return derV;
+	}
+
+	public List<String> getParameterNameList(ComponentType compt, Component comp){
+		List<String> parNames = new ArrayList<String>();
+		for (Parameter p : compt.getDimParams()) {
+			parNames.add(p.getName());
+		}
+		return parNames;
+	}
+
+	public List<String> getParameterValueList(ComponentType compt, Component comp)
+			throws ContentError{
+		ArrayList<String> parVals = new ArrayList<String>();
+		for (Parameter p : compt.getDimParams()) {
+			ParamValue pv = comp.getParamValue(p.getName());
+			parVals.add(String.valueOf(pv.getDoubleValue()));
+		}
+		return parVals;
+	}
+
+	public List<String> getInitialConditions(ComponentType popCompType)
+			throws ContentError{
+
+		ArrayList<String> initVals = new ArrayList<String>();
+
+	    Dynamics dyn = popCompType.getDynamics();
+		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
+		
+		
+        for (OnStart os : initBlocks) {
+                LemsCollection<StateAssignment> assigs = os.getStateAssignments();
+
+                for (StateAssignment va : assigs) {
+                	String initVal = va.getValueExpression();
+                	initVals.add(initVal);
+                }
+
+        }
+		return initVals;
+	}
+
+	
+	public StringBuilder generateSolverBlock(Component simComp, ComponentType popCompType, Component popComp) throws ContentError, ParseError{
+	    StringBuilder sol = new StringBuilder();
+
+	    //TODO: sanitize strings with units properly 
+		String len = simComp.getStringValue("length");
+		String dt = simComp.getStringValue("step");
+		len = len.replaceAll("ms", "*1000").replaceAll("[^\\d.]", "");;
+		dt = dt.replaceAll("ms", "*1000").replaceAll("[^\\d.]", "");;
+
+		String parVal = joinNamesExprs(getParameterNameList(popCompType, popComp), 
+												getParameterValueList(popCompType, popComp)).toString();
+		
+		Map<String, String>valuesMap = new HashMap<String, String>();
+
+		valuesMap.put("ID", simComp.getID());
+		valuesMap.put("unpackedParValPairs", parVal);
+		valuesMap.put("parameterArray", getParameterNameList(popCompType, popComp).toString());
+		valuesMap.put("initCondArray", getInitialConditions(popCompType).toString());
+		valuesMap.put("dynFunctionName", dynFunctionName);
+		valuesMap.put("t0", "0");//TODO: Hardcoded!! is it definable in LEMS?
+		valuesMap.put("dt", dt);
+		valuesMap.put("tf", len);
+
+		InputStream templFile = getClass() .getResourceAsStream("SolverFunctionTemplate.tem");
+		String solverBlockTemplate = new Scanner(templFile).useDelimiter("\\A").next();
+		StrSubstitutor sub = new StrSubstitutor(valuesMap);
+		String header = sub.replace(solverBlockTemplate);
+		sol.append(header);
+
+		return sol;
+	}
+
+	public StringBuilder generatePlotterBlock(Component comp) throws ContentError, ParseError{
+	    StringBuilder plt = new StringBuilder();
+
+	    
+		for (Component dispComp : comp.getAllChildren()) {
 			if (dispComp.getName().indexOf("Display") >= 0) {
 				//Trace.append("\n"+comm+" Display: " + dispComp + "\n");
-				toPlot.append("\n"+comm+" Display: " + dispComp + "\nfigure(\""
+				plt.append("\n"+comm+" Display: " + dispComp + "\nfigure(\""
 						+ dispComp.getTextParam("title") + "\")\n");
 				for (Component lineComp : dispComp.getAllChildren()) {
 					if (lineComp.getName().indexOf("Line") >= 0) {
@@ -143,9 +309,9 @@ public class MatlabWriter extends BaseWriter {
 						String trace = "trace_" + dispComp.getID() + "_"
 								+ lineComp.getID();
 						String ref = lineComp.getStringValue("quantity");
-						
+					
 						String pop, num, var;
-						if (ref.indexOf("/")>0) {
+						if (ref.indexOf("/") > 0) {
 							pop = ref.split("/")[0].split("\\[")[0];
 							num = ref.split("\\[")[1].split("\\]")[0];
 							var = ref.split("/")[1];
@@ -154,14 +320,10 @@ public class MatlabWriter extends BaseWriter {
 							num = "0";
 							var = ref;
 						}
-							
-
-						// if (var.equals("v")){
-
-						//toTrace.append(trace + " = StateMonitor(" + pop + ",'"
-						//		+ var + "',record=[" + num + "])  "
-						//		+ lineComp.summary() + "\n");
-						toPlot.append("plot(" + trace + ".times/second,"
+					//	toTrace.append(trace + " = StateMonitor(" + pop + ",'"
+					//			+ var + "',record=[" + num + "])  "
+					//			+ lineComp.summary() + "\n");
+						plt.append("plot(" + trace + ".times/second,"
 								+ trace + "[" + num + "], color=\""
 								+ lineComp.getStringValue("color") + "\")\n");
 						// }
@@ -169,181 +331,83 @@ public class MatlabWriter extends BaseWriter {
 				}
 			}
 		}
-		sb.append(toTrace);
 
-		String len = simCpt.getStringValue("length");
-		String dt = simCpt.getStringValue("step");
-
-		len = len.replaceAll("ms", "*1000");
-		dt = dt.replaceAll("ms", "*1000");
-
-
-		//sb.append("\ndefaultclock.dt = " + dt + "\n");
-		//sb.append("run(" + len + ")\n");
-		
-		sb.append("\nt = linspace(0, "+len+", "+len+");\n");
-
-
-		sb.append("intpars = odeset('MaxStep', 1e-2 ,'RelTol', 1e-6)\n");
-
-		sb.append("[t y] = ode45(@(t, X) "+mainEqns+"(t, X, pars), t , x0, intpars)\n\n");
-
-		sb.append(toPlot);
-
-		sb.append("\nend");
-		sb.append("\n\n"+typeDefinitions.toString());
-
-		System.out.println(sb);
-		return sb.toString();
+		return plt;
 	}
+	
+	public StringBuilder generateDynamicsBlock(Component cpFlat, ComponentType ctFlat) throws ContentError, ParseError{
 
-	/*
-	private String getBrianSIUnits(Dimension dim) {
-		if (dim.getName().equals("voltage"))
-			return "volt";
-		if (dim.getName().equals("conductance"))
-			return "siemens";
-		if (dim.getName().equals("time"))
-			return "second";
-		if (dim.getName().equals("per_time"))
-			return "1/second";
-		if (dim.getName().equals("capacitance"))
-			return "farad";
-		if (dim.getName().equals("current"))
-			return "amp";
-		return "NotRecognised__"+dim.getName()+"???";
-	}*/
+			    StringBuilder dyn = new StringBuilder();
 
-	public void getCompEqns(CompInfo compInfo, Component compOrig, String popName,
-			ArrayList<String> stateVars, String prefix) throws ContentError,
+				List<String> constNames = getConstantNameList(ctFlat);
+				List<String> constVals = getConstantValueList(ctFlat);
+				List<String> parNames =getParameterNameList(ctFlat, cpFlat);
+				List<String> stateVars = getStateVariableList(ctFlat);
+				List<String> dynamics = getDynamics(ctFlat);
+				List<String> derVarNames = getDerivedVariableNameList(ctFlat);
+				List<String> derVarExprs = getDerivedVariableExprList(ctFlat);
+				
+				//preallocations
+				dyn.append(assembleLine(dynBlockInitializers));
+
+				//constants
+				dyn.append(joinNamesExprs(constNames, constVals));
+				
+				//unpack parameters
+				dyn.append(unpackIntoNames(parNames, parArrayName));
+
+				//unpack current state 
+				dyn.append(unpackIntoNames(stateVars, stateArrayName));
+
+				//unpack derived variables
+				dyn.append(joinNamesExprs(derVarNames, derVarExprs));
+
+				//unpack equations
+				dyn.append(indexedArrayFromList(dynamics, derivsArrayName));
+
+		return dyn;
+	}
+	
+
+	public ComponentType getFlattenedCompType(Component compOrig) throws ContentError,
 			ParseError {
 
+		ComponentType ctFlat = new ComponentType();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
 
-        ComponentType ctFlat;
-        Component cpFlat;
 		try {
 			ctFlat = cf.getFlatType();
-			cpFlat = cf.getFlatComponent();
-
 			lems.addComponentType(ctFlat);
-			lems.addComponent(cpFlat);
-		
 	        String typeOut = XMLSerializer.serialize(ctFlat);
-	        String cptOut = XMLSerializer.serialize(cpFlat);
-	      
 	        E.info("Flat type: \n" + typeOut);
-	        E.info("Flat cpt: \n" + cptOut);
-	        
 			lems.resolve(ctFlat);
-			lems.resolve(cpFlat);
-
-	        
 		} catch (ConnectionError e) {
 			throw new ParseError("Error when flattening component: "+compOrig, e);
 		}
-		
-		LemsCollection<Parameter> ps = ctFlat.getDimParams();
-		/*
-		 * String localPrefix = comp.getID()+"_";
-		 * 
-		 * if (comp.getID()==null) localPrefix = comp.getName()+"_";
-		 */
+		return ctFlat;
+	}	
 
-		for (Constant c : ctFlat.getConstants()) {
+	public Component getFlattenedComp(Component compOrig) throws ContentError,
+			ParseError {
 
-			compInfo.params.append("    "+prefix + c.getName() + " = "
-					+ (float) c.getValue()+ "; \n");
+		Component comp = new Component();
+        ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
+
+		try {
+			comp = cf.getFlatComponent();
+			lems.addComponent(comp);
+	        String compOut = XMLSerializer.serialize(comp);
+	        E.info("Flat component: \n" + compOut);
+			lems.resolve(comp);
+		} catch (ConnectionError e) {
+			throw new ParseError("Error when flattening component: "+compOrig, e);
 		}
+		return comp;
+	}	
+	
 
-		for (Parameter p : ps) {
-			ParamValue pv = cpFlat.getParamValue(p.getName());
+	public static void main(String[] args) throws Exception {
 
-			String val = pv==null ? "???" : (float)pv.getDoubleValue()+"";
-			compInfo.params.append("    "+prefix + p.getName() + " = " + val + "; \n");
-		}
-
-		if (ps.size() > 0)
-			compInfo.params.append("\n");
-
-		Dynamics dyn = ctFlat.getDynamics();
-		LemsCollection<TimeDerivative> tds = dyn.getTimeDerivatives();
-
-		for (TimeDerivative td : tds) {
-			String localName = prefix + td.getStateVariable().name;
-			stateVars.add(localName);
-
-			String expr = td.getValueExpression();
-			expr = expr.replace("^", "**");
-			compInfo.eqns.append("    d" + localName + "_dt = " + expr
-					+ " "+";\n");
-		}
-
-		for (StateVariable svar : dyn.getStateVariables()) {
-			String localName = prefix + svar.getName();
-
-
-			if (!stateVars.contains(localName)) // i.e. no TimeDerivative of
-												// StateVariable
-			{
-				stateVars.add(localName);
-				compInfo.eqns.append("    d" + localName + "_dt = 0 "+";\n");
-			}
-		}
-
-
-		LemsCollection<DerivedVariable> expDevVar = dyn.getDerivedVariables();
-		for (DerivedVariable edv : expDevVar) {
-			// String expr = ((DVal)edv.getRateexp().getRoot()).toString(prefix,
-			// stateVars);
-
-			
-			String expr = edv.getValueExpression();
-
-			expr = expr.replace("^", "**");
-			compInfo.eqns.append("    " + prefix + edv.getName() + " = " + expr
-					+ " "+";\n");
-		}
-
-		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
-
-		for (OnStart os : initBlocks) {
-			LemsCollection<StateAssignment> assigs = os.getStateAssignments();
-
-			for (StateAssignment va : assigs) {
-				String initVal = va.getValueExpression();
-				for (DerivedVariable edv : expDevVar) {
-					if (edv.getName().equals(initVal)) {
-						String expr = edv.getValueExpression();
-						expr = expr.replace("^", "**");
-						initVal = expr;
-
-						for (StateAssignment va2 : assigs) {
-							String expr2 = va2.getValueExpression();
-							expr2 = expr2.replace("^", "**");
-							initVal = Utils.replaceInExpression(initVal, va2.getStateVariable().getName(), expr2);
-						}
-					}
-				}
-
-				for (DerivedVariable edv : expDevVar) {
-					initVal = Utils.replaceInExpression(initVal, edv.getName(), popName + "." + prefix + edv.getName());
-				}
-				compInfo.initInfo.append(popName + "." + prefix
-						+ va.getStateVariable().getName() + " = " + initVal
-						+ "\n");
-			}
-
-		}
-
-
-		return;
-
-	}
-
-    public static void main(String[] args) throws Exception {
-
-    	
         File exampleFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
@@ -353,13 +417,12 @@ public class MatlabWriter extends BaseWriter {
 
         String br = mw.getMainScript();
 
-
         File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", ".m"));
-        System.out.println("Writing to: "+brFile.getAbsolutePath());
+        System.out.println("Writing to: " + brFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(br, brFile);
-
-      
 	}
 
+
+    
 }
