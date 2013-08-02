@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
@@ -264,7 +263,10 @@ public class MatlabWriter extends BaseWriter {
 	
 	public StringBuilder generateSolverBlock(Component simComp, ComponentType popCompType, Component popComp) throws ContentError, ParseError{
 	    StringBuilder sol = new StringBuilder();
+	    
+	    sol.append("All commented out!!!");
 
+/*
 	    //TODO: sanitize strings with units properly 
 		String len = simComp.getStringValue("length");
 		String dt = simComp.getStringValue("step");
@@ -289,7 +291,7 @@ public class MatlabWriter extends BaseWriter {
 		String solverBlockTemplate = new Scanner(templFile).useDelimiter("\\A").next();
 		StrSubstitutor sub = new StrSubstitutor(valuesMap);
 		String header = sub.replace(solverBlockTemplate);
-		sol.append(header);
+		sol.append(header);*/
 
 		return sol;
 	}

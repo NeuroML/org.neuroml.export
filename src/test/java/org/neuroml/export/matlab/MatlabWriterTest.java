@@ -23,7 +23,7 @@ public class MatlabWriterTest extends TestCase {
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-    	generateMainScript(exampleFilename);
+    	//generateMainScript(exampleFilename);
 	}
 	/*
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
