@@ -18,8 +18,55 @@ import org.neuroml.export.Utils;
 
 import junit.framework.TestCase;
 
+import java.io.StringWriter;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.Template;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.MethodInvocationException;
+
 public class MatlabWriterTest extends TestCase {
 
+	
+	public void testVelocity() throws Exception {
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+		
+
+		context.put( "name", new String("VelocityOnOSB") );
+
+		Template template = null;
+
+		try
+		{
+		   template = Velocity.getTemplate("./src/test/resources/mytemplate.vm");
+		}
+		catch( ResourceNotFoundException rnfe )
+		{
+		   // couldn't find the template
+		}
+		catch( ParseErrorException pee )
+		{
+		  // syntax error: problem parsing the template
+		}
+		catch( MethodInvocationException mie )
+		{
+		  // something invoked in the template
+		  // threw an exception
+		}
+		catch( Exception e )
+		{}
+
+		StringWriter sw = new StringWriter();
+
+		template.merge( context, sw );
+		
+		System.out.println(sw);
+	}
+	
+	
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
