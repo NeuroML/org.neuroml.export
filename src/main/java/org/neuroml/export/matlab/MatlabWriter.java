@@ -3,6 +3,7 @@ package org.neuroml.export.matlab;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -11,6 +12,14 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.Template;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.MethodInvocationException;
+
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
@@ -409,20 +418,42 @@ public class MatlabWriter extends BaseWriter {
 	
 
 	public static void main(String[] args) throws Exception {
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+		
 
-        File exampleFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
-        
-		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
-        System.out.println("Loaded: "+exampleFile.getAbsolutePath());
+		context.put( "name", new String("VelocityOnOSB") );
 
-        MatlabWriter mw = new MatlabWriter(lems);
+		Template template = null;
 
-        String br = mw.getMainScript();
+		try
+		{
+		   template = Velocity.getTemplate("./src/test/resources/mytemplate.vm");
+		}
+		catch( ResourceNotFoundException rnfe )
+		{
+		   // couldn't find the template
+		}
+		catch( ParseErrorException pee )
+		{
+		  // syntax error: problem parsing the template
+		}
+		catch( MethodInvocationException mie )
+		{
+		  // something invoked in the template
+		  // threw an exception
+		}
+		catch( Exception e )
+		{}
 
-        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", ".m"));
-        System.out.println("Writing to: " + brFile.getAbsolutePath());
-        
-        FileUtil.writeStringToFile(br, brFile);
+		StringWriter sw = new StringWriter();
+
+		template.merge( context, sw );
+		
+		System.out.println(sw);
+
 	}
 
 
