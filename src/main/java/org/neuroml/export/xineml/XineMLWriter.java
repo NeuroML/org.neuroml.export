@@ -7,15 +7,23 @@ package org.neuroml.export.xineml;
 import java.util.ArrayList;
 
 import org.lemsml.jlems.core.expression.Parser;
+import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
-import org.lemsml.jlems.core.type.FinalParam;
+import org.lemsml.jlems.core.type.EventPort;
+import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
+import org.lemsml.jlems.core.type.dynamics.EventOut;
+import org.lemsml.jlems.core.type.dynamics.OnCondition;
+import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
+import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 
@@ -25,8 +33,8 @@ public class XineMLWriter extends XMLWriter {
 	
 	Variant variant = null;
 
-    public static final String SCHEMA_9ML = "https://raw.github.com/apdavison/nineml/master/catalog/sample_xml_files/NineML_v0.2.xsd";
-    public static final String NAMESPACE_9ML = "http://nineml.org/9ML/0.2";
+    public static final String SCHEMA_9ML = "https://raw.github.com/OpenSourceBrain/NineMLShowcase/master/Schemas/NineML/NineML_v0.3.xsd";
+    public static final String NAMESPACE_9ML = "http://nineml.org/9ML/0.3";
 
     public static final String SCHEMA_SPINEML = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLComponentLayer.xsd";
     public static final String NAMESPACE_SPINEML = "http://www.shef.ac.uk/SpineMLComponentLayer";
@@ -62,7 +70,6 @@ public class XineMLWriter extends XMLWriter {
 	        case NineML:
 	        	namespace = NAMESPACE_9ML;
 	        	schema = SCHEMA_9ML;
-	        	extraAttr = "xmlns:comodl=CoMoDL";
 	        	defaultDimension="none";
 	        	break;
 	        case SpineML:
@@ -97,7 +104,7 @@ public class XineMLWriter extends XMLWriter {
         ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
 
         String netId = tgtNet.getID();
-        startElement(userLayer, "network", "id=" + netId, "name=" + netId);
+        ///startElement(userLayer, "network", "id=" + netId, "name=" + netId);
         userLayer.append("\n");
 
         //indent="";
@@ -107,7 +114,7 @@ public class XineMLWriter extends XMLWriter {
         int initAssNum = 0;
         int onCondNum = 0;
 
-        startElement(userLayer, "groups?");
+        ///startElement(userLayer, "groups?");
 
         for (Component pop : pops) {
             String compRef = pop.getStringValue("component");
@@ -126,100 +133,216 @@ public class XineMLWriter extends XMLWriter {
 
         }
 
-        endElement(userLayer, "groups?");
+        ///endElement(userLayer, "groups?");
 
         userLayer.append("\n");
 
+        ArrayList<String> compTypesAdded = new ArrayList<String>();
 
         for (Component pop : pops) {
             String compRef = pop.getStringValue("component");
-            Component popComp = lems.getComponent(compRef);
+            Component popCompFull = lems.getComponent(compRef);
+            ComponentType ctFull = popCompFull.getComponentType();
             
-            ComponentType ct = popComp.getComponentType();
-
-            String ccAttr = "";
-            String dynRedInfo = "";
-            
-        	String defaultRegime = "defaultRegime";
-        	
-            switch (variant) {
-	        case NineML:
-	        	ccAttr = "xmlns=CoMoDL";
-	        	break;
-	        case SpineML:
-	        	dynRedInfo = "initial_regime="+defaultRegime;
-	        	break;
-            }
-
-            StringBuilder params = new StringBuilder();
-            StringBuilder dynamics = new StringBuilder();
-            StringBuilder stateVars = new StringBuilder();
-            StringBuilder regimes = new StringBuilder();
-            
-            startElement(abstLayer, "ComponentClass", "name="+ct.getName(), ccAttr);
-
-
-            for (FinalParam param : ct.getFinalParams()) {
-                startEndElement(params,
-                        "Parameter",
-                        "name=" + param.getName(),
-                        "dimension="+defaultDimension);
-            }
-            for(Constant c: ct.getConstants())
-            {
-	            startEndElement(params,
-		            "Parameter",
-		            "name=" + c.getName(),
-		            "dimension="+defaultDimension);
-
-            }
-
-        	
-            Dynamics dyn = ct.getDynamics();
-            
-            if (dyn.getRegimes().size()==0) {
-                startElement(dynamics, "Dynamics", dynRedInfo);
-
-                startElement(regimes, "Regime", "name="+defaultRegime);
-                endElement(regimes, "Regime");
-                
-            } else {
-                startElement(dynamics, "Dynamics-MultiRegimesNotYetImpl", dynRedInfo);
-            }
-         
-            
-            for (StateVariable sv : dyn.getStateVariables()) {
-                startEndElement(stateVars,
-                        "StateVariable",
-                        "name=" + sv.getName(),
-                        "dimension="+defaultDimension);
-
-            }
-            
-            
-
-            switch (variant) {
+            if (!compTypesAdded.contains(ctFull.getName())) {
+            	
+            	compTypesAdded.add(ctFull.getName());
+	
+	            ComponentType ctFlat;
+	            Component cpFlat;
+	            
+	            boolean flatten = false;
+	            
+	            if (flatten) {
+		            try {
+			            ComponentFlattener cf = new ComponentFlattener(lems, popCompFull);
+		    			ctFlat = cf.getFlatType();
+		    			cpFlat = cf.getFlatComponent();
+	
+		    			lems.addComponentType(ctFlat);
+		    			lems.addComponent(cpFlat);
+		    		/*
+		    	        String typeOut = XMLSerializer.serialize(ctFlat);
+		    	        String cptOut = XMLSerializer.serialize(cpFlat);
+		    	        
+		    	        E.info("Flat type: \n" + typeOut);
+		    	        E.info("Flat cpt: \n" + cptOut);
+		    	        
+		    			lems.resolve(ctFlat);
+		    			lems.resolve(cpFlat);*/
+	
+		    	        
+		    		} catch (Exception e) {
+		    			throw new ContentError("Error when flattening component: "+popCompFull, e);
+		    		}
+	            } else {
+	            	ctFlat = ctFull;
+	            	cpFlat = popCompFull;
+	            }
+	
+	            String dynInitRegInfo = "";
+	            String ocTargetRegInfo = "";
+	            
+	        	String defaultRegime = "defaultRegime";
+	        	
+	            switch (variant) {
 		        case NineML:
-		        	abstLayer.append(params);
-		        	dynamics.append(stateVars);
-		        	dynamics.append(regimes);
-		            endElement(dynamics, "Dynamics");
-		        	abstLayer.append(dynamics);
-
 		        	break;
 		        case SpineML:
-		        	dynamics.append(regimes);
-		        	dynamics.append(stateVars);
-		            endElement(dynamics, "Dynamics");
-		        	abstLayer.append(dynamics);
-		            
-		        	abstLayer.append(params);
+		        	dynInitRegInfo = "initial_regime="+defaultRegime;
+		        	ocTargetRegInfo = "target_regime="+defaultRegime;
 		        	break;
-            }
-            
-            
+	            }
 
-            endElement(abstLayer, "ComponentClass");
+	            StringBuilder params = new StringBuilder();
+	            StringBuilder ports = new StringBuilder();
+	            StringBuilder dynamics = new StringBuilder();
+	            StringBuilder stateVars = new StringBuilder();
+	            StringBuilder regimes = new StringBuilder();
+	            
+	            startElement(abstLayer, "ComponentClass", "name="+ctFlat.getName());
+	
+
+	            for (Parameter param : ctFlat.getParameters()) {
+	                startEndElement(params,
+	                        "Parameter",
+	                        "name=" + param.getName(),
+	                        "dimension="+defaultDimension);
+	            }
+	            for (Constant constant: ctFlat.getConstants()) {
+	                startEndElement(params,
+	                        "Parameter",
+	                        "name=" + constant.getName(),
+	                        "dimension="+defaultDimension);
+	            }
+	            for (Exposure exp: ctFlat.getExposures()){
+	            	switch (variant) {
+			        case NineML:
+		                startEndElement(ports,
+		                        "AnalogPort",
+		                        "name=" + exp.getName(),
+		                        "mode=send",
+		                        "dimension="+defaultDimension);
+			        	break;
+			        case SpineML:
+		                startEndElement(ports,
+		                        "AnalogSendPort",
+		                        "name=" + exp.getName());
+			        	break;
+		            }
+	            }
+	            for (EventPort port: ctFlat.getEventPorts()) {
+	            	
+	            	switch (variant) {
+			        case NineML:
+		                startEndElement(ports,
+		                        "EventPort",
+		                        "name=" + port.getName(),
+		                        "mode="+(port.direction.equals("out") ? "send":"receive"));
+			        	break;
+			        case SpineML:
+		                startEndElement(ports,
+		                		(port.direction.equals("out") ? "EventSendPort":"EventReceivePort"),
+		                        "name=" + port.getName());
+			        	break;
+		            }
+	            }
+	
+	        	
+	            Dynamics dyn = ctFlat.getDynamics();
+	            
+	            if (dyn.getRegimes().size()==0) {
+	                startElement(dynamics, "Dynamics", dynInitRegInfo);
+	
+	                startElement(regimes, "Regime", "name="+defaultRegime);
+
+	                for (TimeDerivative td: dyn.getTimeDerivatives())
+	                {
+	                    startElement(regimes, "TimeDerivative", "variable="+td.getVariable());
+	                    startEndTextElement(regimes, "MathInline", td.getValueExpression());
+	                    endElement(regimes, "TimeDerivative");
+	                }
+	                for (DerivedVariable dv: dyn.getDerivedVariables())
+	                {
+	                	if (dv.getReduce()==null||dv.getReduce().equals("null")){
+		                    startElement(regimes, "Alias", "name="+dv.getName());
+		                    startEndTextElement(regimes, "MathInline", dv.getValueExpression());
+		                    endElement(regimes, "Alias");
+	                	}
+	                }
+	                
+	                for (OnCondition oc: dyn.getOnConditions()) {
+	
+	                    startElement(regimes, "OnCondition", ocTargetRegInfo);
+
+	    	            StringBuilder trigger = new StringBuilder();
+	    	            
+	                    startElement(trigger, "Trigger");
+	                    if (oc.test!=null) {
+	                    	startEndTextElement(trigger, "MathInline", oc.test);
+	                    }
+	                    endElement(trigger, "Trigger");
+	                    if (variant.equals(Variant.NineML))
+	                    	regimes.append(trigger);
+	                    
+	                    for (StateAssignment sa: oc.getStateAssignments()) {
+
+		                    startElement(regimes, "StateAssignment", "variable="+sa.getVariable());
+		                    
+		                    startEndTextElement(regimes, "MathInline", sa.getValueExpression());
+		                    
+		                    endElement(regimes, "StateAssignment");
+	                    }
+	                    for (EventOut eo: oc.getEventOuts()) {
+	                    	startEndElement(regimes, "EventOut", "port="+eo.port);
+	                    }
+
+	                    if (variant.equals(Variant.SpineML))
+	                    	regimes.append(trigger);
+	                    
+	                    endElement(regimes, "OnCondition");
+	                }
+	                endElement(regimes, "Regime");
+	                
+	            } else {
+	                startElement(dynamics, "Dynamics-MultiRegimesNotYetImpl", dynInitRegInfo);
+	            }
+	         
+	            
+	            for (StateVariable sv : dyn.getStateVariables()) {
+	                startEndElement(stateVars,
+	                        "StateVariable",
+	                        "name=" + sv.getName(),
+	                        "dimension="+defaultDimension);
+	
+	            }
+	            
+	            
+	
+	            switch (variant) {
+			        case NineML:
+			        	abstLayer.append(params);
+			        	abstLayer.append(ports);
+			        	dynamics.append(stateVars);
+			        	dynamics.append(regimes);
+			            endElement(dynamics, "Dynamics");
+			        	abstLayer.append(dynamics);
+	
+			        	break;
+			        case SpineML:
+			        	dynamics.append(regimes);
+			        	dynamics.append(stateVars);
+			            endElement(dynamics, "Dynamics");
+			        	abstLayer.append(dynamics);
+			        	abstLayer.append(ports);
+			        	abstLayer.append(params);
+			        	break;
+	            }
+	            
+	            
+	
+	            endElement(abstLayer, "ComponentClass");
+            }
         }
 
         

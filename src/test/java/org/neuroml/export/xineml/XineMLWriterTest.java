@@ -12,9 +12,7 @@ import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Utils;
 import org.neuroml.export.xineml.XineMLWriter.Variant;
 
 import junit.framework.TestCase;
@@ -26,6 +24,12 @@ public class XineMLWriterTest extends TestCase {
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
+	public void testIzh() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
+    	String exampleFilename = "LEMS_NML2_Ex2_Izh.xml";
+    	generateMainScript(exampleFilename);
+	}
+	
 	/*
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
@@ -53,6 +57,9 @@ public class XineMLWriterTest extends TestCase {
         FileUtil.writeStringToFile(nr, nrFile);
 
         assertTrue(nrFile.exists());
+
+        // Refresh..
+    	lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
         XineMLWriter sw = new XineMLWriter(lems, Variant.SpineML);
 
