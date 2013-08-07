@@ -69,7 +69,7 @@ public abstract class XMLWriter extends BaseWriter {
 		main.append(getIndent());
 		String[] aa = a1.split("=");
 		String end = endToo?"/":"";
-		main.append("<"+name+" "+aa[0].trim()+"=\""+aa[1].trim()+"\""+end+">\n");
+		main.append("<"+name+" "+processAttr(a1)+end+">\n");
 		if (!endToo) indentCount++;
 	}
 
@@ -88,11 +88,17 @@ public abstract class XMLWriter extends BaseWriter {
 	protected void startElement(StringBuilder main, String name, String a1, String a2, boolean endToo){
 
 		main.append(getIndent());
-		String[] aa = a1.split("=");
-		String[] aaa = a2.split("=");
 		String end = endToo?"/":"";
-		main.append("<"+name+" "+aa[0].trim()+"=\""+aa[1].trim()+"\" "+aaa[0].trim()+"=\""+aaa[1].trim()+"\""+end+">\n");
+		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+end+">\n");
 		if (!endToo) indentCount++;
+	}
+	
+	protected String processAttr(String attr) {
+		if (attr.length()==0)
+			return "";
+		String[] aa = attr.split("=");
+		return aa[0].trim()+"=\""+aa[1].trim()+"\"";
+		
 	}
 
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3){
@@ -104,11 +110,8 @@ public abstract class XMLWriter extends BaseWriter {
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, boolean endToo){
 
 		main.append(getIndent());
-		String[] aa = a1.split("=");
-		String[] aaa = a2.split("=");
-		String[] aaaa = a3.split("=");
 		String end = endToo?"/":"";
-		main.append("<"+name+" "+aa[0].trim()+"=\""+aa[1].trim()+"\" "+aaa[0].trim()+"=\""+aaa[1].trim()+"\" "+aaaa[0].trim()+"=\""+aaaa[1].trim()+"\""+end+">\n");
+		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+end+">\n");
 		if (!endToo) indentCount++;
 	}
 
@@ -121,12 +124,8 @@ public abstract class XMLWriter extends BaseWriter {
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, boolean endToo){
 
 		main.append(getIndent());
-		String[] aa = a1.split("=");
-		String[] aaa = a2.split("=");
-		String[] aaaa = a3.split("=");
-		String[] aaaaa = a4.split("=");
 		String end = endToo?"/":"";
-		main.append("<"+name+" "+aa[0].trim()+"=\""+aa[1].trim()+"\" "+aaa[0].trim()+"=\""+aaa[1].trim()+"\" "+aaaa[0].trim()+"=\""+aaaa[1].trim()+"\" "+aaaaa[0].trim()+"=\""+aaaaa[1].trim()+"\""+end+">\n");
+		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+end+">\n");
 		if (!endToo) indentCount++;
 	}
 
@@ -145,7 +144,7 @@ public abstract class XMLWriter extends BaseWriter {
 		String[] aaaaa = a4.split("=");
 		String[] aaaaaa = a5.split("=");
 		String end = endToo?"/":"";
-		main.append("<"+name+" "+aa[0].trim()+"=\""+aa[1].trim()+"\" "+aaa[0].trim()+"=\""+aaa[1].trim()+"\" "+aaaa[0].trim()+"=\""+aaaa[1].trim()+"\" "+aaaaa[0].trim()+"=\""+aaaaa[1].trim()+"\" "+aaaaaa[0].trim()+"=\""+aaaaaa[1].trim()+"\""+end+">\n");
+		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+" "+processAttr(a5)+end+">\n");
 		if (!endToo) indentCount++;
 	}
 
@@ -162,8 +161,10 @@ public abstract class XMLWriter extends BaseWriter {
 		main.append("<"+name);
 		for(String attr:attrs)
 		{
-			String[] aa = attr.split("=");
-			main.append(" "+aa[0].trim()+"=\""+aa[1].trim()+"\"");
+			if (attr.length()>0) {
+				String[] aa = attr.split("=");
+				main.append(" "+aa[0].trim()+"=\""+aa[1].trim()+"\"");
+			}
 		}
 		String end = endToo?"/":"";
 		main.append(end+">\n");
