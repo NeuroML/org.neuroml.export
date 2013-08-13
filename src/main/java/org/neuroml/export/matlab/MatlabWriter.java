@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -12,14 +13,9 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import org.apache.commons.lang.StringUtils;
-
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.Template;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.MethodInvocationException;
-
+import org.apache.velocity.*;
+import org.apache.velocity.app.*;
+import org.apache.velocity.exception.*;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
@@ -42,6 +38,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 public class MatlabWriter extends BaseWriter {
@@ -418,19 +415,24 @@ public class MatlabWriter extends BaseWriter {
 	
 
 	public static void main(String[] args) throws Exception {
-		
 		Velocity.init();
-		
 		VelocityContext context = new VelocityContext();
 		
+	    String somdata = new Scanner(new File("./src/test/resources/izhikevich.json")).useDelimiter("\\A").next();
+	    somdata = somdata.replaceAll("\\*\\*", ".^");
 
-		context.put( "name", new String("VelocityOnOSB") );
+		ObjectMapper mapper = new ObjectMapper(); 
+		Map<String,Object> model = mapper.readValue(somdata, Map.class);
+		
+		for(Map.Entry<String, Object> entry : model.entrySet()){
+			context.put(entry.getKey(), entry.getValue());
+		}
 
 		Template template = null;
 
 		try
 		{
-		   template = Velocity.getTemplate("./src/test/resources/mytemplate.vm");
+		   template = Velocity.getTemplate("./src/test/resources/matlab_ode.vm");
 		}
 		catch( ResourceNotFoundException rnfe )
 		{
@@ -450,7 +452,7 @@ public class MatlabWriter extends BaseWriter {
 
 		StringWriter sw = new StringWriter();
 
-		template.merge( context, sw );
+		template.merge(context, sw );
 		
 		System.out.println(sw);
 
