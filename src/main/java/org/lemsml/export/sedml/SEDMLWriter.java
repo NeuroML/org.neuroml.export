@@ -1,13 +1,14 @@
-package org.neuroml.export.sedml;
+package org.lemsml.export.sedml;
 
 
-import org.neuroml.export.base.XMLWriter;
 
+
+import org.lemsml.export.base.XMLWriter;
 import org.lemsml.jlems.core.logging.E;
-import org.lemsml.jlems.core.type.Component;
-import org.lemsml.jlems.core.type.Target;
-import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.Target;
 
 public class SEDMLWriter extends XMLWriter {
 
