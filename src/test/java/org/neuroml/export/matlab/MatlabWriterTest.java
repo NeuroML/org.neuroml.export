@@ -3,6 +3,7 @@ package org.neuroml.export.matlab;
 import java.io.File;
 import java.io.IOException;
 
+import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -86,7 +87,7 @@ public class MatlabWriterTest extends TestCase {
         
         System.out.println("Loaded: "+exampleFilename);
 
-        MatlabWriter mw = new MatlabWriter(lems);
+        SOMWriter mw = new SOMWriter(lems);
 
         String mat = mw.getMainScript();
 
