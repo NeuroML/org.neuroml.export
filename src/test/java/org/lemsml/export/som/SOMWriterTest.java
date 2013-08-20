@@ -58,6 +58,9 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.AppTest;
+import org.neuroml.export.brian.BrianWriter;
 
 /**
  * @author matteocantarelli
@@ -66,17 +69,50 @@ import org.lemsml.jlems.core.xml.XMLException;
 public class SOMWriterTest extends TestCase
 {
 
-	public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	/*public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
 	{
-		//generateMainScript("./src/test/resources/izhikevich.xml","./src/test/resources/izhikevich.json");
-	}
-	
-	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex2_Izh.xml",
+				         "./src/test/resources/tmp/izhikevich.json");
+	}*/
+
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
 	{
-		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml","./src/test/resources/LEMS_NML2_Ex9_FN.json");
+		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml",
+				           "./src/test/resources/tmp/LEMS_NML2_Ex9_FN.json");
 	}
 
+	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	{
+		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex1_HH.xml",
+				           "./src/test/resources/tmp/LEMS_NML2_Ex1_HH.json");
+	}
+	
+
 	public void generateMainScript(String lemsFilename, String somFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+		String exampleFilename = lemsFilename.substring(lemsFilename.lastIndexOf('/')+1);
+        System.out.println("Loading: "+exampleFilename);
+        
+    	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+
+        SOMWriter sw = new SOMWriter(lems);
+
+        String som = sw.getMainScript();
+
+
+        File somFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".json"));
+        System.out.println(som);
+        System.out.println("Writing to: "+somFile.getAbsolutePath());
+        
+        FileUtil.writeStringToFile(som, somFile);
+
+        
+        assertTrue(somFile.exists());
+		
+	}
+		
+	
+
+	public void generateMainScriptAPI(String lemsFilename, String somFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 		
 		
 		/*

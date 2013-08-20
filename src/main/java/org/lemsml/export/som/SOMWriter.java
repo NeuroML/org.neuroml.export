@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.export.base.BaseWriter;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -26,6 +27,7 @@ import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
+import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 
@@ -37,7 +39,7 @@ public class SOMWriter extends BaseWriter
 	public SOMWriter(Lems lems) throws FileNotFoundException
 	{
 		super(lems, "SOM");
-		System.out.println(System.getProperty("user.dir"));
+		//System.out.println(System.getProperty("user.dir"));
 	}
 
 	public String getMainScript() throws ContentError, ParseError, IOException
@@ -51,6 +53,55 @@ public class SOMWriter extends BaseWriter
 		Component simCpt = target.getComponent();
 
 		g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
+
+		g.writeStringField(SOMKeywords.T_END.get(), simCpt.getParamValue("length").stringValue());
+		g.writeStringField(SOMKeywords.T_START.get(), "0");
+
+		E.info("simCpt: " + simCpt);
+
+		String targetId = simCpt.getStringValue("target");
+
+		Component tgtNet = lems.getComponent(targetId);
+
+		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+
+		if (pops.size()>0) {
+			for (Component pop : pops) {
+				String compRef = pop.getStringValue("component");
+				Component popComp = lems.getComponent(compRef);
+
+				ComponentType ctFlat = null;
+				Component cpFlat = null;
+				ctFlat = getFlattenedCompType(popComp);
+				cpFlat = getFlattenedComp(popComp);
+				
+				writeSOMForComponent(g, cpFlat);
+			}
+		}
+		
+		//
+		// if(pops.size() > 0)
+		// {
+		// for(Component pop : pops)
+		// {
+		// String compRef = pop.getStringValue("component");
+		// Component popComp = lems.getComponent(compRef);
+		// addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
+
+
+		g.close();
+
+		return sw.toString();
+
+
+
+		//
+		// System.out.println(sb);
+		// return sb.toString();
+	}
+
+	private void writeSOMForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	{
 
 		g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
 		writeDynamics(g);
@@ -67,53 +118,35 @@ public class SOMWriter extends BaseWriter
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.STATE.get());
-		writeState(g);
+		writeState(g, comp);
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.STATE_FUNCTIONS.get());
-		writeState(g);
+		writeStateFunctions(g, comp);
 		g.writeEndObject();
 
-		g.writeStringField(SOMKeywords.T_END.get(), "");
-		g.writeStringField(SOMKeywords.T_START.get(), "");
 
 		g.writeEndObject();
-		g.close();
-
-		return sw.toString();
-
-		// ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
-		//
-		// ComponentType ctFlat = null;
-		// Component cpFlat = null;
-		// if(pops.size() > 0)
-		// {
-		// for(Component pop : pops)
-		// {
-		// String compRef = pop.getStringValue("component");
-		// Component popComp = lems.getComponent(compRef);
-		// addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
-		// ctFlat = getFlattenedCompType(popComp);
-		// cpFlat = getFlattenedComp(popComp);
-		// dynBlock.append(generateDynamicsBlock(cpFlat, ctFlat));
-		// }
-		// }
-		// else
-		// {
-		// throw new ParseError("can't yet handle models with no defined population");
-		// }
-		// sb.append(generateSolverBlock(simCpt, ctFlat, cpFlat));
-		// // sb.append(plotterBlockEncloseInBoiler(generatePlotterBlock(cpFlat, ctFlat)));
-		// sb.append("\n\n" + dynBlockEncloseInBoiler(dynBlock).toString());
-		//
-		// System.out.println(sb);
-		// return sb.toString();
 	}
+	
 
-	private void writeState(JsonGenerator g)
+	private void writeState(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
-		// TODO Auto-generated method stub
-
+		ComponentType ct = comp.getComponentType();
+		
+		for (StateVariable sv: ct.getDynamics().getStateVariables())
+		{
+			g.writeStringField(sv.getName(), "???");
+		}
+	}
+	private void writeStateFunctions(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	{
+		ComponentType ct = comp.getComponentType();
+		
+		for (DerivedVariable dv: ct.getDynamics().getDerivedVariables())
+		{
+			g.writeStringField(dv.getName(), "???");
+		}
 	}
 
 	private void writeParameters(JsonGenerator g)
