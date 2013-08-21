@@ -3,6 +3,7 @@ package org.neuroml.export.matlab;
 import java.io.File;
 import java.io.IOException;
 
+import org.lemsml.export.matlab.MatlabWriter;
 import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -71,7 +72,7 @@ public class MatlabWriterTest extends TestCase {
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-    	//generateMainScript(exampleFilename);
+    	generateMainScript(exampleFilename);
 	}
 	/*
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
@@ -87,10 +88,11 @@ public class MatlabWriterTest extends TestCase {
         
         System.out.println("Loaded: "+exampleFilename);
 
-        SOMWriter mw = new SOMWriter(lems);
+        MatlabWriter mw = new MatlabWriter(lems);
 
         String mat = mw.getMainScript();
 
+        System.out.println(mat);
 
         File mFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".m"));
         System.out.println("Writing to: "+mFile.getAbsolutePath());

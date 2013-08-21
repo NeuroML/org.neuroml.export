@@ -33,6 +33,7 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.export.Utils;
 
 public class SOMWriter extends BaseWriter
 {
@@ -92,6 +93,7 @@ public class SOMWriter extends BaseWriter
 
 		g.writeStringField(SOMKeywords.T_END.get(), simCpt.getParamValue("length").stringValue());
 		g.writeStringField(SOMKeywords.T_START.get(), "0");
+		g.writeStringField(SOMKeywords.COMMENT.get(), Utils.getHeaderComment(format));
 		
 		g.writeEndObject();
 
@@ -234,7 +236,7 @@ public class SOMWriter extends BaseWriter
 	private String inequalityToCondition(String ineq)
 	{
 	    String[] s = ineq.split("(\\.)[gleqt]+(\\.)");
-	    E.info("Split: "+ineq+": len "+s.length+"; "+s[0]+", "+s[1]);
+	    //E.info("Split: "+ineq+": len "+s.length+"; "+s[0]+", "+s[1]);
 	    String expr =  s[0].trim() + " - (" + s[1].trim() + ")";
 	    //sign = comp2sign(s.group(2))
 	    return expr;

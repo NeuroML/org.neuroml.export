@@ -1,0 +1,64 @@
+% matlab script automatically generated from a lems/som description
+
+#macro (rollK $hash)#foreach ($k in $hash)$k, #end#end##
+##
+#macro (rollV $hash)#foreach ($k in $hash)$hash.get($k), #end#end##
+##
+#macro (num2cond $num)#if ($num == "-1") < #elseif ($num == "1") > #else ???#end#end##
+##
+#macro (unpackNames $hash $indent)#foreach ($k in $hash)$indent$k = $hash.get($k);
+#end#end##
+##
+#macro (dyn2euler $hash $indent)#foreach ($k in $hash)$indent$k = $k + dt * ($hash.get($k));
+#end#end##
+##
+#macro (vals2idx $name $hash)#foreach ($k in $hash)    ${name}($velocityCount) = $hash.get($k);
+#end#end##
+##
+function integrate_${name}()
+    %Integrate the $name model using Euler's method.
+
+    %parameter list for your convenience
+###foreach ($par in $parameters)##
+##    $par = $parameters.get($par);
+###end
+#unpackNames($parameters, "    ")##
+
+    %assemble parameter array    
+    pars = [#rollK($parameters)];
+    
+    %initial conditions
+##x0 = [#rollV($state)];
+#unpackNames($state, "    ")##
+    
+    %timestep
+    dt = $dt;
+    
+    t = $t_start:dt:$t_end;
+    timeseries = zeros(length(t), length([#rollK($state)]));
+    timeseries(1, :) = [#rollK($state)];
+
+    for i = 1:length(t) - 1
+#unpackNames($state_functions, "        ")
+#dyn2euler($dynamics, "        ")##
+
+#if ($event)##
+        %handle events
+        if($event.condition #num2cond($event.direction) 0)
+#if ($event.effect.state)##
+#unpackNames($event.effect.state, "            ")#end
+#if ($event.effect.parameters)##
+#unpackNames($event.effect.parameters, "            ")#end
+            %repack pars
+            pars = [#rollK($parameters)];
+        end
+        
+#end
+        %repack state vars
+        timeseries(i + 1, :) = [#rollK($state)];
+       
+    end  
+
+    plot(t, timeseries, '-')
+end
+
