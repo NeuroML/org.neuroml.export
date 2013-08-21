@@ -1,14 +1,17 @@
 package org.lemsml.export.som;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.lemsml.export.base.BaseWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
@@ -35,17 +38,27 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.Utils;
 
+import com.sun.xml.xsom.impl.scd.Iterators.Map;
+
 public class SOMWriter extends BaseWriter
 {
 
 	static String DEFAULT_POP = "OneComponentPop";
 
-	public SOMWriter(Lems lems) throws FileNotFoundException
+	public SOMWriter(Lems lems)
 	{
 		super(lems, "SOM");
-		//System.out.println(System.getProperty("user.dir"));
+	}
+	
+	public static void putIntoVelocityContext(String som, VelocityContext context) throws JsonParseException, JsonMappingException, IOException 
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		//Map<String,Object> userData = mapper.readValue(som, Map.class);
+		
+		
 	}
 
+	@Override
 	public String getMainScript() throws ContentError, ParseError, IOException
 	{
 		JsonFactory f = new JsonFactory();

@@ -1,5 +1,7 @@
 package org.lemsml.export.matlab;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.velocity.Template;
@@ -8,6 +10,7 @@ import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
@@ -44,37 +47,47 @@ public class MatlabWriter extends BaseWriter {
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
-		
 
-		context.put( "name", new String("VelocityOnOSB") );
+		//context.put( "name", new String("VelocityOnOSB") );
 
-		Template template = null;
+        SOMWriter somw = new SOMWriter(lems);
 
 		try
 		{
+			String som = somw.getMainScript();
+			
+			SOMWriter.putIntoVelocityContext(som, context);
+        
+			Template template = null;
+			
 		   template = Velocity.getTemplate("./src/main/resources/matlab/matlab_euler.vm");
+		   
+			StringWriter sw = new StringWriter();
+
+			template.merge( context, sw );
+			
+			sb.append(sw);
+		} 
+		catch (IOException e1) {
+			throw new ParseError("Problem converting LEMS to SOM",e1);
 		}
-		catch( ResourceNotFoundException rnfe )
+		catch( ResourceNotFoundException e )
 		{
-		   // couldn't find the template
+			throw new ParseError("Problem finding template",e);
 		}
-		catch( ParseErrorException pee )
+		catch( ParseErrorException e )
 		{
-		  // syntax error: problem parsing the template
+			throw new ParseError("Problem parsing",e);
 		}
-		catch( MethodInvocationException mie )
+		catch( MethodInvocationException e )
 		{
-		  // something invoked in the template
-		  // threw an exception
+			throw new ParseError("Problem finding template",e);
 		}
 		catch( Exception e )
-		{}
+		{
+			throw new ParseError("Problem using template",e);
+		}
 
-		StringWriter sw = new StringWriter();
-
-		template.merge( context, sw );
-		
-		sb.append(sw);
 		
 		return sb.toString();	
 
