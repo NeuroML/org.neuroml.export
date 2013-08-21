@@ -69,22 +69,22 @@ import org.neuroml.export.brian.BrianWriter;
 public class SOMWriterTest extends TestCase
 {
 
-	/*public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
 	{
 		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex2_Izh.xml",
 				         "./src/test/resources/tmp/izhikevich.json");
-	}*/
-
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
-	{
-		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml",
-				           "./src/test/resources/tmp/LEMS_NML2_Ex9_FN.json");
 	}
 
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
 	{
 		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex1_HH.xml",
 				           "./src/test/resources/tmp/LEMS_NML2_Ex1_HH.json");
+	}
+
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	{
+		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml",
+				           "./src/test/resources/tmp/LEMS_NML2_Ex9_FN.json");
 	}
 	
 
