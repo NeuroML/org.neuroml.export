@@ -3,6 +3,8 @@ package org.lemsml.export.som;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.velocity.VelocityContext;
@@ -12,6 +14,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.type.TypeReference;
 import org.lemsml.export.base.BaseWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
@@ -26,11 +29,9 @@ import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
-import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
-import org.lemsml.jlems.core.type.dynamics.OnEvent;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
@@ -38,7 +39,6 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.Utils;
 
-import com.sun.xml.xsom.impl.scd.Iterators.Map;
 
 public class SOMWriter extends BaseWriter
 {
@@ -53,7 +53,39 @@ public class SOMWriter extends BaseWriter
 	public static void putIntoVelocityContext(String som, VelocityContext context) throws JsonParseException, JsonMappingException, IOException 
 	{
 		ObjectMapper mapper = new ObjectMapper();
-		//Map<String,Object> userData = mapper.readValue(som, Map.class);
+
+		HashMap<String,Object> map = new HashMap<String,Object>();
+
+		map = mapper.readValue(som, 
+		    new TypeReference<HashMap<String,Object>>(){});
+		
+		for (String key: map.keySet())
+		{
+			Object val = map.get(key);
+			E.info("Putting: "+key+": "+val+", "+val.getClass());
+
+			context.put(key, val);
+			/*
+			HashMap<String, Object> map2 = new HashMap<String, Object>();
+			if (val instanceof LinkedHashMap) 
+			{
+				LinkedHashMap<String, Object> lhm = (LinkedHashMap<String, Object>)val;
+
+				for (String key2: lhm.keySet())
+				{
+				    map2.put(key2, lhm.get(key2));
+				}
+				  
+				//Map<String, Object> hm = (Map<String, Object>)lhm;
+				context.put(key, map2);
+			}
+			else
+			{
+				context.put(key, val);
+			}*/
+		}
+
+		//E.info("context: "+context.internalGet((String)context.internalGetKeys()[7]));
 		
 		
 	}
@@ -75,9 +107,9 @@ public class SOMWriter extends BaseWriter
 
 		String targetId = simCpt.getStringValue("target");
 
-		Component tgtNet = lems.getComponent(targetId);
+		Component tgtComp = lems.getComponent(targetId);
 
-		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+		ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
 
 		if (pops.size()>0) {
 			///////////////////////////////////////for (Component pop : pops) {
@@ -92,6 +124,10 @@ public class SOMWriter extends BaseWriter
 				
 				writeSOMForComponent(g, cpFlat);
 			/////////////////////////////////////////}
+		}
+		else {
+
+			writeSOMForComponent(g, tgtComp);
 		}
 		
 		//
@@ -175,7 +211,14 @@ public class SOMWriter extends BaseWriter
 		
 		for (DerivedVariable dv: ct.getDynamics().getDerivedVariables())
 		{
-			g.writeStringField(dv.getName(), "0");
+			if (dv.value == null || dv.value.length()==0)
+			{
+				g.writeStringField(dv.getName(), "0");
+			}
+			else
+			{
+				g.writeStringField(dv.getName(), dv.value);
+			}
 		}
 	}
 

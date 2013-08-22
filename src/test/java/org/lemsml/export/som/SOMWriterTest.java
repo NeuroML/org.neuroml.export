@@ -34,9 +34,15 @@ package org.lemsml.export.som;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import junit.framework.TestCase;
 
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
 import org.lemsml.export.utils.FileUtils;
 
 /*
@@ -51,6 +57,7 @@ import org.lemsml.jlems.core.api.interfaces.ILEMSBuildOptions;
 import org.lemsml.jlems.core.api.interfaces.ILEMSDocument;
 */
 import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -110,6 +117,33 @@ public class SOMWriterTest extends TestCase
 		
 	}
 		
+	
+	public void testVelocity() throws Exception {
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+		
+
+		context.put( "name", new String("VelocityOnOSB") );
+		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+		map.put("s1", "v1");
+		map.put("s2", "v2");
+		map.put("s3", "v3");
+		map.put("s4", "v4");
+		E.info("Map: "+map);
+		context.put( "state", map);
+		
+		Template template = null;
+		
+		template = Velocity.getTemplate("./src/test/resources/mytemplate.vm");
+	
+		StringWriter sw = new StringWriter();
+		
+		template.merge( context, sw );
+		
+		System.out.println(sw);
+	}
+			
 	
 
 	public void generateMainScriptAPI(String lemsFilename, String somFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {

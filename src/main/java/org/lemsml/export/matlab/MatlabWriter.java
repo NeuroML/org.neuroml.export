@@ -1,31 +1,51 @@
 package org.lemsml.export.matlab;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Properties;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.base.BaseWriter;
 
 public class MatlabWriter extends BaseWriter {
 	
+	public enum Method {
+		ODE("matlab/matlab_ode.vm"), 
+		EULER("matlab/matlab_euler.vm");
+		
+	 private String filename;
+	 
+	 private Method(String f) {
+		 filename = f;
+	 }
+	 
+	 public String getFilename() {
+	   return filename;
+	 }};
+	
+	private Method method = Method.ODE;
 
 	public MatlabWriter(Lems lems) {
 		super(lems, "MATLAB");
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
 	}
 
 	String comm = "% ";
 	String commPre = "%{";
-	String commPost = "}%";
+	String commPost = "%}";
 	
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
@@ -34,6 +54,10 @@ public class MatlabWriter extends BaseWriter {
 			sb.append(comm + comment + "\n");
 		else
 			sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
+	}
+	
+	public void setMethod(Method method){
+		this.method = method;
 	}
 
 	@Override
@@ -58,9 +82,12 @@ public class MatlabWriter extends BaseWriter {
 			
 			SOMWriter.putIntoVelocityContext(som, context);
         
-			Template template = null;
-			
-		   template = Velocity.getTemplate("./src/main/resources/matlab/matlab_euler.vm");
+			Properties props = new Properties();
+			props.put("resource.loader", "class");
+			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+			VelocityEngine ve = new VelocityEngine();
+			ve.init(props);
+			Template template = ve.getTemplate(method.getFilename());
 		   
 			StringWriter sw = new StringWriter();
 
@@ -87,7 +114,6 @@ public class MatlabWriter extends BaseWriter {
 		{
 			throw new ParseError("Problem using template",e);
 		}
-
 		
 		return sb.toString();	
 

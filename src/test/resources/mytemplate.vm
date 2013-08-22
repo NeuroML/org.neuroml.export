@@ -2,4 +2,8 @@
 <body>
 Hello World: $name!
 </body>
+
+#foreach ($k in $state.keySet()) $k = $state.get($k);
+#end
+
 <html>

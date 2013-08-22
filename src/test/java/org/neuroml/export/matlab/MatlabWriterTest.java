@@ -3,8 +3,9 @@ package org.neuroml.export.matlab;
 import java.io.File;
 import java.io.IOException;
 
+import junit.framework.TestCase;
+
 import org.lemsml.export.matlab.MatlabWriter;
-import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -14,19 +15,7 @@ import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Utils;
-
-import junit.framework.TestCase;
-
-import java.io.StringWriter;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.Template;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.MethodInvocationException;
 
 public class MatlabWriterTest extends TestCase {
 	

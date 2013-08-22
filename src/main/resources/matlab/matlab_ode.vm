@@ -1,5 +1,5 @@
 ###################################################################
-% matlab script automatically generated from a lems/som description
+% MATLAB script automatically generated from a LEMS/SOM description
 ###################################################################
 ##TODO: #parse("matlab_macros.vm") and remove them from here.
 #macro (rollK $map)#foreach ($k in $map.keySet())$k, #end#end
