@@ -1,4 +1,4 @@
-package org.neuroml.export.matlab;
+package org.lemsml.export.matlab;
 
 import java.io.File;
 import java.io.IOException;
