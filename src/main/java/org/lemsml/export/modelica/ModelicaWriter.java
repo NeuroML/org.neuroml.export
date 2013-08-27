@@ -13,7 +13,6 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.lemsml.export.matlab.MatlabWriter.Method;
 import org.lemsml.export.som.SOMKeywords;
 import org.lemsml.export.som.SOMWriter;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -33,7 +32,7 @@ public class ModelicaWriter extends BaseWriter {
 	String commPre = "/*";
 	String commPost = "*/";
 
-    ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+    public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
 
 	public ModelicaWriter(Lems lems) {
 		super(lems, "Modelica");
@@ -92,7 +91,6 @@ public class ModelicaWriter extends BaseWriter {
 			
 			mainRunScript.append(sw1);
 			
-
 			template = ve.getTemplate(classTemplateFile);
 
 			StringWriter sw2 = new StringWriter();
@@ -103,6 +101,7 @@ public class ModelicaWriter extends BaseWriter {
 			
 			if (dirForFiles!=null && dirForFiles.exists())
 			{
+				E.info("Writing Modelica files to: "+dirForFiles);
 				String name = (String)context.internalGet(SOMKeywords.NAME.get());
 				File mainScriptFile = new File(dirForFiles, "run_"+name+".mos");
 				File compScriptFile = new File(dirForFiles, name+".mo");
@@ -110,6 +109,10 @@ public class ModelicaWriter extends BaseWriter {
 	            allGeneratedFiles.add(mainScriptFile);
 	            FileUtil.writeStringToFile(compScript.toString(), compScriptFile);
 	            allGeneratedFiles.add(compScriptFile);
+			}
+			else
+			{
+				E.info("Not writing Modelica scripts to files! Problem with target dir: "+dirForFiles);
 			}
 			
 			

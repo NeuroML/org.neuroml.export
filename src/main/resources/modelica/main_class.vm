@@ -6,10 +6,17 @@ class $name
 #end
 
 #foreach ($s in $state.keySet())
-    Real $s; 
+    Real $s(start = 0); 
+#end
+
+#foreach ($sf in $state_functions.keySet())
+    Real $sf;   
 #end
 
     equation
+#foreach ($sf in $state_functions.keySet())
+        $sf = $state_functions.get($sf);   
+#end
 #foreach ($d in $dynamics.keySet())
         der($d) = $dynamics.get($d);   
 #end

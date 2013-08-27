@@ -25,12 +25,12 @@ public class ModelicaWriterTest extends TestCase {
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
-	/*
+	
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
     	generateMainScript(exampleFilename);
-	}*/
+	}
 	
 	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
