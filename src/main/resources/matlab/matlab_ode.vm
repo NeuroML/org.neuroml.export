@@ -1,5 +1,10 @@
+######################################################
+### Template for SOM-Matlab codegen.               ###
+### This is work in progress. Expect major changes.###
+######################################################
+
 ###################################################################
-% MATLAB script automatically generated from a LEMS/SOM description
+% Matlab script automatically generated from a LEMS/SEM description
 ###################################################################
 ##TODO: #parse("matlab_macros.vm") and remove them from here.
 #macro (rollK $map)#foreach ($k in $map.keySet())$k, #end#end
@@ -12,6 +17,10 @@
 #macro (idx2names $name $map $indent)#foreach ($k in $map.keySet())$indent$k = ${name}($velocityCount);
 #end#end##
 #macro (sign2num $s)#if ($s == "+")1#elseif($s == "-")-1#elseif($s == "0")0#else???#end#end##
+#set ($idt1 = "    ")
+#set ($idt2 = "$idt1$idt1")
+#set ($idt3 = "$idt2$idt1")
+#set ($idt4 = "$idt2$idt2")
 ###################################################################
 
 ###################################################################
@@ -51,40 +60,41 @@ function integrate_${name}()
     while (1)
         [t, x, te, xe, ie] = ode45(@(t, x) dxdt(t, x, pars), tint, x0, options);
         x0 = x(end,:);
-        %stopped at event
         tout = [tout; t(2:end-1)];
         xout = [xout; x(2:end-1, :)];
         teout = [teout; te];
         xeout = [xeout; xe];
         ieout = [ieout; ie];
-        options = odeset(options,'InitialStep',t(end-1)-t(end-2), 'MaxStep',t(end)-t(1));
     
-        %event effects
-        switch ieout(end)
+        if (te)
+            %stopped at event
+            switch ieout(end)
 #foreach($ev in $events)
-            case $velocityCount 
+                case $velocityCount 
                 %$ev.name
 ##
 ## change state 
 #if($ev.effect.state)##
-#idx2names("x0", $state, "                ")##
+#idx2names("x0", $state, $idt4)##
                 x0 = [#rollV($ev.effect.state)];
-#end
+#end##
 ##
 ## change pars 
 #if($ev.effect.parameters)##
-#unpackNames($ev.effect.parameters, "                ")
+#unpackNames($ev.effect.parameters, $idt4)
                 pars = [#rollK($parameters)];
 #end
 #end##foreach($ev in $events)
+            end
+        else 
+            %stopped at t_end
+            break
         end
 
+        options = odeset(options,'InitialStep',t(end)-t(end-1), 'MaxStep',t(end)-t(1));
         t_start = t(end);
         tint = t_start:dt:t_end;
     
-        if (t_start + dt >= t_end)
-            break
-        end
 
     end
 plot(tout, xout, '-', teout, xeout, '*r')    
@@ -104,9 +114,9 @@ function [value,isterminal,direction] = events(t, state, pars)
     direction = [#foreach($e in $events)#sign2num($e.direction),#end];
    
 ##TODO: only unpack if necessary, check event{condition}
-#idx2names("state", $state, "    ")
+#idx2names("state", $state, $idt1)
 
-#idx2names("pars", $parameters, "    ")
+#idx2names("pars", $parameters, $idt1)
 
 
 #foreach($e in $events)## 
@@ -123,11 +133,11 @@ function xdot = dxdt(t, state, pars)
 
     xdot = zeros(length(state),1);
 
-#idx2names("state", $state, "    ")
+#idx2names("state", $state, $idt1)
 
-#idx2names("pars", $parameters, "    ")
+#idx2names("pars", $parameters, $idt1)
 
-#unpackNames($state_functions, "    ")
+#unpackNames($state_functions, $idt1)
 
 #foreach ($xi in $dynamics.keySet())##
     xdot($velocityCount) = $dynamics.get($xi);
