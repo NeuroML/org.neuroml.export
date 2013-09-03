@@ -1,0 +1,20 @@
+{
+    "dt": "0.05",
+    "dynamics": {
+        "V": "(V - (V^3) / 3 - W + I) / SEC",
+        "W": "(0.08 * (V + 0.7 - 0.8 * W)) / SEC"
+    },
+    "events": [],
+    "name": "fn1",
+    "parameters": {
+        "I": "0.8",
+        "SEC": "1.0"
+    },
+    "state": {
+        "V": "0",
+        "W": "0"
+    },
+    "state_functions": {},
+    "t_end": "200.0",
+    "t_start": "0"
+}

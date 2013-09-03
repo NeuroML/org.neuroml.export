@@ -94,7 +94,7 @@ public class SVGWriter extends XMLWriter {
 		if (cell.getMorphology() != null) {
     		Hashtable<Integer, Segment> segs = new Hashtable<Integer, Segment>();
 			for(Segment segment: cell.getMorphology().getSegment()) {
-				int segId = Integer.parseInt(segment.getId());
+				int segId = segment.getId();
 				// <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2"/>
 				
 				Point3DWithDiam prox = segment.getProximal();

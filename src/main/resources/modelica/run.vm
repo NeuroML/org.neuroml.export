@@ -1,0 +1,10 @@
+// Main Modelica script for: $name
+
+loadFile("${name}.mo");
+
+
+simulate(${name}, stopTime = $t_end, outputFormat="csv");
+
+#foreach ($s in $state.keySet())
+plot($s);
+#end

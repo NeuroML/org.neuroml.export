@@ -1,4 +1,4 @@
-package org.neuroml.export.sedml;
+package org.lemsml.export.sedml;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,11 +14,8 @@ import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroML2Validator;
-import org.neuroml.model.util.NeuroMLElements;
 import org.xml.sax.SAXException;
 
 public class SEDMLWriterTest extends TestCase {
