@@ -1,0 +1,36 @@
+// Class file for Component: $name
+
+class $name
+#foreach ($par in $parameters.keySet())
+    parameter Real $par = 0.8; 
+#end
+
+#foreach ($s in $state.keySet())
+    Real $s(start = 0); 
+#end
+
+#foreach ($sf in $state_functions.keySet())
+    Real $sf;   
+#end
+
+    equation
+#foreach ($sf in $state_functions.keySet())
+        $sf = $state_functions.get($sf);   
+#end
+#foreach ($d in $dynamics.keySet())
+        der($d) = $dynamics.get($d);   
+#end
+
+
+
+end $name;
+
+/*
+class population_fnPop1
+    fn1 fn1_0;
+end population_fnPop1;
+
+class net1
+    population_fnPop1 fnPop1;
+end net1;
+*/
