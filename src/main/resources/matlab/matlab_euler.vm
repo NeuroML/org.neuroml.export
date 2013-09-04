@@ -5,7 +5,7 @@
 ########################################################################
 #macro (rollV $hash)#foreach ($k in $hash.keySet())$hash.get($k), #end#end##
 ########################################################################
-#macro (sign2sym $s)#if ($s == "+")>#elseif($s == "-")<1#elseif($s == "0")==#else???#end#end##
+#macro (sign2sym $s)#if ($s == "+")>#elseif($s == "-")<#elseif($s == "0")==#else???#end#end##
 ########################################################################
 #macro (unpackNames $hash)#foreach ($k in $hash.keySet())$indent$k = $hash.get($k);
 #end#end##
