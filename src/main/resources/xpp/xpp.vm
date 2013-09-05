@@ -1,0 +1,63 @@
+#######################################################################
+## xppaut script automatically generated from a LEMS/SOM description ##
+## This is work in progress, expect substantial changes              ##
+#######################################################################
+########################################################################
+#macro (sign2num $s)#if ($s == "+")1#elseif($s == "-")-1#elseif($s == "0")0#else???#end#end##
+########################################################################
+##convoluted but necessary, as older velocity versions don't support $iter.last etc
+#macro (rollMap $m)##
+#foreach($assign in $m.keySet())##
+#set ($str = "$assign=$m.get($assign)")##
+#if($velocityCount == 1)$str#else; $str#end##
+#end#end##
+########################################################################
+
+#ODE definition
+#foreach ($dyn in $dynamics.keySet())##
+$dyn'=$dynamics.get($dyn)
+#end##
+
+#initial conditions
+##use event at t=0 to circumvent limitation in setting IC from par via init
+global 0 t {#rollMap($state)}
+
+#parameters
+#foreach ($p in $parameters.keySet())##
+par $p=$parameters.get($p)
+#end
+
+#state functions
+#foreach ($sf in $state_functions.keySet())##
+$sf=$state_functions.get($sf)
+#end
+
+#event handling
+#foreach ($ev in $events)##
+\# event: $ev.name
+global #sign2num($ev.direction) {$ev.condition} ##
+#foreach($ef in $ev.effect)##
+#set ($eff = $ev.effect.get($ef))##
+{#rollMap($eff)}
+#end##foreach($ef in $ev.effect)
+#end##foreach($ev in $events)
+
+
+
+
+#integration settings
+@ total=$t_end, dt=$dt, maxstor=100000
+
+#plot settings
+#foreach($d in $display)## Plot windows. Notice that xpp allows only a single window from here...
+#if($velocityCount == 1)##plot only first figure...
+@ nplot=$d.curves.size()
+@ xlo=$d.abcissa_axis.min xhi=$d.abcissa_axis.max, ylo=$d.ordinate_axis.min, yhi=$d.ordinate_axis.max
+#foreach($curve in $d.curves)##
+#set($i=$velocityCount)##
+@ xp$!i=$curve.abcissa, yp$!i=$curve.ordinate
+#end
+#end##foreach($curve in $d.curves)
+#end##foreach($d in $display)
+
+
