@@ -92,8 +92,7 @@ function integrate_${name}()
         end
 
         options = odeset(options,'InitialStep',t(end)-t(end-1), 'MaxStep',t(end)-t(1));
-        t_start = t(end);
-        tint = t_start:dt:t_end;
+        tint = [t(end), tout(end)+dt:dt:t_end];
     
 
     end
