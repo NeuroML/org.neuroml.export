@@ -11,7 +11,12 @@
 ###################################################################
 #macro (rollV $map)#foreach ($k in $map.keySet())$map.get($k), #end#end
 ###################################################################
+#macro (rollV_dynsort $map)#foreach ($k in $dynamics.keySet())$map.get($k), #end#end
+###################################################################
 #macro (unpackNames $map)#foreach ($k in $map.keySet())$prefix$k = $map.get($k);
+#end#end##
+###################################################################
+#macro (unpackNames_dynsort $map)#foreach ($k in $dynamics.keySet())$prefix$k = $map.get($k);
 #end#end##
 ###################################################################
 #macro (idx2names $name $map)#foreach ($k in $map.keySet())$prefix$k = ${name}($velocityCount);
@@ -61,7 +66,7 @@ function X = integrate()
     pars = [#rollK($parameters)];
     
     %initial conditions
-    x0_ = [#rollV($state)];
+    x0_ = [#rollV_dynsort($state)];
     
    
     t_start = $t_start;
@@ -73,7 +78,7 @@ function X = integrate()
     options = odeset(options, 'Events',@(t,y) events(t, y, pars));
     %output initialization
     tout = t_start;
-    xout = x0_($output_idx);
+    xout = x0_;
     teout = [];
     xeout = [];
     ieout = [];
@@ -87,7 +92,7 @@ function X = integrate()
         [t_, x_, te_, xe_, ie_] = ode45(@(t, x) dxdt(t, x, pars), tint, x0_, options);
         x0_ = x_(end,:);
         tout = [tout; t_(2:end-1)];
-        xout = [xout; x_(2:end-1, $output_idx)];
+        xout = [xout; x_(2:end-1, :)];
         teout = [teout; te_];
         xeout = [xeout; xe_];
         ieout = [ieout; ie_];
@@ -103,7 +108,7 @@ function X = integrate()
 #if($ev.effect.state)##
 #set ($prefix = $idt4)
 #idx2names("x0_", $state)##
-                x0_ = [#rollV($ev.effect.state)];
+                x0_ = [#rollV_dynsort($ev.effect.state)];
 #end##
 ##
 ## change pars 
@@ -184,7 +189,7 @@ end
 function generate_plots(X)
 
     t = X(:, 1);
-#foreach ($t in $timeseries)##
+#foreach ($t in $dynamics)##
 #set($i = $velocityCount + 1)##
     $t = X(:, $i);
 #end##
@@ -201,10 +206,12 @@ function generate_plots(X)
 end
 
 #############################################################
+#if($dump_to_file)
 function dump_output(X)
     disp(['Dumping timeseries to file ', '$dump_to_file'])
     save('$dump_to_file', 'X', '-ascii');
 end
+#end
 
 #############################################################
 #######################
@@ -212,5 +219,5 @@ end
 #######################
 function c = hex2rgb(hexstring)
     f = @(i) hex2dec(hexstring(i:i+1))/255;
-    c = arrayfun(f, 3:2:7);
+    c = arrayfun(f, 2:2:6);
 end
