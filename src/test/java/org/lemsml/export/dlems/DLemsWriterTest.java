@@ -1,41 +1,9 @@
-/*******************************************************************************
- * The MIT License (MIT)
- * 
- * Copyright (c) 2011, 2013 OpenWorm.
- * http://openworm.org
- * 
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the MIT License
- * which accompanies this distribution, and is available at
- * http://opensource.org/licenses/MIT
- *
- * Contributors:
- *     	OpenWorm - http://openworm.org/people.html
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights 
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
- * copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *******************************************************************************/
-package org.lemsml.export.som;
+
+package org.lemsml.export.dlems;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import junit.framework.TestCase;
@@ -43,7 +11,6 @@ import junit.framework.TestCase;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.lemsml.export.utils.FileUtils;
 
 /*
 import org.lemsml.jlems.core.api.LEMSBuildConfiguration;
@@ -67,13 +34,12 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.brian.BrianWriter;
 
 /**
  * @author matteocantarelli
  *
  */
-public class SOMWriterTest extends TestCase
+public class DLemsWriterTest extends TestCase
 {
 
 	public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
@@ -95,25 +61,25 @@ public class SOMWriterTest extends TestCase
 	}
 	
 
-	public void generateMainScript(String lemsFilename, String somFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScript(String lemsFilename, String dlemsFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 		String exampleFilename = lemsFilename.substring(lemsFilename.lastIndexOf('/')+1);
         System.out.println("Loading: "+exampleFilename);
         
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-        SOMWriter sw = new SOMWriter(lems);
+        DLemsWriter sw = new DLemsWriter(lems);
 
-        String som = sw.getMainScript();
+        String dlems = sw.getMainScript();
 
 
-        File somFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".json"));
-        System.out.println(som);
-        System.out.println("Writing to: "+somFile.getAbsolutePath());
+        File dlemsFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".json"));
+        System.out.println(dlems);
+        System.out.println("Writing to: "+dlemsFile.getAbsolutePath());
         
-        FileUtil.writeStringToFile(som, somFile);
+        FileUtil.writeStringToFile(dlems, dlemsFile);
 
         
-        assertTrue(somFile.exists());
+        assertTrue(dlemsFile.exists());
 		
 	}
 		
@@ -146,7 +112,7 @@ public class SOMWriterTest extends TestCase
 			
 	
 
-	public void generateMainScriptAPI(String lemsFilename, String somFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScriptAPI(String lemsFilename, String dlemsFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 		
 		
 		/*
@@ -162,8 +128,8 @@ public class SOMWriterTest extends TestCase
 		config = new LEMSBuildConfiguration(LEMSDocumentReader.getTarget(model));
 		builder.build(config, options);
 		
-		SOMWriter mw = new SOMWriter((Lems)model);
-        assertEquals(FileUtils.readFile(somFileName), mw.getMainScript());
+		DLemsWriter mw = new DLemsWriter((Lems)model);
+        assertEquals(FileUtils.readFile(dlemsFileName), mw.getMainScript());
         */
 	}
 

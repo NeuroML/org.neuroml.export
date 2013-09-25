@@ -13,8 +13,8 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.lemsml.export.som.SOMKeywords;
-import org.lemsml.export.som.SOMWriter;
+import org.lemsml.export.dlems.DLemsKeywords;
+import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -70,13 +70,13 @@ public class ModelicaWriter extends BaseWriter {
 		
 		VelocityContext context = new VelocityContext();
 
-        SOMWriter somw = new SOMWriter(lems);
+        DLemsWriter somw = new DLemsWriter(lems);
 
 		try
 		{
 			String som = somw.getMainScript();
 			
-			SOMWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(som, context);
         
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -102,7 +102,7 @@ public class ModelicaWriter extends BaseWriter {
 			if (dirForFiles!=null && dirForFiles.exists())
 			{
 				E.info("Writing Modelica files to: "+dirForFiles);
-				String name = (String)context.internalGet(SOMKeywords.NAME.get());
+				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
 				File mainScriptFile = new File(dirForFiles, "run_"+name+".mos");
 				File compScriptFile = new File(dirForFiles, name+".mo");
 	            FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);

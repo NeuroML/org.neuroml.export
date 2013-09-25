@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import org.lemsml.export.matlab.MatlabWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -23,6 +22,12 @@ public class MatlabWriterTest extends TestCase {
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+    	generateMainScript(exampleFilename);
+	}
+	
+	public void testIaF() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
+    	String exampleFilename = "LEMS_NML2_Ex0_IaF.xml";
     	generateMainScript(exampleFilename);
 	}
 	/*
