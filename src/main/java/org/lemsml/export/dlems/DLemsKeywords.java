@@ -22,12 +22,12 @@ public enum DLemsKeywords
     COMMENT,
     DUMP_TO_FILE,
     DISPLAY,
-    ABCISSA_AXIS,
+    ABSCISSA_AXIS,
     MIN,
     MAX,
     ORDINATE_AXIS,
     CURVES,
-    ABCISSA,
+    ABSCISSA,
     ORDINATE,
     COLOUR;
     

@@ -54,10 +54,11 @@ public class DLemsWriter extends BaseWriter
 	{
 		ObjectMapper mapper = new ObjectMapper();
 
-		HashMap<String,Object> map = new HashMap<String,Object>();
+		//HashMap<String,Object> map = new HashMap<String,Object>();
+		LinkedHashMap<String,Object> map = new LinkedHashMap<String,Object>();
 
 		map = mapper.readValue(dlems, 
-		    new TypeReference<HashMap<String,Object>>(){});
+		    new TypeReference<LinkedHashMap<String,Object>>(){});
 		
 		for (String key: map.keySet())
 		{
@@ -205,7 +206,7 @@ public class DLemsWriter extends BaseWriter
                 
                 g.writeStartObject();
                 
-                g.writeObjectFieldStart(DLemsKeywords.ABCISSA_AXIS.get());
+                g.writeObjectFieldStart(DLemsKeywords.ABSCISSA_AXIS.get());
 				g.writeStringField(DLemsKeywords.MIN.get(), dispComp.getStringValue("xmin"));
 				g.writeStringField(DLemsKeywords.MAX.get(), dispComp.getStringValue("xmax"));
                 g.writeEndObject();
@@ -221,7 +222,7 @@ public class DLemsWriter extends BaseWriter
                     if (lineComp.getName().indexOf("Line") >= 0) {
                         
                         g.writeStartObject();
-                        g.writeStringField(DLemsKeywords.ABCISSA.get(), "t");
+                        g.writeStringField(DLemsKeywords.ABSCISSA.get(), "t");
                         String quantity = lineComp.getStringValue("quantity");
                       
                         g.writeStringField(DLemsKeywords.ORDINATE.get(), quantity.substring(quantity.indexOf("/")+1));
