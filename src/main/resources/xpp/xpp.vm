@@ -52,10 +52,10 @@ global #sign2num($ev.direction) {$ev.condition} ##
 #foreach($d in $display)## Plot windows. Notice that xpp allows only a single window from here...
 #if($velocityCount == 1)##plot only first figure...
 @ nplot=$d.curves.size()
-@ xlo=$d.abcissa_axis.min xhi=$d.abcissa_axis.max, ylo=$d.ordinate_axis.min, yhi=$d.ordinate_axis.max
+@ xlo=$d.abscissa_axis.min xhi=$d.abscissa_axis.max, ylo=$d.ordinate_axis.min, yhi=$d.ordinate_axis.max
 #foreach($curve in $d.curves)##
 #set($i=$velocityCount)##
-@ xp$!i=$curve.abcissa, yp$!i=$curve.ordinate
+@ xp$!i=$curve.abscissa, yp$!i=$curve.ordinate
 #end
 #end##foreach($curve in $d.curves)
 #end##foreach($d in $display)

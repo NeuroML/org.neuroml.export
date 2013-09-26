@@ -22,6 +22,9 @@
 #macro (idx2names $name $map)#foreach ($k in $map.keySet())$prefix$k = ${name}($velocityCount);
 #end#end##
 ###################################################################
+#macro (idx2names_dynsort $name $map)#foreach ($k in $dynamics.keySet())$prefix$k = ${name}($velocityCount);
+#end#end##
+###################################################################
 #macro (sign2num $s)#if ($s == "+")1#elseif($s == "-")-1#elseif($s == "0")0#else???#end#end##
 ###################################################################
 #macro (name2i $name $map)#foreach($k in $map.keySet())#if ($k == $name)$velocityCount#end#end#end##
@@ -74,7 +77,7 @@ function X = integrate()
     dt = $dt;
     tint = t_start:dt:t_end;
     options = odeset('RelTol', 1e-6);
-#if($events)##
+#if($events.size() > 0)##
     options = odeset(options, 'Events',@(t,y) events(t, y, pars));
     %output initialization
     tout = t_start;
@@ -87,7 +90,7 @@ function X = integrate()
 #end
 
 
-#if($events)##
+#if($events.size() > 0)##
     while (1)
         [t_, x_, te_, xe_, ie_] = ode45(@(t, x) dxdt(t, x, pars), tint, x0_, options);
         x0_ = x_(end,:);
@@ -140,7 +143,7 @@ end
 ###################################
 ## Rootfinding (event) functions ##
 ###################################
-#if($events)
+#if($events.size() > 0)
 
 function [value,isterminal,direction] = events(t, state, pars)
 #set ($prefix = $idt1)
@@ -149,7 +152,7 @@ function [value,isterminal,direction] = events(t, state, pars)
     direction = [#foreach($e in $events)#sign2num($e.direction),#end];
    
 ##TODO: only unpack if necessary, check event{condition}
-#idx2names("state", $state)
+#idx2names_dynsort("state", $state)
 
 #idx2names("pars", $parameters)
 
@@ -170,7 +173,7 @@ function xdot = dxdt(t, state, pars)
 #set ($prefix = $idt1)
     xdot = zeros(length(state),1);
 
-#idx2names("state", $state)
+#idx2names_dynsort("state", $state)
 
 #idx2names("pars", $parameters)
 
@@ -197,9 +200,10 @@ function generate_plots(X)
 #foreach ($d in $display)##
     figure($velocityCount);
     hold on;
-    axis([$d.abcissa_axis.min, $d.abcissa_axis.max,$d.ordinate_axis.min, $d.ordinate_axis.max])
+    % uncomment below to bypass autoscaling
+    %axis([$d.abscissa_axis.min, $d.abscissa_axis.max, $d.ordinate_axis.min, $d.ordinate_axis.max])
 #foreach ($c in $d.curves)##
-    plot($c.abcissa, $c.ordinate, 'Color', hex2rgb('$c.colour'))
+    plot($c.abscissa, $c.ordinate, 'Color', hex2rgb('$c.colour'))
 #end##foreach($c in $d.curves)##
 
 #end##foreach($d in $display)##
