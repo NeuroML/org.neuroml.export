@@ -18,7 +18,13 @@
 #macro (NV2names $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
 #end#end##
 ########################################################################
+#macro (NV2names_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount-1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
+#end#end##
+########################################################################
 #macro (intoNV $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
+#end#end##
+########################################################################
+#macro (intoNV_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount-1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
 #end#end##
 ########################################################################
 #macro (names2array $array $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)${prefix}${array}[$i] = $k;
@@ -47,13 +53,14 @@
 
 /* Problem Constants */
 \#define NEQ   $dynamics.size() /* number of equations */
-#if($events)##
+#if($events.size() > 0)##
 \#define NRF   $events.size() /* number of rootfinding functions */
 #end
 \#define RTOL  RCONST(1.0e-4)   /* scalar relative tolerance */
-\#define ATOL0 RCONST(1.0e-6)   /* vector absolute tolerance components */
-\#define ATOL1 RCONST(1.0e-6)
-\#define ATOL2 RCONST(1.0e-6)
+#foreach($d in $dynamics)##
+#set($i = $velocityCount-1)
+\#define ATOL$i RCONST(1.0e-6)   /* vector absolute tolerance components */
+#end
 \#define T0    RCONST($t_start)/* initial time */
 \#define T1    RCONST($t_end)  /* total integration time */
 \#define DT    RCONST($dt)     /* output stepsize */
@@ -63,7 +70,7 @@ static void PrintRootInfo(realtype t, N_Vector y, int *rootsfound);
 static void PrintFinalStats(void *cvode_mem);
 static int check_flag(void *flagvalue, char *funcname, int opt);
 static int dstate_dt(realtype t, N_Vector state, N_Vector dstate, void *params);
-#if($events)
+#if($events.size() > 0)
 static int root_functions(realtype t, N_Vector state, realtype *gout, void *params);
 #end##
 
@@ -76,7 +83,7 @@ static int dstate_dt(realtype t, N_Vector state, N_Vector dstate,  void *p){
 #set($prefix = $idt1)##
 #idx2names("pars", $parameters)##
 
-#NV2names("state", $state)##
+#NV2names_dynsort("state", $state)##
 
 #unpackNames($state_functions)##
 
@@ -85,13 +92,13 @@ static int dstate_dt(realtype t, N_Vector state, N_Vector dstate,  void *p){
     return(0);
 }
 
-#if($events)##
+#if($events.size() > 0)##
 static int root_functions(realtype t, N_Vector state, realtype *gout, void *p)
 {
 
     realtype *pars = (realtype *) p;
 
-#NV2names("state", $state)##
+#NV2names_dynsort("state", $state)##
 #idx2names("pars", $parameters)##
 #unpackNames($state_functions)##
 
@@ -114,7 +121,7 @@ int main(int narg, char **args)
     N_Vector state, abstol;
     void *cvode_mem;
     int flag, flagr;
-#if($events)##
+#if($events.size() > 0)##
     int rootsfound[NRF];
     int rootdir[] = {#foreach($e in $events)#sign2num($e.direction),#end};
 #end
@@ -131,7 +138,7 @@ int main(int narg, char **args)
     realtype p[] = {#rollK($parameters)};
 
 #unpackNames($state)##
-#intoNV("state", $state)##
+#intoNV_dynsort("state", $state)##
 
     reltol = RTOL;
 #foreach($x in $dynamics)##
@@ -152,7 +159,7 @@ int main(int narg, char **args)
     flag = CVodeSVtolerances(cvode_mem, reltol, abstol);
     if (check_flag(&flag, "CVodeSVtolerances", 1)) return(1);
    
-    #if($events)##
+    #if($events.size() > 0)##
     flag = CVodeRootInit(cvode_mem, NRF, root_functions);
     if (check_flag(&flag, "CVodeRootInit", 1)) return(1);
 
@@ -166,17 +173,19 @@ int main(int narg, char **args)
 
 
     printf(" \n Integrating $name \n\n");
-
+    printf("#t #rollK($dynamics)\n");
+    PrintOutput(t, state);
+   
     tout = DT;
     while(1) {
         flag = CVode(cvode_mem, tout, state, &t, CV_NORMAL);
         
-#if($events)##
+#if($events.size() > 0)##
         if(flag == CV_ROOT_RETURN) {
             /* Event detected */
             flagr = CVodeGetRootInfo(cvode_mem, rootsfound);
             if (check_flag(&flagr, "CVodeGetRootInfo", 1)) return(1);
-	       PrintRootInfo(t, state, rootsfound);
+            PrintRootInfo(t, state, rootsfound);
           
 #set($prefix = $idt4)##
 #set($Declare_float ="")##
@@ -186,9 +195,9 @@ int main(int narg, char **args)
                 //$ev.name
 ## change state 
 #if($ev.effect.state)##
-#NV2names("state", $state)##
+#NV2names_dynsort("state", $state)##
 ##unpackNames($ev.effect.state)##
-#intoNV("state", $ev.effect.state)##
+#intoNV_dynsort("state", $ev.effect.state)##
 
 #end##
 ## change pars 
@@ -243,7 +252,7 @@ static void PrintOutput(realtype t, N_Vector state)
     return;
 }
 
-#if($events)
+#if($events.size() > 0)
 static void PrintRootInfo(realtype t, N_Vector state, int *rootfound)
 {
     unsigned int i = 0;

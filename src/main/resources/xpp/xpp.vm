@@ -46,7 +46,7 @@ global #sign2num($ev.direction) {$ev.condition} ##
 
 
 #integration settings
-@ total=$t_end, dt=$dt, maxstor=100000
+@ total=$t_end, dt=$dt, maxstor=5000000
 
 #plot settings
 #foreach($d in $display)## Plot windows. Notice that xpp allows only a single window from here...
