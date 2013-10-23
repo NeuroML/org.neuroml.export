@@ -1,7 +1,6 @@
 
 package org.neuroml.export.info;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import javax.xml.bind.JAXBException;
@@ -15,11 +14,8 @@ import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
-import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
-import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.Main;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
@@ -44,6 +40,11 @@ public class InfoWriterTest extends TestCase
 	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
 	{
 		generateBasicInfo("NML2_SimpleIonChannel.nml");
+	}
+
+	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
+	{
+		generateBasicInfo("NML2_InstanceBasedNetwork.nml");
 	}
 	
 
