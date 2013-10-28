@@ -10,8 +10,4 @@ install:
     - mvn install
     - cd ..
     
-    
- 
- 
-
 
