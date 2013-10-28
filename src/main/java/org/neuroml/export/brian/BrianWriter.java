@@ -45,11 +45,12 @@ public class BrianWriter extends BaseWriter {
 		String commPre = "'''";
 		String commPost = "'''";
 		if (comment.indexOf("\n") < 0)
-			sb.append(comm + comment + "\n");
+			sb.append(comm).append(comment).append("\n");
 		else
-			sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
+			sb.append(commPre).append("\n").append(comment).append("\n").append(commPost).append("\n");
 	}
 
+        @Override
 	public String getMainScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
 		addComment(sb, "Brian simulator compliant Python export for:\n\n"
@@ -86,9 +87,9 @@ public class BrianWriter extends BaseWriter {
 	
 				getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
 	
-				sb.append("\n" + compInfo.params.toString());
+				sb.append("\n").append(compInfo.params.toString());
 	
-				sb.append(prefix + "eqs=Equations('''\n");
+				sb.append(prefix).append("eqs=Equations('''\n");
 				sb.append(compInfo.eqns.toString());
 				sb.append("''')\n\n");
 	
@@ -138,9 +139,16 @@ public class BrianWriter extends BaseWriter {
 						
 						String pop, num, var;
 						if (ref.indexOf("/")>0) {
-							pop = ref.split("/")[0].split("\\[")[0];
+                                                        String[] splitSlash = ref.split("/");
+							pop = splitSlash[0].split("\\[")[0];
 							num = ref.split("\\[")[1].split("\\]")[0];
-							var = ref.split("/")[1];
+							var = "";
+                                                        for (int i=1;i<splitSlash.length;i++) {
+                                                            if (var.length()>0)
+                                                                var += "_";
+                                                            var += splitSlash[i];
+                                                        }
+                                                        
 						} else {
 							pop = DEFAULT_POP;
 							num = "0";
@@ -343,7 +351,7 @@ public class BrianWriter extends BaseWriter {
     public static void main(String[] args) throws Exception {
 
     	
-        File exampleFile = new File("/home/padraig/org.neuroml.import/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_LEMS.xml");
+        File exampleFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
@@ -358,7 +366,6 @@ public class BrianWriter extends BaseWriter {
         
         FileUtil.writeStringToFile(br, brFile);
 
-      
-	}
+      }
 
 }
