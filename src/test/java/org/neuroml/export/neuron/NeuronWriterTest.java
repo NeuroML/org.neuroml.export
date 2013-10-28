@@ -20,83 +20,81 @@ import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 
 import junit.framework.TestCase;
-
+import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.Main;
+import org.neuroml.model.util.NeuroMLConverter;
 
 public class NeuronWriterTest extends TestCase {
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
-		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-    	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-		testGetMainScript(exampleFilename, lems);
-	}
-	
-	public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+        String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+        testGetMainScript(exampleFilename, lems);
+    }
 
-		//TODO: Find in jar!!
-		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_SimpleIonChannel.nml");
+    public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
-    	testComponentToMod(exampleFile, "na");
-	}
+        testComponentToMod("NML2_SimpleIonChannel.nml", "na");
+    }
 
-	public void testSynapse() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testSynapse() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
-		//TODO: Find in jar!!
-		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_SynapseTypes.nml");
+        testComponentToMod("NML2_SynapseTypes.nml", "blockStpSynDepFac");
+    }
 
-    	testComponentToMod(exampleFile, "blockStpSynDepFac");
-	}
-	public void testIaFCells() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testIaFCells() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
-		//TODO: Find in jar!!
-		File exampleFile = new File("../org.neuroml.model/src/main/resources/examples/NML2_AbstractCells.nml");
+        testComponentToMod("NML2_AbstractCells.nml", "iafTau");
+        testComponentToMod("NML2_AbstractCells.nml", "iafTauRef");
+        testComponentToMod("NML2_AbstractCells.nml", "iaf");
+        testComponentToMod("NML2_AbstractCells.nml", "iafRef");
+    }
 
-    	testComponentToMod(exampleFile, "iafTau");
-    	testComponentToMod(exampleFile, "iafTauRef");
-    	testComponentToMod(exampleFile, "iaf");
-    	testComponentToMod(exampleFile, "iafRef");
-	}
-	
-	public void testComponentToMod(File exampleFile, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException
-	{
-		E.info("Loading: "+exampleFile.getCanonicalPath());
-    	Lems lems = Utils.readNeuroMLFile(exampleFile).getLems();
+    public void testComponentToMod(String nmlFilename, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException {
+        E.info("Loading: " + nmlFilename);
+        
+		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
+        
+    	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
+        
+        Lems lems = Utils.readLemsNeuroMLFile(nmlLems).getLems();
         Component comp = lems.getComponent(compId);
         E.info("Found component: " + comp);
 
         String modFile = NeuronWriter.generateModFile(comp);
 
         String origName = comp.getComponentType().getName();
-        String newName = "MOD_"+compId;
+        String newName = "MOD_" + compId;
 
         modFile = modFile.replaceAll(origName, newName);
         File newMechFile = new File(AppTest.getTempDir(), newName + ".mod");
 
         FileUtil.writeStringToFile(modFile, newMechFile);
         E.info("Written to file: " + newMechFile);
-	}
+    }
 
-	public void testGetMainScript(String exampleFilename, Lems lems) throws ContentError, ParseError,
-			ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testGetMainScript(String exampleFilename, Lems lems) throws ContentError, ParseError,
+            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
-    	MinimalMessageHandler.setVeryMinimal(true);
+        MinimalMessageHandler.setVeryMinimal(true);
 
-		NeuronWriter nw = new NeuronWriter(lems);
+        NeuronWriter nw = new NeuronWriter(lems);
 
-        File mainFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", "_nrn.py"));
+        File mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
 
-        E.info("Generating NEURON from "+exampleFilename);
+        E.info("Generating NEURON from " + exampleFilename);
 
-		ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
+        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
 
-		assertTrue(genFiles.size() >= 2);
+        assertTrue(genFiles.size() >= 2);
 
-		for (File f : genFiles) {
-			E.info("Written model behaviour to: " + f.getAbsolutePath());
-			assertTrue(f.exists());
-			assertTrue(f.length() > 0);
-		}
+        for (File f : genFiles) {
+            E.info("Written model behaviour to: " + f.getAbsolutePath());
+            assertTrue(f.exists());
+            assertTrue(f.length() > 0);
+        }
 
-	}
+    }
 
 }
