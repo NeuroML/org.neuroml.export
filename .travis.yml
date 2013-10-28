@@ -1,0 +1,17 @@
+language: java
+
+install:
+    - git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
+    - cd org.neuroml.model.injectingplugin
+    - mvn install
+    - cd ..
+    - git clone https://github.com/NeuroML/org.neuroml.model
+    - cd org.neuroml.model
+    - mvn install
+    - cd ..
+    
+    
+ 
+ 
+
+
