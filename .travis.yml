@@ -1,12 +1,16 @@
 language: java
 
 install:
+    - export main_repo_branch=$(git rev-parse --abbrev-ref HEAD)
+    - echo $main_repo_branch
     - git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
     - cd org.neuroml.model.injectingplugin
+    - git checkout $main_repo_branch
     - mvn install
     - cd ..
     - git clone https://github.com/NeuroML/org.neuroml.model
     - cd org.neuroml.model
+    - git checkout $main_repo_branch
     - mvn install
     - cd ..
     - git clone https://github.com/LEMS/jLEMS.git
