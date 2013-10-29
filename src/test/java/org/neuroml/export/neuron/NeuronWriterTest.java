@@ -50,6 +50,14 @@ public class NeuronWriterTest extends TestCase {
         testComponentToMod("NML2_AbstractCells.nml", "iaf");
         testComponentToMod("NML2_AbstractCells.nml", "iafRef");
     }
+    
+    public void testInputs() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+
+        testComponentToMod("NML2_Inputs.nml", "pulseGen");
+        testComponentToMod("NML2_Inputs.nml", "sineGen");
+        testComponentToMod("NML2_Inputs.nml", "rampGen");
+        testComponentToMod("NML2_Inputs.nml", "vClamp");
+    }
 
     public void testComponentToMod(String nmlFilename, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException {
         E.info("Loading: " + nmlFilename);
