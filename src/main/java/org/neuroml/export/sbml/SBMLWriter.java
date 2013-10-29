@@ -5,6 +5,7 @@ package org.neuroml.export.sbml;
 
 
 import java.util.ArrayList;
+import org.lemsml.export.base.GenerationException;
 
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
@@ -14,8 +15,6 @@ import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
-//import org.lemsml.jlems.expression.MathMLWriter;
-//import org.lemsml.jlems.expression.;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.expression.ParseTree;
 import org.lemsml.jlems.core.expression.Parser;
@@ -25,11 +24,9 @@ import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
-/*
-import org.lemsml.jlems.sim.Sim;
-import org.lemsml.jlemsio.reader.FileInclusionReader;
-import org.lemsml.jlemsio.util.FileUtil;*/
 
+
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class SBMLWriter extends XMLWriter {
 
     public static final String PREF_SBML_SCHEMA = "http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd";
@@ -46,7 +43,8 @@ public class SBMLWriter extends XMLWriter {
         return pop.getID() + "_";
     }*/
 
-    public String getMainScript() throws ContentError {
+    @Override
+    public String getMainScript() throws GenerationException {
 
         Parser p = new Parser();
 
@@ -67,194 +65,196 @@ public class SBMLWriter extends XMLWriter {
         endElement(main, "p");
         endElement(main, "notes");
 
+        try {
+            Target target = lems.getTarget();
 
-        Target target = lems.getTarget();
-        
-        Component simCpt = target.getComponent();
-        
-        String targetId = simCpt.getStringValue("target");
+            Component simCpt = target.getComponent();
 
-        Component tgtNet = lems.getComponent(targetId);
-        addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
+            String targetId = simCpt.getStringValue("target");
 
-        String netId = tgtNet.getID();
-        startElement(main, "model", "id=" + netId, "name=" + netId);
-        main.append("\n");
+            Component tgtNet = lems.getComponent(targetId);
+            addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
 
-        //indent="";
+            String netId = tgtNet.getID();
+            startElement(main, "model", "id=" + netId, "name=" + netId);
+            main.append("\n");
 
-        ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+            //indent="";
 
-        int initAssNum = 0;
-        int onCondNum = 0;
+            ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 
-        startElement(main, "listOfCompartments");
+            int initAssNum = 0;
+            int onCondNum = 0;
 
-        for (Component pop : pops) {
-            String compRef = pop.getStringValue("component");
-            Component popComp = lems.getComponent(compRef);
-            ComponentType type = popComp.getComponentType();
-            initAssNum = initAssNum + type.getDynamics().getOnStarts().size();
-            onCondNum = onCondNum + type.getDynamics().getOnConditions().size();
-            
-            int num = Integer.parseInt(pop.getStringValue("size"));
-            addComment(main, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
+            startElement(main, "listOfCompartments");
 
-            for (int i = 0; i < num; i++) {
-                startEndElement(main, "compartment", "id=" + pop.getID() + "_" + i, "size=1");
+            for (Component pop : pops) {
+                String compRef = pop.getStringValue("component");
+                Component popComp = lems.getComponent(compRef);
+                ComponentType type = popComp.getComponentType();
+                initAssNum = initAssNum + type.getDynamics().getOnStarts().size();
+                onCondNum = onCondNum + type.getDynamics().getOnConditions().size();
+
+                int num = Integer.parseInt(pop.getStringValue("size"));
+                addComment(main, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
+
+                for (int i = 0; i < num; i++) {
+                    startEndElement(main, "compartment", "id=" + pop.getID() + "_" + i, "size=1");
+                }
+
             }
 
-        }
+            endElement(main, "listOfCompartments");
 
-        endElement(main, "listOfCompartments");
+            main.append("\n");
 
-        main.append("\n");
+            startElement(main, "listOfParameters");
 
-        startElement(main, "listOfParameters");
-
-        for (Component pop : pops) {
-            String compRef = pop.getStringValue("component");
-            Component popComp = lems.getComponent(compRef);
+            for (Component pop : pops) {
+                String compRef = pop.getStringValue("component");
+                Component popComp = lems.getComponent(compRef);
 
 
-            for (FinalParam param : popComp.getComponentType().getFinalParams()) {
+                for (FinalParam param : popComp.getComponentType().getFinalParams()) {
+                    startEndElement(main,
+                            "parameter",
+                            "id=" + param.getName(),
+                            "value=" + (float) popComp.getParamValue(param.getName()).getDoubleValue(),
+                            "constant=false");
+                }
+
+                for (StateVariable sv : popComp.getComponentType().getDynamics().getStateVariables()) {
+                    startEndElement(main,
+                            "parameter",
+                            "id=" + sv.getName(),
+                            "value=0",
+                            "constant=false");
+
+                }
+                /*
+                for(Constant c: popComp.getComponentClass().getConstants())
+                {
                 startEndElement(main,
-                        "parameter",
-                        "id=" + param.getName(),
-                        "value=" + (float) popComp.getParamValue(param.getName()).getDoubleValue(),
-                        "constant=false");
+                "parameter",
+                "id="+c.getName(),
+                "value="+(float)popComp.getParamValue(c.getName()).getDoubleValue(),
+                "constant=false");
+
+                }*/
             }
 
-            for (StateVariable sv : popComp.getComponentType().getDynamics().getStateVariables()) {
-                startEndElement(main,
-                        "parameter",
-                        "id=" + sv.getName(),
-                        "value=0",
-                        "constant=false");
+            endElement(main, "listOfParameters");
+            main.append("\n");
 
-            }
-            /*
-            for(Constant c: popComp.getComponentClass().getConstants())
+            if (initAssNum>0)
             {
-            startEndElement(main,
-            "parameter",
-            "id="+c.getName(),
-            "value="+(float)popComp.getParamValue(c.getName()).getDoubleValue(),
-            "constant=false");
+                startElement(main, "listOfInitialAssignments");
 
-            }*/
-        }
+                for (Component pop : pops) {
+                    String compRef = pop.getStringValue("component");
+                    Component popComp = lems.getComponent(compRef);
+                    ComponentType type = popComp.getComponentType();
 
-        endElement(main, "listOfParameters");
-        main.append("\n");
+                    for (OnStart os : type.getDynamics().getOnStarts()) {
+                        for (StateAssignment sa : os.getStateAssignments()) {
 
-        if (initAssNum>0)
-        {
-            startElement(main, "listOfInitialAssignments");
+
+                            startElement(main, "initialAssignment", "symbol=" + sa.getStateVariable().getName());
+                            processMathML(main, sa.getParseTree());
+                            endElement(main, "initialAssignment");
+
+
+
+                        }
+                    }
+                }
+
+                endElement(main, "listOfInitialAssignments");
+            }
+
+            main.append("\n");
+
+            startElement(main, "listOfRules");
 
             for (Component pop : pops) {
                 String compRef = pop.getStringValue("component");
                 Component popComp = lems.getComponent(compRef);
                 ComponentType type = popComp.getComponentType();
 
-                for (OnStart os : type.getDynamics().getOnStarts()) {
-                    for (StateAssignment sa : os.getStateAssignments()) {
+                for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
+                    startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
+                    //MathMLWriter mmlw = new MathMLWriter();
+                    //E.info("TD: "+mmlw.serialize(td.getParseTree()));
+                    processMathML(main, td.getParseTree());
+                    endElement(main, "rateRule");
 
+                }
 
-                        startElement(main, "initialAssignment", "symbol=" + sa.getStateVariable().getName());
-                        processMathML(main, sa.getParseTree());
-                        endElement(main, "initialAssignment");
-
-
+                for(OnStart os: type.getDynamics().getOnStarts()){
+                    for(StateAssignment sa: os.getStateAssignments()){
+                    startElement(main,"assignmentRule", "variable="+sa.getStateVariable().getName());
+                    processMathML(main, sa.getParseTree());
+                    endElement(main,"assignmentRule");
 
                     }
                 }
             }
 
-            endElement(main, "listOfInitialAssignments");
-        }
-        
-        main.append("\n");
 
-        startElement(main, "listOfRules");
-
-        for (Component pop : pops) {
-            String compRef = pop.getStringValue("component");
-            Component popComp = lems.getComponent(compRef);
-            ComponentType type = popComp.getComponentType();
-
-            for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
-                startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
-                //MathMLWriter mmlw = new MathMLWriter();
-                //E.info("TD: "+mmlw.serialize(td.getParseTree()));
-                processMathML(main, td.getParseTree());
-                endElement(main, "rateRule");
-
-            }
-            
-            for(OnStart os: type.getDynamics().getOnStarts()){
-	            for(StateAssignment sa: os.getStateAssignments()){
-	            startElement(main,"assignmentRule", "variable="+sa.getStateVariable().getName());
-	            processMathML(main, sa.getParseTree());
-	            endElement(main,"assignmentRule");
-	
-	            }
-            }
-        }
+            endElement(main, "listOfRules");
+            main.append("\n");
 
 
-        endElement(main, "listOfRules");
-        main.append("\n");
+            if (onCondNum>0)
+            {
+                startElement(main, "listOfEvents");
 
+                for (Component pop : pops) {
+                    String compRef = pop.getStringValue("component");
+                    Component popComp = lems.getComponent(compRef);
+                    ComponentType type = popComp.getComponentType();
 
-        if (onCondNum>0)
-        {
-            startElement(main, "listOfEvents");
+                    for (OnCondition oc : type.getDynamics().getOnConditions()) {
 
-            for (Component pop : pops) {
-                String compRef = pop.getStringValue("component");
-                Component popComp = lems.getComponent(compRef);
-                ComponentType type = popComp.getComponentType();
+                        String id = "check__" + getSuitableId(oc.test);
+                        startElement(main, "event", "id=" + id);
+                        startElement(main, "trigger");
+                        //String tempTestString = oc.test.replace(".gt.", ">").replace(".lt.", "<");
 
-                for (OnCondition oc : type.getDynamics().getOnConditions()) {
+                        try {
+                            ParseTree testEval = p.parseCondition(oc.test);
+                            processMathML(main, testEval);
+                        } catch (ParseError ex) {
+                            throw new ContentError("Problem parsing string for triggering event: " + oc.test, ex);
+                        }
 
-                    String id = "check__" + getSuitableId(oc.test);
-                    startElement(main, "event", "id=" + id);
-                    startElement(main, "trigger");
-                    //String tempTestString = oc.test.replace(".gt.", ">").replace(".lt.", "<");
+                        endElement(main, "trigger");
+                        startElement(main, "listOfEventAssignments");
 
-                    try {
-                    	ParseTree testEval = p.parseCondition(oc.test);
-                        processMathML(main, testEval);
-                    } catch (ParseError ex) {
-                        throw new ContentError("Problem parsing string for triggering event: " + oc.test, ex);
-                    }
+                        for (StateAssignment sa : oc.getStateAssignments()) {
 
-                    endElement(main, "trigger");
-                    startElement(main, "listOfEventAssignments");
+                            startElement(main, "eventAssignment", "variable=" + sa.getStateVariable().getName());
+                            processMathML(main, sa.getParseTree());
+                            endElement(main, "eventAssignment");
 
-                    for (StateAssignment sa : oc.getStateAssignments()) {
-
-                        startElement(main, "eventAssignment", "variable=" + sa.getStateVariable().getName());
-                        processMathML(main, sa.getParseTree());
-                        endElement(main, "eventAssignment");
+                        }
+                        endElement(main, "listOfEventAssignments");
+                        endElement(main, "event");
 
                     }
-                    endElement(main, "listOfEventAssignments");
-                    endElement(main, "event");
-
                 }
+                endElement(main, "listOfEvents");
             }
-            endElement(main, "listOfEvents");
+
+
+            main.append("\n");
+
+
+            endElement(main, "model");
+            endElement(main, "sbml");
+        } catch (ContentError e) {
+            throw new GenerationException("Error with LEMS content", e);
         }
-
-
-        main.append("\n");
-
-
-        endElement(main, "model");
-        endElement(main, "sbml");
-        //System.out.println(main);
         return main.toString();
     }
 

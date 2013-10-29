@@ -17,10 +17,11 @@ import org.neuroml.export.Utils;
 import org.neuroml.export.AppTest;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 public class GraphWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
         //Note: only works with this example at the moment!!
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";

@@ -11,11 +11,10 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
-import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.base.BaseWriter;
 
@@ -62,7 +61,7 @@ public class MatlabWriter extends BaseWriter {
 	}
 
 	@Override
-	public String getMainScript() throws ContentError, ParseError {
+	public String getMainScript() throws GenerationException {
 
 		StringBuilder sb = new StringBuilder();
 
@@ -97,23 +96,23 @@ public class MatlabWriter extends BaseWriter {
 			sb.append(sw);
 		} 
 		catch (IOException e1) {
-			throw new ParseError("Problem converting LEMS to SOM",e1);
+			throw new GenerationException("Problem converting LEMS to SOM",e1);
 		}
 		catch( ResourceNotFoundException e )
 		{
-			throw new ParseError("Problem finding template",e);
+			throw new GenerationException("Problem finding template",e);
 		}
 		catch( ParseErrorException e )
 		{
-			throw new ParseError("Problem parsing",e);
+			throw new GenerationException("Problem parsing",e);
 		}
 		catch( MethodInvocationException e )
 		{
-			throw new ParseError("Problem finding template",e);
+			throw new GenerationException("Problem finding template",e);
 		}
 		catch( Exception e )
 		{
-			throw new ParseError("Problem using template",e);
+			throw new GenerationException("Problem using template",e);
 		}
 		
 		return sb.toString();	

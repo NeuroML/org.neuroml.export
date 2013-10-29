@@ -1,12 +1,13 @@
 package org.neuroml.export.base;
 
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.neuroml.model.NeuroMLDocument;
 
-
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class XMLWriter extends BaseWriter {
 
 	int indentCount = 0;
@@ -138,11 +139,12 @@ public abstract class XMLWriter extends BaseWriter {
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, String a5, boolean endToo){
 
 		main.append(getIndent());
+        /*
 		String[] aa = a1.split("=");
 		String[] aaa = a2.split("=");
 		String[] aaaa = a3.split("=");
 		String[] aaaaa = a4.split("=");
-		String[] aaaaaa = a5.split("=");
+		String[] aaaaaa = a5.split("=");*/
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+" "+processAttr(a5)+end+">\n");
 		if (!endToo) indentCount++;
@@ -178,7 +180,8 @@ public abstract class XMLWriter extends BaseWriter {
 		main.append(getIndent()+"</"+name+">\n");
 	}
 
-	public abstract String getMainScript() throws ContentError;
+    @Override
+	public abstract String getMainScript() throws GenerationException;
 
 
 	public void processMathML(StringBuilder main, DoubleEvaluator expression){

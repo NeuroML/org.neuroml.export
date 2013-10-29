@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 
 import org.lemsml.jlems.core.expression.ParseError;
@@ -27,28 +28,28 @@ import org.neuroml.model.util.NeuroMLConverter;
 public class InfoWriterTest extends TestCase
 {
 
-	public void testAbstract() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
+	public void testAbstract() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
 	{
 		generateBasicInfo("NML2_AbstractCells.nml");
 	}
 
-	public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
+	public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
 	{
 		generateBasicInfo("NML2_FullCell.nml");
 	}
 
-	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
+	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
 	{
 		generateBasicInfo("NML2_SimpleIonChannel.nml");
 	}
 
-	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException
+	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
 	{
 		generateBasicInfo("NML2_InstanceBasedNetwork.nml");
 	}
 	
 
-	public void generateBasicInfo(String nmlFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {  
+	public void generateBasicInfo(String nmlFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException {  
 
 		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
 		NeuroMLConverter nmlc = new NeuroMLConverter();

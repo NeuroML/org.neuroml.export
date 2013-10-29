@@ -3,8 +3,20 @@ package org.neuroml.export.neuron;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
+import org.lemsml.export.base.GenerationException;
+import org.lemsml.export.dlems.DLemsKeywords;
+import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.jlems.core.expression.ParseError;
 
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
@@ -28,7 +40,7 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
-import org.neuroml.model.util.NeuroMLConverter;
+import org.neuroml.model.Morphology;
 import org.neuroml.model.util.NeuroMLElements;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -53,6 +65,7 @@ public class NeuronWriter extends BaseWriter {
 
     static boolean debug = false;
     
+	private static final String cellTemplateFile = "neuron/cell.vm";
     
 
     public NeuronWriter(Lems l) {
@@ -76,7 +89,7 @@ public class NeuronWriter extends BaseWriter {
         allGeneratedFiles.clear();
     }
 
-    public ArrayList<File> generateMainScriptAndMods(File mainFile) throws ContentError {
+    public ArrayList<File> generateMainScriptAndMods(File mainFile) throws ContentError, ParseError, IOException {
         String main = generate(mainFile.getParentFile());
         try {
             FileUtil.writeStringToFile(main, mainFile);
@@ -88,8 +101,17 @@ public class NeuronWriter extends BaseWriter {
     }
 
     @Override
-    public String getMainScript() throws ContentError {
-        return generate(null);
+    public String getMainScript() throws GenerationException {
+        try {
+            return generate(null);
+        } catch (ContentError e) {
+            throw new GenerationException("Error with LEMS content", e);
+        } catch (ParseError e) {
+            throw new GenerationException("Error parsing LEMS content", e);
+        } catch (IOException e) {
+            throw new GenerationException("Error with file I/O", e);
+        }
+        
     }
 
     private static String getStateVarName(String sv) {
@@ -132,7 +154,7 @@ public class NeuronWriter extends BaseWriter {
     }
 
 
-    public String generate(File dirForMods) throws ContentError {
+    public String generate(File dirForMods) throws ContentError, ParseError, IOException {
 
         reset();
         StringBuilder main = new StringBuilder();
@@ -184,7 +206,7 @@ public class NeuronWriter extends BaseWriter {
                 popComp = lems.getComponent(compReference);
                 popName = popsOrComponent.getID();
         	} else {
-        		compReference = popsOrComponent.getComponentType().getName();
+        		//compReference = popsOrComponent.getComponentType().getName();
         		number = 1;
                 popComp = popsOrComponent;
                 popName = DUMMY_POPULATION_PREFIX+popComp.getName();
@@ -235,20 +257,35 @@ public class NeuronWriter extends BaseWriter {
 
             // Build the mod file for the Type
 
-            String mod = generateModFile(popComp);
+            
+            if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
+                                
+                String cellString = generateCellFile(popComp);
 
+                String fileName = popComp.getComponentType().getName() + ".hoc";
+                File cellFile = new File(dirForMods, fileName);
+                E.info("Writing to: " + cellFile);
+                
+                main.append("h.load_file(\""+fileName+"\")\n");
 
-            File modFile = new File(dirForMods, popComp.getComponentType().getName() + ".mod");
-            E.info("Writing to: " + modFile);
+                try {
+                    FileUtil.writeStringToFile(cellString, cellFile);
+                    allGeneratedFiles.add(cellFile);
+                } catch (IOException ex) {
+                    throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
+                }
+            } else {
+                String mod = generateModFile(popComp);
 
-            //System.out.println(mod);
-            //System.out.println(main);
+                File modFile = new File(dirForMods, popComp.getComponentType().getName() + ".mod");
+                E.info("Writing to: " + modFile);
 
-            try {
-                FileUtil.writeStringToFile(mod.toString(), modFile);
-                allGeneratedFiles.add(modFile);
-            } catch (IOException ex) {
-                throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+                try {
+                    FileUtil.writeStringToFile(mod.toString(), modFile);
+                    allGeneratedFiles.add(modFile);
+                } catch (IOException ex) {
+                    throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+                }
             }
 
 
@@ -319,9 +356,17 @@ public class NeuronWriter extends BaseWriter {
                         if (!displayGraphs.contains(dispGraph)) {
                             displayGraphs.add(dispGraph);
                         }
+                        
+                        String dim = "None";
+                        try {
+                            Exposure exp = popComp.getComponentType().getExposure(var);
+                            dim = exp.getDimension().getName();
+                        } catch(Exception e) {
+                            
+                        }
 
                         float scale = 1 / convertToNeuronUnits((float) lineComp.getParamValue("scale").getDoubleValue(),
-                                popComp.getComponentType().getExposure(var).getDimension().getName());
+                                dim);
 
                         String plotRef = "\"" + varRef + "\"";
 
@@ -382,12 +427,77 @@ public class NeuronWriter extends BaseWriter {
         return main.toString();
     }
 
+    public static String generateCellFile(Component comp) throws ContentError, ParseError, IOException {
+        StringBuilder cell = new StringBuilder();
+
+        String cellName = comp.getID();
+        
+        cell.append("// Cell: "+cellName);
+        String json = cellToJson(comp);
+        cell.append("/*\n"+json+"\n*/");
+        
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+     
+        DLemsWriter.putIntoVelocityContext(json, context);
+
+        Properties props = new Properties();
+        props.put("resource.loader", "class");
+        props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        VelocityEngine ve = new VelocityEngine();
+        ve.init(props);
+        Template template = ve.getTemplate(cellTemplateFile);
+
+        StringWriter sw1 = new StringWriter();
+
+        template.merge( context, sw1 );
+     
+        cell.append(sw1.toString());
+        
+        return cell.toString();
+    }
+    
+    
+	public static String cellToJson(Component cellComp) throws ContentError, ParseError, IOException
+	{
+		JsonFactory f = new JsonFactory();
+		StringWriter sw = new StringWriter();
+		JsonGenerator g = f.createJsonGenerator(sw);
+		g.useDefaultPrettyPrinter();
+		g.writeStartObject();
+
+		g.writeStringField("id", cellComp.getID());
+        try {
+            g.writeStringField("notes", cellComp.getStringValue("notes"));
+        } catch (ContentError e) {};
+        
+        
+		g.writeObjectFieldStart("sections");
+		
+        Component morph = cellComp.getChild("morphology");
+        HashMap<String, Component> segs = morph.getChildHM();
+        for (Component seg: segs.values()) {
+            
+			g.writeStringField("seg_"+seg.getID(),seg.getID());
+        }
+        
+		g.writeEndObject();
+        
+		g.writeEndObject();
+
+		g.close();
+        System.out.println(sw.toString());
+
+		return sw.toString();
+
+    }
+    
     public static String generateModFile(Component comp) throws ContentError {
         StringBuilder mod = new StringBuilder();
 
         String mechName = comp.getComponentType().getName();
         
-
         mod.append("TITLE Mod file for component: " + comp + "\n\n");
 
         mod.append("COMMENT\n\n"+Utils.getHeaderComment(NEURON_FORMAT)+"\n\nENDCOMMENT\n\n");
@@ -1441,7 +1551,21 @@ public class NeuronWriter extends BaseWriter {
         //for (File f : expDir.listFiles()) {
             //f.delete();
         //}
+        
+        File lemsFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
+        lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex5_DetCell.xml");
+        
+        Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+        File mainFile = new File(expDir, "hh.py");
+        
+        NeuronWriter nw = new NeuronWriter(lems);
+        ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
+        for (File f: ff){
+            System.out.println("Generated: "+f.getAbsolutePath());
+        }
+            
 
+        /*
         for (File nml2Channel : nml2Channels) {
             String nml2Content = FileUtil.readStringFromFile(nml2Channel);
             //System.out.println("nml2Content: "+nml2Content);
@@ -1449,7 +1573,7 @@ public class NeuronWriter extends BaseWriter {
             //System.out.println("lemsified: "+lemsified);
 
             Lems lems = Utils.readLemsNeuroMLFile(lemsified).getLems();
-
+            
             for (Component comp : lems.components.getContents()) {
                 E.info("Component: " + comp);
                 E.info("baseIonChannel: " + comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE));
@@ -1476,6 +1600,6 @@ public class NeuronWriter extends BaseWriter {
                 }
 
             }
-        }
+        }*/
     }
 }

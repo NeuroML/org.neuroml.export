@@ -21,11 +21,12 @@ import org.neuroml.model.util.NeuroML2Validator;
 import org.xml.sax.SAXException;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 public class SBMLWriterTest extends TestCase {
 	
 
-	public void testGetMainScript1() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
+	public void testGetMainScript1() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml"; 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -42,7 +43,7 @@ public class SBMLWriterTest extends TestCase {
         
 	}*/
         
-    public void generateSBMLAndTestScript(Lems lems, String exampleFileName)  throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
+    public void generateSBMLAndTestScript(Lems lems, String exampleFileName)  throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, GenerationException {
 
 
         SBMLWriter sbmlw = new SBMLWriter(lems);

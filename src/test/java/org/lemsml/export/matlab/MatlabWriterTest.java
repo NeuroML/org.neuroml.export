@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -19,13 +20,13 @@ import org.neuroml.export.AppTest;
 public class MatlabWriterTest extends TestCase {
 	
 	
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
 	
-	public void testIaF() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testIaF() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex0_IaF.xml";
     	generateMainScript(exampleFilename);
@@ -37,7 +38,7 @@ public class MatlabWriterTest extends TestCase {
     	generateMainScript(exampleFilename);
 	}*/
 	
-	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

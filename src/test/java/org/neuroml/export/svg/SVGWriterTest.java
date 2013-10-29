@@ -6,6 +6,7 @@ import java.io.IOException;
 import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -25,7 +26,7 @@ import org.xml.sax.SAXException;
 
 public class SVGWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, JAXBException {
+	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, JAXBException, GenerationException {
 
     	String exampleFilename = "NML2_FullCell.nml";    
 

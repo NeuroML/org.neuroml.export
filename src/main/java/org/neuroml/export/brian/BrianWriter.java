@@ -2,6 +2,7 @@ package org.neuroml.export.brian;
 
 import java.io.File;
 import java.util.ArrayList;
+import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
@@ -30,6 +31,7 @@ import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
 
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class BrianWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
@@ -50,145 +52,152 @@ public class BrianWriter extends BaseWriter {
 			sb.append(commPre).append("\n").append(comment).append("\n").append(commPost).append("\n");
 	}
 
-        @Override
-	public String getMainScript() throws ContentError, ParseError {
+    @Override
+	public String getMainScript() throws GenerationException {
 		StringBuilder sb = new StringBuilder();
-		addComment(sb, "Brian simulator compliant Python export for:\n\n"
-				+ lems.textSummary(false, false));
-		
-		addComment(sb, Utils.getHeaderComment(format));
+        try {
+            addComment(sb, "Brian simulator compliant Python export for:\n\n"
+                    + lems.textSummary(false, false));
 
-		sb.append("from brian import *\n\n");
-		sb.append("from math import *\n\n");
+            addComment(sb, Utils.getHeaderComment(format));
 
-		Target target = lems.getTarget();
+            sb.append("from brian import *\n\n");
+            sb.append("from math import *\n\n");
 
-		Component simCpt = target.getComponent();
-		E.info("simCpt: " + simCpt);
+            Target target = lems.getTarget();
 
-		String targetId = simCpt.getStringValue("target");
+            Component simCpt = target.getComponent();
+            E.info("simCpt: " + simCpt);
 
-		Component tgtNet = lems.getComponent(targetId);
-		addComment(sb, "Adding simulation " + simCpt + " of network: " + tgtNet.summary());
+            String targetId = simCpt.getStringValue("target");
 
-		ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+            Component tgtNet = lems.getComponent(targetId);
+            addComment(sb, "Adding simulation " + simCpt + " of network: " + tgtNet.summary());
 
-		if (pops.size()>0) {
-			for (Component pop : pops) {
-				String compRef = pop.getStringValue("component");
-				Component popComp = lems.getComponent(compRef);
-				addComment(sb, "   Population " + pop.getID()
-						+ " contains components of: " + popComp + " ");
-	
-				String prefix = popComp.getID() + "_";
-	
-				CompInfo compInfo = new CompInfo();
-				ArrayList<String> stateVars = new ArrayList<String>();
-	
-				getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
-	
-				sb.append("\n").append(compInfo.params.toString());
-	
-				sb.append(prefix).append("eqs=Equations('''\n");
-				sb.append(compInfo.eqns.toString());
-				sb.append("''')\n\n");
-	
-				String flags = "";// ,implicit=True, freeze=True
-				sb.append(pop.getID() + " = NeuronGroup("
-						+ pop.getStringValue("size") + ", model=" + prefix + "eqs"
-						+ flags + ")\n");
-	
-				sb.append(compInfo.initInfo.toString());
-			}
-		} else {
-			String prefix = "";
-			
-			CompInfo compInfo = new CompInfo();
-			ArrayList<String> stateVars = new ArrayList<String>();
+            ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 
-			getCompEqns(compInfo, tgtNet, DEFAULT_POP, stateVars, "");
+            if (pops.size()>0) {
+                for (Component pop : pops) {
+                    String compRef = pop.getStringValue("component");
+                    Component popComp = lems.getComponent(compRef);
+                    addComment(sb, "   Population " + pop.getID()
+                            + " contains components of: " + popComp + " ");
 
-			sb.append("\n" + compInfo.params.toString());
+                    String prefix = popComp.getID() + "_";
 
-			sb.append(prefix + "eqs=Equations('''\n");
-			sb.append(compInfo.eqns.toString());
-			sb.append("''')\n\n");
+                    CompInfo compInfo = new CompInfo();
+                    ArrayList<String> stateVars = new ArrayList<String>();
 
-			String flags = "";// ,implicit=True, freeze=True
-			sb.append(DEFAULT_POP + " = NeuronGroup("
-					+ "1" + ", model=" + prefix + "eqs"
-					+ flags + ")\n");
+                    getCompEqns(compInfo, popComp, pop.getID(), stateVars, "");
 
-			sb.append(compInfo.initInfo.toString());
-		}
+                    sb.append("\n").append(compInfo.params.toString());
 
-		StringBuilder toTrace = new StringBuilder();
-		StringBuilder toPlot = new StringBuilder();
+                    sb.append(prefix).append("eqs=Equations('''\n");
+                    sb.append(compInfo.eqns.toString());
+                    sb.append("''')\n\n");
 
-		for (Component dispComp : simCpt.getAllChildren()) {
-			if (dispComp.getName().indexOf("Display") >= 0) {
-				toTrace.append("\n# Display: " + dispComp + "\n");
-				toPlot.append("\n# Display: " + dispComp + "\nfigure(\""
-						+ dispComp.getTextParam("title") + "\")\n");
-				for (Component lineComp : dispComp.getAllChildren()) {
-					if (lineComp.getName().indexOf("Line") >= 0) {
-						// trace=StateMonitor(hhpop,'v',record=[0])
-						String trace = "trace_" + dispComp.getID() + "_"
-								+ lineComp.getID();
-						String ref = lineComp.getStringValue("quantity");
-						
-						String pop, num, var;
-						if (ref.indexOf("/")>0) {
-                                                        String[] splitSlash = ref.split("/");
-							pop = splitSlash[0].split("\\[")[0];
-							num = ref.split("\\[")[1].split("\\]")[0];
-							var = "";
-                                                        for (int i=1;i<splitSlash.length;i++) {
-                                                            if (var.length()>0)
-                                                                var += "_";
-                                                            var += splitSlash[i];
-                                                        }
-                                                        
-						} else {
-							pop = DEFAULT_POP;
-							num = "0";
-							var = ref;
-						}
-							
+                    String flags = "";// ,implicit=True, freeze=True
+                    sb.append(pop.getID() + " = NeuronGroup("
+                            + pop.getStringValue("size") + ", model=" + prefix + "eqs"
+                            + flags + ")\n");
 
-						// if (var.equals("v")){
+                    sb.append(compInfo.initInfo.toString());
+                }
+            } else {
+                String prefix = "";
 
-						toTrace.append(trace + " = StateMonitor(" + pop + ",'"
-								+ var + "',record=[" + num + "]) # "
-								+ lineComp.summary() + "\n");
-						toPlot.append("plot(" + trace + ".times/second,"
-								+ trace + "[" + num + "], color=\""
-								+ lineComp.getStringValue("color") + "\")\n");
-						// }
-					}
-				}
-			}
-		}
-		sb.append(toTrace);
+                CompInfo compInfo = new CompInfo();
+                ArrayList<String> stateVars = new ArrayList<String>();
 
-		String len = simCpt.getStringValue("length");
-		String dt = simCpt.getStringValue("step");
+                getCompEqns(compInfo, tgtNet, DEFAULT_POP, stateVars, "");
 
-		len = len.replaceAll("ms", "*msecond");
-		len = len.replaceAll("0s", "0*second"); // TODO: Fix!!!
-		dt = dt.replaceAll("ms", "*msecond");
+                sb.append("\n" + compInfo.params.toString());
 
-		if (dt.endsWith("s"))
-			dt = dt.substring(0, dt.length() - 1) + "*second"; // TODO: Fix!!!
+                sb.append(prefix + "eqs=Equations('''\n");
+                sb.append(compInfo.eqns.toString());
+                sb.append("''')\n\n");
 
-		sb.append("\ndefaultclock.dt = " + dt + "\n");
-		sb.append("run(" + len + ")\n");
+                String flags = "";// ,implicit=True, freeze=True
+                sb.append(DEFAULT_POP + " = NeuronGroup("
+                        + "1" + ", model=" + prefix + "eqs"
+                        + flags + ")\n");
 
-		sb.append(toPlot);
+                sb.append(compInfo.initInfo.toString());
+            }
 
-		sb.append("show()\n");
+            StringBuilder toTrace = new StringBuilder();
+            StringBuilder toPlot = new StringBuilder();
 
-		System.out.println(sb);
+            for (Component dispComp : simCpt.getAllChildren()) {
+                if (dispComp.getName().indexOf("Display") >= 0) {
+                    toTrace.append("\n# Display: " + dispComp + "\n");
+                    toPlot.append("\n# Display: " + dispComp + "\nfigure(\""
+                            + dispComp.getTextParam("title") + "\")\n");
+                    for (Component lineComp : dispComp.getAllChildren()) {
+                        if (lineComp.getName().indexOf("Line") >= 0) {
+                            // trace=StateMonitor(hhpop,'v',record=[0])
+                            String trace = "trace_" + dispComp.getID() + "_"
+                                    + lineComp.getID();
+                            String ref = lineComp.getStringValue("quantity");
+
+                            String pop, num, var;
+                            if (ref.indexOf("/")>0) {
+                                                            String[] splitSlash = ref.split("/");
+                                pop = splitSlash[0].split("\\[")[0];
+                                num = ref.split("\\[")[1].split("\\]")[0];
+                                var = "";
+                                                            for (int i=1;i<splitSlash.length;i++) {
+                                                                if (var.length()>0)
+                                                                    var += "_";
+                                                                var += splitSlash[i];
+                                                            }
+
+                            } else {
+                                pop = DEFAULT_POP;
+                                num = "0";
+                                var = ref;
+                            }
+
+
+                            // if (var.equals("v")){
+
+                            toTrace.append(trace + " = StateMonitor(" + pop + ",'"
+                                    + var + "',record=[" + num + "]) # "
+                                    + lineComp.summary() + "\n");
+                            toPlot.append("plot(" + trace + ".times/second,"
+                                    + trace + "[" + num + "], color=\""
+                                    + lineComp.getStringValue("color") + "\")\n");
+                            // }
+                        }
+                    }
+                }
+            }
+            sb.append(toTrace);
+
+            String len = simCpt.getStringValue("length");
+            String dt = simCpt.getStringValue("step");
+
+            len = len.replaceAll("ms", "*msecond");
+            len = len.replaceAll("0s", "0*second"); // TODO: Fix!!!
+            dt = dt.replaceAll("ms", "*msecond");
+
+            if (dt.endsWith("s"))
+                dt = dt.substring(0, dt.length() - 1) + "*second"; // TODO: Fix!!!
+
+            sb.append("\ndefaultclock.dt = " + dt + "\n");
+            sb.append("run(" + len + ")\n");
+
+            sb.append(toPlot);
+
+            sb.append("show()\n");
+
+            System.out.println(sb);
+            
+        } catch (ContentError e) {
+            throw new GenerationException("Error with LEMS content", e);
+        } catch (ParseError ex) {
+            throw new GenerationException("Error parsing LEMS content", ex);
+        } 
 		return sb.toString();
 	}
 
@@ -342,9 +351,6 @@ public class BrianWriter extends BaseWriter {
 			}
 
 		}
-
-
-		return;
 
 	}
 

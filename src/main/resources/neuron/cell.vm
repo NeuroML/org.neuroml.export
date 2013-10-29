@@ -1,0 +1,143 @@
+########################################################################
+## Neuron script automatically generated from a NeuroML 2 description ##
+## This is work in progress...                                        ##
+########################################################################
+
+
+
+begintemplate ${id}
+
+public init, topol, basic_shape, subsets, geom, memb
+public x, y, z, position
+
+
+//  Some methods for referencing the cells
+
+public toString, netInfo
+
+public all
+
+objref synlist
+objref all
+objref stringFuncs
+
+public soma_group
+objref soma_group
+public dendrite_group
+objref dendrite_group
+
+proc init() {
+    topol()
+    subsets()
+    geom()
+    biophys()
+    geom_nseg()
+    x = y = z = 0
+    
+}
+
+create soma
+public soma
+create dend
+public dend
+
+proc topol() {
+    connect dend(0), soma(1.0)
+    basic_shape()
+}
+
+proc basic_shape() {
+
+//  Looking at segment number 0: soma, section: soma, ID: 0, ROOT SEGMENT, rad: 20.0, (0.0, 0.0, 0.0) -> (0.0, 40.0, 0.0), len: 40 (FINITE VOLUME)
+    soma {pt3dclear() pt3dadd(0.0, 0.0, 0.0, 40.0) pt3dadd(0.0, 40.0, 0.0, 40.0)}
+
+//  Looking at segment number 1: dend, section: dend, ID: 1, parent: soma (0), rad: 1.0, (0.0, 40.0, 0.0) -> (0.0, 200.0, 0.0), len: 160
+    dend {pt3dclear() pt3dadd(0.0, 40.0, 0.0, 2.0) pt3dadd(0.0, 200.0, 0.0, 2.0)}
+}
+
+proc subsets() { local i
+
+
+//  The group all is assumed never to change
+    all = new SectionList()
+
+
+    soma_group = new SectionList()
+
+    soma soma_group.append()
+
+
+    dendrite_group = new SectionList()
+
+    dend dendrite_group.append()
+
+
+    soma all.append()
+    dend all.append()
+}
+
+proc geom() {
+}
+
+proc biophys() {
+    forsec all cm = 1.5
+    forsec all Ra = 70.0
+
+    forsec all { 
+//      Using parameters: [e = -65.0]
+
+        insert LeakConductance_bask  { gmax_LeakConductance_bask = 1.428571E-4
+    e_LeakConductance_bask = -65.0 }  
+//      Ion non_specific is used in this mechanism...
+
+
+    }
+
+    forsec soma_group { 
+//      Assuming parameters other than max cond dens are set in the mod file...
+
+        insert Na_bask  { gmax_Na_bask = 0.1 }  
+//      Ion na is used in this mechanism...
+
+        ena = 50.0  // note: this is val from ChannelML, may be reset later
+
+    }
+
+    forsec soma_group { 
+//      Assuming parameters other than max cond dens are set in the mod file...
+
+        insert Kdr_bask  { gmax_Kdr_bask = 0.05 }  
+//      Ion k is used in this mechanism...
+
+        ek = -90.0  // note: this is val from ChannelML, may be reset later
+
+    }
+
+}
+
+proc geom_nseg() {
+    // All sections not mentioned here have nseg = 1
+
+}
+
+
+proc position() { local i
+    forsec all {
+        for i = 0, n3d()-1 {
+            pt3dchange(i, $1+x3d(i), $2+y3d(i), $3+z3d(i), diam3d(i))
+        }
+    }
+    x = $1  y = $2  z = $3
+}
+
+
+
+
+endtemplate ${id}
+
+
+
+
+
+
+

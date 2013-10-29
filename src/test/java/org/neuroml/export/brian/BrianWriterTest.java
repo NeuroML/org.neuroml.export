@@ -17,10 +17,11 @@ import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 public class BrianWriterTest extends TestCase {
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
@@ -32,7 +33,7 @@ public class BrianWriterTest extends TestCase {
     	generateMainScript(exampleFilename);
 	}*/
 	
-	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

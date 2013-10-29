@@ -7,7 +7,7 @@ package org.neuroml.export.info;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.export.base.GenerationException;
 
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.Cell;
@@ -24,6 +24,8 @@ import org.neuroml.model.util.NeuroMLConverter;
  *
  * @author padraig
  */
+
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class InfoWriter extends BaseWriter 
 {
     private static final String INDENT = "    ";
@@ -33,7 +35,7 @@ public class InfoWriter extends BaseWriter
     }
     
 	@Override
-	public String getMainScript() throws ContentError {
+	public String getMainScript() throws GenerationException {
 
         StringBuilder main = new StringBuilder();
         main.append("Information on contents of NeuroML 2 file\n");
