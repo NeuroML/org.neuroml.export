@@ -35,7 +35,7 @@ public class XineMLWriter extends XMLWriter {
 	Variant variant = null;
 
     public static final String SCHEMA_9ML = "https://raw.github.com/OpenSourceBrain/NineMLShowcase/master/Schemas/NineML/NineML_v0.3.xsd";
-    public static final String NAMESPACE_9ML = "http://nineml.org/9ML/0.3";
+    public static final String NAMESPACE_9ML = "http://nineml.incf.org/9ML/0.3";
 
     public static final String SCHEMA_SPINEML = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLComponentLayer.xsd";
     public static final String NAMESPACE_SPINEML = "http://www.shef.ac.uk/SpineMLComponentLayer";
