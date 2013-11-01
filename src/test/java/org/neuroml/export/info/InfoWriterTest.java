@@ -56,9 +56,6 @@ public class InfoWriterTest extends TestCase
 
         InfoWriter infow = new InfoWriter(nmlDocument);
         
-        //FIXME This assertion should be in a InfoTreeCreatorTest
-        assertTrue(!InfoTreeCreator.createInfoTree(nmlDocument).isEmpty());
-
         String info = infow.getMainScript();
 
         System.out.println("---------------\nInfo for "+nmlFilename+":\n"+info);

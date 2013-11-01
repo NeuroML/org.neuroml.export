@@ -72,7 +72,7 @@ public class InfoNode
 	 */
 	public String toString()
 	{
-		return toTreeString("");
+		return toTreeString("").trim();
 	}
 
 }
