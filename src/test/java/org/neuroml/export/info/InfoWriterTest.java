@@ -57,7 +57,7 @@ public class InfoWriterTest extends TestCase
 
         InfoWriter infow = new InfoWriter(nmlDocument);
         
-        LinkedHashMap<String, Object> list = infow.getProperties();
+        LinkedHashMap<String, Object> list = infow.getProperties().getHashMap();
         
         assertTrue(!list.isEmpty());
 

@@ -7,9 +7,11 @@ package org.neuroml.export.info;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.lemsml.export.base.GenerationException;
 
+import org.lemsml.export.base.GenerationException;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.export.info.model.MathExpression;
+import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.Cell;
 import org.neuroml.model.IonChannel;
 import org.neuroml.model.Morphology;
@@ -39,7 +41,7 @@ public class InfoWriter extends BaseWriter
 
         StringBuilder main = new StringBuilder();
         main.append("Information on contents of NeuroML 2 file\n");
-        LinkedHashMap<String, Object> props = getProperties();
+        LinkedHashMap<String, Object> props = getProperties().getHashMap();
         
         main.append(propsToString(props, ""));
         
@@ -52,49 +54,51 @@ public class InfoWriter extends BaseWriter
         for (String key: props.keySet()) {
             Object obj = props.get(key);
             if (obj instanceof LinkedHashMap) {
-                main.append(indent+key+":\n");
-                main.append(propsToString((LinkedHashMap<String, Object>)obj, indent+INDENT));
+                main.append(indent + key + ":\n");
+                main.append(propsToString((LinkedHashMap<String, Object>)obj, indent + INDENT));
                 
             } else {
-                main.append(indent+key+": "+obj+"\n");
+                main.append(indent+key+": " + obj + "\n");
             }
         }
         return main.toString();
     }
     
-    public LinkedHashMap<String, Object> getProperties() {
-        LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>();
+    public InfoNode getProperties() {
+        InfoNode props = new InfoNode();
         
         for (Cell cell: nmlDocument.getCell()){
-            LinkedHashMap<String, Object> cellProps = new LinkedHashMap<String, Object>();
+            InfoNode cellProps = new InfoNode(); 
        
             cellProps.put("ID", cell.getId());
-            if (cell.getNotes()!=null && cell.getNotes().length()>0)
+            if (cell.getNotes() != null && cell.getNotes().length() > 0)
                 cellProps.put("Description", formatNotes(cell.getNotes()));
             Morphology morph = cell.getMorphology();
             cellProps.put("Number of segments", morph.getSegment().size());
             
-            props.put("Cell "+cell.getId(), cellProps);
+            props.put("Cell " + cell.getId(), cellProps);
         }
         for (IonChannel chan: nmlDocument.getIonChannel()) {
-            LinkedHashMap<String, Object> chanProps = new LinkedHashMap<String, Object>();
+            InfoNode chanProps = new InfoNode();
             chanProps.put("ID", chan.getId());
-            if (chan.getNotes()!=null && chan.getNotes().length()>0)
+
+            if (chan.getNotes() != null && chan.getNotes().length() > 0)
                 chanProps.put("Description", formatNotes(chan.getNotes()));
             
-            props.put("Ion Channel "+chan.getId(), chanProps);
+            props.put("Ion Channel " + chan.getId(), chanProps);
         }
         for (Network element: nmlDocument.getNetwork()) {
-            LinkedHashMap<String, Object> elementProps = new LinkedHashMap<String, Object>();
+        	InfoNode elementProps = new InfoNode();
+
             elementProps.put("ID", element.getId());
-            if (element.getNotes()!=null && element.getNotes().length()>0)
+            if (element.getNotes() != null && element.getNotes().length()>0)
                 elementProps.put("Description", formatNotes(element.getNotes()));
             
             
             elementProps.put("Number of populations", element.getPopulation().size());
             
             for (Population sub: element.getPopulation()) {
-                LinkedHashMap<String, Object> subProps = new LinkedHashMap<String, Object>();
+                InfoNode subProps = new InfoNode();
                 
                 subProps.put("ID", sub.getId());
                 if (sub.getNotes()!=null && sub.getNotes().length()>0)
@@ -113,16 +117,16 @@ public class InfoWriter extends BaseWriter
             elementProps.put("Number of projections", element.getProjection().size());
             
             for (Projection sub: element.getProjection()) {
-                LinkedHashMap<String, Object> subProps = new LinkedHashMap<String, Object>();
+                InfoNode subProps = new InfoNode();
                 
                 subProps.put("ID", sub.getId());
                 subProps.put("Presynaptic population", sub.getPresynapticPopulation());
                 subProps.put("Postsynaptic population", sub.getPostsynapticPopulation());
                 
-                elementProps.put("Projection "+sub.getId(), subProps);
+                elementProps.put("Projection " + sub.getId(), subProps);
             }
             
-            props.put("Network "+element.getId(), elementProps);
+            props.put("Network " + element.getId(), elementProps);
         }
         
         //Testing...
@@ -131,7 +135,7 @@ public class InfoWriter extends BaseWriter
         
         for (Object obj: remainder) {
             Standalone element = (Standalone)obj;
-            LinkedHashMap<String, Object> elementProps = new LinkedHashMap<String, Object>();
+            InfoNode elementProps = new InfoNode();
             elementProps.put("ID", element.getId());
             if (element.getNotes()!=null && element.getNotes().length()>0)
                 elementProps.put("Description", formatNotes(element.getNotes()));
