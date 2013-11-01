@@ -4,6 +4,9 @@
 package org.neuroml.export.info.model;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
+
+
 
 /**
  * @author borismarin
@@ -12,7 +15,7 @@ import java.util.LinkedHashMap;
 public class InfoNode
 {
 
-	private LinkedHashMap<String, Object> _properties = new LinkedHashMap<String, Object>();
+	private Map<String, Object> _properties = new LinkedHashMap<String, Object>();
 
 	/**
 	 * @param key
