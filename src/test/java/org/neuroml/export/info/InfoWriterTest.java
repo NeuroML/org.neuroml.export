@@ -2,13 +2,12 @@
 package org.neuroml.export.info;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
+
 import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
+
 import org.lemsml.export.base.GenerationException;
-
-
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -57,9 +56,7 @@ public class InfoWriterTest extends TestCase
 
         InfoWriter infow = new InfoWriter(nmlDocument);
         
-        LinkedHashMap<String, Object> list = infow.getProperties().getHashMap();
-        
-        assertTrue(!list.isEmpty());
+        assertTrue(!infow.getProperties().isEmpty());
 
         String info = infow.getMainScript();
 

@@ -5,13 +5,13 @@
 package org.neuroml.export.info;
 
 import java.io.File;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.lemsml.export.base.GenerationException;
 import org.neuroml.export.base.BaseWriter;
-import org.neuroml.export.info.model.MathExpression;
 import org.neuroml.export.info.model.InfoNode;
+import org.neuroml.model.BaseCell;
 import org.neuroml.model.Cell;
 import org.neuroml.model.IonChannel;
 import org.neuroml.model.Morphology;
@@ -26,11 +26,8 @@ import org.neuroml.model.util.NeuroMLConverter;
  *
  * @author padraig
  */
-
-@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class InfoWriter extends BaseWriter 
 {
-    private static final String INDENT = "    ";
             
     public InfoWriter(NeuroMLDocument nmlDocument) {
         super(nmlDocument, "Information");
@@ -41,28 +38,11 @@ public class InfoWriter extends BaseWriter
 
         StringBuilder main = new StringBuilder();
         main.append("Information on contents of NeuroML 2 file\n");
-        LinkedHashMap<String, Object> props = getProperties().getHashMap();
-        
-        main.append(propsToString(props, ""));
-        
+        main.append(getProperties());
         return main.toString();
     }
     
-    public String propsToString(LinkedHashMap<String, Object> props, String indent) {
-        
-        StringBuilder main = new StringBuilder();
-        for (String key: props.keySet()) {
-            Object obj = props.get(key);
-            if (obj instanceof LinkedHashMap) {
-                main.append(indent + key + ":\n");
-                main.append(propsToString((LinkedHashMap<String, Object>)obj, indent + INDENT));
-                
-            } else {
-                main.append(indent+key+": " + obj + "\n");
-            }
-        }
-        return main.toString();
-    }
+
     
     public InfoNode getProperties() {
         InfoNode props = new InfoNode();
@@ -130,7 +110,8 @@ public class InfoWriter extends BaseWriter
         }
         
         //Testing...
-        List remainder = nmlDocument.getIafRefCell();
+        List<BaseCell> remainder = new ArrayList<BaseCell>();
+        remainder.addAll(nmlDocument.getIafRefCell());
         remainder.addAll(nmlDocument.getAdExIaFCell());
         
         for (Object obj: remainder) {
