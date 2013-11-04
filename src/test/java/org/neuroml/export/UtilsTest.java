@@ -1,5 +1,7 @@
 package org.neuroml.export;
 
+import java.io.IOException;
+import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -50,7 +52,19 @@ public class UtilsTest extends TestCase {
 		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
 		
 		assertEquals(50.0, Utils.getMagnitudeInSI("50 Hz"), 1e-6);
+        
+		assertEquals(0.3, Utils.getMagnitudeInSI("0.3 ohm_m"), 1e-6);
+        
+		assertEquals(0.3, Utils.getMagnitudeInSI("0.03 kohm_cm"), 1e-6);
 	}
+    
+    
+    public void testFilesInJar() throws IOException, ContentError
+    {
+        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
+        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+    }
 	
 
 }

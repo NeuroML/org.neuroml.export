@@ -8,11 +8,11 @@ public class Main
 
     public static String getLemsExamplesResourcesDir()
     {
-        return new String("/NeuroML2CoreTypes");
+        return "/NeuroML2CoreTypes";
     }
     public static String getNeuroMLExamplesResourcesDir()
     {
-        return new String("/examples");
+        return "/examples";
     }
 
 }
