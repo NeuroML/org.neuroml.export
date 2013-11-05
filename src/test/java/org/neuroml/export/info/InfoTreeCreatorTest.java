@@ -49,7 +49,17 @@ public class InfoTreeCreatorTest extends TestCase
 	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
 	{
 		String expected="Ion Channel na:\n" + 
-				"	ID: na";
+				"	ID: na\n" + 
+				"	Gates:\n" + 
+				"		gate m:\n" + 
+				"			instances: 3\n" + 
+				"			forward rate: 1000.00 * (v - -0.0400000)/0.0100000 / ( 1 - exp(-(v - -0.0400000) / 0.0100000))\n" + 
+				"			reverse rate: 4000.00 * exp((v - -0.0650000)/-0.0180000)\n" + 
+				"		gate h:\n" + 
+				"			instances: 1\n" + 
+				"			forward rate: 70.0000 * exp((v - -0.0650000)/-0.0200000)\n" + 
+				"			reverse rate: 1000.00 /(1 + exp((v - -0.0350000)/0.0100000))";
+
 		Assert.assertEquals(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
 	}
 

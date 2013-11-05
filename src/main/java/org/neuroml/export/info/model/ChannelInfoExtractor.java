@@ -3,13 +3,6 @@
  */
 package org.neuroml.export.info.model;
 
-import java.awt.List;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
@@ -48,8 +41,8 @@ public class ChannelInfoExtractor {
 
 			gate.put("instances", g.getInstances());
 
-			String fwd = new CMLStandardExpression<HHRate>(g.getForwardRate()).toString();
-			String rev = new CMLStandardExpression<HHRate>(g.getReverseRate()).toString();
+			String fwd = new CMLExpressionInfoExtractor<HHRate>(g.getForwardRate()).toString();
+			String rev = new CMLExpressionInfoExtractor<HHRate>(g.getReverseRate()).toString();
 
 			gate.put("forward rate", fwd);
 			gate.put("reverse rate", rev);
@@ -86,10 +79,3 @@ public class ChannelInfoExtractor {
 
 }
 
-
-
-class HHChannelCharacteristicFunction{
-	private String name;
-	private CMLExpression function;
-	
-}
