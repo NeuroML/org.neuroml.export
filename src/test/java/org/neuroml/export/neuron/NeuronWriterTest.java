@@ -3,6 +3,7 @@ package org.neuroml.export.neuron;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.xml.bind.JAXBException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
@@ -26,13 +27,21 @@ import org.neuroml.model.util.NeuroMLConverter;
 
 public class NeuronWriterTest extends TestCase {
 
-    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    
+    public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
+
+        String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
+        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+        testGetMainScript(exampleFilename, lems);
+    }
+
+    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
 
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
         testGetMainScript(exampleFilename, lems);
     }
-
+    
     public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
         testComponentToMod("NML2_SimpleIonChannel.nml", "na");
@@ -83,7 +92,7 @@ public class NeuronWriterTest extends TestCase {
     }
 
     public void testGetMainScript(String exampleFilename, Lems lems) throws ContentError, ParseError,
-            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
 
         MinimalMessageHandler.setVeryMinimal(true);
 
