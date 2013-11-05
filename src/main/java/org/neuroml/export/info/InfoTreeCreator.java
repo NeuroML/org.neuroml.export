@@ -3,6 +3,7 @@ package org.neuroml.export.info;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neuroml.export.info.model.ChannelInfoExtractor;
 import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.BaseCell;
 import org.neuroml.model.Cell;
@@ -42,7 +43,11 @@ public class InfoTreeCreator
 		for(IonChannel chan : nmlDocument.getIonChannel())
 		{
 			InfoNode chanProps = new InfoNode();
+			ChannelInfoExtractor cinfo = new ChannelInfoExtractor(chan);
+
 			chanProps.put("ID", chan.getId());
+			
+			chanProps.put("Gates", cinfo.getGates());
 
 			if(chan.getNotes() != null && chan.getNotes().length() > 0) chanProps.put("Description", formatNotes(chan.getNotes()));
 
