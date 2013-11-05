@@ -2,6 +2,8 @@ package org.neuroml.export;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import javax.xml.bind.JAXBException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -21,6 +23,10 @@ import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLElements;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.model.Standalone;
 
 public class Utils {
 	
@@ -68,6 +74,7 @@ public class Utils {
 	public static Sim readLemsNeuroMLFile(String contents) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
 
 		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		JarResourceInclusionReader.addSearchPathInJar("/examples");
 		JarResourceInclusionReader.addSearchPathInJar("/");
 		
 		JarResourceInclusionReader jrir = new JarResourceInclusionReader(contents);
@@ -78,8 +85,6 @@ public class Utils {
     	return sim;
 		
 	}
-	
-    
 
 	public static Sim readNeuroMLFile(File f) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException {
 
@@ -191,6 +196,21 @@ public class Utils {
         }
         return expr;
     }*/
+    
+    
+    public static ArrayList<Standalone> convertLemsComponentToNeuroML(Component comp) throws ContentError, JAXBException 
+    {
+        XMLSerializer xmlSer = XMLSerializer.newInstance();
+        String compString = xmlSer.writeObject(comp);
+        System.out.println(compString);
+        
+        NeuroMLConverter nmlc = new NeuroMLConverter();
+    	NeuroMLDocument nmlDocument = nmlc.loadNeuroML("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" +
+"    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+"      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 "+NeuroMLElements.TARGET_SCHEMA_LOCATION+"\">"+compString+"</neuroml>");
+        ArrayList<Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
+        return els;
+    }
     
 
     public static void main(String[] args) throws Exception {
