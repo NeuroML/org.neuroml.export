@@ -20,7 +20,7 @@ abstract class NMLMapping{
 }
 
 
-class CMLStandardExpression extends NMLMapping{
+class ChannelMLStandardRateExpression extends NMLMapping{
 	public static List<String> known_expressions = new ArrayList<String>(
 			Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate")
 	);
@@ -31,7 +31,7 @@ class CMLStandardExpression extends NMLMapping{
 	Float midpoint;
 	Float scale;
 
-	CMLStandardExpression(HHRate expr) {
+	ChannelMLStandardRateExpression(HHRate expr) {
 
 		try {
 			rate =  Utils.getMagnitudeInSI(expr.getRate());

@@ -3,6 +3,9 @@
  */
 package org.neuroml.export.info.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
@@ -27,6 +30,26 @@ public class ChannelInfoExtractor {
     */
 	
 
+	/**
+	 * @param expression
+	 * @return
+	 */
+	public PlotNode createPlot(ChannelMLRateExpression<HHRate> expression)
+	{
+		PlotNode plot=new PlotNode("RatePlot","mV","ms-1");
+		List<Float> x=new ArrayList<Float>();
+		List<Float> y=new ArrayList<Float>();
+		float dt=0.1f;
+		for(int i=-80;i<100;i++)
+		{
+			x.add(i*dt);
+			y.add(expression.eval(i*dt)*0.001f);
+		}
+		Data d=new Data(x,y,expression.getId());
+		plot.getData().add(d);
+		return plot;
+	}
+	
 	public ChannelInfoExtractor(IonChannel chan) 
 	{
 		for (GateHHUndetermined g : chan.getGate()){
@@ -41,12 +64,14 @@ public class ChannelInfoExtractor {
 
 			gate.put("instances", g.getInstances());
 
-			String fwd = new CMLExpressionInfoExtractor<HHRate>(g.getForwardRate()).toString();
-			String rev = new CMLExpressionInfoExtractor<HHRate>(g.getReverseRate()).toString();
+			ChannelMLRateExpression<HHRate> fwd = new ChannelMLRateExpression<HHRate>(g.getForwardRate());
+			ChannelMLRateExpression<HHRate> rev = new ChannelMLRateExpression<HHRate>(g.getReverseRate());
 
-			gate.put("forward rate", fwd);
-			gate.put("reverse rate", rev);
-
+			gate.put("forward rate", fwd.toString());
+			gate.put("reverse rate", rev.toString());
+			gate.put("forward rate plot", createPlot(fwd));
+			gate.put("reverse rate plot", createPlot(rev));
+			
 			gates.put("gate " + g.getId(), gate);
 		}
 
