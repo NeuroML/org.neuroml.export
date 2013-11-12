@@ -36,6 +36,15 @@ public class InfoNode
 	}
 
 	/**
+	 * @return
+	 */
+	public Map<String, Object> getProperties()
+	{
+		return _properties;
+		
+	}
+	
+	/**
 	 * 
 	 */
 	public boolean isEmpty()
