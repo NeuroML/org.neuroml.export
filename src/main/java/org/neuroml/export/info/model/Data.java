@@ -47,8 +47,8 @@ public class Data
 		return "Data [X=" + _xData + ", Y=" + _yData + ", Label=" + _label + "]";
 	}
 
-	private List<Float> _xData;
-	private List<Float> _yData;
+	private List<Double> _xData;
+	private List<Double> _yData;
 	private String _label;
 	
 	/**
@@ -56,7 +56,7 @@ public class Data
 	 * @param y
 	 * @param label
 	 */
-	public Data(List<Float> x, List<Float> y, String label)
+	public Data(List<Double> x, List<Double> y, String label)
 	{
 		_xData=x;
 		_yData=y;
@@ -66,7 +66,7 @@ public class Data
 	/**
 	 * @return the _xData
 	 */
-	public List<Float> getXData()
+	public List<Double> getXData()
 	{
 		return _xData;
 	}
@@ -74,7 +74,7 @@ public class Data
 	/**
 	 * @return the _yData
 	 */
-	public List<Float> getYData()
+	public List<Double> getYData()
 	{
 		return _yData;
 	}

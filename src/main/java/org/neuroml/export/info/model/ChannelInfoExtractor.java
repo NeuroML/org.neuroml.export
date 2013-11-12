@@ -39,11 +39,11 @@ public class ChannelInfoExtractor {
 		PlotNode plot=new PlotNode("RatePlot","mV","ms-1");
 		List<Double> x=new ArrayList<Double>();
 		List<Double> y=new ArrayList<Double>();
-		float dt=0.1f;
+		double dt=0.1f;
 		for(int i=-80;i<100;i++)
 		{
-			x.add(i*dt);
-			y.add(expression.eval(i*dt)*0.001f);
+			x.add((double) i*dt);
+			y.add(expression.eval(i*dt*0.001d));
 		}
 		Data d=new Data(x,y,expression.getId());
 		plot.getData().add(d);

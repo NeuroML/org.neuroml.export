@@ -6,43 +6,47 @@ import java.util.List;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.neuroml.model.HHRate;
 import org.neuroml.export.Utils;
+import org.neuroml.model.HHRate;
 
-abstract class NMLMapping{
+abstract class NMLMapping
+{
 	protected String string_repr;
 
 	public abstract Double eval(Double t);
 	
-	public String toString(){
+	public String toString()
+	{
 		return string_repr;
 	};
 }
 
+class ChannelMLStandardRateExpression extends NMLMapping
+{
+	public static List<String> known_expressions = new ArrayList<String>(Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate"));
 
-class ChannelMLStandardRateExpression extends NMLMapping{
-	public static List<String> known_expressions = new ArrayList<String>(
-			Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate")
-	);
-	
 	private Function _function;	
 	private String _type;
 	private Double _rate;
 	private Double _midpoint;
 	private Double _scale;
 
-	ChannelMLStandardRateExpression(HHRate expr) {
+	ChannelMLStandardRateExpression(HHRate expr)
+	{
 
-		try {
+		try
+		{
 			_rate = (double) Utils.getMagnitudeInSI(expr.getRate());
 			_midpoint = (double) Utils.getMagnitudeInSI(expr.getMidpoint());
 			_scale = (double) Utils.getMagnitudeInSI(expr.getScale());
-		} catch (ParseError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ContentError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		}
+		catch(ParseError e)
+		{
+			throw new RuntimeException(e);
+		}
+		catch(ContentError e)
+		{
+			throw new RuntimeException(e);
 		}
 
 		_type = expr.getType();
@@ -62,7 +66,8 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 		return _function.eval(t);
 	}
 
-	public String toString() {
+	public String toString()
+	{
 		return _function.toString();
 	}
 
@@ -89,7 +94,8 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 			return  rate / (  1 + Math.exp( (v - midpoint) / scale )  ) ;
 		}
 		
-		public String toString(){
+	public String toString()
+	{
 			return String.format("%g /(1 + exp((v - %g)/%g))", rate, midpoint, scale);
 		}
 	}
@@ -110,7 +116,8 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 			return rate * Math.exp((v - midpoint) / scale);
 		}
 		
-		public String toString(){
+	public String toString()
+	{
 			return String.format("%g * exp((v - %g)/%g)", rate, midpoint, scale);
 		}
 	}
@@ -138,7 +145,8 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 			}
 		}
 		
-		public String toString(){
+	public String toString()
+	{
 			return String.format("%1$g * (v - %2$g)/%3$g / ( 1 - exp(-(v - %2$g) / %3$g))", rate, midpoint, scale);
 		}
 	}
