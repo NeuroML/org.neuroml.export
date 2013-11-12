@@ -43,7 +43,7 @@ public class ChannelInfoExtractor {
 		for(int i=-80;i<100;i++)
 		{
 			x.add(i*dt);
-			y.add(expression.eval(i*dt)*0.001f);
+			y.add(expression.eval(i*dt*0.001f));
 		}
 		Data d=new Data(x,y,expression.getId());
 		plot.getData().add(d);
