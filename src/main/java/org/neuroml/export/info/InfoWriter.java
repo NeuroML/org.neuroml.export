@@ -45,12 +45,13 @@ public class InfoWriter extends BaseWriter
 	public static void main(String[] args) throws Exception
 	{
 		String fileName = "../neuroConstruct/osb/cerebellum/cerebellar_nucleus_cell/CerebellarNucleusNeuron/NeuroML2/DCN.nml";
-		fileName = "../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/CA1.nml";
+		//fileName = "../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/CA1.nml";
 		// fileName = "../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/SupAxAx.nml";
 		// fileName = "../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/Gran_KDr_98.nml";
-		fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
-		fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
-		fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
+		//fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
+		//fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
+		//fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
+		fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));

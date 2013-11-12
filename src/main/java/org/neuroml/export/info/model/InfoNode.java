@@ -84,4 +84,12 @@ public class InfoNode
 		return toTreeString("").trim();
 	}
 
+	/**
+	 * @return
+	 */
+	public Map<String, Object> getProperties()
+	{
+		return _properties;
+	}
+
 }
