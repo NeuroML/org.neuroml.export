@@ -89,7 +89,7 @@ proc biophys() {
         insert $cd.ionChannel
         gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
 #if( $cd.ion == 'non_specific' )##
-        e = $cd.erev  // units: mV
+        e_$cd.ionChannel = $cd.erev  // units: mV
 #else
         e$cd.ion = $cd.erev  // units: mV
 #end

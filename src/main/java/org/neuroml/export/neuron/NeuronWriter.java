@@ -852,8 +852,13 @@ public class NeuronWriter extends BaseWriter {
             blockNeuron.append("SUFFIX " + mechName + "\n");
 
             String species = comp.getTextParam("species");
-            if (species != null) {
-                blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + "\n"); //TODO check valence
+            
+            if (species == null || species.equals("non_specific")) {
+                blockNeuron.append("NONSPECIFIC_CURRENT i\n"); 
+                blockNeuron.append("RANGE e\n"); 
+            }
+            else if (species != null) {
+                blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + "  ? TODO check valence\n");
             }
 
             for (Component child1: comp.getAllChildren()) {
@@ -884,6 +889,7 @@ public class NeuronWriter extends BaseWriter {
             blockNeuron.append("SUFFIX " + mechName + "\n");
 
             String ion = comp.getStringValue("ion");
+            
             if (ion != null) {
                 blockNeuron.append("USEION " + ion + " READ " + ion + "i," + ion + "o, i" + ion + " WRITE " + ion + "i\n"); //TODO check valence
             }
@@ -952,7 +958,12 @@ public class NeuronWriter extends BaseWriter {
             blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
 
             String species = comp.getTextParam("species");
-            if (species != null) {
+            
+            if (species == null || species.equals("non_specific")) {
+                blockAssigned.append("e (mV)\n");
+                blockAssigned.append("i (mA/cm2)\n");
+            }
+            else if (species != null) {
                 blockAssigned.append("e" + species + " (mV)\n");
                 blockAssigned.append("i" + species + " (mA/cm2)\n");
             }
@@ -978,7 +989,11 @@ public class NeuronWriter extends BaseWriter {
 
             String species = comp.getTextParam("species");
             // Only for ohmic!!
-            if (species != null) {
+            
+            if (species == null || species.equals("non_specific")) {
+                blockBreakpoint.append("i = g * (v - e)\n");
+            }
+            else if (species != null) {
                 blockBreakpoint.append("i" + species + " = g * (v - e" + species + ")\n");
             }
         }
