@@ -16,7 +16,7 @@ public class ChannelMLRateExpression<T extends HHRate> {
 		return _expression.toString();
 	}
 	
-	public Float eval(Float x){
+	public Double eval(Double x){
 		return _expression.eval(x);
 		
 	}

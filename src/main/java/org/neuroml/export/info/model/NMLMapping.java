@@ -12,7 +12,7 @@ import org.neuroml.export.Utils;
 abstract class NMLMapping{
 	protected String string_repr;
 
-	public abstract Float eval(Float t);
+	public abstract Double eval(Double t);
 	
 	public String toString(){
 		return string_repr;
@@ -25,18 +25,18 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 			Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate")
 	);
 	
-	R1toR1Mapping function;
-	String type;
-	Float rate;
-	Float midpoint;
-	Float scale;
+	private Function _function;	
+	private String _type;
+	private Double _rate;
+	private Double _midpoint;
+	private Double _scale;
 
 	ChannelMLStandardRateExpression(HHRate expr) {
 
 		try {
-			rate =  Utils.getMagnitudeInSI(expr.getRate());
-			midpoint = Utils.getMagnitudeInSI(expr.getMidpoint());
-			scale =  Utils.getMagnitudeInSI(expr.getScale());
+			_rate = (double) Utils.getMagnitudeInSI(expr.getRate());
+			_midpoint = (double) Utils.getMagnitudeInSI(expr.getMidpoint());
+			_scale = (double) Utils.getMagnitudeInSI(expr.getScale());
 		} catch (ParseError e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,48 +45,48 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 			e.printStackTrace();
 		}
 
-		type = expr.getType();
-		if(type.equals("HHSigmoidRate")){
-			function = new HHSigmoidalRate(rate, scale, midpoint);
+		_type = expr.getType();
+		if(_type.equals("HHSigmoidRate")){
+			_function = new HHSigmoidalRate(_rate, _scale, _midpoint);
 		}
-		else if(type.equals("HHExpRate")){
-			function = new HHExponentialRate(rate, scale, midpoint);
+		else if(_type.equals("HHExpRate")){
+			_function = new HHExponentialRate(_rate, _scale, _midpoint);
 		}
-		else if(type.equals("HHExpLinearRate")){
-			function = new HHExponentialLinearRate(rate, scale, midpoint);
+		else if(_type.equals("HHExpLinearRate")){
+			_function = new HHExponentialLinearRate(_rate, _scale, _midpoint);
 		}
 	}
 
 
-	public Float eval(Float t) {
-		return function.eval(t);
+	public Double eval(Double t) {
+		return _function.eval(t);
 	}
 
 	public String toString() {
-		return function.toString();
+		return _function.toString();
 	}
 
 	}
 
-    interface R1toR1Mapping{
-    	public Float eval(Float t);
+    interface Function{
+    	public Double eval(Double t);
     	public String toString();
     }
 
-	class HHSigmoidalRate implements R1toR1Mapping {
-		Float rate;
-		Float scale;
-		Float midpoint;
+	class HHSigmoidalRate implements Function {
+		Double rate;
+		Double scale;
+		Double midpoint;
 
-		public HHSigmoidalRate(Float rate, Float scale, Float midpoint) {
+		public HHSigmoidalRate(Double rate, Double scale, Double midpoint) {
 			this.rate = rate;
 			this.scale = scale;
 			this.midpoint = midpoint;
 		}
 
 
-		public Float eval(Float v){
-			return (float) (rate / (1 + Math.exp(v - midpoint) / scale));
+		public Double eval(Double v){
+			return  rate / (  1 + Math.exp( (v - midpoint) / scale )  ) ;
 		}
 		
 		public String toString(){
@@ -95,19 +95,19 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 	}
 
 
-	class HHExponentialRate implements R1toR1Mapping {
-		Float rate;
-		Float scale;
-		Float midpoint;
+	class HHExponentialRate implements Function {
+		Double rate;
+		Double scale;
+		Double midpoint;
 
-		public HHExponentialRate(Float rate, Float scale, Float midpoint) {
+		public HHExponentialRate(Double rate, Double scale, Double midpoint) {
 			this.rate = rate;
 			this.scale = scale;
 			this.midpoint = midpoint;
 		}
 
-		public Float eval(Float v){
-			return (float) (rate * Math.exp((v - midpoint) / scale));
+		public Double eval(Double v){
+			return rate * Math.exp((v - midpoint) / scale);
 		}
 		
 		public String toString(){
@@ -116,20 +116,26 @@ class ChannelMLStandardRateExpression extends NMLMapping{
 	}
 
 
-	class HHExponentialLinearRate implements R1toR1Mapping {
-		Float rate;
-		Float scale;
-		Float midpoint;
+	class HHExponentialLinearRate implements Function {
+		Double rate;
+		Double scale;
+		Double midpoint;
 
-		public HHExponentialLinearRate(Float rate, Float scale, Float midpoint) {
+		public HHExponentialLinearRate(Double rate, Double scale, Double midpoint) {
 			this.rate = rate;
 			this.scale = scale;
 			this.midpoint = midpoint;
 		}
 
-		public Float eval(Float v){
-			Float fact = (v - midpoint) / scale;
-			return (float) ((rate * fact)/(1 - Math.exp(-fact)));
+		public Double eval(Double v){
+			Double fact = (v - midpoint) / scale;
+			if (Math.abs(fact) < 1e-4) {
+				//expand around removable singularity
+				return rate * (1 + fact/2);
+			}
+			else {
+				return (rate * fact)/(1 - Math.exp(-fact));
+			}
 		}
 		
 		public String toString(){
