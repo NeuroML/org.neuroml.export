@@ -13,7 +13,7 @@ public x, y, z, position
 
 //  Some methods for referencing the cells
 
-public toString, netInfo
+public toString, netInfo, set_initial_v
 
 
 #foreach ($s in $sections)##
@@ -35,6 +35,13 @@ proc init() {
     geom_nseg()
     x = y = z = 0
     
+}
+
+proc set_initial_v() {
+    // Taken from the initMembPotential value
+#foreach ($imp in $initMembPotential)##
+    forsec $imp.group v = $imp.value  // units: mV
+#end
 }
 
 proc topol() {
