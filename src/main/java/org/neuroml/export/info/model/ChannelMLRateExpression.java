@@ -24,13 +24,16 @@ public class ChannelMLRateExpression<T extends HHRate> {
 	{
 		return _id;
 	}
+
+	public NeuroMLExpression getExpression() {
+		return _expression;
+	}
 	
 	
 }
 
 interface Function{
 	public Double eval(Double t);
-	public String toString();
 }
 
 class HHSigmoidalRate implements Function {

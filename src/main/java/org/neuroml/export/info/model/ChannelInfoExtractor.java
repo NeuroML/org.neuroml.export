@@ -22,25 +22,6 @@ public class ChannelInfoExtractor {
 	private InfoNode gates = new InfoNode();
 
 
-	/**
-	 * @param expression
-	 * @return
-	 */
-	public PlotNode createPlot(ChannelMLRateExpression<HHRate> expression)
-	{
-		PlotNode plot=new PlotNode("RatePlot","mV","ms-1");
-		List<Double> x=new ArrayList<Double>();
-		List<Double> y=new ArrayList<Double>();
-		double dt=0.1f;
-		for(int i=-80;i<100;i++)
-		{
-			x.add((double) i*dt);
-			y.add(expression.eval(i*dt*0.001d));
-		}
-		Data d=new Data(x,y,expression.getId());
-		plot.getData().add(d);
-		return plot;
-	}
 	
 	public ChannelInfoExtractor(IonChannel chan) 
 	{
@@ -61,8 +42,8 @@ public class ChannelInfoExtractor {
 
 			gate.put("forward rate", fwd.toString());
 			gate.put("reverse rate", rev.toString());
-			gate.put("forward rate plot", createPlot(fwd));
-			gate.put("reverse rate plot", createPlot(rev));
+			gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
+			gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
 			
 			gates.put("gate " + g.getId(), gate);
 		}

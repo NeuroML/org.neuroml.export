@@ -18,6 +18,7 @@ class ChannelMLStandardRateExpression implements NeuroMLExpression
 	private Double _rate;
 	private Double _midpoint;
 	private Double _scale;
+	private String _Id;
 
 	ChannelMLStandardRateExpression(HHRate expr)
 	{
@@ -40,12 +41,15 @@ class ChannelMLStandardRateExpression implements NeuroMLExpression
 		_type = expr.getType();
 		if(_type.equals("HHSigmoidRate")){
 			_function = new HHSigmoidalRate(_rate, _scale, _midpoint);
+			setId("HHSigmoidRate");
 		}
 		else if(_type.equals("HHExpRate")){
 			_function = new HHExponentialRate(_rate, _scale, _midpoint);
+			setId("HHExpRate");
 		}
 		else if(_type.equals("HHExpLinearRate")){
 			_function = new HHExponentialLinearRate(_rate, _scale, _midpoint);
+			setId("HHExpLinearRate");
 		}
 	}
 
@@ -59,4 +63,15 @@ class ChannelMLStandardRateExpression implements NeuroMLExpression
 		return _function.toString();
 	}
 
+
+	@Override
+	public String getId() {
+		return "Standard ChannelML Expression:" + _Id;
 	}
+
+
+	public void setId(String _Id) {
+		this._Id = _Id;
+	}
+
+}

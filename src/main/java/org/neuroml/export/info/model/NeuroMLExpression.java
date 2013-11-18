@@ -5,4 +5,5 @@ interface NeuroMLExpression
 {
 	public abstract Double eval(Double t);
 	public String toString();
+	public abstract String getId();
 }
