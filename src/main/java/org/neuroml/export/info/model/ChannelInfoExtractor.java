@@ -36,11 +36,11 @@ public class ChannelInfoExtractor {
 	 */
 	public PlotNode createPlot(ChannelMLRateExpression<HHRate> expression)
 	{
-		PlotNode plot=new PlotNode("RatePlot","mV","ms-1");
+		PlotNode plot=new PlotNode("RatePlot","mV","ms");
 		List<Float> x=new ArrayList<Float>();
 		List<Float> y=new ArrayList<Float>();
 		float dt=0.1f;
-		for(int i=-80;i<100;i++)
+		for(int i=-800;i<1000;i++)
 		{
 			x.add(i*dt);
 			y.add(expression.eval(i*dt*0.001f));
