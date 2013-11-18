@@ -3,15 +3,18 @@ package org.neuroml.export;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.xml.bind.JAXBException;
 
 import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
@@ -19,14 +22,12 @@ import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.model.util.NeuroML2Validator;
-import org.neuroml.model.util.NeuroMLConverter;
-import org.neuroml.model.util.NeuroMLElements;
-import org.lemsml.jlems.core.logging.E;
-import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Standalone;
+import org.neuroml.model.util.NeuroML2Validator;
+import org.neuroml.model.util.NeuroMLConverter;
+import org.neuroml.model.util.NeuroMLElements;
 
 public class Utils {
 	
@@ -78,7 +79,7 @@ public class Utils {
 		JarResourceInclusionReader.addSearchPathInJar("/");
 		
 		JarResourceInclusionReader jrir = new JarResourceInclusionReader(contents);
-		
+		JUtil.setResourceRoot(NeuroMLConverter.class);
         Sim sim = new Sim(jrir.read());
             
         sim.readModel();

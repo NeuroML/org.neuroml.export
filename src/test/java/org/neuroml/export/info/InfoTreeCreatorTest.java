@@ -65,7 +65,7 @@ public class InfoTreeCreatorTest extends TestCase
 				"			reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHSigmoidRate, X=V, Y=ms-1, Data=-0.0800 989.0131-0.0750 982.0138-0.0700 970.6878-0.0650 952.5741-0.0600 924.1418-0.0550 880.7971-0.0500 817.5745-0.0450 731.0586-0.0400 622.4593-0.0350 500.0000-0.0300 377.5407-0.0250 268.9414-0.0200 182.4255-0.0150 119.2029-0.0100 75.8582-0.0050 47.42590.0000 29.31220.0050 17.98620.0100 10.98690.0150 6.69290.0200 4.07010.0250 2.47260.0300 1.50120.0350 0.91110.0400 0.55280.0450 0.33540.0500 0.20340.0550 0.12340.0600 0.07480.0650 0.04540.0700 0.02750.0750 0.01670.0800 0.01010.0850 0.00610.0900 0.00370.0950 0.0023]";
 				 
 
-		Assert.assertEquals(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
+		Assert.assertTrue(getInfoTreeAsString("NML2_SimpleIonChannel.nml").startsWith(expected));
 	}
 
 	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException

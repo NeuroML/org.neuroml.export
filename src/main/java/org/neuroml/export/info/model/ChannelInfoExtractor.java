@@ -3,9 +3,6 @@
  */
 package org.neuroml.export.info.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
