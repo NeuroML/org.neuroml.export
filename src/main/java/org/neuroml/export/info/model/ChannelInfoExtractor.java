@@ -21,14 +21,6 @@ import org.neuroml.model.IonChannel;
 public class ChannelInfoExtractor {
 	private InfoNode gates = new InfoNode();
 
-    /*
-    private List<GateHHUndetermined> gate;
-    private List<GateHHRates> gateHHrates;
-    private List<GateHHRatesTau> gateHHratesTau;
-    private List<GateHHTauInf> gateHHtauInf;
-    private List<GateHHRatesInf> gateHHratesInf;
-    */
-	
 
 	/**
 	 * @param expression
@@ -37,13 +29,13 @@ public class ChannelInfoExtractor {
 	public PlotNode createPlot(ChannelMLRateExpression<HHRate> expression)
 	{
 		PlotNode plot=new PlotNode("RatePlot","mV","ms");
-		List<Float> x=new ArrayList<Float>();
-		List<Float> y=new ArrayList<Float>();
-		float dt=0.1f;
+		List<Double> x=new ArrayList<Double>();
+		List<Double> y=new ArrayList<Double>();
+		double dt=0.1f;
 		for(int i=-800;i<1000;i++)
 		{
-			x.add(i*dt);
-			y.add(expression.eval(i*dt*0.001f));
+			x.add((double) i*dt);
+			y.add(expression.eval(i*dt*0.001d));
 		}
 		Data d=new Data(x,y,expression.getId());
 		plot.getData().add(d);

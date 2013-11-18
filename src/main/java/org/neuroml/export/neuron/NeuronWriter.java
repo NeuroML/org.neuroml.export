@@ -45,6 +45,7 @@ import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
+import org.neuroml.model.InitMembPotential;
 import org.neuroml.model.Input;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.Member;
@@ -212,6 +213,15 @@ public class NeuronWriter extends BaseWriter {
         if (popsOrComponents.isEmpty()) {
         	popsOrComponents.add(targetComp);
         	simulatingNetwork = false;
+        } else {
+            if (targetComp.getComponentType().getName().equals("networkWithTemperature") ||
+                (targetComp.hasAttribute("type") && targetComp.getStringValue("type").equals("networkWithTemperature"))) {
+                String temp = targetComp.getStringValue("temperature");
+                float tempSI = Utils.getMagnitudeInSI(temp);
+                main.append("\n# Temperature used for network: "+tempSI+" K\n");
+                main.append("h.celsius = "+tempSI+" - 273.15\n\n");
+                
+            }
         }
 
         for (Component popsOrComponent : popsOrComponents) {
@@ -257,7 +267,6 @@ public class NeuronWriter extends BaseWriter {
             main.append("print \"Population " + popName + " contains " + number + " instance(s) of component: "
                     + popComp.getID() + " of type: " + popComp.getComponentType().getName() + " \"\n\n");
 
-            // Build the mod file for the Type
             
             if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
                                 
@@ -274,16 +283,22 @@ public class NeuronWriter extends BaseWriter {
                 
                 main.append(popName+" = []\n");
                 
-                main.append("n_"+popName+" = "+number+"\n");
+                main.append("h(\"n_"+popName+" = "+number+"\")\n");
                 
-                main.append("h(\"objectvar "+popName+"[%i]\"%n_"+popName+")\n");
+                main.append("h(\"objectvar "+popName+"[n_"+popName+"]\")\n");
                 
-                main.append("for i in range(n_"+popName+"):\n");
+                main.append("for i in range(int(h.n_"+popName+")):\n");
                 //main.append("    cell = h."+cellName+"()\n");
                 main.append("    h(\""+popName+"[%i] = new "+cellName+"()\"%i)\n");
                 //main.append("    cell."+getNrnSectionName(cell.getMorphology().getSegment().get(0))+".push()\n");
-                main.append("    h(\"access "+popName+"[%i]."+getNrnSectionName(cell.getMorphology().getSegment().get(0))+"\"%i)\n");
+                main.append("    h(\"access "+popName+"[%i]."+getNrnSectionName(cell.getMorphology().getSegment().get(0))+"\"%i)\n\n");
                 
+                
+                main.append(String.format("h(\"proc initialiseValues_%s() { for i = 0, n_%s-1 { %s[i].set_initial_v() } }\")\n\n", popName, popName, popName));
+                main.append(String.format("h(\"objref fih_%s\")\n\n", popName));
+                main.append(String.format("h(\'{fih_%s = new FInitializeHandler(0, \"initialiseValues_%s()\")}\')\n\n", popName, popName));
+                
+
                 try {
                     FileUtil.writeStringToFile(cellString, cellFile);
                     allGeneratedFiles.add(cellFile);
@@ -392,7 +407,10 @@ public class NeuronWriter extends BaseWriter {
                 String cellId = parts[3];
                 Cell cell = cellsVsCompIds.get(cellId);
                 String inputName = inputList.getID()+ "_"+input.getID();
-                main.append(String.format("h(\"objectvar %s\")\n", inputName));
+                
+                addComment(main, "Adding input: "+ input);
+                
+                main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
                 main.append(String.format("h(\"%s[%s].%s { %s = new %s(0.5) } \")\n\n", pop, cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)), inputName, inputComp.getID()));
                 
             }
@@ -487,11 +505,54 @@ public class NeuronWriter extends BaseWriter {
                             else {
                                 Cell cell = cellsVsCompIds.get(varParts[0]);
                                 String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
-                                for(int i=1; i<varParts.length; i++)
-                                {
-                                    varInst +="."+varParts[i];
+                                
+                                if (varParts.length==5) {
+                                    String cellId = varParts[0];
+                                    String biophys = varParts[1];
+                                    String membProps = varParts[2];
+                                    String channelDensId = varParts[3];
+                                    String variable = varParts[4];
+                                    Component cellComp = lems.getComponent(cellId);
+                                    ArrayList<Component> channelDensityComps = cellComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
+                                    
+
+                                    if (variable.equals("gDensity")) {
+                                        for (Component c: channelDensityComps) {
+                                            if (c.getID().equals(channelDensId))
+                                            variable = "g_"+c.getStringValue("ionChannel");
+                                        }
+                                    }
+                                  
+                                    varInst +="."+variable;
+
+                                    varRef = pop + "[" + num + "]." + varInst;
+                                } else if (varParts.length>5) {
+                                    String cellRef = varParts[0];
+                                    String biophys = varParts[1];
+                                    String membProps = varParts[2];
+                                    String channelDensId = varParts[3];
+                                    String ionChanId = varParts[4];
+
+                                    for(int i=5; i<varParts.length; i++)
+                                    {
+                                        if (i==5)
+                                            varInst +=".";
+                                        else
+                                            varInst +="_";
+                                        varInst += varParts[i];
+                                    }
+
+                                    varInst +="_"+ionChanId;
+
+                                    varRef = pop + "[" + num + "]." + varInst;
+                                } else {
+                                    for(int i=1; i<varParts.length; i++)
+                                    {
+                                        varInst +="."+varParts[i];
+                                    }
+                                    varRef = pop + "[" + num + "]." + varInst;
+                                        
                                 }
-                                varRef = pop + "[" + num + "]." + varInst;
                             }
 
                         }
@@ -564,7 +625,13 @@ public class NeuronWriter extends BaseWriter {
 
         main.append("h.nrncontrolmenu()\n");
 
-        main.append("h.run()\n");
+        main.append("h.run()\n\n");
+        
+        
+        //main.append("objref SampleGraph\n");
+        for (String dg : displayGraphs) {
+            main.append(dg + ".exec_menu(\"View = plot\")\n");
+        }
 
         main.append("print \"Done\"\n\n");
 
@@ -738,6 +805,21 @@ public class NeuronWriter extends BaseWriter {
             
         }
         g.writeEndArray();
+        
+        g.writeArrayFieldStart("initMembPotential");
+        
+        for (InitMembPotential imp: mp.getInitMembPotential()) {
+            g.writeStartObject();
+            String group = imp.getSegmentGroup()==null ? "all" : imp.getSegmentGroup();
+			g.writeStringField("group",group);
+            float value = Utils.getMagnitudeInSI(imp.getValue()) * units.voltageFactor;
+			g.writeStringField("value",formatDefault(value));
+            g.writeEndObject();
+            
+        }
+        g.writeEndArray();
+        
+        
         
         g.writeArrayFieldStart("resistivity");
         IntracellularProperties ip = bp.getIntracellularProperties();
