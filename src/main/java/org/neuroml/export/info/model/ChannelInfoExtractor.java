@@ -21,14 +21,6 @@ import org.neuroml.model.IonChannel;
 public class ChannelInfoExtractor {
 	private InfoNode gates = new InfoNode();
 
-    /*
-    private List<GateHHUndetermined> gate;
-    private List<GateHHRates> gateHHrates;
-    private List<GateHHRatesTau> gateHHratesTau;
-    private List<GateHHTauInf> gateHHtauInf;
-    private List<GateHHRatesInf> gateHHratesInf;
-    */
-	
 
 	/**
 	 * @param expression
