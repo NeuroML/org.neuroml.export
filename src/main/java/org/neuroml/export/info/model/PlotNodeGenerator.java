@@ -9,7 +9,7 @@ public class PlotNodeGenerator {
 	 * @param expression
 	 * @return
 	 */
-	public static PlotNode createPlotNode(NeuroMLExpression expression, Double x0, Double x1, Double dx) {
+	public static PlotNode createPlotNode(IPlottableExpression expression, Double x0, Double x1, Double dx) {
 		PlotNode plot = new PlotNode(expression.getId(), "V", "ms-1");
 		plot.getData().add(createDiscretizedData(expression, x0, x1, dx));
 		return plot;
@@ -21,7 +21,7 @@ public class PlotNodeGenerator {
 		return plot;
 	}
 
-	private static Data createDiscretizedData(NeuroMLExpression expression, Double x0, Double x1, Double dx) {
+	private static Data createDiscretizedData(IPlottableExpression expression, Double x0, Double x1, Double dx) {
 		List<Double> X = new ArrayList<Double>();
 		List<Double> Y = new ArrayList<Double>();
 
