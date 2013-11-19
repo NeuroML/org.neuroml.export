@@ -1,6 +1,8 @@
 package org.neuroml.export;
 
+import java.io.File;
 import java.io.IOException;
+import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -15,6 +17,8 @@ import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
+import org.lemsml.jlems.core.type.Component;
+import org.neuroml.model.IaFTauCell;
 
 public class UtilsTest extends TestCase {
 /*
@@ -37,14 +41,15 @@ public class UtilsTest extends TestCase {
 	public void testReadLemsNeuroMLFile() throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
 
 		System.out.println("Testing: readLemsNeuroMLFile(String contents)");
-		
 		String[] filenames = new String[]{"NML2_SynapseTypes.nml", "NML2_SimpleIonChannel.nml", "NML2_SimpleMorphology.nml", "NML2_FullNeuroML.nml", "NML2_PyNNCells.nml"};
 		
 		for (String filename: filenames) {
-			loadNeuroMLExample(filename);
+            
+			Utils.readLemsNeuroMLFile(new File(filename));
 		}
-		
 	}*/
+    
+    
 	
 	public void testGetMagnitudeInSI() throws ParseError, ContentError {
 		System.out.println("Testing: getMagnitudeInSI()");
@@ -64,6 +69,20 @@ public class UtilsTest extends TestCase {
         String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+    }
+    
+    public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
+        
+        IaFTauCell iaf = new IaFTauCell();
+        iaf.setTau("10ms");
+        iaf.setLeakReversal("-60mV");
+        iaf.setReset("-70mV");
+        iaf.setThresh("-40mV");
+        iaf.setId("iaf00");
+        System.out.println("Converting: "+iaf);
+        Component comp = Utils.convertNeuroMLToComponent(iaf);
+        System.out.println("Now: "+comp.details("    "));
+        
     }
 	
 

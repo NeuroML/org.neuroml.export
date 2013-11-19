@@ -213,6 +213,22 @@ public class Utils {
         return els;
     }
     
+    
+    public static Component convertNeuroMLToComponent(Standalone nmlElement) throws JAXBException, Exception
+    {
+        NeuroMLDocument nml2 = new NeuroMLDocument();
+        nml2.setId(nmlElement.getId());
+        NeuroMLConverter.addElementToDocument(nml2, nmlElement);
+        NeuroMLConverter nmlc = new NeuroMLConverter();
+        String nml2String = nmlc.neuroml2ToXml(nml2);
+        System.out.println("nml2: "+nml2String);
+        String lemsString = nmlc.convertNeuroML2ToLems(nml2String);
+        System.out.println("lemsString: "+lemsString);
+        Lems lems = Utils.readLemsNeuroMLFile(lemsString).getLems();
+        
+        return lems.getComponent(nmlElement.getId());
+    }
+    
 
     public static void main(String[] args) throws Exception {
     	
