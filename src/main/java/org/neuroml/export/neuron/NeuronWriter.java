@@ -38,6 +38,9 @@ import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.type.Requirement;
+import org.lemsml.jlems.core.type.dynamics.Case;
+import org.lemsml.jlems.core.type.dynamics.ConditionalDerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
@@ -45,8 +48,8 @@ import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
+import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.InitMembPotential;
-import org.neuroml.model.Input;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.Member;
 import org.neuroml.model.MembraneProperties;
@@ -55,6 +58,7 @@ import org.neuroml.model.Point3DWithDiam;
 import org.neuroml.model.Resistivity;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
+import org.neuroml.model.Species;
 import org.neuroml.model.SpecificCapacitance;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLElements;
@@ -154,11 +158,11 @@ public class NeuronWriter extends BaseWriter {
 
         String newExpr = expr.trim();
 
-        newExpr = newExpr.replaceAll("greater_than_or_equal_to", ">=");
-        newExpr = newExpr.replaceAll("greater_than", ">");
-        newExpr = newExpr.replaceAll("less_than_or_equal_to", "<=");
-        newExpr = newExpr.replaceAll("less_than", "<=");
-        newExpr = newExpr.replaceAll("equal_to", "==");
+        newExpr = newExpr.replaceAll(".geq.", ">="); // TODO, use strings from GreaterThanOrEqualsNode in jLEMS
+        newExpr = newExpr.replaceAll(".gt.", ">");
+        newExpr = newExpr.replaceAll(".leq.", "<=");
+        newExpr = newExpr.replaceAll(".lt.", "<=");
+        newExpr = newExpr.replaceAll(".eq.", "==");
 
         newExpr = newExpr.replaceAll(" ln\\(", " log(");
 
@@ -206,7 +210,8 @@ public class NeuronWriter extends BaseWriter {
         HashMap<String, Integer> compMechsCreated = new HashMap<String, Integer>();
         HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
         
-        HashMap<String, Cell> cellsVsCompIds = new HashMap<String, Cell>();
+        HashMap<String, Cell> compIdsVsCells = new HashMap<String, Cell>();
+        HashMap<String, String> popIdsVsCellIds = new HashMap<String, String>();
         
         boolean simulatingNetwork = true;
         
@@ -238,6 +243,7 @@ public class NeuronWriter extends BaseWriter {
         		number = Integer.parseInt(popsOrComponent.getStringValue("size"));
                 popComp = lems.getComponent(compReference);
                 popName = popsOrComponent.getID();
+                popIdsVsCellIds.put(popName, compReference);
         	} else if (popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST)) {
         		compReference = popsOrComponent.getStringValue("component");
                 popComp = lems.getComponent(compReference);
@@ -250,6 +256,7 @@ public class NeuronWriter extends BaseWriter {
                 }
                         popComp.getAllChildren().size();
                 popName = popsOrComponent.getID();
+                popIdsVsCellIds.put(popName, compReference);
                 isCondBasedCell = true;
         	} else {
         		//compReference = popsOrComponent.getComponentType().getName();
@@ -271,7 +278,7 @@ public class NeuronWriter extends BaseWriter {
             if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
                                 
                 Cell cell = getCellFromComponent(popComp);
-                cellsVsCompIds.put(popComp.getID(), cell);
+                compIdsVsCells.put(popComp.getID(), cell);
                 String cellString = generateCellFile(cell);
                 String cellName = popComp.getID();
 
@@ -324,6 +331,47 @@ public class NeuronWriter extends BaseWriter {
                             throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
                         }
                     }
+                }
+                
+                for (ChannelDensityNernst cdn: cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
+                {
+                    String ionChannel = cdn.getIonChannel();
+                    if (!generatedModComponents.contains(ionChannel)) {
+                        Component ionChannelComp = lems.getComponent(ionChannel);
+                        String mod = generateModFile(ionChannelComp);
+                        generatedModComponents.add(ionChannel);
+
+                        File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
+                        E.info("-- Writing to: " + modFile);
+
+                        try {
+                            FileUtil.writeStringToFile(mod.toString(), modFile);
+                            allGeneratedFiles.add(modFile);
+                        } catch (IOException ex) {
+                            throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+                        }
+                    }
+                }
+                
+                for (Species sp: cell.getBiophysicalProperties().getIntracellularProperties().getSpecies())
+                {
+                    String concModel = sp.getConcentrationModel();
+                    if (!generatedModComponents.contains(concModel)) {
+                        Component concModelComp = lems.getComponent(concModel);
+                        String mod = generateModFile(concModelComp);
+                        generatedModComponents.add(concModel);
+
+                        File modFile = new File(dirForMods, concModelComp.getID() + ".mod");
+                        E.info("-- Writing to: " + modFile);
+
+                        try {
+                            FileUtil.writeStringToFile(mod.toString(), modFile);
+                            allGeneratedFiles.add(modFile);
+                        } catch (IOException ex) {
+                            throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+                        }
+                    }
+                    
                 }
                 
             } else {
@@ -402,10 +450,25 @@ public class NeuronWriter extends BaseWriter {
             
             for (Component input: inputs) {
                 String targetString = input.getStringValue("target");
-                String[] parts = targetString.split("/");
-                String cellNum = parts[2];
-                String cellId = parts[3];
-                Cell cell = cellsVsCompIds.get(cellId);
+                Cell cell = null;
+                String cellNum = null;
+                
+                if(targetString.indexOf("[")>0){
+                    String[] parts1 = targetString.split("/");
+                    String[] parts2 = parts1[1].split("\\[");
+                    cellNum = parts2[1].split("\\]")[0];
+                    String popName = parts2[0];
+                    String cellId = popIdsVsCellIds.get(popName);
+                    cell = compIdsVsCells.get(cellId);
+                    
+                }
+                else {
+                    String[] parts = targetString.split("/");
+                    cellNum = parts[2];
+                    String cellId = parts[3];
+                    cell = compIdsVsCells.get(cellId);
+                }
+                
                 String inputName = inputList.getID()+ "_"+input.getID();
                 
                 addComment(main, "Adding input: "+ input);
@@ -498,12 +561,12 @@ public class NeuronWriter extends BaseWriter {
                         }
                         if (isCondBasedCell) {
                             if (varParts==null) {
-                                Cell cell = cellsVsCompIds.get(popComp.getID());
+                                Cell cell = compIdsVsCells.get(popComp.getID());
                                 String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
                                 varRef = pop + "[" + num + "]." + varInst+"."+var;
                             }
                             else {
-                                Cell cell = cellsVsCompIds.get(varParts[0]);
+                                Cell cell = compIdsVsCells.get(varParts[0]);
                                 String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
                                 
                                 if (varParts.length==5) {
@@ -521,7 +584,7 @@ public class NeuronWriter extends BaseWriter {
                                             if (c.getID().equals(channelDensId))
                                             variable = "g_"+c.getStringValue("ionChannel");
                                         }
-                                    }
+                                    } 
                                   
                                     varInst +="."+variable;
 
@@ -548,7 +611,11 @@ public class NeuronWriter extends BaseWriter {
                                 } else {
                                     for(int i=1; i<varParts.length; i++)
                                     {
-                                        varInst +="."+varParts[i];
+                                        String part = varParts[i];
+                                        if (part.equals("caConc")) {
+                                            part = "cai";
+                                        }
+                                        varInst +="."+part;
                                     }
                                     varRef = pop + "[" + num + "]." + varInst;
                                         
@@ -556,7 +623,7 @@ public class NeuronWriter extends BaseWriter {
                             }
 
                         }
-                        System.out.println("");
+                        System.out.println(" = "+varRef);
 
                         String dispGraph = "display_" + dispId;
                         if (!displayGraphs.contains(dispGraph)) {
@@ -647,11 +714,9 @@ public class NeuronWriter extends BaseWriter {
     public static String generateCellFile(Cell cell) throws ContentError, ParseError, IOException, JAXBException {
         StringBuilder cellString = new StringBuilder();
 
-        
         cellString.append("// Cell: "+cell.getId()+"\n");
         String json = cellToJson(cell, SupportedUnits.NEURON);
         cellString.append("/*\n"+json+"\n*/");
-       
         
 		Velocity.init();
 		
@@ -677,22 +742,24 @@ public class NeuronWriter extends BaseWriter {
     
     //TODO: to be made more general
     public enum SupportedUnits{
-        SI(1,1,1,1, 1), 
-        PHYSIOLOGICAL(1000, 1e-6f, 100, 0.1f, 0.1f), 
-        NEURON(1000, 1e-6f, 100, 100, 1e-4f);
+        SI(1,1,1,1,1,1), 
+        PHYSIOLOGICAL(1000, 1e-6f, 100, 0.1f, 0.1f, 1e-6f), 
+        NEURON(1000, 1e-6f, 100, 100, 1e-4f, 1);
         
-        SupportedUnits(float voltageFactor, float lengthFactor, float specCapFactor, float resistivityFactor, float condDensFactor) {
+        SupportedUnits(float voltageFactor, float lengthFactor, float specCapFactor, float resistivityFactor, float condDensFactor, float concentrationFactor) {
             this.voltageFactor = voltageFactor;
             this.lengthFactor = lengthFactor;
             this.specCapFactor = specCapFactor;
             this.resistivityFactor = resistivityFactor;
             this.condDensFactor = condDensFactor;
+            this.concentrationFactor = concentrationFactor;
         }
         float voltageFactor;
         float lengthFactor;
         float specCapFactor;
         float resistivityFactor;
         float condDensFactor;
+        float concentrationFactor;
     };
     
     private static String getNrnSectionName(Segment seg) {
@@ -848,7 +915,6 @@ public class NeuronWriter extends BaseWriter {
                 g.writeStringField("ion","non_specific");
             }
                 
-            
             String group = cd.getSegmentGroup()==null ? "all" : cd.getSegmentGroup();
 			g.writeStringField("group",group);
             
@@ -857,6 +923,48 @@ public class NeuronWriter extends BaseWriter {
             
             float valueErev = Utils.getMagnitudeInSI(cd.getErev())*units.voltageFactor;
 			g.writeStringField("erev",formatDefault(valueErev));
+            
+            g.writeEndObject();
+        }
+        for (ChannelDensityNernst cdn: mp.getChannelDensityNernst()) {
+            g.writeStartObject();
+			g.writeStringField("id",cdn.getId());
+			g.writeStringField("ionChannel",cdn.getIonChannel());
+
+            g.writeStringField("ion",cdn.getIon());
+          
+                
+            String group = cdn.getSegmentGroup()==null ? "all" : cdn.getSegmentGroup();
+			g.writeStringField("group",group);
+            
+            float valueCondDens = Utils.getMagnitudeInSI(cdn.getCondDensity())*units.condDensFactor;
+			g.writeStringField("condDens",formatDefault(valueCondDens));
+            
+			g.writeStringField("erev","calculated_by_Nernst_equation");
+            
+            g.writeEndObject();
+        }
+        
+        
+        g.writeEndArray();
+        
+        
+        g.writeArrayFieldStart("species");
+        for (Species sp: ip.getSpecies()) {
+            g.writeStartObject();
+			g.writeStringField("id",sp.getId());
+			g.writeStringField("ion",sp.getIon());
+			g.writeStringField("concentrationModel",sp.getConcentrationModel());
+            
+                
+            String group = sp.getSegmentGroup()==null ? "all" : sp.getSegmentGroup();
+			g.writeStringField("group",group);
+            
+            float initConc = Utils.getMagnitudeInSI(sp.getInitialConcentration())*units.concentrationFactor;
+			g.writeStringField("initialConcentration",formatDefault(initConc));
+            float initExtConc = Utils.getMagnitudeInSI(sp.getInitialExtConcentration())*units.concentrationFactor;
+			g.writeStringField("initialExtConcentration",formatDefault(initExtConc));
+            
             
             g.writeEndObject();
         }
@@ -940,7 +1048,14 @@ public class NeuronWriter extends BaseWriter {
                 blockNeuron.append("RANGE e\n"); 
             }
             else if (species != null) {
-                blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + "  ? TODO check valence\n");
+                if (species.indexOf("ca")>=0)
+                {
+                    blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + " VALENCE 2 ? Assuming valence = 2 (Ca ion); TODO check this!!\n");
+                }
+                else
+                {
+                    blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + " VALENCE 1 ? Assuming valence = 1; TODO check this!!\n");
+                }
             }
 
             for (Component child1: comp.getAllChildren()) {
@@ -973,7 +1088,7 @@ public class NeuronWriter extends BaseWriter {
             String ion = comp.getStringValue("ion");
             
             if (ion != null) {
-                blockNeuron.append("USEION " + ion + " READ " + ion + "i," + ion + "o, i" + ion + " WRITE " + ion + "i\n"); //TODO check valence
+                blockNeuron.append("USEION " + ion + " READ " + ion + "i," + ion + "o, i" + ion + " WRITE " + ion + "i VALENCE 2\n"); //TODO check valence
             }
             blockNeuron.append("RANGE cai\n");
             blockNeuron.append("RANGE cao\n");
@@ -1030,7 +1145,7 @@ public class NeuronWriter extends BaseWriter {
 
         parseStateVars(comp, prefix, rangeVars, stateVars, blockNeuron, blockParameter, blockAssigned, blockState, paramMappings);
 
-        parseParameters(comp, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
+        parseParameters(comp, prefix, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
 
 
         if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
@@ -1416,6 +1531,7 @@ public class NeuronWriter extends BaseWriter {
 
     private static void parseParameters(Component comp,
             String prefix,
+            String prefixParent,
             ArrayList<String> rangeVars,
             ArrayList<String> stateVars,
             StringBuilder blockNeuron,
@@ -1434,12 +1550,12 @@ public class NeuronWriter extends BaseWriter {
             rangeVars.add(mappedName);
             paramMappingsComp.put(pv.getName(), mappedName);
 
-            String range = "\nRANGE " + mappedName;
+            String range = "RANGE " + mappedName;
             while (range.length() < commentOffset) {
                 range = range + " ";
             }
 
-            blockNeuron.append(range + ": parameter");
+            blockNeuron.append(range + ": parameter\n");
             float val = convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName());
             String valS = val + "";
             if ((int) val == val) {
@@ -1463,7 +1579,7 @@ public class NeuronWriter extends BaseWriter {
                 while (range.length() < commentOffset) {
                     range = range + " ";
                 }
-                blockNeuron.append(range + ": exposure");
+                blockNeuron.append(range + ": exposure\n");
 
                 if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
                     exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
@@ -1472,13 +1588,23 @@ public class NeuronWriter extends BaseWriter {
                 }
             }
         }
+        
+        for (Requirement req : comp.getComponentType().getRequirements()) {
+            String mappedName = prefixParent + req.getName();
+            if (!req.getName().equals("v") && !req.getName().equals("temperature") && !req.getName().equals("caConc"))
+            {
+                // Make the assumption that the requirement is in the parent...
+                paramMappingsComp.put(req.getName(), mappedName);
+            }
+            
+        }
 
         for (Component childComp : comp.getAllChildren()) {
             String prefixNew = prefix + childComp.getID() + "_";
             if (childComp.getID() == null) {
                 prefixNew = prefix + childComp.getName() + "_";
             }
-            parseParameters(childComp, prefixNew, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
+            parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
 
             /*
             HashMap<String, String> childMaps = paramMappings.get(childComp.getID());
@@ -1492,6 +1618,7 @@ public class NeuronWriter extends BaseWriter {
         if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE)) {
             blockNeuron.append("\nRANGE " + V_COPY_PREFIX + NEURON_VOLTAGE + "                           : copy of v on section\n");
         }
+        
 
     }
 
@@ -1715,6 +1842,7 @@ public class NeuronWriter extends BaseWriter {
             if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
                 blockForEqns = blockBreakpoint;
             }
+            
             for (DerivedVariable dv : comp.getComponentType().getDynamics().getDerivedVariables()) {
 
                 StringBuilder block = new StringBuilder();
@@ -1723,12 +1851,12 @@ public class NeuronWriter extends BaseWriter {
                 if (!rangeVars.contains(mappedName)) {
                     rangeVars.add(mappedName);
 
-                    String range = "\nRANGE " + mappedName;
+                    String range = "RANGE " + mappedName;
                     while (range.length() < commentOffset) {
                         range = range + " ";
                     }
 
-                    blockNeuron.append(range + ": derived var\n");
+                    blockNeuron.append(range + ": derived variable\n");
                     paramMappingsComp.put(dv.getName(), mappedName);
                 }
 
@@ -1737,15 +1865,12 @@ public class NeuronWriter extends BaseWriter {
                     assig = assig + " ";
                 }
 
-                blockAssigned.append(assig + ": derived var\n");
+                blockAssigned.append(assig + ": derived variable\n");
 
 
                 if (dv.getValueExpression() != null) {
 
-                    //block.append("? DV was: " + dv.getValueExpression() + "\n");
-
                     String rate = checkForStateVarsAndNested(dv.getValueExpression(), comp, paramMappings);
-                    //block.append("? DV is: " + rate + "\n");
 
                     String synFactor = "";
                     if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
@@ -1754,25 +1879,9 @@ public class NeuronWriter extends BaseWriter {
                         // since synapse currents differ in sign from NEURON
                         synFactor = "-1 * ";
                     }
-                    
-                    int u=7;
-                    if (1<u /*TODOdv.get == null*/) {
-                        //if (cond.)
-                        block.append(prefix + dv.getName() + " = "+synFactor + rate + " ? evaluable\n\n");
-                    } else {
-
-                        block.append("TODO dv.getEvaluableCondition() !!!!!\n");
-                        /*
-                        String cond = checkForStateVarsAndNested(dv.getEvaluableCondition().toString(), comp, paramMappings);
-                        String ifFalse = checkForStateVarsAndNested(dv.getEvaluableIfFalse().toString(), comp, paramMappings);
-
-                        block.append("if (" + cond + ") {\n");
-                        block.append("    " + prefix + dv.getName() + " = "+synFactor + rate + " \n");
-                        block.append("} else {\n");
-                        block.append("    " + prefix + dv.getName() + " = "+synFactor + ifFalse + " \n");
-                        block.append("} \n\n");*/
-
-                    }
+                 
+                    block.append(prefix + dv.getName() + " = "+synFactor + rate + " ? evaluable\n");
+                  
 
                 } else {
                     String firstChild = dv.getPath().substring(0, dv.getPath().indexOf("/"));
@@ -1836,8 +1945,6 @@ public class NeuronWriter extends BaseWriter {
                                 }
                                 eqn = eqn + childComp.getID() + "_" + path;
                             }
-
-
                             eqn = eqn + " ? " + reduce + " applied to all instances of " + path + " in: <" + children +"> ("+comp.getChildrenAL(children)+")" +" c2 ("+comp.getAllChildren()+")";
                         }
                         block.append(prefix + dv.getName() + " = " + eqn + " ? path based\n\n");
@@ -1846,6 +1953,53 @@ public class NeuronWriter extends BaseWriter {
                 //blockForEqns.insert(0, block);
                 blockForEqns.append(block);
             }
+            
+            
+            for (ConditionalDerivedVariable cdv : comp.getComponentType().getDynamics().getConditionalDerivedVariables()) {
+
+                StringBuilder block = new StringBuilder();
+
+                String mappedName = prefix + cdv.getName();
+                if (!rangeVars.contains(mappedName)) {
+                    rangeVars.add(mappedName);
+
+                    String range = "\nRANGE " + mappedName;
+                    while (range.length() < commentOffset) {
+                        range = range + " ";
+                    }
+
+                    blockNeuron.append(range + ": conditional derived var\n");
+                    paramMappingsComp.put(cdv.getName(), mappedName);
+                }
+
+                String assig = "\n" + prefix + cdv.getName() + " " + getNeuronUnit(cdv.dimension);
+                while (assig.length() < commentOffset) {
+                    assig = assig + " ";
+                }
+
+                blockAssigned.append(assig + ": conditional derived var...\n");
+
+                for (Case c: cdv.cases){
+                    
+                    String rate = checkForStateVarsAndNested(c.getValueExpression(), comp, paramMappings);
+                    
+                    String cond = "\n} else ";
+                    if (c.condition!=null) {
+                        String cond_ = checkForStateVarsAndNested(c.condition, comp, paramMappings);
+                        cond = "if ("+cond_+") ";
+                        if (block.length()!=0)
+                            cond = "else "+cond;
+                    }
+                    
+
+                    block.append(cond +" { \n    " + prefix + cdv.getName() + " = " + rate + " ? evaluable cdv");
+                }
+                
+                blockForEqns.append(block+"\n}\n\n");
+
+
+            }
+            
         }
 
     }
@@ -1967,9 +2121,13 @@ public class NeuronWriter extends BaseWriter {
         lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex5_DetCell.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
         lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
+        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
+        lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
+        
+        //lemsFile = new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-        File mainFile = new File(expDir, "hh.py");
+        File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
         
         NeuronWriter nw = new NeuronWriter(lems);
         ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
