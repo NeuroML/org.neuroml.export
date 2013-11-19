@@ -8,7 +8,6 @@ import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
 import org.neuroml.model.GateHHTauInf;
 import org.neuroml.model.GateHHUndetermined;
-import org.neuroml.model.HHRate;
 import org.neuroml.model.IonChannel;
 
 /**
@@ -34,8 +33,10 @@ public class ChannelInfoExtractor {
 
 			gate.put("instances", g.getInstances());
 
-			ChannelMLRateExpression<HHRate> fwd = new ChannelMLRateExpression<HHRate>(g.getForwardRate());
-			ChannelMLRateExpression<HHRate> rev = new ChannelMLRateExpression<HHRate>(g.getReverseRate());
+			HHRateProcessor rateinfo = new HHRateProcessor(g);
+
+			ChannelMLHHExpression fwd = rateinfo.getForwardRate();
+			ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
 			gate.put("forward rate", fwd.toString());
 			gate.put("reverse rate", rev.toString());

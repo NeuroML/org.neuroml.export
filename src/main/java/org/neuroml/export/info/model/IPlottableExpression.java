@@ -1,9 +1,9 @@
 package org.neuroml.export.info.model;
 
 
-interface NeuroMLExpression
+interface IPlottableExpression
 {
 	public abstract Double eval(Double t);
-	public String toString();
+	public abstract String toString();
 	public abstract String getId();
 }
