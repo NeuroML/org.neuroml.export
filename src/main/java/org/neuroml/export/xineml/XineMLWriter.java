@@ -4,9 +4,12 @@
 package org.neuroml.export.xineml;
 
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import org.lemsml.export.base.GenerationException;
 
+import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.expression.Parser;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -25,6 +28,7 @@ import org.lemsml.jlems.core.type.dynamics.OnCondition;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 
@@ -37,9 +41,15 @@ public class XineMLWriter extends XMLWriter {
     public static final String SCHEMA_9ML = "https://raw.github.com/OpenSourceBrain/NineMLShowcase/master/Schemas/NineML/NineML_v0.3.xsd";
     public static final String NAMESPACE_9ML = "http://nineml.incf.org/9ML/0.3";
 
-    public static final String SCHEMA_SPINEML = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLComponentLayer.xsd";
-    public static final String NAMESPACE_SPINEML = "http://www.shef.ac.uk/SpineMLComponentLayer";
+    public static final String SCHEMA_SPINEML_COMP_LAYER = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLComponentLayer.xsd";
+    public static final String SCHEMA_SPINEML_NET_LAYER = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLNetworkLayer.xsd";
+    public static final String SCHEMA_SPINEML_EXP_LAYER = "http://bimpa.group.shef.ac.uk/SpineML/schemas/SpineMLExperimentLayer.xsd";
+    
+    public static final String NAMESPACE_SPINEML_COMP_LAYER = "http://www.shef.ac.uk/SpineMLComponentLayer";
+    public static final String NAMESPACE_SPINEML_NET_LAYER = "http://www.shef.ac.uk/SpineMLNetworkLayer";
+    public static final String NAMESPACE_SPINEML_EXP_LAYER = "http://www.shef.ac.uk/SpineMLExperimentLayer";
    
+    ArrayList<File> filesGenerated = new ArrayList<File>();
     
     //public static final String LOCAL_9ML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
 
@@ -47,9 +57,15 @@ public class XineMLWriter extends XMLWriter {
         super(l, v.toString());
         this.variant = v;
     }
+    
+
+	
+	public ArrayList<File> getFilesGenerated()
+	{
+		return filesGenerated;
+	}
 
 
-    @Override
     public String getMainScript() throws GenerationException {
 
         Parser p = new Parser();
@@ -57,8 +73,9 @@ public class XineMLWriter extends XMLWriter {
         StringBuilder mainFile = new StringBuilder();
 
         StringBuilder abstLayer = new StringBuilder();
-        
         StringBuilder userLayer = new StringBuilder();
+        StringBuilder expLayer = new StringBuilder();
+        int expLayerFlag = 3;
 
         mainFile.append("<?xml version='1.0' encoding='UTF-8'?>\n");
         
@@ -75,8 +92,8 @@ public class XineMLWriter extends XMLWriter {
 	        	defaultDimension="none";
 	        	break;
 	        case SpineML:
-        		namespace = NAMESPACE_SPINEML;
-        		schema = SCHEMA_SPINEML;
+        		namespace = NAMESPACE_SPINEML_COMP_LAYER;
+        		schema = SCHEMA_SPINEML_COMP_LAYER;
 	        	defaultDimension="?";
 	        	break;
         }
@@ -89,6 +106,16 @@ public class XineMLWriter extends XMLWriter {
         String root = variant.toString();
         
         startElement(mainFile, root, attrs);
+        
+        if (variant.equals(variant.SpineML))
+        {
+            String[] attrs_exp = new String[]{"xmlns="+NAMESPACE_SPINEML_EXP_LAYER,
+                    extraAttr,
+                    "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+                    "xsi:schemaLocation="+NAMESPACE_SPINEML_EXP_LAYER+" "+SCHEMA_SPINEML_EXP_LAYER};
+            
+            startElement(expLayer, root, attrs_exp, expLayerFlag);
+        }
 
         String info = "\n"+Utils.getHeaderComment(format) + "\n" +
         			"\nExport of model:\n" + lems.textSummary(false, false) + "\n";
@@ -98,12 +125,27 @@ public class XineMLWriter extends XMLWriter {
         try {
 
             Target target = lems.getTarget();
-
             Component simCpt = target.getComponent();
 
             String targetId = simCpt.getStringValue("target");
 
             Component tgtNet = lems.getComponent(targetId);
+            ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
+
+            if (variant.equals(Variant.SpineML))
+            {
+                startElement(expLayer, "Experiment", "name="+simCpt.getID()+"description=Export from LEMS", expLayerFlag);
+                startElement(expLayer, "Model", "network_layer_url=network_"+tgtNet.id+"/>", expLayerFlag);
+
+                //<Simulation duration="1" preferred_simulator="BRAHMS"><EulerIntegration dt="0.1"/></Simulation>
+                startElement(expLayer, "Simulation", "duration="+simCpt.getStringValue("length"), expLayerFlag);
+                startEndElement(expLayer, "EulerIntegration", "dt="+simCpt.getStringValue("step"), expLayerFlag);
+                endElement(expLayer, "Simulation", expLayerFlag);
+
+            }
+
+
+
             ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
 
             String netId = tgtNet.getID();
@@ -457,6 +499,36 @@ public class XineMLWriter extends XMLWriter {
             endElement(mainFile, root);
         } catch (ContentError e) {
             throw new GenerationException("Error with LEMS content", e);
+
+            ////////////////////////////////////////////////////////
+            /*
+        mainFile.append(abstLayer);
+        mainFile.append("\n");
+
+
+        endElement(mainFile, root);
+        //System.out.println(main);
+        
+        String mainFilename = "Component_"+netId+"."+variant.toString().toLowerCase();
+        File main = new File(dirForFiles,mainFilename);
+
+        FileUtil.writeStringToFile(mainFile.toString(), main);
+        filesGenerated.add(main);
+        
+        if (variant.equals(Variant.SpineML))
+        {
+            endElement(expLayer, "Model", expLayerFlag);
+            endElement(expLayer, "Experiment", expLayerFlag);
+            endElement(expLayer, root, expLayerFlag);
+            
+            String expFilename = "Run_"+netId+"."+variant.toString().toLowerCase();
+            File expFile = new File(dirForFiles,expFilename);
+
+            FileUtil.writeStringToFile(expLayer.toString(), expFile);
+            filesGenerated.add(expFile);
+          
+        */
+            ///////////////////////////////////////////  
         }
         
         return mainFile.toString();

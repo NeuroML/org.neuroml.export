@@ -2,6 +2,7 @@ package org.neuroml.export.xineml;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -50,14 +51,11 @@ public class XineMLWriterTest extends TestCase {
         String nr = nw.getMainScript();
         
         System.out.println("Generated: "+nr);
-
-        File nrFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".9ml"));
         
-        System.out.println("Writing to: "+nrFile.getAbsolutePath());
-        
-        FileUtil.writeStringToFile(nr, nrFile);
-
-        assertTrue(nrFile.exists());
+        for (File f: nw.getFilesGenerated()) {
+            System.out.println("Checking file: "+f.getAbsolutePath());
+	        assertTrue(f.exists());
+        }
 
         // Refresh..
     	lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -67,14 +65,11 @@ public class XineMLWriterTest extends TestCase {
         String sr = sw.getMainScript();
         
         System.out.println("Generated: "+sr);
-
-        File srFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".spineml"));
         
-        System.out.println("Writing to: "+srFile.getAbsolutePath());
-        
-        FileUtil.writeStringToFile(sr, srFile);
-
-        assertTrue(srFile.exists());
+        for (File f: sw.getFilesGenerated()) {
+            System.out.println("Checking file: "+f.getAbsolutePath());
+	        assertTrue(f.exists());
+        }
 	}
 
 }
