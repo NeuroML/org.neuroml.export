@@ -34,6 +34,13 @@ public class NeuronWriterTest extends TestCase {
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
         testGetMainScript(exampleFilename, lems);
     }
+    /*
+    public void testQ10() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
+
+        String exampleFilename = "LEMS_NML2_Ex10_Q10.xml";
+        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+        testGetMainScript(exampleFilename, lems);
+    }*/
 
     public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
 
