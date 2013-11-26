@@ -1,5 +1,5 @@
 #######################################################################
-## xppaut script automatically generated from a LEMS/SOM description ##
+## Template for generating xppaut code from a dLEMS    description   ##
 ## This is work in progress, expect substantial changes              ##
 #######################################################################
 ########################################################################
@@ -12,6 +12,8 @@
 #if($velocityCount == 1)$str#else; $str#end##
 #end#end##
 ########################################################################
+
+#This script has been automatically generated from a dLems description
 
 #ODE definition
 #foreach ($dyn in $dynamics.keySet())##
