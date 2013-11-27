@@ -21,6 +21,7 @@ import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 
 import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.Main;
 import org.neuroml.model.util.NeuroMLConverter;
@@ -28,7 +29,7 @@ import org.neuroml.model.util.NeuroMLConverter;
 public class NeuronWriterTest extends TestCase {
 
     
-    public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
+    public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException {
 
         String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -42,7 +43,7 @@ public class NeuronWriterTest extends TestCase {
         testGetMainScript(exampleFilename, lems);
     }*/
 
-    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
+    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException {
 
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -99,7 +100,7 @@ public class NeuronWriterTest extends TestCase {
     }
 
     public void testGetMainScript(String exampleFilename, Lems lems) throws ContentError, ParseError,
-            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
+            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException {
 
         MinimalMessageHandler.setVeryMinimal(true);
 

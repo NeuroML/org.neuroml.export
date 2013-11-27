@@ -13,7 +13,7 @@ public x, y, z, position
 
 //  Some methods for referencing the cells
 
-public toString, netInfo, set_initial_v, set_initial_ion_properties
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
 
 
 #foreach ($s in $sections)##
@@ -27,12 +27,15 @@ public $s.name
 objref $g.name
 #end
 
+objref synlist
+
 proc init() {
     topol()
     subsets()
     geom()
     biophys()
     geom_nseg()
+    synlist = new List()
     x = y = z = 0
     
 }
