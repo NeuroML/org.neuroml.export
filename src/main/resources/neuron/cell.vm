@@ -13,7 +13,7 @@ public x, y, z, position
 
 //  Some methods for referencing the cells
 
-public toString, netInfo, set_initial_v
+public toString, netInfo, set_initial_v, set_initial_ion_properties
 
 
 #foreach ($s in $sections)##
@@ -43,6 +43,19 @@ proc set_initial_v() {
     forsec $imp.group v = $imp.value  // units: mV
 #end
 }
+
+
+proc set_initial_ion_properties() {
+    // From species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        ${sp.ion}i = $sp.initialConcentration  // units: mM
+        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
+    }
+#end
+}
+
 
 proc topol() {
     /////////// Only works for 1 section!!!
@@ -112,8 +125,6 @@ proc biophys() {
     // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
     forsec $sp.group {
         insert $sp.concentrationModel
-        ${sp.ion}i = $sp.initialConcentration  // units: mM
-        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
     }
 #end
 

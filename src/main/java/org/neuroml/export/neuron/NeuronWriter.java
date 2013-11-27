@@ -87,6 +87,14 @@ public class NeuronWriter extends BaseWriter {
     
 	private static final String cellTemplateFile = "neuron/cell.vm";
     
+    public enum ChannelConductanceOption {
+		FIXED_REVERSAL_POTENTIAL, 
+		USE_NERNST, 
+		USE_GHK;
+        
+        float erev;
+		
+	 };
 
     public NeuronWriter(Lems l) {
         super(l, NEURON_FORMAT);
@@ -301,9 +309,13 @@ public class NeuronWriter extends BaseWriter {
                 main.append("    h(\"access "+popName+"[%i]."+getNrnSectionName(cell.getMorphology().getSegment().get(0))+"\"%i)\n\n");
                 
                 
-                main.append(String.format("h(\"proc initialiseValues_%s() { for i = 0, n_%s-1 { %s[i].set_initial_v() } }\")\n\n", popName, popName, popName));
-                main.append(String.format("h(\"objref fih_%s\")\n\n", popName));
-                main.append(String.format("h(\'{fih_%s = new FInitializeHandler(0, \"initialiseValues_%s()\")}\')\n\n", popName, popName));
+                main.append(String.format("h(\"proc initialiseV_%s() { for i = 0, n_%s-1 { %s[i].set_initial_v() } }\")\n", popName, popName, popName));
+                main.append(String.format("h(\"objref fih_%s\")\n", popName));
+                main.append(String.format("h(\'{fih_%s = new FInitializeHandler(0, \"initialiseV_%s()\")}\')\n\n", popName, popName));
+                
+                main.append(String.format("h(\"proc initialiseIons_%s() { for i = 0, n_%s-1 { %s[i].set_initial_ion_properties() } }\")\n", popName, popName, popName));
+                main.append(String.format("h(\"objref fih_ion_%s\")\n", popName));
+                main.append(String.format("h(\'{fih_ion_%s = new FInitializeHandler(1, \"initialiseIons_%s()\")}\')\n\n", popName, popName));
                 
 
                 try {
@@ -318,14 +330,16 @@ public class NeuronWriter extends BaseWriter {
                     String ionChannel = cd.getIonChannel();
                     if (!generatedModComponents.contains(ionChannel)) {
                         Component ionChannelComp = lems.getComponent(ionChannel);
-                        String mod = generateModFile(ionChannelComp);
+                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+                        option.erev = convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
+                        String mod = generateModFile(ionChannelComp, option);
                         generatedModComponents.add(ionChannel);
 
                         File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
                         E.info("-- Writing to: " + modFile);
 
                         try {
-                            FileUtil.writeStringToFile(mod.toString(), modFile);
+                            FileUtil.writeStringToFile(mod, modFile);
                             allGeneratedFiles.add(modFile);
                         } catch (IOException ex) {
                             throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
@@ -338,14 +352,14 @@ public class NeuronWriter extends BaseWriter {
                     String ionChannel = cdn.getIonChannel();
                     if (!generatedModComponents.contains(ionChannel)) {
                         Component ionChannelComp = lems.getComponent(ionChannel);
-                        String mod = generateModFile(ionChannelComp);
+                        String mod = generateModFile(ionChannelComp, ChannelConductanceOption.USE_NERNST);
                         generatedModComponents.add(ionChannel);
 
                         File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
                         E.info("-- Writing to: " + modFile);
 
                         try {
-                            FileUtil.writeStringToFile(mod.toString(), modFile);
+                            FileUtil.writeStringToFile(mod, modFile);
                             allGeneratedFiles.add(modFile);
                         } catch (IOException ex) {
                             throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
@@ -582,7 +596,7 @@ public class NeuronWriter extends BaseWriter {
                                     if (variable.equals("gDensity")) {
                                         for (Component c: channelDensityComps) {
                                             if (c.getID().equals(channelDensId))
-                                            variable = "g_"+c.getStringValue("ionChannel");
+                                            variable = "gion_"+c.getStringValue("ionChannel");
                                         }
                                     } 
                                   
@@ -987,6 +1001,10 @@ public class NeuronWriter extends BaseWriter {
     }
     
     public static String generateModFile(Component comp) throws ContentError {
+        return generateModFile(comp, null);
+    }
+    
+    public static String generateModFile(Component comp, ChannelConductanceOption condOption) throws ContentError {
         StringBuilder mod = new StringBuilder();
 
         String mechName = comp.getComponentType().getName();
@@ -1020,14 +1038,16 @@ public class NeuronWriter extends BaseWriter {
         blockUnits.append("\n(nA) = (nanoamp)\n"
                 + "(uA) = (microamp)\n"
                 + "(mA) = (milliamp)\n"
+                + "(A) = (amp)\n"
                 + "(mV) = (millivolt)\n"
                 + "(mS) = (millisiemens)\n"
                 + "(uS) = (microsiemens)\n"
                 + "(molar) = (1/liter)\n"
+                + "(kHz) = (kilohertz)\n"
                 + "(mM) = (millimolar)\n"
-                + "(um) = (micrometer)\n");
-                /*+ "(S) = (siemens)\n"
                 + "(um) = (micrometer)\n"
+                + "(S) = (siemens)\n");
+                /*+ "(um) = (micrometer)\n"
                 + "(molar) = (1/liter)\n"
                 + "(mM) = (millimolar)\n"
                 + "(l) = (liter)\n")*/
@@ -1047,14 +1067,26 @@ public class NeuronWriter extends BaseWriter {
                 blockNeuron.append("NONSPECIFIC_CURRENT i\n"); 
                 blockNeuron.append("RANGE e\n"); 
             }
-            else if (species != null) {
+            else {
+                String readRevPot = "";
+                
+                if (condOption==null || (condOption.equals(ChannelConductanceOption.USE_NERNST)))
+                {
+                    readRevPot = "READ e" + species;
+                }
+                else if (condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL)) 
+                {
+                    blockInitial.append("e" + species + " = "+condOption.erev+"\n\n");
+                }
+                 
+                
                 if (species.indexOf("ca")>=0)
                 {
-                    blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + " VALENCE 2 ? Assuming valence = 2 (Ca ion); TODO check this!!\n");
+                    blockNeuron.append("USEION " + species + " " + readRevPot + " WRITE i" + species + " VALENCE 2 ? Assuming valence = 2 (Ca ion); TODO check this!!\n");
                 }
                 else
                 {
-                    blockNeuron.append("USEION " + species + " READ e" + species + " WRITE i" + species + " VALENCE 1 ? Assuming valence = 1; TODO check this!!\n");
+                    blockNeuron.append("USEION " + species + " " + readRevPot + " WRITE i" + species + " VALENCE 1 ? Assuming valence = 1; TODO check this!!\n");
                 }
             }
 
@@ -1077,9 +1109,12 @@ public class NeuronWriter extends BaseWriter {
                 blockNeuron.append("USEION ca READ cai VALENCE 2\n"); //TODO check valence
             }
 
-            blockNeuron.append("\nRANGE gmax                             : Will be set when ion channel mechanism placed on cell!\n");
+            blockNeuron.append("\nRANGE gion                           ");
+            blockNeuron.append("\nRANGE gmax                              : Will be changed when ion channel mechanism placed on cell!\n");
 
-            blockParameter.append("\ngmax = 0                                : Will be set when ion channel mechanism placed on cell!\n");
+            blockParameter.append("\ngmax = 0  (S/cm2)                            : Will be changed when ion channel mechanism placed on cell!\n");
+            
+            blockAssigned.append("\ngion   (S/cm2)                              : Transient conductance density of the channel");
 
         } else if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE)) {
             mechName = comp.getID();
@@ -1088,25 +1123,31 @@ public class NeuronWriter extends BaseWriter {
             String ion = comp.getStringValue("ion");
             
             if (ion != null) {
-                blockNeuron.append("USEION " + ion + " READ " + ion + "i," + ion + "o, i" + ion + " WRITE " + ion + "i VALENCE 2\n"); //TODO check valence
+                blockNeuron.append("USEION " + ion + " READ " + ion + "i, " + ion + "o, i" + ion + " WRITE " + ion + "i VALENCE 2\n"); //TODO check valence
             }
+            
             blockNeuron.append("RANGE cai\n");
             blockNeuron.append("RANGE cao\n");
             
-            blockParameter.append("cai (mM)\n");
-            blockParameter.append("cao (mM)\n");
+            blockAssigned.append("cai (mM)\n");
+            blockAssigned.append("cao (mM)\n");
+            
+            /**/
 
             blockAssigned.append("ica		(mA/cm2)\n");
 
             blockAssigned.append("diam (um)\n");
             
             blockAssigned.append("area (um2)\n");
+            
+            blockParameter.append(NeuroMLElements.CONC_MODEL_SURF_AREA+" (um2)\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR+" (nA)\n");
 
             ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = area\n\n");
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_CURR_DENS + " = -10000 * ica * "+NeuroMLElements.CONC_MODEL_SURF_AREA+" : To correct units...\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " = -1 * (0.01) * ica * "+NeuroMLElements.CONC_MODEL_SURF_AREA+" : To correct units...\n\n");
 
-            locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
-            locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
+            //locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
+            //locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
 
             blockNeuron.append("GLOBAL "+NeuroMLElements.CONC_MODEL_INIT_CONC + "\n");
             blockNeuron.append("GLOBAL "+NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + "\n");
@@ -1182,16 +1223,16 @@ public class NeuronWriter extends BaseWriter {
 
         if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
 
-            blockBreakpoint.append("g = gmax * fopen     : Overwriting evaluation of g, assuming gmax set externally\n\n");
+            blockBreakpoint.append("gion = gmax * fopen     \n\n");
 
             String species = comp.getTextParam("species");
             // Only for ohmic!!
             
             if (species == null || species.equals("non_specific")) {
-                blockBreakpoint.append("i = g * (v - e)\n");
+                blockBreakpoint.append("i = gion * (v - e)\n");
             }
             else if (species != null) {
-                blockBreakpoint.append("i" + species + " = g * (v - e" + species + ")\n");
+                blockBreakpoint.append("i" + species + " = gion * (v - e" + species + ")\n");
             }
         }
 
@@ -1579,7 +1620,7 @@ public class NeuronWriter extends BaseWriter {
                 while (range.length() < commentOffset) {
                     range = range + " ";
                 }
-                blockNeuron.append(range + ": exposure\n");
+                blockNeuron.append(range + " : exposure\n");
 
                 if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
                     exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
@@ -2021,7 +2062,7 @@ public class NeuronWriter extends BaseWriter {
         } else if (dimensionName.equals("time")) {
             return "(ms)";
         } else if (dimensionName.equals("per_time")) {
-            return "(megahertz)";
+            return "(kHz)";
         } else if (dimensionName.equals("current")) {
             return "(nA)";
         } else if (dimensionName.equals("length")) {
@@ -2036,6 +2077,8 @@ public class NeuronWriter extends BaseWriter {
             return "(K)";
         } else if (dimensionName.equals("idealGasConstantDims")) {
 	    return "(millijoule / K)";
+        } else if (dimensionName.equals("rho_factor")) {
+	    return "(mM m2 /A /s)";
         } else if (dimensionName.equals(Dimension.NO_DIMENSION)) {
             return "";
         } else {
@@ -2074,6 +2117,8 @@ public class NeuronWriter extends BaseWriter {
             return 1f;
         } else if (dimensionName.equals("idealGasConstantDims")) {
 	    return 1000f;
+        } else if (dimensionName.equals("rho_factor")) {
+	    return 1f;
         }
         return 1f;
     }
@@ -2119,13 +2164,13 @@ public class NeuronWriter extends BaseWriter {
         
         File lemsFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
         lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex5_DetCell.xml");
-        lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
         lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
         
         lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         
         //lemsFile = new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
+        lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
