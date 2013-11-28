@@ -3,12 +3,15 @@
  */
 package org.neuroml.export.info.model;
 
+import org.lemsml.jlems.core.sim.Sim;
+import org.neuroml.export.Utils;
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
 import org.neuroml.model.GateHHTauInf;
 import org.neuroml.model.GateHHUndetermined;
 import org.neuroml.model.IonChannel;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * @author borismarin
@@ -19,8 +22,10 @@ public class ChannelInfoExtractor {
 
 
 	
-	public ChannelInfoExtractor(IonChannel chan) 
+	public ChannelInfoExtractor(IonChannel chan) throws NeuroMLException 
 	{
+		Sim simchan = Utils.convertNeuroMLToSim(chan);
+
 		for (GateHHUndetermined g : chan.getGate()){
 			InfoNode gate = new InfoNode();
 			gate.put("instances", g.getInstances());
@@ -44,6 +49,7 @@ public class ChannelInfoExtractor {
 			gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
 			
 			gates.put("gate " + g.getId(), gate);
+
 		}
 
 		for(GateHHRatesInf g : chan.getGateHHratesInf()){

@@ -28,6 +28,7 @@ import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLElements;
+import org.neuroml.model.util.NeuroMLException;
 
 public class Utils {
 	
@@ -214,19 +215,50 @@ public class Utils {
     }
     
     
-    public static Component convertNeuroMLToComponent(Standalone nmlElement) throws JAXBException, Exception
+    public static Component convertNeuroMLToComponent(Standalone nmlElement) throws NeuroMLException
+    {
+        Lems lems = convertNeuroMLToSim(nmlElement).getLems();
+        
+        try {
+			return lems.getComponent(nmlElement.getId());
+		} catch (ContentError e) {
+			throw new NeuroMLException(e);
+		}
+    }
+
+    public static Sim convertNeuroMLToSim(Standalone nmlElement) throws NeuroMLException
     {
         NeuroMLDocument nml2 = new NeuroMLDocument();
         nml2.setId(nmlElement.getId());
         NeuroMLConverter.addElementToDocument(nml2, nmlElement);
-        NeuroMLConverter nmlc = new NeuroMLConverter();
+        NeuroMLConverter nmlc;
+		try {
+			nmlc = new NeuroMLConverter();
+		} catch (JAXBException e) {
+			throw new NeuroMLException(e);
+		}
         String nml2String = nmlc.neuroml2ToXml(nml2);
-        System.out.println("nml2: "+nml2String);
-        String lemsString = nmlc.convertNeuroML2ToLems(nml2String);
-        System.out.println("lemsString: "+lemsString);
-        Lems lems = Utils.readLemsNeuroMLFile(lemsString).getLems();
+        String lemsString = NeuroMLConverter.convertNeuroML2ToLems(nml2String);
+        Sim sim;
+		try {
+			sim = Utils.readLemsNeuroMLFile(lemsString);
+		} catch (ContentError e) {
+			throw new NeuroMLException(e);
+		} catch (ParseError e) {
+			throw new NeuroMLException(e);
+		} catch (ParseException e) {
+			throw new NeuroMLException(e);
+		} catch (BuildException e) {
+			throw new NeuroMLException(e);
+		} catch (XMLException e) {
+			throw new NeuroMLException(e);
+		} catch (ConnectionError e) {
+			throw new NeuroMLException(e);
+		} catch (RuntimeError e) {
+			throw new NeuroMLException(e);
+		}
         
-        return lems.getComponent(nmlElement.getId());
+        return sim;
     }
     
 

@@ -28,7 +28,7 @@ import org.neuroml.model.util.NeuroMLConverter;
 public class InfoTreeCreatorTest extends TestCase
 {
 
-	public void testAbstract() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
+	public void testAbstract() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception
 	{
 		String expected="Element iafRef:\n" + 
 				"	ID: iafRef\n" + 
@@ -37,7 +37,7 @@ public class InfoTreeCreatorTest extends TestCase
 		Assert.assertEquals(expected, getInfoTreeAsString("NML2_AbstractCells.nml"));
 	}
 
-	public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
+	public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception
 	{
 		String expected="Cell SpikingCell:\n" + 
 				"	ID: SpikingCell\n" + 
@@ -46,7 +46,7 @@ public class InfoTreeCreatorTest extends TestCase
 		Assert.assertEquals(expected, getInfoTreeAsString("NML2_FullCell.nml"));
 	}
 
-	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
+	public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception
 	{
 		String expected="Ion Channel na:\n" + 
 				"	ID: na\n" + 
@@ -62,7 +62,7 @@ public class InfoTreeCreatorTest extends TestCase
 		Assert.assertTrue(getInfoTreeAsString("NML2_SimpleIonChannel.nml").startsWith(expected));
 	}
 
-	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException
+	public void testNetwork() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception
 	{
 		String expected="Network InstanceBasedNetwork:\n" + 
 				"	ID: InstanceBasedNetwork\n" + 
@@ -87,7 +87,7 @@ public class InfoTreeCreatorTest extends TestCase
 	 * @throws ContentError 
 	 * @throws JAXBException 
 	 */
-	private String getInfoTreeAsString(String nmlFilename) throws ContentError, JAXBException
+	private String getInfoTreeAsString(String nmlFilename) throws ContentError, JAXBException, Exception
 	{
 		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
 		NeuroMLConverter nmlc = new NeuroMLConverter();

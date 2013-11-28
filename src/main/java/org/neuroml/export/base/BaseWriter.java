@@ -1,6 +1,8 @@
 package org.neuroml.export.base;
 
 
+import javax.xml.bind.JAXBException;
+
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.model.NeuroMLDocument;
@@ -24,7 +26,7 @@ public abstract class BaseWriter {
 	protected abstract void addComment(StringBuilder sb, String comment);
 
 
-	public abstract String getMainScript() throws GenerationException;
+	public abstract String getMainScript() throws GenerationException, JAXBException, Exception;
 
 	public class CompInfo
 	{

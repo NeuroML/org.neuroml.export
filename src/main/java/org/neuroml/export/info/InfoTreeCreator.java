@@ -24,8 +24,9 @@ public class InfoTreeCreator
 
 	/**
 	 * @return
+	 * @throws Exception 
 	 */
-	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument)
+	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument) 
 	{
 		InfoNode infoRoot = new InfoNode();
 

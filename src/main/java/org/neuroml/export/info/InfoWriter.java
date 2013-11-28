@@ -6,6 +6,8 @@ package org.neuroml.export.info;
 
 import java.io.File;
 
+import javax.xml.bind.JAXBException;
+
 import org.lemsml.export.base.GenerationException;
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.NeuroMLDocument;
@@ -29,7 +31,7 @@ public class InfoWriter extends BaseWriter
 	 * @see org.neuroml.export.base.BaseWriter#getMainScript()
 	 */
 	@Override
-	public String getMainScript() throws GenerationException
+	public String getMainScript() throws JAXBException, Exception
 	{
 		StringBuilder main = new StringBuilder();
 		main.append("Information on contents of NeuroML 2 file\n");
