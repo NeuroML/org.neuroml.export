@@ -14,6 +14,7 @@ import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Population;
 import org.neuroml.model.Projection;
 import org.neuroml.model.Standalone;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * @author matteocantarelli
@@ -24,9 +25,9 @@ public class InfoTreeCreator
 
 	/**
 	 * @return
-	 * @throws Exception 
+	 * @throws NeuroMLException 
 	 */
-	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument) 
+	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument) throws NeuroMLException 
 	{
 		InfoNode infoRoot = new InfoNode();
 
@@ -93,7 +94,7 @@ public class InfoTreeCreator
 			}
 
 			infoRoot.put("Network " + element.getId(), elementProps);
-		}
+		} 
 
 		// Testing...
 		List<BaseCell> remainder = new ArrayList<BaseCell>();
