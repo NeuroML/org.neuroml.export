@@ -1,6 +1,7 @@
 package org.neuroml.export.info.model;
 
 import org.neuroml.model.GateHHRates;
+import org.neuroml.model.GateHHUndetermined;
 import org.neuroml.model.HHRate;
 
 public class HHRateProcessor {
@@ -8,6 +9,11 @@ public class HHRateProcessor {
 	private ChannelMLHHExpression rev;
 
 	public HHRateProcessor(GateHHRates g) {
+		setForwardRate(rateToexpr(g.getForwardRate()));
+		setReverseRate(rateToexpr(g.getReverseRate()));
+	}
+
+	public HHRateProcessor(GateHHUndetermined g) {
 		setForwardRate(rateToexpr(g.getForwardRate()));
 		setReverseRate(rateToexpr(g.getReverseRate()));
 	}

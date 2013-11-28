@@ -20,43 +20,53 @@ import org.neuroml.model.util.NeuroMLException;
 public class ChannelInfoExtractor {
 	private InfoNode gates = new InfoNode();
 
+	private InfoNode GenerateRatePlots(HHRateProcessor rateinfo) {
+		
+		InfoNode gate = new InfoNode();
+					
+		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
+		ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
+		gate.put("forward rate", fwd.toString());
+		gate.put("reverse rate", rev.toString());
+		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
+		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
+
+		return gate;
+		
+		
+	}
 	
 	public ChannelInfoExtractor(IonChannel chan) throws NeuroMLException 
 	{
 		Sim simchan = Utils.convertNeuroMLToSim(chan);
 
+		
 		for (GateHHUndetermined g : chan.getGate()){
-			InfoNode gate = new InfoNode();
+
+			HHRateProcessor rateinfo = new HHRateProcessor(g);	
+			InfoNode gate = GenerateRatePlots(rateinfo);
+
 			gate.put("instances", g.getInstances());
 			gates.put("gate " + g.getId(), gate);
 		}
 
 
 		for (GateHHRates g : chan.getGateHHrates()){
-			InfoNode gate = new InfoNode();
 
-			gate.put("instances", g.getInstances());
+			HHRateProcessor rateinfo = new HHRateProcessor(g);	
+			InfoNode gateinfo = GenerateRatePlots(rateinfo);
 
-			HHRateProcessor rateinfo = new HHRateProcessor(g);
-
-			ChannelMLHHExpression fwd = rateinfo.getForwardRate();
-			ChannelMLHHExpression rev = rateinfo.getReverseRate();
-
-			gate.put("forward rate", fwd.toString());
-			gate.put("reverse rate", rev.toString());
-			gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
-			gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
-			
-			gates.put("gate " + g.getId(), gate);
+			gateinfo.put("instances", g.getInstances());
+			gates.put("gate " + g.getId(), gateinfo);
 
 		}
 
 		for(GateHHRatesInf g : chan.getGateHHratesInf()){
-			InfoNode gate = new InfoNode();
-			gate.put("instances", g.getInstances());
+			InfoNode gateinfo = new InfoNode();
+			gateinfo.put("instances", g.getInstances());
 
-			gates.put("gate " + g.getId(), gate);
+			gates.put("gate " + g.getId(), gateinfo);
 		}
 
 		for(GateHHRatesTau g : chan.getGateHHratesTau()){
