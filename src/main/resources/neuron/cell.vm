@@ -13,7 +13,7 @@ public x, y, z, position
 
 //  Some methods for referencing the cells
 
-public toString, netInfo, set_initial_v
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
 
 
 #foreach ($s in $sections)##
@@ -27,12 +27,15 @@ public $s.name
 objref $g.name
 #end
 
+objref synlist
+
 proc init() {
     topol()
     subsets()
     geom()
     biophys()
     geom_nseg()
+    synlist = new List()
     x = y = z = 0
     
 }
@@ -43,6 +46,19 @@ proc set_initial_v() {
     forsec $imp.group v = $imp.value  // units: mV
 #end
 }
+
+
+proc set_initial_ion_properties() {
+    // From species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        ${sp.ion}i = $sp.initialConcentration  // units: mM
+        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
+    }
+#end
+}
+
 
 proc topol() {
     /////////// Only works for 1 section!!!
@@ -98,8 +114,20 @@ proc biophys() {
 #if( $cd.ion == 'non_specific' )##
         e_$cd.ionChannel = $cd.erev  // units: mV
 #else
+#if( $cd.erev == 'calculated_by_Nernst_equation' )##
+        // erev is calculated by Nernst equation
+#else
         e$cd.ion = $cd.erev  // units: mV
 #end
+#end
+    }
+#end
+
+    // Concentration models for species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        insert $sp.concentrationModel
     }
 #end
 
