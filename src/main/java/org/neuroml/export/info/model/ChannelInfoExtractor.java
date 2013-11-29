@@ -3,8 +3,6 @@
  */
 package org.neuroml.export.info.model;
 
-import org.lemsml.jlems.core.sim.Sim;
-import org.neuroml.export.Utils;
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
@@ -20,28 +18,13 @@ import org.neuroml.model.util.NeuroMLException;
 public class ChannelInfoExtractor {
 	private InfoNode gates = new InfoNode();
 
-	private InfoNode GenerateRatePlots(HHRateProcessor rateinfo) {
-		
-		InfoNode gate = new InfoNode();
-					
-		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
-		ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
-		gate.put("forward rate", fwd.toString());
-		gate.put("reverse rate", rev.toString());
-		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
-		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
-
-		return gate;
-		
-		
-	}
-	
 	public ChannelInfoExtractor(IonChannel chan) throws NeuroMLException 
 	{
-		Sim simchan = Utils.convertNeuroMLToSim(chan);
+		//TODO: use jlems to simulate channels and generate traces to plot
+		//Sim simchan = Utils.convertNeuroMLToSim(chan);
 
-		
+
 		for (GateHHUndetermined g : chan.getGate()){
 
 			HHRateProcessor rateinfo = new HHRateProcessor(g);	
@@ -64,30 +47,56 @@ public class ChannelInfoExtractor {
 
 		for(GateHHRatesInf g : chan.getGateHHratesInf()){
 			InfoNode gateinfo = new InfoNode();
-			gateinfo.put("instances", g.getInstances());
 
+			gateinfo.put("instances", g.getInstances());
 			gates.put("gate " + g.getId(), gateinfo);
 		}
 
 		for(GateHHRatesTau g : chan.getGateHHratesTau()){
 			InfoNode gate = new InfoNode();
-			gate.put("instances", g.getInstances());
 
+			gate.put("instances", g.getInstances());
 			gates.put("gate " + g.getId(), gate);
 		}
 
 		for(GateHHTauInf g : chan.getGateHHtauInf()){
 			InfoNode gate = new InfoNode();
-			gate.put("instances", g.getInstances());
 
+			HHTauInfProcessor tii = new HHTauInfProcessor(g);	
+			ChannelMLHHExpression inf = tii.getSteadyStateActivation();
+			ChannelMLHHExpression tau = tii.getTimeCourse();
+
+			gate.put("steady state activation", inf.toString());
+			gate.put("time constant", tau.toString());
+			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005));
+			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005));
+
+			gate.put("instances", g.getInstances());
 			gates.put("gate " + g.getId(), gate);
 		}
+	}
+
+	private InfoNode GenerateRatePlots(HHRateProcessor rateinfo) {
+
+		InfoNode gate = new InfoNode();
+
+		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
+		ChannelMLHHExpression rev = rateinfo.getReverseRate();
+
+		gate.put("forward rate", fwd.toString());
+		gate.put("reverse rate", rev.toString());
+		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
+		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
+
+		return gate;
+
+
 	}
 
 	public InfoNode getGates() {
 		return gates;
 	}
-	
+
 
 }
 

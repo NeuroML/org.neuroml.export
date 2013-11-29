@@ -8,16 +8,19 @@ public class ChannelMLHHExpression{
 
 	public ChannelMLHHExpression(IHHExpression expr) {
 		_type = expr.getType();
-		if(ChannelMLStandardHHExpression.known_expressions.contains(_type)){
-			_expression = new ChannelMLStandardHHExpression(expr);
+		if(ChannelMLStandardHHExpression.knownExpressions.contains(_type)){
+			setExpression(new ChannelMLStandardHHExpression(expr));
+		}
+		else {
+			setExpression(new ChannelMLGenericHHExpression(expr));
 		}
 	}
 	public String toString() {
-		return _expression.toString();
+		return getExpression().toString();
 	}
 
 	public Double eval(Double x){
-		return _expression.eval(x);
+		return getExpression().eval(x);
 
 	}
 	public String getId()
@@ -27,6 +30,12 @@ public class ChannelMLHHExpression{
 
 	public IPlottableExpression getExpression() {
 		return _expression;
+	}
+	/**
+	 * @param _expression the _expression to set
+	 */
+	public void setExpression(IPlottableExpression expression) {
+		_expression = expression;
 	}
 
 

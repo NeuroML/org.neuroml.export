@@ -1,6 +1,5 @@
 package org.neuroml.export.info.model;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +9,8 @@ import org.neuroml.model.util.NeuroMLException;
 
 class ChannelMLStandardHHExpression implements IPlottableExpression
 {
-	public static List<String> known_expressions = new ArrayList<String>(Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate"));
+	public static List<String> knownExpressions = new ArrayList<String>(Arrays.asList("HHSigmoidRate", "HHExpRate", "HHExpLinearRate",
+			"HHSigmoidVariable", "HHExpVariable", "HHExpLinearVariable"));
 
 	private Function _function;	
 	private String _type;
@@ -35,18 +35,19 @@ class ChannelMLStandardHHExpression implements IPlottableExpression
 
 		_type = expr.getType();
 
-		if(_type.equals("HHSigmoidRate")){
+		if(_type.startsWith("HHSigmoid")){
 			_function = new HHSigmoidalRate(_rate, _scale, _midpoint);
 			setId("HHSigmoidRate");
 		}
-		else if(_type.equals("HHExpRate")){
-			_function = new HHExponentialRate(_rate, _scale, _midpoint);
-			setId("HHExpRate");
-		}
-		else if(_type.equals("HHExpLinearRate")){
+		else if(_type.startsWith("HHExpLinearRate")){
 			_function = new HHExponentialLinearRate(_rate, _scale, _midpoint);
 			setId("HHExpLinearRate");
 		}
+		else if(_type.startsWith("HHExp")){
+			_function = new HHExponentialRate(_rate, _scale, _midpoint);
+			setId("HHExpRate");
+		}
+		
 	}
     
 
@@ -75,17 +76,6 @@ class ChannelMLStandardHHExpression implements IPlottableExpression
 
 }
 
-
-abstract class Function{
-	abstract public Double eval(Double t);
-    
-    protected static DecimalFormat df = new DecimalFormat("#.##");
-    
-    protected static String format(double s)
-    {
-        return df.format(s);
-    }
-}
 
 class HHSigmoidalRate extends Function {
 	Double rate;
