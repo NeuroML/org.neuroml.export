@@ -2,7 +2,11 @@ package org.neuroml.export;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
@@ -15,9 +19,11 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
+import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
@@ -33,6 +39,23 @@ import org.neuroml.model.util.NeuroMLException;
 public class Utils {
 	
 	private static Lems lemsWithNML2CompTypes;
+    
+    private static Lems getLemsWithNML2CompTypes() throws ParseError {
+        if (lemsWithNML2CompTypes==null) {
+            try {
+                NeuroML2Validator nmlv = new NeuroML2Validator();
+                String content = JUtil.getRelativeResource(nmlv.getClass(),
+                        Main.getNeuroMLExamplesResourcesDir()
+                                + "/NML2_AbstractCells.nml");
+                String lemsVer = NeuroMLConverter.convertNeuroML2ToLems(content);
+                lemsWithNML2CompTypes = readLemsNeuroMLFile(lemsVer).getLems();
+
+            } catch (Exception e) {
+                throw new ParseError("Error loading NeuroML CompType definitions!", e);
+            }
+        }
+		return lemsWithNML2CompTypes;
+    }
 	
 
 	public static String getHeaderComment(String format) {
@@ -46,32 +69,35 @@ public class Utils {
 	/*
 	 * Gets the magnitude of a NeuroML 2 quantity string in SI units (e.g. -60mV -> -0.06)
 	 */
-	public static float getMagnitudeInSI(String nml2Quantity) throws ParseError, ContentError {
-
-		//System.out.println("Converting to SI: "+nml2Quantity);
+	public static float getMagnitudeInSI(String nml2Quantity) throws NeuroMLException {
 		
-		if (lemsWithNML2CompTypes==null) {
+        try {
+            DimensionalQuantity dq = QuantityReader.parseValue(nml2Quantity, getLemsWithNML2CompTypes().getUnits());
+            float val = (float)dq.getValue();
 
-			try {
-				NeuroML2Validator nmlv = new NeuroML2Validator();
-				String content = JUtil.getRelativeResource(nmlv.getClass(),
-						Main.getNeuroMLExamplesResourcesDir()
-								+ "/NML2_AbstractCells.nml");
-				String lemsVer = NeuroMLConverter.convertNeuroML2ToLems(content);
-				lemsWithNML2CompTypes = readLemsNeuroMLFile(lemsVer).getLems();
-				
-			} catch (Exception e) {
-				throw new ParseError("Error loading NeuroML CompType definitions!", e);
-			}
-		}
-		DimensionalQuantity dq = QuantityReader.parseValue(nml2Quantity, lemsWithNML2CompTypes.getUnits());
-
-		//System.out.println("DimensionalQuantity dq: "+dq);
-		float val = (float)dq.getValue();
-
-		return val;
+            return val;
+        } catch (ParseError ex) {
+            throw new NeuroMLException("Problem getting magnitude in SI for: "+nml2Quantity, ex);
+        } catch (ContentError ex) {
+            throw new NeuroMLException("Problem getting magnitude in SI for: "+nml2Quantity, ex);
+        }
 		
 	}
+    
+    public static Unit getSIUnitInNeuroML(Dimension dim) throws NeuroMLException
+    {
+        try {
+            for (Unit unit: getLemsWithNML2CompTypes().getUnits()) {
+                if (unit.getDimension().getName().equals(dim.getName()) &&
+                    unit.scale==1 && unit.power==0 && unit.offset==0)
+                    return unit;
+            }
+        } catch (ParseError ex) {
+            throw new NeuroMLException("Problem finding SI unit for dimension: "+dim, ex);
+        }
+        
+        return null;
+    }
 
 	public static Sim readLemsNeuroMLFile(String contents) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
 
@@ -141,66 +167,9 @@ public class Utils {
         return expression.trim();
     }
 
-    /*
-	
- 	private static String toRegexp(String s){
-	   if (s.equals("(") || s.equals("+") || s.equals("*") || s.equals("^"))
-		   return "\\"+s;
-	   return s;
-   	}
-    public static String replaceInFunction(String expr, String oldVar, String newVar) {
-        String orig = new String(expr);
-
-        if (expr.trim().equals(oldVar)) {
-            return newVar;
-        }
-
-        //String new_ = toReplace.get(old);
-        String[] pres = new String[]{"(", "+", "-", "*", "/", "^", " ", "<", ">"};
-        String[] posts = new String[]{")", "+", "-", "*", "/", "^", " ", "<", ">"};
-
-        for (String pre : pres) {
-            for (String post : posts) {
-
-                String o = pre + oldVar + post;
-                String n = pre + " " + newVar + " " + post;
-
-                String o_regexp = toRegexp(pre) + oldVar + toRegexp(post);
-
-                E.info("Replacing "+o+" with "+n+" in "+expr+" [using reg exp: "+o_regexp+"]");
-                expr = expr.replaceAll(toRegexp(o), n);
-            }
-        }
-        expr = expr.trim();
-
-        for (String pre : pres) {
-            String o = pre + oldVar;
-            String n = pre + " " + newVar;
-
-            E.info("Checking ending "+o);
-            if (expr.endsWith(o)) {
-                expr = expr.substring(0, expr.length() - o.length()) + n;
-            }
-        }
-        for (String post : posts) {
-            String o = oldVar + post;
-            String n = newVar + " " + post;
-            E.info("Checking starting "+o);
-            if (expr.startsWith(o)) {
-                expr = n + expr.substring(o.length());
-            }
-        }
-
-        expr = expr.replaceAll("  ", " ");
-
-        if (!expr.equals(orig)) {
-            //E.info("----------  Changed "+orig+" to "+ expr);
-        }
-        return expr;
-    }*/
     
     
-    public static ArrayList<Standalone> convertLemsComponentToNeuroML(Component comp) throws ContentError, JAXBException 
+    public static LinkedHashMap<String,Standalone> convertLemsComponentToNeuroML(Component comp) throws ContentError, JAXBException 
     {
         XMLSerializer xmlSer = XMLSerializer.newInstance();
         String compString = xmlSer.writeObject(comp);
@@ -210,7 +179,7 @@ public class Utils {
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" +
 "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
 "      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 "+NeuroMLElements.TARGET_SCHEMA_LOCATION+"\">"+compString+"</neuroml>");
-        ArrayList<Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
+        LinkedHashMap<String,Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
         return els;
     }
     
@@ -259,6 +228,41 @@ public class Utils {
 		}
         
         return sim;
+    }
+    
+    public static AbstractList reorderAlphabetically(AbstractList list, boolean ascending)
+    {
+        if (list.size() > 1)
+        {
+            for (int j = 1; j < list.size(); j++)
+            {
+
+                for (int k = 0; k < j; k++)
+                {
+                    if (ascending)
+                    {
+                        if (list.get(j).toString().compareToIgnoreCase(list.get(k).toString()) < 0)
+                        {
+                            Object earlier = list.get(j);
+                            Object later = list.get(k);
+                            list.set(j, later);
+                            list.set(k, earlier);
+                        }
+                    }
+                    else
+                    {
+                        if (list.get(j).toString().compareToIgnoreCase(list.get(k).toString()) > 0)
+                        {
+                            Object earlier = list.get(j);
+                            Object later = list.get(k);
+                            list.set(j, later);
+                            list.set(k, earlier);
+                        }
+                    }
+                }
+            }
+        }
+        return list;
     }
     
 

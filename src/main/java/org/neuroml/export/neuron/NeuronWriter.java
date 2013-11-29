@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Properties;
 import javax.xml.bind.JAXBException;
 import org.apache.velocity.Template;
@@ -62,6 +63,7 @@ import org.neuroml.model.Species;
 import org.neuroml.model.SpecificCapacitance;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLElements;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends BaseWriter {
@@ -117,7 +119,7 @@ public class NeuronWriter extends BaseWriter {
         allGeneratedFiles.clear();
     }
 
-    public ArrayList<File> generateMainScriptAndMods(File mainFile) throws ContentError, ParseError, IOException, JAXBException, GenerationException {
+    public ArrayList<File> generateMainScriptAndMods(File mainFile) throws ContentError, ParseError, IOException, JAXBException, GenerationException, NeuroMLException {
         String main = generate(mainFile.getParentFile());
         try {
             FileUtil.writeStringToFile(main, mainFile);
@@ -129,7 +131,7 @@ public class NeuronWriter extends BaseWriter {
     }
 
     @Override
-    public String getMainScript() throws GenerationException {
+    public String getMainScript() throws GenerationException, NeuroMLException {
         try {
             return generate(null);
         } catch (ContentError e) {
@@ -185,7 +187,7 @@ public class NeuronWriter extends BaseWriter {
     }
 
 
-    public String generate(File dirForMods) throws ContentError, ParseError, IOException, JAXBException, GenerationException {
+    public String generate(File dirForMods) throws NeuroMLException, IOException, JAXBException, GenerationException, ContentError, ParseError {
 
         reset();
         StringBuilder main = new StringBuilder();
@@ -794,12 +796,12 @@ public class NeuronWriter extends BaseWriter {
     }
 
     public static Cell getCellFromComponent(Component comp) throws ContentError, ParseError, IOException, JAXBException {
-        ArrayList<Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
-        Cell cell = (Cell)els.get(0);
+        LinkedHashMap<String,Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
+        Cell cell = (Cell)els.values().iterator().next();
         return cell;
     }
         
-    public static String generateCellFile(Cell cell) throws ContentError, ParseError, IOException, JAXBException {
+    public static String generateCellFile(Cell cell) throws ContentError, ParseError, IOException, JAXBException, NeuroMLException {
         StringBuilder cellString = new StringBuilder();
 
         cellString.append("// Cell: "+cell.getId()+"\n");
@@ -858,7 +860,7 @@ public class NeuronWriter extends BaseWriter {
     /*
      * TODO: move to other class as it will be useful for MOOSE, etc.
      */
-	public static String cellToJson(Cell cell, SupportedUnits units) throws ContentError, ParseError, IOException
+	public static String cellToJson(Cell cell, SupportedUnits units) throws ContentError, ParseError, IOException, NeuroMLException
 	{
 		JsonFactory f = new JsonFactory();
 		StringWriter sw = new StringWriter();
@@ -2243,7 +2245,6 @@ public class NeuronWriter extends BaseWriter {
         
         File lemsFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
         lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex5_DetCell.xml");
-        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
         lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
         
         
@@ -2251,6 +2252,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
         lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
+        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));

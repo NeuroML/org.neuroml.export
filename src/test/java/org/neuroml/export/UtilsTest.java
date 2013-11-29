@@ -19,6 +19,7 @@ import org.neuroml.model.util.NeuroMLConverter;
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.type.Component;
 import org.neuroml.model.IaFTauCell;
+import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
 /*
@@ -51,7 +52,7 @@ public class UtilsTest extends TestCase {
     
     
 	
-	public void testGetMagnitudeInSI() throws ParseError, ContentError {
+	public void testGetMagnitudeInSI() throws NeuroMLException {
 		System.out.println("Testing: getMagnitudeInSI()");
 		
 		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
