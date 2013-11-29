@@ -170,7 +170,7 @@ public class InfoTreeCreatorTest extends TestCase {
         InfoNode root = InfoTreeCreator.createInfoTree(nmlDocument);
         Assert.assertFalse(root.isEmpty());
 
-        System.out.println("----------\n" + root.toString() + "\n------------");
+        //System.out.println("----------\n" + root.toString() + "\n------------");
         return root.toString();
     }
 
