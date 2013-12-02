@@ -33,8 +33,7 @@ public class NeuronWriterTest extends TestCase {
     public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
 
         String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
-        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-        testGetMainScript(exampleFilename, lems);
+        testGetMainScript(exampleFilename);
     }
     /*
     public void testQ10() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
@@ -47,8 +46,7 @@ public class NeuronWriterTest extends TestCase {
     public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
 
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-        testGetMainScript(exampleFilename, lems);
+        testGetMainScript(exampleFilename);
     }
     
     public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
@@ -99,11 +97,39 @@ public class NeuronWriterTest extends TestCase {
         FileUtil.writeStringToFile(modFile, newMechFile);
         E.info("Written to file: " + newMechFile);
     }
+    
+    public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException, JAXBException, NeuroMLException {
 
-    public void testGetMainScript(String exampleFilename, Lems lems) throws ContentError, ParseError,
+    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+    	generateMainScript(exampleSBML);
+	}
+	
+	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException, JAXBException, NeuroMLException {
+
+    	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
+       
+        NeuronWriter nw = new NeuronWriter(lems);
+
+        File mainFile = new File(AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+
+        E.info("Generating NEURON from " + localFile);
+
+        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
+
+        assertTrue(genFiles.size() >= 2);
+
+        for (File f : genFiles) {
+            E.info("Written model behaviour to: " + f.getAbsolutePath());
+            assertTrue(f.exists());
+            assertTrue(f.length() > 0);
+        }
+    }
+
+    public void testGetMainScript(String exampleFilename) throws ContentError, ParseError,
             ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
 
         MinimalMessageHandler.setVeryMinimal(true);
+        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
         NeuronWriter nw = new NeuronWriter(lems);
 

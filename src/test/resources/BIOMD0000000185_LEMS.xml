@@ -1,0 +1,254 @@
+<Lems>
+    <Dimension name="time" m="0" l="0" t="1" i="0" k="0" n="0" j="0"/>
+    <Dimension name="per_time" m="0" l="0" t="-1" i="0" k="0" n="0" j="0"/>
+    <Dimension name="voltage" m="1" l="2" t="-3" i="-1" k="0" n="0" j="0"/>
+    <Dimension name="per_voltage" m="-1" l="-2" t="3" i="1" k="0" n="0" j="0"/>
+    <Dimension name="conductance" m="-1" l="-2" t="3" i="2" k="0" n="0" j="0"/>
+    <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2" k="0" n="0" j="0"/>
+    <Dimension name="capacitance" m="-1" l="-2" t="4" i="2" k="0" n="0" j="0"/>
+    <Dimension name="specificCapacitance" m="-1" l="-4" t="4" i="2" k="0" n="0" j="0"/>
+    <Dimension name="resistance" m="1" l="2" t="-3" i="-2" k="0" n="0" j="0"/>
+    <Dimension name="resistivity" m="2" l="2" t="-3" i="-2" k="0" n="0" j="0"/>
+    <Dimension name="charge" m="0" l="0" t="1" i="1" k="0" n="0" j="0"/>
+    <Dimension name="charge_per_mole" m="0" l="0" t="1" i="1" k="0" n="-1" j="0"/>
+    <Dimension name="current" m="0" l="0" t="0" i="1" k="0" n="0" j="0"/>
+    <Dimension name="currentDensity" m="0" l="-2" t="0" i="1" k="0" n="0" j="0"/>
+    <Dimension name="length" m="0" l="1" t="0" i="0" k="0" n="0" j="0"/>
+    <Dimension name="area" m="0" l="2" t="0" i="0" k="0" n="0" j="0"/>
+    <Dimension name="volume" m="0" l="3" t="0" i="0" k="0" n="0" j="0"/>
+    <Dimension name="concentration" m="0" l="-3" t="0" i="0" k="0" n="1" j="0"/>
+    <Dimension name="permeability" m="0" l="1" t="-1" i="0" k="0" n="0" j="0"/>
+    <Dimension name="temperature" m="0" l="0" t="0" i="0" k="1" n="0" j="0"/>
+    <Dimension name="idealGasConstantDims" m="1" l="2" t="-2" i="0" k="-1" n="-1" j="0"/>
+    <Dimension name="rho_factor" m="0" l="-1" t="-1" i="-1" k="0" n="1" j="0"/>
+    <Dimension name="none" m="0" l="0" t="0" i="0" k="0" n="0" j="0"/>
+    <Dimension name="substance_dimension" m="0" l="0" t="0" i="0" k="0" n="1" j="0"/>
+    <Dimension name="time_dimension" m="0" l="0" t="1" i="0" k="0" n="0" j="0"/>
+    <Dimension name="nM_dimension" m="3" l="0" t="0" i="0" k="0" n="1" j="0"/>
+    <Dimension name="nM_hr_1_dimension" m="3" l="0" t="1" i="0" k="0" n="1" j="0"/>
+    <Dimension name="hr_1_dimension" m="0" l="0" t="1" i="0" k="0" n="0" j="0"/>
+    <Unit name="s" symbol="s" dimension="time" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="per_s" symbol="per_s" dimension="per_time" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="Hz" symbol="Hz" dimension="per_time" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="ms" symbol="ms" dimension="time" power="-3" scale="1.0" offset="0.0"/>
+    <Unit name="per_ms" symbol="per_ms" dimension="per_time" power="3" scale="1.0" offset="0.0"/>
+    <Unit name="m" symbol="m" dimension="length" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="cm" symbol="cm" dimension="length" power="-2" scale="1.0" offset="0.0"/>
+    <Unit name="um" symbol="um" dimension="length" power="-6" scale="1.0" offset="0.0"/>
+    <Unit name="m2" symbol="m2" dimension="area" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="cm2" symbol="cm2" dimension="area" power="-4" scale="1.0" offset="0.0"/>
+    <Unit name="um2" symbol="um2" dimension="area" power="-12" scale="1.0" offset="0.0"/>
+    <Unit name="m3" symbol="m3" dimension="volume" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="cm3" symbol="cm3" dimension="volume" power="-6" scale="1.0" offset="0.0"/>
+    <Unit name="um3" symbol="um3" dimension="volume" power="-18" scale="1.0" offset="0.0"/>
+    <Unit name="V" symbol="V" dimension="voltage" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="mV" symbol="mV" dimension="voltage" power="-3" scale="1.0" offset="0.0"/>
+    <Unit name="per_V" symbol="per_V" dimension="per_voltage" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="per_mV" symbol="per_mV" dimension="per_voltage" power="3" scale="1.0" offset="0.0"/>
+    <Unit name="ohm" symbol="ohm" dimension="resistance" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="Kohm" symbol="Kohm" dimension="resistance" power="3" scale="1.0" offset="0.0"/>
+    <Unit name="Mohm" symbol="Mohm" dimension="resistance" power="6" scale="1.0" offset="0.0"/>
+    <Unit name="S" symbol="S" dimension="conductance" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="mS" symbol="mS" dimension="conductance" power="-3" scale="1.0" offset="0.0"/>
+    <Unit name="uS" symbol="uS" dimension="conductance" power="-6" scale="1.0" offset="0.0"/>
+    <Unit name="nS" symbol="nS" dimension="conductance" power="-9" scale="1.0" offset="0.0"/>
+    <Unit name="pS" symbol="pS" dimension="conductance" power="-12" scale="1.0" offset="0.0"/>
+    <Unit name="S_per_m2" symbol="S_per_m2" dimension="conductanceDensity" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="mS_per_cm2" symbol="mS_per_cm2" dimension="conductanceDensity" power="1" scale="1.0" offset="0.0"/>
+    <Unit name="S_per_cm2" symbol="S_per_cm2" dimension="conductanceDensity" power="4" scale="1.0" offset="0.0"/>
+    <Unit name="F" symbol="F" dimension="capacitance" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="uF" symbol="uF" dimension="capacitance" power="-6" scale="1.0" offset="0.0"/>
+    <Unit name="nF" symbol="nF" dimension="capacitance" power="-9" scale="1.0" offset="0.0"/>
+    <Unit name="pF" symbol="pF" dimension="capacitance" power="-12" scale="1.0" offset="0.0"/>
+    <Unit name="F_per_m2" symbol="F_per_m2" dimension="specificCapacitance" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="uF_per_cm2" symbol="uF_per_cm2" dimension="specificCapacitance" power="-2" scale="1.0" offset="0.0"/>
+    <Unit name="ohm_m" symbol="ohm_m" dimension="resistivity" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="kohm_cm" symbol="kohm_cm" dimension="resistivity" power="1" scale="1.0" offset="0.0"/>
+    <Unit name="C" symbol="C" dimension="charge" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="C_per_mol" symbol="C_per_mol" dimension="charge_per_mole" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="A" symbol="A" dimension="current" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="uA" symbol="uA" dimension="current" power="-6" scale="1.0" offset="0.0"/>
+    <Unit name="nA" symbol="nA" dimension="current" power="-9" scale="1.0" offset="0.0"/>
+    <Unit name="pA" symbol="pA" dimension="current" power="-12" scale="1.0" offset="0.0"/>
+    <Unit name="A_per_m2" symbol="A_per_m2" dimension="currentDensity" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="uA_per_cm2" symbol="uA_per_cm2" dimension="currentDensity" power="-2" scale="1.0" offset="0.0"/>
+    <Unit name="mA_per_cm2" symbol="mA_per_cm2" dimension="currentDensity" power="1" scale="1.0" offset="0.0"/>
+    <Unit name="mol_per_m3" symbol="mol_per_m3" dimension="concentration" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="mol_per_cm3" symbol="mol_per_cm3" dimension="concentration" power="6" scale="1.0" offset="0.0"/>
+    <Unit name="M" symbol="M" dimension="concentration" power="3" scale="1.0" offset="0.0"/>
+    <Unit name="mM" symbol="mM" dimension="concentration" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="m_per_s" symbol="m_per_s" dimension="permeability" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="cm_per_s" symbol="cm_per_s" dimension="permeability" power="-2" scale="1.0" offset="0.0"/>
+    <Unit name="degC" symbol="degC" dimension="temperature" power="0" scale="1.0" offset="273.15"/>
+    <Unit name="K" symbol="K" dimension="temperature" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="J_per_K_per_mol" symbol="J_per_K_per_mol" dimension="idealGasConstantDims" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="mol_per_m_per_A_per_s" symbol="mol_per_m_per_A_per_s" dimension="rho_factor" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="none" symbol="none" dimension="none" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="substance_unit" symbol="substance_unit" dimension="substance_dimension" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="time_unit" symbol="time_unit" dimension="time_dimension" power="0" scale="1.0" offset="0.0"/>
+    <Unit name="nM_unit" symbol="nM_unit" dimension="nM_dimension" power="-3" scale="1.0" offset="0.0"/>
+    <Unit name="nM_hr_1_unit" symbol="nM_hr_1_unit" dimension="nM_hr_1_dimension" power="-3" scale="1.0" offset="0.0"/>
+    <Unit name="hr_1_unit" symbol="hr_1_unit" dimension="hr_1_dimension" power="0" scale="1.0" offset="0.0"/>
+    <ComponentType name="Display" standalone="false">
+        <Parameter name="xmin" dimension="none"/>
+        <Parameter name="xmax" dimension="none"/>
+        <Parameter name="ymin" dimension="none"/>
+        <Parameter name="ymax" dimension="none"/>
+        <Parameter name="timeScale" dimension="time"/>
+        <Children name="lines" type="Line"/>
+        <Simulation idCounter="0">
+            <DataDisplay title="title" dataRegion="xmin,xmax,ymin,ymax"/>
+        </Simulation>
+        <Text name="title"/>
+    </ComponentType>
+    <ComponentType name="Line" standalone="false">
+        <Parameter name="scale" dimension="*"/>
+        <Parameter name="timeScale" dimension="*"/>
+        <Simulation idCounter="0">
+            <Record quantity="quantity" timeScale="timeScale" scale="scale" color="color"/>
+        </Simulation>
+        <Path name="quantity"/>
+        <Text name="color"/>
+    </ComponentType>
+    <ComponentType name="Simulation" standalone="false">
+        <Parameter name="length" dimension="time"/>
+        <Parameter name="step" dimension="time"/>
+        <Children name="displays" type="Display"/>
+        <Children name="outputs" type="OutputFile"/>
+        <ComponentReference name="target" type="Component" isAny="true"/>
+        <Dynamics simultaneous="false">
+            <StateVariable name="t" dimension="time"/>
+        </Dynamics>
+        <Simulation idCounter="0">
+            <Run component="target" variable="t" increment="step" total="length"/>
+        </Simulation>
+    </ComponentType>
+    <ComponentType name="OutputFile" standalone="false">
+        <Children name="outputColumn" type="OutputColumn"/>
+        <Simulation idCounter="0">
+            <DataWriter path="path" fileName="fileName"/>
+        </Simulation>
+        <Text name="path"/>
+        <Text name="fileName"/>
+    </ComponentType>
+    <ComponentType name="OutputColumn" standalone="false">
+        <Simulation idCounter="0">
+            <Record quantity="quantity"/>
+        </Simulation>
+        <Path name="quantity"/>
+    </ComponentType>
+    <ComponentType name="Locke2008_Circadian_Clock" standalone="false">
+        <Parameter name="v_1" dimension="none"/>
+        <Parameter name="K1" dimension="none"/>
+        <Parameter name="n" dimension="none"/>
+        <Parameter name="v_2" dimension="none"/>
+        <Parameter name="K2" dimension="none"/>
+        <Parameter name="vc" dimension="none"/>
+        <Parameter name="K" dimension="none"/>
+        <Parameter name="Kc" dimension="none"/>
+        <Parameter name="L" dimension="none"/>
+        <Parameter name="k3" dimension="none"/>
+        <Parameter name="v_4" dimension="none"/>
+        <Parameter name="K4" dimension="none"/>
+        <Parameter name="k5" dimension="none"/>
+        <Parameter name="v_6" dimension="none"/>
+        <Parameter name="K6" dimension="none"/>
+        <Parameter name="k7" dimension="none"/>
+        <Parameter name="v_8" dimension="none"/>
+        <Parameter name="K8" dimension="none"/>
+        <Exposure name="F" dimension="none"/>
+        <Exposure name="X1" dimension="none"/>
+        <Exposure name="Y1" dimension="none"/>
+        <Exposure name="Z1" dimension="none"/>
+        <Exposure name="V1" dimension="none"/>
+        <Exposure name="X2" dimension="none"/>
+        <Exposure name="Y2" dimension="none"/>
+        <Exposure name="Z2" dimension="none"/>
+        <Exposure name="V2" dimension="none"/>
+        <Dynamics simultaneous="false">
+            <DerivedVariable name="F" dimension="none" exposure="F" required="true" value="((1.0 / 2.0) * (V1 + V2))"/>
+            <DerivedVariable name="rate__R1" dimension="none" required="true" value="((compartment * v_1) * ((K1 ^ n) / ((K1 ^ n) + ( (Z1/compartment)  ^ n))))"/>
+            <DerivedVariable name="rate__R2" dimension="none" required="true" value="((compartment * v_2) * ( (X1/compartment)  / (K2 +  (X1/compartment) )))"/>
+            <DerivedVariable name="rate__R3" dimension="none" required="true" value="(((compartment * vc) * K) * (F / (Kc + (K * F))))"/>
+            <DerivedVariable name="rate__R4" dimension="none" required="true" value="(compartment * L)"/>
+            <DerivedVariable name="rate__R5" dimension="none" required="true" value="((compartment * k3) *  (X1/compartment) )"/>
+            <DerivedVariable name="rate__R6" dimension="none" required="true" value="((compartment * v_4) * ( (Y1/compartment)  / (K4 +  (Y1/compartment) )))"/>
+            <DerivedVariable name="rate__R7" dimension="none" required="true" value="((compartment * k5) *  (Y1/compartment) )"/>
+            <DerivedVariable name="rate__R8" dimension="none" required="true" value="((compartment * v_6) * ( (Z1/compartment)  / (K6 +  (Z1/compartment) )))"/>
+            <DerivedVariable name="rate__R9" dimension="none" required="true" value="((compartment * k7) *  (X1/compartment) )"/>
+            <DerivedVariable name="rate__R10" dimension="none" required="true" value="((compartment * v_8) * ( (V1/compartment)  / (K8 +  (V1/compartment) )))"/>
+            <DerivedVariable name="rate__R11" dimension="none" required="true" value="((compartment * v_1) * ((K1 ^ n) / ((K1 ^ n) + ( (Z2/compartment)  ^ n))))"/>
+            <DerivedVariable name="rate__R12" dimension="none" required="true" value="((compartment * v_2) * ( (X2/compartment)  / (K2 +  (X2/compartment) )))"/>
+            <DerivedVariable name="rate__R13" dimension="none" required="true" value="(((compartment * vc) * K) * (F / (Kc + (K * F))))"/>
+            <DerivedVariable name="rate__R14" dimension="none" required="true" value="(compartment * L)"/>
+            <DerivedVariable name="rate__R15" dimension="none" required="true" value="((compartment * k3) *  (X2/compartment) )"/>
+            <DerivedVariable name="rate__R16" dimension="none" required="true" value="((compartment * v_4) * ( (Y2/compartment)  / (K4 +  (Y2/compartment) )))"/>
+            <DerivedVariable name="rate__R17" dimension="none" required="true" value="((compartment * k5) *  (Y2/compartment) )"/>
+            <DerivedVariable name="rate__R18" dimension="none" required="true" value="((compartment * v_6) * ( (Z2/compartment)  / (K6 +  (Z2/compartment) )))"/>
+            <DerivedVariable name="rate__R19" dimension="none" required="true" value="((compartment * k7) *  (X2/compartment) )"/>
+            <DerivedVariable name="rate__R20" dimension="none" required="true" value="((compartment * v_8) * ( (V2/compartment)  / (K8 +  (V2/compartment) )))"/>
+            <StateVariable name="X1" dimension="none" exposure="X1"/>
+            <StateVariable name="Y1" dimension="none" exposure="Y1"/>
+            <StateVariable name="Z1" dimension="none" exposure="Z1"/>
+            <StateVariable name="V1" dimension="none" exposure="V1"/>
+            <StateVariable name="X2" dimension="none" exposure="X2"/>
+            <StateVariable name="Y2" dimension="none" exposure="Y2"/>
+            <StateVariable name="Z2" dimension="none" exposure="Z2"/>
+            <StateVariable name="V2" dimension="none" exposure="V2"/>
+            <TimeDerivative variable="V2" value="tscale * (rate__R19 - rate__R20) "/>
+            <TimeDerivative variable="Z1" value="tscale * (rate__R7 - rate__R8) "/>
+            <TimeDerivative variable="X1" value="tscale * (rate__R1 - rate__R2 + rate__R3 + rate__R4) "/>
+            <TimeDerivative variable="X2" value="tscale * (rate__R11 - rate__R12 + rate__R13 + rate__R14) "/>
+            <TimeDerivative variable="Y1" value="tscale * (rate__R5 - rate__R6) "/>
+            <TimeDerivative variable="Y2" value="tscale * (rate__R15 - rate__R16) "/>
+            <TimeDerivative variable="V1" value="tscale * (rate__R9 - rate__R10) "/>
+            <TimeDerivative variable="Z2" value="tscale * (rate__R17 - rate__R18) "/>
+            <OnStart>
+                <StateAssignment variable="X1" value="init_X1"/>
+                <StateAssignment variable="Y1" value="init_Y1"/>
+                <StateAssignment variable="Z1" value="init_Z1"/>
+                <StateAssignment variable="V1" value="init_V1"/>
+                <StateAssignment variable="X2" value="init_X2"/>
+                <StateAssignment variable="Y2" value="init_Y2"/>
+                <StateAssignment variable="Z2" value="init_Z2"/>
+                <StateAssignment variable="V2" value="init_V2"/>
+            </OnStart>
+        </Dynamics>
+        <Constant name="tscale" value="1per_s" dimension="per_time"/>
+        <Constant name="compartment" value="1.0 " dimension="none"/>
+        <Constant name="init_X1" value="4.25 " dimension="none"/>
+        <Constant name="init_Y1" value="3.25 " dimension="none"/>
+        <Constant name="init_Z1" value="2.25 " dimension="none"/>
+        <Constant name="init_V1" value="2.5 " dimension="none"/>
+        <Constant name="init_X2" value="0.0 " dimension="none"/>
+        <Constant name="init_Y2" value="0.0 " dimension="none"/>
+        <Constant name="init_Z2" value="0.0 " dimension="none"/>
+        <Constant name="init_V2" value="0.0 " dimension="none"/>
+    </ComponentType>
+    <Locke2008_Circadian_Clock id="Locke2008_Circadian_Clock_0" v_1="6.8355" K1="2.7266" n="5.6645" v_2="8.4297" K2="0.291" vc="6.7924" K="1.0" Kc="4.8283" L="0.0" k3="0.1177" v_4="1.0841" K4="8.1343" k5="0.3352" v_6="4.6645" K6="9.9849" k7="0.2282" v_8="3.5216" K8="7.4519"/>
+    <Simulation id="sim1" target="Locke2008_Circadian_Clock_0" length="50.0s" step="0.005s">
+        <Display id="disp1" timeScale="1s" title="Simulation of SBML model: Locke2008_Circadian_Clock from file: src/test/resources/BIOMD0000000185.xml" xmin="0" xmax="50.0" ymin="0" ymax="1">
+            <Line id="X1__S" scale="1" quantity="X1" color="#000000" timeScale="1s"/>
+            <Line id="Y1__S" scale="1" quantity="Y1" color="#ff0000" timeScale="1s"/>
+            <Line id="Z1__S" scale="1" quantity="Z1" color="#00ff00" timeScale="1s"/>
+            <Line id="V1__S" scale="1" quantity="V1" color="#0000ff" timeScale="1s"/>
+            <Line id="X2__S" scale="1" quantity="X2" color="#ff00ff" timeScale="1s"/>
+            <Line id="Y2__S" scale="1" quantity="Y2" color="#00ffff" timeScale="1s"/>
+            <Line id="Z2__S" scale="1" quantity="Z2" color="#ffff00" timeScale="1s"/>
+            <Line id="V2__S" scale="1" quantity="V2" color="#ffc800" timeScale="1s"/>
+            <Line id="F__P" scale="1" quantity="F" color="#ffafaf" timeScale="1s"/>
+        </Display>
+        <OutputFile id="outputFile1" fileName="Locke2008_Circadian_Clock.dat" path=".">
+            <OutputColumn id="os_X1" quantity="X1"/>
+            <OutputColumn id="os_Y1" quantity="Y1"/>
+            <OutputColumn id="os_Z1" quantity="Z1"/>
+            <OutputColumn id="os_V1" quantity="V1"/>
+            <OutputColumn id="os_X2" quantity="X2"/>
+            <OutputColumn id="os_Y2" quantity="Y2"/>
+            <OutputColumn id="os_Z2" quantity="Z2"/>
+            <OutputColumn id="os_V2" quantity="V2"/>
+            <OutputColumn id="op_F" quantity="F"/>
+        </OutputFile>
+    </Simulation>
+    <Target component="sim1"/>
+</Lems>

@@ -17,6 +17,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.Utils;
 
 public class ModelicaWriterTest extends TestCase {
 
@@ -31,6 +32,30 @@ public class ModelicaWriterTest extends TestCase {
 
     	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
     	generateMainScript(exampleFilename);
+	}
+    
+	public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+
+    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+    	generateMainScript(exampleSBML);
+	}
+	
+	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+
+    	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
+        
+        System.out.println("Loaded from: "+localFile);
+
+        ModelicaWriter mw = new ModelicaWriter(lems);
+
+        String mod = mw.generateMainScriptAndCompFiles(AppTest.getTempDir());
+        
+        for (File genFile: mw.allGeneratedFiles)
+        {
+        	assertTrue(genFile.exists());
+            System.out.println("------------------"+genFile.getAbsolutePath()+"------------------------------------");
+            System.out.println(FileUtil.readStringFromFile(genFile));
+        }
 	}
 	
 	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {

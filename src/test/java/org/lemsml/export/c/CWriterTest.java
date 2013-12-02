@@ -1,7 +1,10 @@
-package org.neuroml.export.brian;
+package org.lemsml.export.c;
 
 import java.io.File;
 import java.io.IOException;
+
+import junit.framework.TestCase;
+import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -13,73 +16,79 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
-
-import junit.framework.TestCase;
-import org.lemsml.export.base.GenerationException;
 import org.neuroml.export.Utils;
 
-public class BrianWriterTest extends TestCase {
-
+public class CWriterTest extends TestCase {
+	
+	
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+        
+        System.out.println("Converting: "+exampleFilename);
     	generateMainScript(exampleFilename);
 	}
 	/*
-	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void testIaF() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
-    	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
+    	String exampleFilename = "LEMS_NML2_Ex0_IaF.xml";
     	generateMainScript(exampleFilename);
 	}*/
-    
-    
+	
 	public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
     	generateMainScript(exampleSBML);
 	}
     
+	
+	
 	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
-        System.out.println("Loaded: "+localFile);
-
-        BrianWriter bw = new BrianWriter(lems);
-
-        String br = bw.getMainScript();
-
-
-        File brFile = new File(AppTest.getTempDir(),localFile.getName().replaceAll(".xml", "_brian.py"));
-        System.out.println("Writing to: "+brFile.getAbsolutePath());
         
-        FileUtil.writeStringToFile(br, brFile);
+        System.out.println("Loaded from: "+localFile);
 
+        CWriter cw = new CWriter(lems);
+
+        String code = cw.getMainScript();
+
+        System.out.println(code);
+
+        File cFile = new File(AppTest.getTempDir(),localFile.getName().replaceAll(".xml", ".c"));
         
-        assertTrue(brFile.exists());
+        FileUtil.writeStringToFile(code, cFile);
+        
+        assertTrue(cFile.exists());
+        
+        File makefile = new File("src/main/resources/"+cw.getSolver().getMakefile());
+        
+        FileUtil.copyFile(makefile, cFile.getParentFile());
 	}
 	
 	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-
-        //exampleFile = new File("/home/padraig/neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecar.xml");
-        //exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_SBML.xml");
         
         System.out.println("Loaded: "+exampleFilename);
 
-        BrianWriter bw = new BrianWriter(lems);
+        CWriter cw = new CWriter(lems);
 
-        String br = bw.getMainScript();
+        String code = cw.getMainScript();
 
+        System.out.println(code);
 
-        File brFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", "_brian.py"));
-        System.out.println("Writing to: "+brFile.getAbsolutePath());
+        File cFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".c"));
+        System.out.println("Writing to: "+cFile.getAbsolutePath());
         
-        FileUtil.writeStringToFile(br, brFile);
-
+        FileUtil.writeStringToFile(code, cFile);
         
-        assertTrue(brFile.exists());
+        assertTrue(cFile.exists());
+        
+        File makefile = new File("src/main/resources/"+cw.getSolver().getMakefile());
+        
+        FileUtil.copyFile(makefile, cFile.getParentFile());
 	}
 
 }
