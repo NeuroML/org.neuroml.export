@@ -121,7 +121,13 @@ public class InfoTreeCreator
                         if (comp.hasAttribute(pv.getName())) {
                             String orig = comp.getStringValue(pv.getName());
                             String siSymbol = Utils.getSIUnitInNeuroML(pv.getFinalParam().getDimension()).getSymbol();
-                            String si = (float)pv.getDoubleValue()+ (siSymbol.equals(Unit.NO_UNIT)?"": " "+siSymbol);
+                            
+                            //TODO: replace with DecimalFormat
+                            String val = (float)pv.getDoubleValue()+"";
+                            if (val.endsWith("0") && val.indexOf("E")<0 && !val.endsWith(".0") && val.indexOf(".")>0)
+                                val = val.substring(0,val.length()-1);
+                            
+                            String si = val + (siSymbol.equals(Unit.NO_UNIT)?"": " "+siSymbol);
                             if (!orig.equals(si))
                                 orig = orig +" ("+si+")";
                             elementProps.put(pv.getName(), orig);
