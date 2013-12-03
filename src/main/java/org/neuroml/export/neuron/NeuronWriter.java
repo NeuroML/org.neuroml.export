@@ -177,10 +177,22 @@ public class NeuronWriter extends BaseWriter {
         newExpr = newExpr.replaceAll(" ln\\(", " log(");
 
         HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
-        //E.info("Making mappings in "+newExpr+" for "+comp+": "+paramMappingsComp);
+        
         for (String origName : paramMappingsComp.keySet()) {
             String newName = paramMappingsComp.get(origName);
             newExpr = Utils.replaceInExpression(newExpr, origName, newName);
+        }
+        
+        // Since modlunit is confused about statements with: (100) * v
+        // It assumes the 100 is a scaling factor for units & complains
+        // Change to: 100 * v
+        if (newExpr.charAt(0)=='(') {
+            int nextBracket = newExpr.indexOf(")");
+            String num = newExpr.substring(1,nextBracket-1).trim();
+            try {
+                float f = Float.parseFloat(num);
+                newExpr = f+" "+newExpr.substring(nextBracket+1);
+            } catch (NumberFormatException e) {}
         }
 
         return newExpr;
@@ -440,7 +452,6 @@ public class NeuronWriter extends BaseWriter {
                 }
             }
 
-
         }
         
         ArrayList<Component> projections = targetComp.getChildrenAL("projections");
@@ -459,7 +470,6 @@ public class NeuronWriter extends BaseWriter {
                 if (comp.getComponentType().getName().equals(NeuroMLElements.CONNECTION))
                     number++;
             }
-            
             
             addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", id, prePop, postPop, synapse, number));
             
@@ -575,25 +585,250 @@ public class NeuronWriter extends BaseWriter {
         main.append("trec.record(h._ref_t)\n\n");
 
         StringBuilder toRec = new StringBuilder();
-        StringBuilder toPlot = new StringBuilder();
 
 
         ArrayList<String> displayGraphs = new ArrayList<String>();
+        HashMap<String, ArrayList<String>> plots = new HashMap<String, ArrayList<String>>();
 
         for (Component dispComp : simCpt.getAllChildren()) {
             if (dispComp.getName().indexOf("Display") >= 0) {
-                toRec.append("# Display: " + dispComp + "\n");
+                
                 String dispId = dispComp.getID();
                 int plotColour = 1;
 
                 for (Component lineComp : dispComp.getAllChildren()) {
                     if (lineComp.getName().indexOf("Line") >= 0) {
-                        //trace=StateMonitor(hhpop,'v',record=[0])
-                        /////String trace = "trace_" + lineComp.getID();
+                        
                         String ref = lineComp.getStringValue("quantity");
                         String origRef = ref;
 
-                        toRec.append("#   Line, recording: " + ref + "\n");
+                        String pop;
+                        String num;
+                        String var;
+                        String[] varParts = null;
+                        Component popComp = null;
+                        
+                        if (ref.indexOf("/")<0 && !simulatingNetwork) {
+
+                        	popComp = targetComp;
+                        	var = ref;
+                        	num = "0";
+	                        pop = DUMMY_POPULATION_PREFIX+popComp.getName();
+
+                        } else {
+                            if (ref.indexOf('[')>0) {
+                                pop = ref.split("/")[0].split("\\[")[0];
+                                num = ref.split("\\[")[1].split("\\]")[0];
+                                var = ref.split("/")[1];
+                            }
+                            else
+                            {
+                                String[] parts = ref.split("/");
+                                pop = parts[0];
+                                num = parts[1];
+                                var = "";
+                                varParts = new String[parts.length-2];
+                                for (int i=2;i<parts.length;i++) {
+                                    if (i>2)
+                                        var +="_";
+                                    var +=parts[i];
+                                    varParts[i-2]=parts[i];
+                                }
+                            }
+	
+
+	                        for (Component popsOrComponent : popsOrComponents) {
+	                            if (popsOrComponent.getID().equals(pop)) {
+	                                popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
+	                            }
+	                        }
+                        }
+                        String popArray = "a_"+pop;
+	
+                        System.out.println("Plotting " + var + " on cell " + num + " in " + pop + " of type " + popComp +" (was: "+origRef+")");
+
+                        String varRef = popArray + "_" + num;
+
+                        varRef = compMechNamesHoc.get(varRef) + "." + var;
+                        
+                        boolean isCondBasedCell = popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE);
+
+                        if (var.equals(NEURON_VOLTAGE)) {
+                            varRef = compMechNamesHoc.get(popArray + "_" + num) + "." + V_COPY_PREFIX + var;
+
+                        }
+                        if (isCondBasedCell) {
+                            if (varParts==null) {
+                                Cell cell = compIdsVsCells.get(popComp.getID());
+                                String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+                                varRef = popArray + "[" + num + "]." + varInst+"."+var;
+                            }
+                            else {
+                                Cell cell = compIdsVsCells.get(varParts[0]);
+                                String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+                                
+                                if (varParts.length==5) {
+                                    String cellId = varParts[0];
+                                    String biophys = varParts[1];
+                                    String membProps = varParts[2];
+                                    String channelDensId = varParts[3];
+                                    String variable = varParts[4];
+                                    Component cellComp = lems.getComponent(cellId);
+                                    ArrayList<Component> channelDensityComps = cellComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
+                                    
+
+                                    if (variable.equals("gDensity")) {
+                                        for (Component c: channelDensityComps) {
+                                            if (c.getID().equals(channelDensId))
+                                            variable = "gion_"+c.getStringValue("ionChannel");
+                                        }
+                                    } 
+                                  
+                                    varInst +="."+variable;
+
+                                    varRef = popArray + "[" + num + "]." + varInst;
+                                } else if (varParts.length>5) {
+                                    String cellRef = varParts[0];
+                                    String biophys = varParts[1];
+                                    String membProps = varParts[2];
+                                    String channelDensId = varParts[3];
+                                    String ionChanId = varParts[4];
+
+                                    for(int i=5; i<varParts.length; i++)
+                                    {
+                                        if (i==5)
+                                            varInst +=".";
+                                        else
+                                            varInst +="_";
+                                        varInst += varParts[i];
+                                    }
+
+                                    varInst +="_"+ionChanId;
+
+                                    varRef = popArray + "[" + num + "]." + varInst;
+                                } else {
+                                    for(int i=1; i<varParts.length; i++)
+                                    {
+                                        String part = varParts[i];
+                                        if (part.equals("caConc")) {
+                                            part = "cai";
+                                        }
+                                        varInst +="."+part;
+                                    }
+                                    varRef = popArray + "[" + num + "]." + varInst;
+                                        
+                                }
+                            }
+
+                        }
+
+                        
+                        String dim = "None";
+                        try {
+                            Exposure exp = popComp.getComponentType().getExposure(var);
+                            dim = exp.getDimension().getName();
+                        } catch(ContentError e) {
+                            
+                        }
+
+                        float scale = 1 / convertToNeuronUnits((float) lineComp.getParamValue("scale").getDoubleValue(), dim);
+
+                        String plotRef = "\"" + varRef + "\"";
+
+                        if (scale != 1) {
+                            plotRef = "\"(" + scale + ") * " + varRef + "\"";
+                        }
+                        
+                        
+                        String dispGraph = "display_" + dispId;
+                        if (!displayGraphs.contains(dispGraph)) {
+                            displayGraphs.add(dispGraph);
+                        }
+                        
+                        if (plots.get(dispGraph)==null)
+                            plots.put(dispGraph, new ArrayList<String>());
+                        
+                        plots.get(dispGraph).add("# Line, plotting: " + ref);
+                        
+                        plots.get(dispGraph).add(dispGraph + ".addexpr(" + plotRef + ", " + plotRef + ", " + plotColour + ", 1, 0.8, 0.9, 2)");
+                        plotColour++;
+                        if (plotColour > 10) {
+                            plotColour = 1;
+                        }
+                    
+
+                    }
+                }
+            }
+        }
+        main.append(toRec);
+
+        String len = simCpt.getStringValue("length");
+        len = len.replaceAll("ms", "");
+        if (len.indexOf("s") > 0) {
+            len = len.replaceAll("s", "").trim();
+            len = "" + Float.parseFloat(len) * 1000;
+        }
+
+        String dt = simCpt.getStringValue("step");
+        dt = dt.replaceAll("ms", "").trim();
+        if (dt.indexOf("s") > 0) {
+            dt = dt.replaceAll("s", "").trim();
+            dt = "" + Float.parseFloat(dt) * 1000;
+        }
+
+        main.append("h.tstop = " + len + "\n\n");
+        main.append("h.dt = " + dt + "\n\n");
+        main.append("h.steps_per_ms = " + (float) (1d / Double.parseDouble(dt)) + "\n\n");
+
+        //main.append("objref SampleGraph\n");
+        for (String dg : displayGraphs) {
+            addComment(main, "Display: "+dg);
+            main.append(dg + " = h.Graph(0)\n");
+            main.append(dg + ".size(0,h.tstop,-80.0,50.0)\n");
+            main.append(dg + ".view(0, -80.0, h.tstop, 130.0, 80, 330, 330, 250)\n");
+            main.append("h.graphList[0].append(" + dg + ")\n");
+            for (String plot: plots.get(dg)) {
+                main.append(plot+"\n");
+            }
+            main.append("\n");
+        }
+
+        main.append("\n\n");
+
+        
+        
+        HashMap<String, String> outfiles = new HashMap<String, String>();
+        HashMap<String, ArrayList<String>> columnsPre = new HashMap<String, ArrayList<String>>();
+        HashMap<String, ArrayList<String>> columnsPost = new HashMap<String, ArrayList<String>>();
+        
+        String timeRef = "time";
+        outfiles.put(timeRef, target.timesFile);
+        
+        columnsPre.put(timeRef, new ArrayList<String>());
+        columnsPost.put(timeRef, new ArrayList<String>());
+        
+        columnsPre.get(timeRef).add("# Column: " + timeRef);
+        columnsPre.get(timeRef).add("h(' objectvar v_"+timeRef+" ')");
+        columnsPre.get(timeRef).add("h(' { v_"+timeRef+" = new Vector() } ')");
+        columnsPre.get(timeRef).add("h(' v_"+timeRef+".record(&t) ')");
+        columnsPre.get(timeRef).add("h(' v_"+timeRef+".resize("+"111111"+") ')");
+        columnsPost.get(timeRef).add("h(' v_"+timeRef+".printf(f_"+timeRef+") ')");
+        
+        for (Component ofComp : simCpt.getAllChildren()) {
+            if (ofComp.getName().indexOf("OutputFile") >= 0) {
+                
+                String outfileId = ofComp.getID().replaceAll(" ", "_");
+                outfiles.put(outfileId, ofComp.getTextParam("fileName"));
+
+                for (Component colComp : ofComp.getAllChildren()) {
+                    
+                    if (colComp.getName().indexOf("OutputColumn") >= 0) {
+                        
+                        String colId = colComp.getID().replaceAll(" ", "_")+"_"+outfileId;
+                        String ref = colComp.getStringValue("quantity");
+                        String origRef = ref;
+
                         String pop;
                         String num;
                         String var;
@@ -713,12 +948,7 @@ public class NeuronWriter extends BaseWriter {
                             }
 
                         }
-                        System.out.println(" = "+varRef);
 
-                        String dispGraph = "display_" + dispId;
-                        if (!displayGraphs.contains(dispGraph)) {
-                            displayGraphs.add(dispGraph);
-                        }
                         
                         String dim = "None";
                         try {
@@ -728,57 +958,43 @@ public class NeuronWriter extends BaseWriter {
                             
                         }
 
-                        float scale = 1 / convertToNeuronUnits((float) lineComp.getParamValue("scale").getDoubleValue(),
-                                dim);
+                        // TODO check if scale is supported in OutputColumn
+                        ////float scale = 1 / convertToNeuronUnits((float) lineComp.getParamValue("scale").getDoubleValue(), dim);
+                        float scale = 1;
 
-                        String plotRef = "\"" + varRef + "\"";
-
-                        if (scale != 1) {
-                            plotRef = "\"(" + scale + ") * " + varRef + "\"";
-                        }
-
-                        toPlot.append(dispGraph + ".addexpr(" + plotRef + ", " + plotRef + ", " + plotColour + ", 1, 0.8, 0.9, 2)\n");
-                        plotColour++;
-                        if (plotColour > 10) {
-                            plotColour = 1;
-                        }
+                        
+                        if (columnsPre.get(outfileId)==null)
+                            columnsPre.put(outfileId, new ArrayList<String>());
+                        if (columnsPost.get(outfileId)==null)
+                            columnsPost.put(outfileId, new ArrayList<String>());
+                        
+    
+                        columnsPre.get(outfileId).add("# Column: " + ref);
+                        columnsPre.get(outfileId).add("h(' objectvar v_"+colId+" ')");
+                        columnsPre.get(outfileId).add("h(' { v_"+colId+" = new Vector() } ')");
+                        columnsPre.get(outfileId).add("h(' v_"+colId+".record(&"+varRef+") ')");
+                        columnsPre.get(outfileId).add("h(' v_"+colId+".resize("+"111111"+") ')");
+                        columnsPost.get(outfileId).add("h(' v_"+colId+".printf(f_"+outfileId+") ')");
+                        
                     
 
                     }
                 }
             }
         }
-        main.append(toRec);
 
-        String len = simCpt.getStringValue("length");
-        len = len.replaceAll("ms", "");
-        if (len.indexOf("s") > 0) {
-            len = len.replaceAll("s", "").trim();
-            len = "" + Float.parseFloat(len) * 1000;
+        for (String f : outfiles.keySet()) {
+            addComment(main, "File to save: "+f);
+            //main.append(f + " = ???\n");
+            
+            for (String col: columnsPre.get(f)) {
+                main.append(col+"\n");
+            }
+            main.append("\n");
         }
 
-        String dt = simCpt.getStringValue("step");
-        dt = dt.replaceAll("ms", "").trim();
-        if (dt.indexOf("s") > 0) {
-            dt = dt.replaceAll("s", "").trim();
-            dt = "" + Float.parseFloat(dt) * 1000;
-        }
-
-        main.append("h.tstop = " + len + "\n\n");
-        main.append("h.dt = " + dt + "\n\n");
-        main.append("h.steps_per_ms = " + (float) (1d / Double.parseDouble(dt)) + "\n\n");
-
-        //main.append("objref SampleGraph\n");
-        for (String dg : displayGraphs) {
-            main.append(dg + " = h.Graph(0)\n");
-            main.append(dg + ".size(0,h.tstop,-80.0,50.0)\n");
-            main.append(dg + ".view(0, -80.0, h.tstop, 130.0, 80, 330, 330, 250)\n");
-            main.append("h.graphList[0].append(" + dg + ")\n");
-        }
-
-        main.append(toPlot);
         main.append("\n\n");
-
+        
 
         main.append("h.nrncontrolmenu()\n");
 
@@ -789,11 +1005,35 @@ public class NeuronWriter extends BaseWriter {
         for (String dg : displayGraphs) {
             main.append(dg + ".exec_menu(\"View = plot\")\n");
         }
+        main.append("\n");
+        /*
+for i=0, 0 {
+    f_CG1_seg_Soma_v[i] = new File()
+    strdef filename
+    {sprint(filename, "%sCG1_%d.dat", targetDir, i)}
+    f_CG1_seg_Soma_v[i].wopen(filename)
+    v_CG1_seg_Soma_v[i].printf(f_CG1_seg_Soma_v[i])
+    f_CG1_seg_Soma_v[i].close()*/
+        
+        for (String f : outfiles.keySet()) {
+            addComment(main, "File to save: "+f);
+            main.append("h(' objectvar f_"+f + " ')\n");
+            main.append("h(' { f_"+f + " = new File() } ')\n");
+            main.append("h.f_"+f + ".wopen(\""+outfiles.get(f)+"\")\n");
+            for (String col: columnsPost.get(f)) {
+                main.append(col+"\n");
+            }
+            main.append("h.f_"+f + ".close()\n");
+            main.append("print(\"Saved data to: "+outfiles.get(f)+"\")\n");
+            
+            main.append("\n");
+        }
 
         main.append("print \"Done\"\n\n");
 
         return main.toString();
     }
+    
 
     public static Cell getCellFromComponent(Component comp) throws ContentError, ParseError, IOException, JAXBException {
         LinkedHashMap<String,Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
@@ -2150,6 +2390,8 @@ public class NeuronWriter extends BaseWriter {
             return "(um)";
         } else if (dimensionName.equals("area")) {
             return "(um2)";
+        } else if (dimensionName.equals("volume")) {
+            return "(um3)";
         } else if (dimensionName.equals("concentration")) {
             return "(mM)";
         } else if (dimensionName.equals("charge_per_mole")) {
@@ -2192,6 +2434,8 @@ public class NeuronWriter extends BaseWriter {
             return 1000000f;
         } else if (dimensionName.equals("area")) {
             return 1e12f;
+        } else if (dimensionName.equals("volume")) {
+            return 1e18f;
         } else if (dimensionName.equals("concentration")) {
             return 1f;
         } else if (dimensionName.equals("charge_per_mole")) {
@@ -2250,9 +2494,9 @@ public class NeuronWriter extends BaseWriter {
         
         //lemsFile = new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
-        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
+        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
