@@ -12,22 +12,22 @@
 #macro (unpackNames $map)#foreach ($k in $map.keySet())$prefix$Declare_float$k = $map.get($k);
 #end#end##
 ########################################################################
-#macro (idx2names $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)$prefix$Declare_float$k = ${name}[$i];
+#macro (idx2names $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount - 1)$prefix$Declare_float$k = ${name}[$i];
 #end#end##
 ########################################################################
-#macro (NV2names $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
+#macro (NV2names $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount - 1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
 #end#end##
 ########################################################################
-#macro (NV2names_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount-1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
+#macro (NV2names_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount - 1)$prefix$Declare_float$k = NV_Ith_S(${name}, $i);
 #end#end##
 ########################################################################
-#macro (intoNV $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
+#macro (intoNV $name $map)#foreach ($k in $map.keySet())#set($i = $velocityCount - 1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
 #end#end##
 ########################################################################
-#macro (intoNV_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount-1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
+#macro (intoNV_dynsort $name $map)#foreach ($k in $dynamics.keySet())#set($i = $velocityCount - 1)${prefix}NV_Ith_S(${name}, $i) = $map.get($k);
 #end#end##
 ########################################################################
-#macro (names2array $array $map)#foreach ($k in $map.keySet())#set($i = $velocityCount-1)${prefix}${array}[$i] = $k;
+#macro (names2array $array $map)#foreach ($k in $map.keySet())#set($i = $velocityCount - 1)${prefix}${array}[$i] = $k;
 #end#end##
 ########################################################################
 #macro (sign2num $s)#if ($s == "+")1#elseif($s == "-")-1#elseif($s == "0")0#else???#end#end##
@@ -58,7 +58,7 @@
 #end
 \#define RTOL  RCONST(1.0e-4)   /* scalar relative tolerance */
 #foreach($d in $dynamics)##
-#set($i = $velocityCount-1)
+#set($i = $velocityCount - 1)
 \#define ATOL$i RCONST(1.0e-6)   /* vector absolute tolerance components */
 #end
 \#define T0    RCONST($t_start)/* initial time */
@@ -104,7 +104,7 @@ static int root_functions(realtype t, N_Vector state, realtype *gout, void *p)
 
 #foreach($e in $events)## 
     //$e.name
-#set($i=$velocityCount-1)##
+#set($i=$velocityCount - 1)##
     gout[$i] = $e.condition;
 #end##
 
@@ -142,7 +142,7 @@ int main(int narg, char **args)
 
     reltol = RTOL;
 #foreach($x in $dynamics)##
-#set($i = $velocityCount-1)##
+#set($i = $velocityCount - 1)##
     NV_Ith_S(abstol,$i) = ATOL$i;
 #end##
  
@@ -190,7 +190,7 @@ int main(int narg, char **args)
 #set($prefix = $idt4)##
 #set($Declare_float ="")##
 #foreach($ev in $events)##
-#set($i=$velocityCount-1)##
+#set($i=$velocityCount - 1)##
             if(rootsfound[$i]){
                 //$ev.name
 ## change state 
