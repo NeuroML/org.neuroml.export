@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
-import org.lemsml.export.base.GenerationException;
 
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;

@@ -11,18 +11,6 @@ import junit.framework.TestCase;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-
-/*
-import org.lemsml.jlems.core.api.LEMSBuildConfiguration;
-import org.lemsml.jlems.core.api.LEMSBuildException;
-import org.lemsml.jlems.core.api.LEMSBuildOptions;
-import org.lemsml.jlems.core.api.LEMSBuildOptionsEnum;
-import org.lemsml.jlems.core.api.LEMSBuilder;
-import org.lemsml.jlems.core.api.LEMSDocumentReader;
-import org.lemsml.jlems.core.api.interfaces.ILEMSBuildConfiguration;
-import org.lemsml.jlems.core.api.interfaces.ILEMSBuildOptions;
-import org.lemsml.jlems.core.api.interfaces.ILEMSDocument;
-*/
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
@@ -66,7 +54,7 @@ public class DLemsWriterTest extends TestCase
         System.out.println("Loading: "+exampleFilename);
         
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-
+    	
         DLemsWriter sw = new DLemsWriter(lems);
 
         String dlems = sw.getMainScript();
@@ -88,7 +76,6 @@ public class DLemsWriterTest extends TestCase
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
-		
 
 		context.put( "name", new String("VelocityOnOSB") );
 		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();

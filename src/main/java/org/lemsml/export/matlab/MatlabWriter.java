@@ -74,7 +74,7 @@ public class MatlabWriter extends BaseWriter {
 
 		//context.put( "name", new String("VelocityOnOSB") );
 
-        DLemsWriter somw = new DLemsWriter(lems);
+        DLemsWriter somw = new DLemsWriter(lems, new MatlabVisitors());
 
 		try
 		{

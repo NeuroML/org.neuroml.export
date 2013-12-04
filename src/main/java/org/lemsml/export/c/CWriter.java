@@ -87,8 +87,8 @@ public class CWriter extends BaseWriter {
 		VelocityContext context = new VelocityContext();
 
 		//context.put( "name", new String("VelocityOnOSB") );
-
-        DLemsWriter somw = new DLemsWriter(lems);
+		
+        DLemsWriter somw = new DLemsWriter(lems, new CVisitors());
 
 		try
 		{
