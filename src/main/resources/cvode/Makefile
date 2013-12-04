@@ -12,7 +12,7 @@ EXECUTABLE=${SOURCES:.c=}
 all: ${SOURCES} ${EXECUTABLE}
 
 ${EXECUTABLE}: ${OBJECTS} 
-	${CC} ${LDFLAGS} -o $@ ${OBJECTS} ${SUN_LDFLAGS} 
+	${CC} ${LDFLAGS} -o $@ $@.o ${SUN_LDFLAGS} 
 
 .c.o:
 	${CC} ${CFLAGS} ${SUN_CPPFLAGS} -c $< 
