@@ -61,9 +61,9 @@ public class CWriterTest extends TestCase {
         
         assertTrue(cFile.exists());
         
-        File makefile = new File("src/main/resources/"+cw.getSolver().getMakefile());
-        
-        FileUtil.copyFile(makefile, cFile.getParentFile());
+        File mFile = new File(AppTest.getTempDir(),"Makefile");
+        String makefile = cw.getMakefile();
+        FileUtil.writeStringToFile(makefile, mFile);
 	}
 	
 	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
@@ -86,9 +86,9 @@ public class CWriterTest extends TestCase {
         
         assertTrue(cFile.exists());
         
-        File makefile = new File("src/main/resources/"+cw.getSolver().getMakefile());
-        
-        FileUtil.copyFile(makefile, cFile.getParentFile());
+        File mFile = new File(AppTest.getTempDir(),"Makefile");
+        String makefile = cw.getMakefile();
+        FileUtil.writeStringToFile(makefile, mFile);
 	}
 
 }

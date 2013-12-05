@@ -13,9 +13,12 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
+import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
 import org.neuroml.export.base.BaseWriter;
 
 public class CWriter extends BaseWriter {
@@ -25,8 +28,8 @@ public class CWriter extends BaseWriter {
         // Default (& only supported version) is CVODE
         CVODE("cvode/cvode.vm", "cvode/Makefile");
 
-        private String template;
-        private String makefile;
+        private final String template;
+        private final String makefile;
 
         private Solver(String t, String m) {
             template = t;
@@ -56,6 +59,7 @@ public class CWriter extends BaseWriter {
 	String commPost = "*/";
 	
 	@Override
+    @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	protected void addComment(StringBuilder sb, String comment) {
 	
 		if (comment.indexOf("\n") < 0)
@@ -72,6 +76,15 @@ public class CWriter extends BaseWriter {
         return solver;
     }
     
+	public String getMakefile() throws GenerationException {
+        
+        try {
+            String makefile = getRelativeResource(this.getClass(), "/"+solver.getMakefile());
+            return makefile;
+        } catch (ContentError ex) {
+            throw new GenerationException("Problem finding makefile: "+solver.getMakefile(), ex);
+        }
+    }
     
 
 	@Override
@@ -85,8 +98,6 @@ public class CWriter extends BaseWriter {
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
-
-		//context.put( "name", new String("VelocityOnOSB") );
 		
         DLemsWriter somw = new DLemsWriter(lems, new CVisitors());
 
@@ -124,9 +135,13 @@ public class CWriter extends BaseWriter {
 		{
 			throw new GenerationException("Problem finding template",e);
 		}
-		catch( Exception e )
+		catch( ContentError e )
 		{
-			throw new GenerationException("Problem using template",e);
+			throw new GenerationException("Problem finding template",e);
+		}
+		catch( ParseError e )
+		{
+			throw new GenerationException("Problem finding template",e);
 		}
 		
 		return sb.toString();	
