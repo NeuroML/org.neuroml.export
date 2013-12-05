@@ -295,7 +295,7 @@ public class NeuronWriter extends BaseWriter {
 
             main.append("print \"Population " + popName + " contains " + number + " instance(s) of component: "
                     + popComp.getID() + " of type: " + popComp.getComponentType().getName() + " \"\n\n");
-
+       
             
             if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
                                 
@@ -415,41 +415,49 @@ public class NeuronWriter extends BaseWriter {
                     throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
                 }
                 
-                for (int i = 0; i < number; i++) {
-                    String instName = popName + "_" + i;
-                    main.append(instName + " = h.Section()\n");
-                    double defaultRadius = 5;
-                    main.append(instName + ".L = " + defaultRadius * 2 + "\n");
-                    main.append(instName + "(0.5).diam = " + defaultRadius * 2 + "\n");
+                
+                
+                main.append("h(\" n_"+popName+" = "+number+" \")\n");
+                main.append("h(\" create "+popName+"["+number+"]\")\n");
+                main.append("h(\" objectvar m_"+mechName + "["+number+"] \")\n\n");
+                
+                
+                main.append("for i in range(int(h.n_"+popName+")):\n");
+                String instName = popName + "[i]";
+                //main.append(instName + " = h.Section()\n");
+                double defaultRadius = 5;
+                main.append("    h."+instName + ".L = " + defaultRadius * 2 + "\n");
+                main.append("    h."+instName + "(0.5).diam = " + defaultRadius * 2 + "\n");
 
-                    if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)) {
-                        double capTotSI = popComp.getParamValue("C").getDoubleValue();
-                        double area = 4 * Math.PI * defaultRadius * defaultRadius;
-                        double specCapNeu = 10e13 * capTotSI / area;
-                        main.append(instName + "(0.5).cm = " + specCapNeu + "\n");
-                    } else {
-                        main.append(instName + "(0.5).cm = 318.31927\n");
-                    }
-
-                    main.append(instName + ".push()\n");
-                    main.append(mechName + "_" + instName + " = h." + mechName + "(0.5, sec=" + instName + ")\n\n");
-
-                    if (!compMechsCreated.containsKey(mechName)) {
-                        compMechsCreated.put(mechName, 0);
-                    }
-
-                    compMechsCreated.put(mechName, compMechsCreated.get(mechName) + 1);
-
-                    String hocMechName = mechName + "[" + (compMechsCreated.get(mechName) - 1) + "]";
-
-                    compMechNamesHoc.put(instName, hocMechName);
-
-                    LemsCollection<ParamValue> pvs = popComp.getParamValues();
-                    for (ParamValue pv : pvs) {
-                        main.append("h." + hocMechName + "." + pv.getName() + " = "
-                                + convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
-                    }
+                if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)) {
+                    double capTotSI = popComp.getParamValue("C").getDoubleValue();
+                    double area = 4 * Math.PI * defaultRadius * defaultRadius;
+                    double specCapNeu = 10e13 * capTotSI / area;
+                    main.append("    h."+instName + "(0.5).cm = " + specCapNeu + "\n");
+                } else {
+                    main.append("    h."+instName + "(0.5).cm = 318.31927\n");
                 }
+
+                main.append("    h."+instName + ".push()\n");
+                main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") +"  { m_"+mechName + "[%i] = new "+mechName + "(0.5) } \"%(i,i))\n\n");
+
+                if (!compMechsCreated.containsKey(mechName)) {
+                    compMechsCreated.put(mechName, 0);
+                }
+
+                compMechsCreated.put(mechName, compMechsCreated.get(mechName) + 1);
+
+                //String hocMechName = mechName + "[" + (compMechsCreated.get(mechName) - 1) + "]";
+                String hocMechName = "m_"+mechName+"[i]" ;
+
+                compMechNamesHoc.put(instName, hocMechName);
+
+                LemsCollection<ParamValue> pvs = popComp.getParamValues();
+                for (ParamValue pv : pvs) {
+                    main.append("    "+"h." + hocMechName + "." + pv.getName() + " = "
+                            + convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
+                }
+                
             }
 
         }
@@ -601,134 +609,156 @@ public class NeuronWriter extends BaseWriter {
                         
                         String ref = lineComp.getStringValue("quantity");
                         String origRef = ref;
-
-                        String pop;
-                        String num;
+                        String varRef = null;
                         String var;
-                        String[] varParts = null;
-                        Component popComp = null;
+                            
+                        String dim = "None";
                         
-                        if (ref.indexOf("/")<0 && !simulatingNetwork) {
+                        if (false && !simulatingNetwork) {
+                            varRef = ref;
+                            var = ref;
+                            try {
+                                Exposure exp = targetComp.getComponentType().getExposure(var);
+                                dim = exp.getDimension().getName();
+                            } catch(ContentError e) {
 
-                        	popComp = targetComp;
-                        	var = ref;
-                        	num = "0";
-	                        pop = DUMMY_POPULATION_PREFIX+popComp.getName();
-
-                        } else {
-                            if (ref.indexOf('[')>0) {
-                                pop = ref.split("/")[0].split("\\[")[0];
-                                num = ref.split("\\[")[1].split("\\]")[0];
-                                var = ref.split("/")[1];
                             }
-                            else
-                            {
-                                String[] parts = ref.split("/");
-                                pop = parts[0];
-                                num = parts[1];
-                                var = "";
-                                varParts = new String[parts.length-2];
-                                for (int i=2;i<parts.length;i++) {
-                                    if (i>2)
-                                        var +="_";
-                                    var +=parts[i];
-                                    varParts[i-2]=parts[i];
+                            
+                            System.out.println("Plotting " + var + " (dim: "+dim+") on comp: "+targetComp);
+                        }
+                        else
+                        {
+                            String pop;
+                            String num;
+                            String[] varParts = null;
+                            Component popComp = null;
+
+                            if (ref.indexOf("/")<0 && !simulatingNetwork) {
+
+                                popComp = targetComp;
+                                var = ref;
+                                num = "0";
+                                pop = DUMMY_POPULATION_PREFIX+popComp.getName();
+                                
+                            } else {
+                                if (ref.indexOf('[')>0) {
+                                    pop = ref.split("/")[0].split("\\[")[0];
+                                    num = ref.split("\\[")[1].split("\\]")[0];
+                                    var = ref.split("/")[1];
+                                }
+                                else
+                                {
+                                    String[] parts = ref.split("/");
+                                    pop = parts[0];
+                                    num = parts[1];
+                                    var = "";
+                                    varParts = new String[parts.length-2];
+                                    for (int i=2;i<parts.length;i++) {
+                                        if (i>2)
+                                            var +="_";
+                                        var +=parts[i];
+                                        varParts[i-2]=parts[i];
+                                    }
+                                }
+
+
+                                for (Component popsOrComponent : popsOrComponents) {
+                                    if (popsOrComponent.getID().equals(pop)) {
+                                        popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
+                                    }
                                 }
                             }
-	
+                            String popArray = "a_"+pop;
 
-	                        for (Component popsOrComponent : popsOrComponents) {
-	                            if (popsOrComponent.getID().equals(pop)) {
-	                                popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
-	                            }
-	                        }
-                        }
-                        String popArray = "a_"+pop;
-	
-                        System.out.println("Plotting " + var + " on cell " + num + " in " + pop + " of type " + popComp +" (was: "+origRef+")");
 
-                        String varRef = popArray + "_" + num;
+                            varRef = popArray + "_" + num;
 
-                        varRef = compMechNamesHoc.get(varRef) + "." + var;
-                        
-                        boolean isCondBasedCell = popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE);
+                            varRef = compMechNamesHoc.get(varRef) + "." + var;
 
-                        if (var.equals(NEURON_VOLTAGE)) {
-                            varRef = compMechNamesHoc.get(popArray + "_" + num) + "." + V_COPY_PREFIX + var;
+                            boolean isCondBasedCell = popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE);
+                            
+                            if (var.equals(NEURON_VOLTAGE)) {
+                                varRef = compMechNamesHoc.get(popArray + "_" + num) + "." + V_COPY_PREFIX + var;
 
-                        }
-                        if (isCondBasedCell) {
-                            if (varParts==null) {
-                                Cell cell = compIdsVsCells.get(popComp.getID());
-                                String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
-                                varRef = popArray + "[" + num + "]." + varInst+"."+var;
+                            }
+                            if (isCondBasedCell) {
+                                if (varParts==null) {
+                                    Cell cell = compIdsVsCells.get(popComp.getID());
+                                    String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+                                    varRef = popArray + "[" + num + "]." + varInst+"."+var;
+                                }
+                                else {
+                                    Cell cell = compIdsVsCells.get(varParts[0]);
+                                    String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+
+                                    if (varParts.length==5) {
+                                        String cellId = varParts[0];
+                                        String biophys = varParts[1];
+                                        String membProps = varParts[2];
+                                        String channelDensId = varParts[3];
+                                        String variable = varParts[4];
+                                        Component cellComp = lems.getComponent(cellId);
+                                        ArrayList<Component> channelDensityComps = cellComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
+
+
+                                        if (variable.equals("gDensity")) {
+                                            for (Component c: channelDensityComps) {
+                                                if (c.getID().equals(channelDensId))
+                                                variable = "gion_"+c.getStringValue("ionChannel");
+                                            }
+                                        } 
+
+                                        varInst +="."+variable;
+
+                                        varRef = popArray + "[" + num + "]." + varInst;
+                                    } else if (varParts.length>5) {
+                                        String cellRef = varParts[0];
+                                        String biophys = varParts[1];
+                                        String membProps = varParts[2];
+                                        String channelDensId = varParts[3];
+                                        String ionChanId = varParts[4];
+
+                                        for(int i=5; i<varParts.length; i++)
+                                        {
+                                            if (i==5)
+                                                varInst +=".";
+                                            else
+                                                varInst +="_";
+                                            varInst += varParts[i];
+                                        }
+
+                                        varInst +="_"+ionChanId;
+
+                                        varRef = popArray + "[" + num + "]." + varInst;
+                                    } else {
+                                        for(int i=1; i<varParts.length; i++)
+                                        {
+                                            String part = varParts[i];
+                                            if (part.equals("caConc")) {
+                                                part = "cai";
+                                            }
+                                            varInst +="."+part;
+                                        }
+                                        varRef = popArray + "[" + num + "]." + varInst;
+
+                                    }
+                                }
                             }
                             else {
-                                Cell cell = compIdsVsCells.get(varParts[0]);
-                                String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+                                System.out.println("Plotting " + var + " on cell " + num + " in " + pop + " of type " + popComp +" (was: "+origRef+"), "+compMechNamesHoc);
+                                String mechRef = compMechNamesHoc.get(pop+"[i]");
                                 
-                                if (varParts.length==5) {
-                                    String cellId = varParts[0];
-                                    String biophys = varParts[1];
-                                    String membProps = varParts[2];
-                                    String channelDensId = varParts[3];
-                                    String variable = varParts[4];
-                                    Component cellComp = lems.getComponent(cellId);
-                                    ArrayList<Component> channelDensityComps = cellComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
-                                    
-
-                                    if (variable.equals("gDensity")) {
-                                        for (Component c: channelDensityComps) {
-                                            if (c.getID().equals(channelDensId))
-                                            variable = "gion_"+c.getStringValue("ionChannel");
-                                        }
-                                    } 
-                                  
-                                    varInst +="."+variable;
-
-                                    varRef = popArray + "[" + num + "]." + varInst;
-                                } else if (varParts.length>5) {
-                                    String cellRef = varParts[0];
-                                    String biophys = varParts[1];
-                                    String membProps = varParts[2];
-                                    String channelDensId = varParts[3];
-                                    String ionChanId = varParts[4];
-
-                                    for(int i=5; i<varParts.length; i++)
-                                    {
-                                        if (i==5)
-                                            varInst +=".";
-                                        else
-                                            varInst +="_";
-                                        varInst += varParts[i];
-                                    }
-
-                                    varInst +="_"+ionChanId;
-
-                                    varRef = popArray + "[" + num + "]." + varInst;
-                                } else {
-                                    for(int i=1; i<varParts.length; i++)
-                                    {
-                                        String part = varParts[i];
-                                        if (part.equals("caConc")) {
-                                            part = "cai";
-                                        }
-                                        varInst +="."+part;
-                                    }
-                                    varRef = popArray + "[" + num + "]." + varInst;
-                                        
-                                }
+                                varRef = mechRef.replaceAll("\\[i\\]", "["+num+"]") + "." + var;
                             }
-
-                        }
-
-                        
-                        String dim = "None";
-                        try {
-                            Exposure exp = popComp.getComponentType().getExposure(var);
-                            dim = exp.getDimension().getName();
-                        } catch(ContentError e) {
+                            System.out.println("Plotting " + var + " on cell " + num + " in " + pop + " of type " + popComp +" (was: "+origRef+"), varRef: "+varRef);
                             
+                            try {
+                                Exposure exp = popComp.getComponentType().getExposure(var);
+                                dim = exp.getDimension().getName();
+                            } catch(ContentError e) {
+
+                            }
+                        
                         }
 
                         float scale = 1 / convertToNeuronUnits((float) lineComp.getParamValue("scale").getDoubleValue(), dim);
@@ -738,6 +768,8 @@ public class NeuronWriter extends BaseWriter {
                         if (scale != 1) {
                             plotRef = "\"(" + scale + ") * " + varRef + "\"";
                         }
+                        
+                        System.out.println(varRef+", "+plotRef+", "+compMechNamesHoc);
                         
                         
                         String dispGraph = "display_" + dispId;
@@ -803,7 +835,8 @@ public class NeuronWriter extends BaseWriter {
         HashMap<String, ArrayList<String>> columnsPost = new HashMap<String, ArrayList<String>>();
         
         String timeRef = "time";
-        outfiles.put(timeRef, target.timesFile);
+        String timefileName = target.timesFile !=null ? target.timesFile : "times.dat";
+        outfiles.put(timeRef, timefileName);
         
         columnsPre.put(timeRef, new ArrayList<String>());
         columnsPost.put(timeRef, new ArrayList<String>());
@@ -947,6 +980,13 @@ public class NeuronWriter extends BaseWriter {
                                 }
                             }
 
+                        }
+                        
+                        else {
+                            String mechRef = compMechNamesHoc.get(pop+"[i]");
+
+                            varRef = mechRef.replaceAll("\\[i\\]", "["+num+"]") + "." + var;
+                            System.out.println("Saving " + var + "-> "+varRef+" on cell " + num + " in " + pop + " of type " + popComp +" (was: "+origRef+"), "+compMechNamesHoc);
                         }
 
                         
@@ -1480,7 +1520,7 @@ for i=0, 0 {
             blockNeuron.append("ELECTRODE_CURRENT i\n");
         }
         else {
-            blockNeuron.append("POINT_PROCESS " + mechName);
+            blockNeuron.append("POINT_PROCESS " + mechName+"\n");
         }
 
         if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
@@ -1687,7 +1727,7 @@ for i=0, 0 {
                 if (!resetVoltage) {
                     blockBreakpoint.append("if (" + checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
                     for (StateAssignment sa : oc.getStateAssignments()) {
-                        blockBreakpoint.append("\n    " + getStateVarName(sa.getStateVariable().getName()) + " = " + checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
+                        blockBreakpoint.append("\n    " + getStateVarName(sa.getStateVariable().getName()) + " = " + checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ??\n");
                     }
                     blockBreakpoint.append("}\n\n");
                 } else {
@@ -2494,9 +2534,11 @@ for i=0, 0 {
         
         //lemsFile = new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
-        lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
-        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
+        lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
         lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
+        lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
+        lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
