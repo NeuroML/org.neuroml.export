@@ -20,7 +20,7 @@ install:
     
 script:
     - pwd
+    - cd src
     - ls
-    #- cd org.neuroml.export/src/test/resources/tmp
     #- make
 
