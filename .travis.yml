@@ -20,7 +20,7 @@ install:
     
 script:
     - pwd
-    - cd src/test
+    - cd src/test/resources
     - ls
     #- make
 
