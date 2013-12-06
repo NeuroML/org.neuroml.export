@@ -19,6 +19,6 @@ install:
     - cd ..
     
 script:
-    - cd src/test/resources/tmp
+    - cd org.neuroml.export/src/test/resources/tmp
     - make
 
