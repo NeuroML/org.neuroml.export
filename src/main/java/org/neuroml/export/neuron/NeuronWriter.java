@@ -845,8 +845,8 @@ public class NeuronWriter extends BaseWriter {
         columnsPre.get(timeRef).add("h(' objectvar v_"+timeRef+" ')");
         columnsPre.get(timeRef).add("h(' { v_"+timeRef+" = new Vector() } ')");
         columnsPre.get(timeRef).add("h(' v_"+timeRef+".record(&t) ')");
-        columnsPre.get(timeRef).add("h(' v_"+timeRef+".resize("+"111111"+") ')");
-        columnsPost.get(timeRef).add("h(' v_"+timeRef+".printf(f_"+timeRef+") ')");
+        columnsPre.get(timeRef).add("h.v_"+timeRef+".resize( (h.tstop * h.steps_per_ms) + 1)");
+        columnsPost.get(timeRef).add("    h.f_"+timeRef+".printf(\"%f\\n\", h.v_"+timeRef+".get(i))");
         
         for (Component ofComp : simCpt.getAllChildren()) {
             if (ofComp.getName().indexOf("OutputFile") >= 0) {
@@ -1013,8 +1013,9 @@ public class NeuronWriter extends BaseWriter {
                         columnsPre.get(outfileId).add("h(' objectvar v_"+colId+" ')");
                         columnsPre.get(outfileId).add("h(' { v_"+colId+" = new Vector() } ')");
                         columnsPre.get(outfileId).add("h(' v_"+colId+".record(&"+varRef+") ')");
-                        columnsPre.get(outfileId).add("h(' v_"+colId+".resize("+"111111"+") ')");
-                        columnsPost.get(outfileId).add("h(' v_"+colId+".printf(f_"+outfileId+") ')");
+                        columnsPre.get(outfileId).add("h.v_"+colId+".resize( (h.tstop * h.steps_per_ms) + 1)");
+                        
+                        columnsPost.get(outfileId).add("    h.f_"+outfileId+".printf(\"%f\\t\", h.v_"+colId+".get(i))");
                         
                     
 
@@ -1060,9 +1061,11 @@ for i=0, 0 {
             main.append("h(' objectvar f_"+f + " ')\n");
             main.append("h(' { f_"+f + " = new File() } ')\n");
             main.append("h.f_"+f + ".wopen(\""+outfiles.get(f)+"\")\n");
+            main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
             for (String col: columnsPost.get(f)) {
                 main.append(col+"\n");
             }
+            main.append("    h.f_"+f + ".printf(\"\\n\")\n");
             main.append("h.f_"+f + ".close()\n");
             main.append("print(\"Saved data to: "+outfiles.get(f)+"\")\n");
             
@@ -2535,10 +2538,11 @@ for i=0, 0 {
         //lemsFile = new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
         lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
-        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
         lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
+        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
+        lemsFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
