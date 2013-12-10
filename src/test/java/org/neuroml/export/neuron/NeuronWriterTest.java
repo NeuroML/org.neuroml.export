@@ -3,8 +3,12 @@ package org.neuroml.export.neuron;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.xml.bind.JAXBException;
 
+import junit.framework.TestCase;
+
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -17,13 +21,10 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
-import org.neuroml.export.Utils;
-
-import junit.framework.TestCase;
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.AppTest;
 import org.neuroml.export.Main;
+import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -48,6 +49,7 @@ public class NeuronWriterTest extends TestCase {
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         testGetMainScript(exampleFilename);
     }
+
     
     public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
