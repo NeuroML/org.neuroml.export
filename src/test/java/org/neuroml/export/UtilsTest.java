@@ -62,6 +62,12 @@ public class UtilsTest extends TestCase {
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.3 ohm_m"), 1e-6);
         
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.03 kohm_cm"), 1e-6);
+        
+		assertEquals(60, Utils.getMagnitudeInSI("1 min"), 1e-6);
+        
+		assertEquals(1f/3600, Utils.getMagnitudeInSI("1 per_hour"), 1e-6);
+        
+		assertEquals(1e-3, Utils.getMagnitudeInSI("1 litre"), 1e-6);
 	}
     
     
