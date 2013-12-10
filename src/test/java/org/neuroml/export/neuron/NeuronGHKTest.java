@@ -25,7 +25,6 @@ import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Main;
 import org.neuroml.model.util.NeuroMLException;
 
 /**
@@ -36,11 +35,12 @@ public class NeuronGHKTest extends TestCase {
 
 	public void testGHK() throws ContentError, JAXBException, NeuroMLException, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException, GenerationException {
 		String exampleFilename = "ghk_na_k_ca.xml";
-		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+ "/" + exampleFilename);
+		//JUtil.setResourceRoot(this.getClass());
 
-		JarResourceInclusionReader.addSearchPathInJar("/examples");
+		String content = JUtil.getRelativeResource(this.getClass(), "/ghk/" + exampleFilename);
+
+		JarResourceInclusionReader.addSearchPathInJar("/ghk");
 		JarResourceInclusionReader jrir = new JarResourceInclusionReader(content);
-		JUtil.setResourceRoot(this.getClass());
 
 		Sim sim = new Sim(jrir.read());
         sim.readModel();
