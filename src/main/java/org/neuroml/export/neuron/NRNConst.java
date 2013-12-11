@@ -41,9 +41,9 @@ public class NRNConst {
 			"(S) = (siemens)\n"; 
 	
 	static final String ghkUnits = 
-			" : bypass nrn default faraday const\n" + 
-			"        FARADAY = (96485.3) (coulomb)\n" + 
-			"        R = (k-mole) (joule/degC)\n";
+			": bypass nrn default faraday const\n" + 
+			"FARADAY = (96485.3) (coulomb)\n" + 
+			"R = (k-mole) (joule/degC)\n";
 	
 	static final String ghkFunctionDefs =
 			"\nFUNCTION ghk(v(mV), ci(mM), co(mM)) (.001 coul/cm3) {\n" + 
