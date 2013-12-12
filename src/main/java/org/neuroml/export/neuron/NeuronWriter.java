@@ -1520,7 +1520,9 @@ for i=0, 0 {
         } else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE)) {
             mechName = comp.getID();
             blockNeuron.append("POINT_PROCESS " + mechName+"\n");
-            blockNeuron.append("ELECTRODE_CURRENT i\n");
+            if (!comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
+                blockNeuron.append("ELECTRODE_CURRENT i\n");
+            }
         }
         else {
             blockNeuron.append("POINT_PROCESS " + mechName+"\n");
@@ -1595,7 +1597,7 @@ for i=0, 0 {
                 blockBreakpoint.append("i" + species + " = gion * (v - e" + species + ")\n");
             }
         } else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
-                ratesMethod.append("i = -1 * i ? Due to different convention in synapses\n");
+                //ratesMethod.append("i = -1 * i ? Due to different convention in synapses\n");
             
         }
         
@@ -1989,7 +1991,7 @@ for i=0, 0 {
                 if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
                     exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
                 {
-                    blockNeuron.append("\n\nNONSPECIFIC_CURRENT "+NeuroMLElements.POINT_CURR_CURRENT+"\n");
+                    blockNeuron.append("\n\nNONSPECIFIC_CURRENT "+NeuroMLElements.POINT_CURR_CURRENT+" \n");
                 }
             }
         }
@@ -2540,9 +2542,9 @@ for i=0, 0 {
         lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
         lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
         lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
-        lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
-        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
         lemsFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
+        lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
+        lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
