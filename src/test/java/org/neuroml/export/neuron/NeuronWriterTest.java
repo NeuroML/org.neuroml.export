@@ -50,6 +50,12 @@ public class NeuronWriterTest extends TestCase {
         testGetMainScript(exampleFilename);
     }
 
+    public void testGHK() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
+    	
+    	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
+         testGetMainScript(exampleFilename);
+     }
+       
     
     public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
 
