@@ -3,6 +3,9 @@
  */
 package org.neuroml.export.neuron;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author boris
  *
@@ -64,4 +67,19 @@ public class NRNConst {
 			"        }\n" + 
 			"}\n";
 
+	// TODO Add more keywords / builtin mechanisms
+	static final Set<String> NRNKeywords = new HashSet<String>() {{
+		add("IClamp");
+	}};
+	
+	
+	public static String getSafeName(String id) {
+		String prefix = "";
+
+		if (NRNKeywords.contains(id)) {
+			prefix = "my";
+		}
+
+		return prefix + id;
+	}
 }
