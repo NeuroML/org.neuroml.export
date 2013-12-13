@@ -1091,8 +1091,8 @@ public class NeuronWriter extends BaseWriter {
 	// TODO: to be made more general
 	public enum SupportedUnits {
 		SI(1, 1, 1, 1, 1, 1, 1),
-		PHYSIOLOGICAL(1000, 1e-6f, 100, 0.1f, 0.1f, 1e-6f, 1000),
-		NEURON(1000, 1e-6f, 100, 100, 1e-4f, 1, 1000);
+		PHYSIOLOGICAL(1000, 1e-6f, 100, 0.1f, 0.1f, 1e-6f, 1e-1f),
+		NEURON(1000, 1e-6f, 100, 100, 1e-4f, 1, 100);
 
 		SupportedUnits(float voltageFactor, float lengthFactor,
 				float specCapFactor, float resistivityFactor,
@@ -1236,7 +1236,7 @@ public class NeuronWriter extends BaseWriter {
 
 			} else if (condOption.equals(ChannelConductanceOption.USE_GHK)) {
 				blockNeuron.append("\nRANGE permeability                      : Will be changed when ion channel mechanism placed on cell!\n");
-				blockParameter.append("\npermeability = 0  (um/ms)                       : Will be changed when ion channel mechanism placed on cell!\n");
+				blockParameter.append("\npermeability = 0  (cm/s)                       : Will be changed when ion channel mechanism placed on cell!\n");
 
 				blockNeuron.append("RANGE cai\n");
 				blockNeuron.append("RANGE cao\n");
