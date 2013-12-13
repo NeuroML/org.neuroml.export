@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 
@@ -573,6 +575,57 @@ public class NeuronWriter extends BaseWriter {
 						inputComp.getID()));
 
 			}
+
+		}
+
+
+		ArrayList<Component> explicitInputs = targetComp.getChildrenAL("explicitInputs");
+
+		for (Component explInput : explicitInputs) {
+			HashMap<String,Component> inputReference = explInput.getRefComponents();
+
+			Component inputComp = inputReference.get("input");
+
+			String safeName = NRNConst.getSafeName(inputComp.getID());
+			String inputName = explInput.getTypeName() + "_" + safeName;
+			String mod = generateModFile(inputComp);
+
+			File modFile = new File(dirForMods, safeName + ".mod");
+			E.info("Writing to: " + modFile);
+
+			try {
+				FileUtil.writeStringToFile(mod, modFile);
+				allGeneratedFiles.add(modFile);
+			} catch (IOException ex) {
+				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+			}
+
+			String targetString = explInput.getStringValue("target");
+			Cell cell;
+			String cellNum;
+			String popName = null;
+
+			Pattern p = Pattern.compile("(.+)\\[(\\d+)\\]");
+			Matcher m = p.matcher(targetString);
+			if(m.find()) {
+				popName = m.group(1);
+				cellNum = m.group(2);
+				String cellId = popIdsVsCellIds.get(popName);
+				cell = compIdsVsCells.get(cellId);
+			} else {
+				String[] parts = targetString.split("/");
+				cellNum = parts[2];
+				String cellId = parts[3];
+				cell = compIdsVsCells.get(cellId);
+			}
+
+
+			addComment(main, "Adding input: " + explInput);
+
+			main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
+			main.append(String.format("h(\"a_%s[%s].%s { %s = new %s(0.5) } \")\n\n", popName,
+					cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)), inputName,
+					safeName));
 
 		}
 
@@ -1288,7 +1341,7 @@ public class NeuronWriter extends BaseWriter {
 			blockInitial.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + " = cao" + "\n");
 
 		} else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE)) {
-			mechName = comp.getID();
+			mechName = NRNConst.getSafeName(comp.getID());
 			blockNeuron.append("POINT_PROCESS " + mechName + "\n");
 			if (!comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
 				blockNeuron.append("ELECTRODE_CURRENT i\n");
@@ -1652,6 +1705,8 @@ public class NeuronWriter extends BaseWriter {
 
 		return mod.toString();
 	}
+
+
 
 	private static void parseOnStart(Component comp, String prefix,
 			StringBuilder blockInitial, StringBuilder blockInitial_v,
