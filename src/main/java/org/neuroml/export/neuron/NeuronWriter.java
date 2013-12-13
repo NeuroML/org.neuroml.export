@@ -1259,6 +1259,7 @@ public class NeuronWriter extends BaseWriter {
 
 					blockFunctions.append(NRNConst.ghkFunctionDefs);
 					blockUnits.append(NRNConst.ghkUnits);
+					readRevPot = String.format("READ %si, %so", species, species);
 
 				}
 
