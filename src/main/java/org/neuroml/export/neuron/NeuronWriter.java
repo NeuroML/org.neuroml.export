@@ -122,9 +122,9 @@ public class NeuronWriter extends BaseWriter {
 	}
 
 	private static String checkForBinaryOperators(String expr) {
-		return expr.replace(".gt.", ">").replace(".geq.", ">=")
-				.replace(".lt.", "<").replace(".leq.", "<=")
-				.replace(".and.", "&&");
+		return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=")
+				.replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=")
+				.replace("\\.and\\.", "&&");
 	}
 
 	private static String checkForStateVarsAndNested(String expr,
@@ -137,13 +137,14 @@ public class NeuronWriter extends BaseWriter {
 
 		String newExpr = expr.trim();
 
-		newExpr = newExpr.replaceAll(".geq.", ">="); // TODO, use strings from
+		newExpr = newExpr.replaceAll("\\.geq\\.", ">="); // TODO, use strings from
 		// GreaterThanOrEqualsNode
 		// in jLEMS
-		newExpr = newExpr.replaceAll(".gt.", ">");
-		newExpr = newExpr.replaceAll(".leq.", "<=");
-		newExpr = newExpr.replaceAll(".lt.", "<=");
-		newExpr = newExpr.replaceAll(".eq.", "==");
+		newExpr = newExpr.replaceAll("\\.gt\\.", ">");
+		newExpr = newExpr.replaceAll("\\.leq\\.", "<=");
+		newExpr = newExpr.replaceAll("\\.lt\\.", "<=");
+		newExpr = newExpr.replaceAll("\\.eq\\.", "==");
+		newExpr = newExpr.replaceAll("\\.and.", "&&");
 
 		newExpr = newExpr.replaceAll(" ln\\(", " log(");
 
