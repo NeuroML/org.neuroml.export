@@ -683,6 +683,17 @@ public class NeuronWriter extends BaseWriter {
 							var = ref;
 							num = "0";
 							pop = NRNConst.DUMMY_POPULATION_PREFIX + popComp.getName();
+                            
+							varRef = var;
+                            
+							String mechRef = compMechNamesHoc.get(pop + "[i]");
+
+							varRef = mechRef.replaceAll("\\[i\\]", "[" + num + "]") + "." + var;
+							System.out.println("Plotting... " + var + " on cell "
+									+ num + " in " + pop + " of type "
+									+ popComp + " (was: " + origRef
+									+ "), varRef: " + varRef);
+                            
 
 						} else {
 							if (ref.indexOf('[') > 0) {
@@ -1282,7 +1293,7 @@ public class NeuronWriter extends BaseWriter {
 
 			blockNeuron.append("\nRANGE gion                           ");
 
-			if (condOption == null || condOption.equals(ChannelConductanceOption.USE_NERNST)) {
+			if (condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL)|| condOption.equals(ChannelConductanceOption.USE_NERNST)) {
 
 				blockNeuron.append("\nRANGE gmax                              : Will be changed when ion channel mechanism placed on cell!\n");
 				blockParameter.append("\ngmax = 0  (S/cm2)                       : Will be changed when ion channel mechanism placed on cell!\n");
@@ -1317,7 +1328,7 @@ public class NeuronWriter extends BaseWriter {
 			blockAssigned.append("cai (mM)\n");
 			blockAssigned.append("cao (mM)\n");
 
-			blockAssigned.append("ica               (mA/cm2)\n");
+			blockAssigned.append("ica (mA/cm2)\n");
 
 			blockAssigned.append("diam (um)\n");
 
@@ -1389,6 +1400,7 @@ public class NeuronWriter extends BaseWriter {
 			blockAssigned.append("\n");
 			if (hasCaDependency) {
 				blockAssigned.append("cai (mM)\n\n");
+				blockAssigned.append("cao (mM)\n\n");
 
 				locals.add("caConc");
 				ratesMethod.append("caConc = cai\n\n");
@@ -1405,7 +1417,7 @@ public class NeuronWriter extends BaseWriter {
 
 		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
 
-			if (condOption == null || condOption.equals(ChannelConductanceOption.USE_NERNST)) {
+			if (condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL)|| condOption.equals(ChannelConductanceOption.USE_NERNST)) {
 				blockBreakpoint.append("gion = gmax * fopen \n\n");
 			} else if (condOption.equals(ChannelConductanceOption.USE_GHK)) {
 				blockBreakpoint.append("gion = permeability * fopen \n");
@@ -1416,7 +1428,7 @@ public class NeuronWriter extends BaseWriter {
 			if (species == null || species.equals("non_specific")) {
 				blockBreakpoint.append("i = gion * (v - e)\n");
 			} else {
-				if (condOption == null || condOption.equals(ChannelConductanceOption.USE_NERNST)) {
+				if (condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL)|| condOption.equals(ChannelConductanceOption.USE_NERNST)) {
 					blockBreakpoint.append("i" + species + " = gion * (v - e" + species + ")\n");
 				} else if (condOption.equals(ChannelConductanceOption.USE_GHK))  {
 					blockBreakpoint.append("i" + species + " = gion * ghk(v, cai, cao)\n");
@@ -2385,10 +2397,11 @@ public class NeuronWriter extends BaseWriter {
 		// File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_Figure2A.xml");
 		lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml");
 		lemsFile = new File("../NeuroML2/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml");
-		lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml"); lemsFile = new File(
-				"../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
+		lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml"); 
+        lemsFile = new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml");
 		lemsFile = new File("../org.neuroml.import/src/test/resources/Simple3Species_LEMS.xml");
 		lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
+		lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml"); 
 		lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
 
 		Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
