@@ -42,7 +42,7 @@ public class NRNConst {
 	
 	static final String ghkUnits = 
 			": bypass nrn default faraday const\n" + 
-			"FARADAY = (96485.3) (coulomb)\n" + 
+			"FARADAY = 96485.3 (coulomb)\n" + 
 			"R = (k-mole) (joule/degC)\n";
 	
 	static final String ghkFunctionDefs =
