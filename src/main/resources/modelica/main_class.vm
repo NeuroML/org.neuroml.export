@@ -2,11 +2,11 @@
 
 class $name
 #foreach ($par in $parameters.keySet())
-    parameter Real $par = 0.8; 
+    parameter Real $par = $parameters.get($par); 
 #end
 
 #foreach ($s in $state.keySet())
-    Real $s(start = 0); 
+    Real $s(start = $state.get($s)); 
 #end
 
 #foreach ($sf in $state_functions.keySet())
