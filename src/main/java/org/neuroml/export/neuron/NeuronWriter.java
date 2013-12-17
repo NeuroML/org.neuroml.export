@@ -341,16 +341,7 @@ public class NeuronWriter extends BaseWriter {
 
 			} else {
 				String mod = generateModFile(popComp);
-
-				File modFile = new File(dirForMods, popComp.getComponentType().getName() + ".mod");
-				E.info("Writing to: " + modFile);
-
-				try {
-					FileUtil.writeStringToFile(mod, modFile);
-					allGeneratedFiles.add(modFile);
-				} catch (IOException ex) {
-					throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-				}
+				dumpModToFile(popComp, mod);
 
 				main.append("h(\" n_" + popName + " = " + number + " \")\n");
 				main.append("h(\" create " + popName + "[" + number + "]\")\n");
@@ -419,16 +410,8 @@ public class NeuronWriter extends BaseWriter {
 			Component synapseComp = lems.getComponent(synapse);
 
 			String mod = generateModFile(synapseComp);
+			dumpModToFile(synapseComp, mod);
 
-			File modFile = new File(dirForMods, synapseComp.getID() + ".mod");
-			E.info("Writing to: " + modFile);
-
-			try {
-				FileUtil.writeStringToFile(mod, modFile);
-				allGeneratedFiles.add(modFile);
-			} catch (IOException ex) {
-				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-			}
 
 			String synObjName = String.format("syn_%s_%s", id, synapse);
 
@@ -480,16 +463,7 @@ public class NeuronWriter extends BaseWriter {
 			Component inputComp = lems.getComponent(inputReference);
 
 			String mod = generateModFile(inputComp);
-
-			File modFile = new File(dirForMods, inputComp.getID() + ".mod");
-			E.info("Writing to: " + modFile);
-
-			try {
-				FileUtil.writeStringToFile(mod, modFile);
-				allGeneratedFiles.add(modFile);
-			} catch (IOException ex) {
-				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-			}
+			dumpModToFile(inputComp, mod);
 
 			String pop = inputList.getStringValue("population");
 			ArrayList<Component> inputs = inputList.getChildrenAL("inputs");
@@ -514,14 +488,14 @@ public class NeuronWriter extends BaseWriter {
 					cell = compIdsVsCells.get(cellId);
 				}
 
-				String inputName = inputList.getID() + "_" + input.getID();
+				String inputName = NRNConst.getSafeName(inputList.getID()) + "_" + input.getID();
 
 				addComment(main, "Adding input: " + input);
 
 				main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
 				main.append(String.format("h(\"a_%s[%s].%s { %s = new %s(0.5) } \")\n\n", pop,
 						cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)), inputName,
-						inputComp.getID()));
+						NRNConst.getSafeName(inputComp.getID())));
 
 			}
 
@@ -538,16 +512,9 @@ public class NeuronWriter extends BaseWriter {
 			String safeName = NRNConst.getSafeName(inputComp.getID());
 			String inputName = explInput.getTypeName() + "_" + safeName;
 			String mod = generateModFile(inputComp);
+			
+			dumpModToFile(inputComp, mod);
 
-			File modFile = new File(dirForMods, safeName + ".mod");
-			E.info("Writing to: " + modFile);
-
-			try {
-				FileUtil.writeStringToFile(mod, modFile);
-				allGeneratedFiles.add(modFile);
-			} catch (IOException ex) {
-				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-			}
 
 			String targetString = explInput.getStringValue("target");
 			Cell cell;
@@ -1076,15 +1043,19 @@ public class NeuronWriter extends BaseWriter {
 			String mod = generateModFile(comp, option);
 			generatedModComponents.add(compName);
 
-			File modFile = new File(dirForMods, comp.getID() + ".mod");
-			E.info("-- Writing to: " + modFile);
+			dumpModToFile(comp, mod);
+		}
+	}
 
-			try {
-				FileUtil.writeStringToFile(mod, modFile);
-				allGeneratedFiles.add(modFile);
-			} catch (IOException ex) {
-				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-			}
+	private void dumpModToFile(Component comp, String mod) throws ContentError {
+		File modFile = new File(dirForMods, NRNConst.getSafeName(comp.getID()) + ".mod");
+		E.info("-- Writing to: " + modFile);
+
+		try {
+			FileUtil.writeStringToFile(mod, modFile);
+			allGeneratedFiles.add(modFile);
+		} catch (IOException ex) {
+			throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
 		}
 	}
 
