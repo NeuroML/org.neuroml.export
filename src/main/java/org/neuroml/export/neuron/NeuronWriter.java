@@ -336,22 +336,7 @@ public class NeuronWriter extends BaseWriter {
 
 				for (Species sp : cell.getBiophysicalProperties().getIntracellularProperties().getSpecies()) {
 					String concModel = sp.getConcentrationModel();
-					if (!generatedModComponents.contains(concModel)) {
-						Component concModelComp = lems.getComponent(concModel);
-						String mod = generateModFile(concModelComp);
-						generatedModComponents.add(concModel);
-
-						File modFile = new File(dirForMods, concModelComp.getID() + ".mod");
-						E.info("-- Writing to: " + modFile);
-
-						try {
-							FileUtil.writeStringToFile(mod, modFile);
-							allGeneratedFiles.add(modFile);
-						} catch (IOException ex) {
-							throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-						}
-					}
-
+					writeModFile(concModel);
 				}
 
 			} else {
@@ -1080,14 +1065,18 @@ public class NeuronWriter extends BaseWriter {
 		return main.toString();
 	}
 
-	private void writeModFile(String ionChannel, ChannelConductanceOption option)
-			throws ContentError {
-		if (!generatedModComponents.contains(ionChannel)) {
-			Component ionChannelComp = lems.getComponent(ionChannel);
-			String mod = generateModFile(ionChannelComp, option);
-			generatedModComponents.add(ionChannel);
+	private void writeModFile(String compName) throws ContentError {
+		writeModFile(compName, null);
+	}
 
-			File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
+	private void writeModFile(String compName, ChannelConductanceOption option)
+			throws ContentError {
+		if (!generatedModComponents.contains(compName)) {
+			Component comp = lems.getComponent(compName);
+			String mod = generateModFile(comp, option);
+			generatedModComponents.add(compName);
+
+			File modFile = new File(dirForMods, comp.getID() + ".mod");
 			E.info("-- Writing to: " + modFile);
 
 			try {
