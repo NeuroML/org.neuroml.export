@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version2" level="2" version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sbml.org/sbml/level2/version2 http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd">
+  <model id="$name" name="$name">
+    <notes>
+      <body xmlns="http://www.w3.org/1999/xhtml">
+<p>$comment</p>
+      </body>
+    </notes>
+
+
+    <listOfParameters>
+#foreach ($s in $state.keySet())
+      <parameter id="$s" constant="false" value="$state.get($s)"/>
+#end
+#foreach ($sf in $state_functions.keySet())
+      <parameter id="$sf" constant="false" value="$state_functions.get($sf)"/>
+#end
+#foreach ($par in $parameters.keySet())
+      <parameter id="$par" constant="true" value="$parameters.get($par)"/>
+#end
+    </listOfParameters>
+
+<!--
+#foreach ($sf in $state_functions.keySet())
+        $sf = $state_functions.get($sf);   
+#end
+#foreach ($d in $dynamics.keySet())
+        der($d) = $dynamics.get($d);   
+#end-->
+
+
+  </model>
+</sbml>

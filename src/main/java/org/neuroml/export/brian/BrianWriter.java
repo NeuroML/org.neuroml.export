@@ -125,54 +125,113 @@ public class BrianWriter extends BaseWriter {
                 sb.append(compInfo.initInfo.toString());
             }
 
-            StringBuilder toTrace = new StringBuilder();
-            StringBuilder toPlot = new StringBuilder();
-
-            for (Component dispComp : simCpt.getAllChildren()) {
-                if (dispComp.getName().indexOf("Display") >= 0) {
-                    toTrace.append("\n# Display: " + dispComp + "\n");
-                    toPlot.append("\n# Display: " + dispComp + "\nfigure(\""
-                            + dispComp.getTextParam("title") + "\")\n");
-                    for (Component lineComp : dispComp.getAllChildren()) {
-                        if (lineComp.getName().indexOf("Line") >= 0) {
-                            // trace=StateMonitor(hhpop,'v',record=[0])
-                            String trace = "trace_" + dispComp.getID() + "_"
-                                    + lineComp.getID();
-                            String ref = lineComp.getStringValue("quantity");
+            StringBuilder preRunSave = new StringBuilder();
+            StringBuilder postRunSave = new StringBuilder();
+            
+            for (Component outComp : simCpt.getAllChildren()) {
+                if (outComp.getName().indexOf("OutputFile") >= 0) {
+                    
+                    String fileName = outComp.getTextParam("fileName");
+                    String info = "\n# Saving to file: "+fileName+", ref " + outComp.id + "\n";
+                    preRunSave.append(info);
+                    postRunSave.append(info);
+                    preRunSave.append("record_" + outComp.getID() + " = {}\n");
+                    postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
+                    
+                    for (Component colComp : outComp.getAllChildren()) {
+                        if (colComp.getName().indexOf("OutputColumn") >= 0) {
+                            
+                            String monitor = "record_" + outComp.getID() + "[\"" + colComp.getID()+"\"]";
+                            String ref = colComp.getStringValue("quantity");
 
                             String pop, num, var;
                             if (ref.indexOf("/")>0) {
-                                                            String[] splitSlash = ref.split("/");
+                                String[] splitSlash = ref.split("/");
                                 pop = splitSlash[0].split("\\[")[0];
                                 num = ref.split("\\[")[1].split("\\]")[0];
                                 var = "";
-                                                            for (int i=1;i<splitSlash.length;i++) {
-                                                                if (var.length()>0)
-                                                                    var += "_";
-                                                                var += splitSlash[i];
-                                                            }
+                                for (int i=1;i<splitSlash.length;i++) {
+                                    if (var.length()>0)
+                                        var += "_";
+                                    var += splitSlash[i];
+                                }
 
                             } else {
                                 pop = DEFAULT_POP;
                                 num = "0";
                                 var = ref;
                             }
+                            preRunSave.append(monitor + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + colComp.summary() + "\n");
+                            
+                            if (postRunSave.indexOf("[0]")>0)
+                                postRunSave.append(", ");
+                            postRunSave.append(monitor+"[0] ");
+                            /*
+                            postRunPlot.append("plot(" + trace + ".times/second,"
+                                    + trace + "[" + num + "], color=\""
+                                    + lineComp.getStringValue("color") + "\")\n");*/
+                        }
+                    }
+                    
+                    postRunSave.append(" ] )\n");
+                    postRunSave.append("all_"+outComp.id+" = all_"+outComp.id+".transpose()\n");
+                    postRunSave.append("file_"+outComp.id+" = open(\""+fileName+"\", 'w')\n");
+                    postRunSave.append("for l in all_"+outComp.id+":\n");
+                    postRunSave.append("    line = ''\n");
+                    postRunSave.append("    for c in l: \n");
+                    postRunSave.append("        line = line + (', %f'%c if len(line)>0 else '%f'%c)\n");
+                    postRunSave.append("    file_"+outComp.id+".write(line+'\\n')\n");
+                    postRunSave.append("file_"+outComp.id+".close()\n");
+                }
+            }
+            
+            
+            
+            
+            StringBuilder preRunPlot = new StringBuilder();
+            StringBuilder postRunPlot = new StringBuilder();
 
+            for (Component dispComp : simCpt.getAllChildren()) {
+                if (dispComp.getName().indexOf("Display") >= 0) {
+                    preRunPlot.append("\n# Display: " + dispComp + "\n");
+                    postRunPlot.append("\n# Display: " + dispComp + "\nfigure(\""
+                            + dispComp.getTextParam("title") + "\")\n");
+                    for (Component lineComp : dispComp.getAllChildren()) {
+                        if (lineComp.getName().indexOf("Line") >= 0) {
+                            String trace = "trace_" + dispComp.getID() + "_"
+                                    + lineComp.getID();
+                            String ref = lineComp.getStringValue("quantity");
 
-                            // if (var.equals("v")){
+                            String pop, num, var;
+                            if (ref.indexOf("/")>0) {
+                                String[] splitSlash = ref.split("/");
+                                pop = splitSlash[0].split("\\[")[0];
+                                num = ref.split("\\[")[1].split("\\]")[0];
+                                var = "";
+                                for (int i=1;i<splitSlash.length;i++) {
+                                    if (var.length()>0)
+                                        var += "_";
+                                    var += splitSlash[i];
+                                }
 
-                            toTrace.append(trace + " = StateMonitor(" + pop + ",'"
-                                    + var + "',record=[" + num + "]) # "
-                                    + lineComp.summary() + "\n");
-                            toPlot.append("plot(" + trace + ".times/second,"
+                            } else {
+                                pop = DEFAULT_POP;
+                                num = "0";
+                                var = ref;
+                            }
+                            preRunPlot.append(trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
+                            postRunPlot.append("plot(" + trace + ".times/second,"
                                     + trace + "[" + num + "], color=\""
                                     + lineComp.getStringValue("color") + "\")\n");
-                            // }
                         }
                     }
                 }
+                
             }
-            sb.append(toTrace);
+            
+            
+            sb.append(preRunSave);
+            sb.append(preRunPlot);
 
             String len = simCpt.getStringValue("length");
             String dt = simCpt.getStringValue("step");
@@ -187,7 +246,8 @@ public class BrianWriter extends BaseWriter {
             sb.append("\ndefaultclock.dt = " + dt + "\n");
             sb.append("run(" + len + ")\n");
 
-            sb.append(toPlot);
+            sb.append(postRunPlot);
+            sb.append(postRunSave);
 
             sb.append("show()\n");
 
@@ -214,8 +274,36 @@ public class BrianWriter extends BaseWriter {
 			return "farad";
 		if (dim.getName().equals("current"))
 			return "amp";
-		return "NotRecognised__"+dim.getName()+"???";
+		if (dim.getName().equals("current"))
+			return "amp";
+		if (dim.getName().equals("volume"))
+			return "meter3";
+		if (dim.getName().equals("concentration"))
+			return "mmole";
+        
+        StringBuilder unitInfo = new StringBuilder();
+        appendSIUnit(unitInfo, "kilogram", dim.getM());
+        appendSIUnit(unitInfo, "meter", dim.getL());
+        appendSIUnit(unitInfo, "second", dim.getT());
+        appendSIUnit(unitInfo, "amp", dim.getI());
+        appendSIUnit(unitInfo, "kelvin", dim.getK());
+        appendSIUnit(unitInfo, "mole", dim.getN());
+        appendSIUnit(unitInfo, "candle", dim.getJ());
+        
+		return unitInfo.toString()+" # Dimension: "+dim.summary();
 	}
+    
+    private void appendSIUnit(StringBuilder base, String siVal, int power) {
+        
+        if (power!=0) {
+            if (base.length()!=0)
+                base.append("*");
+            String pow = power!=1 ? "**"+power : "";
+            base.append(siVal+pow);
+        }
+            
+    }
+    
 
 	public void getCompEqns(CompInfo compInfo, Component compOrig, String popName,
 			ArrayList<String> stateVars, String prefix) throws ContentError,
@@ -358,6 +446,7 @@ public class BrianWriter extends BaseWriter {
 
     	
         File exampleFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
+        exampleFile = new File("../lemspaper/tidyExamples/Figure8_SBML_LEMS.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
