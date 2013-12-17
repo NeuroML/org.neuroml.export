@@ -58,6 +58,9 @@ import org.neuroml.model.util.NeuroMLException;
 
 public class NeuronWriter extends BaseWriter {
 
+	private ArrayList<String> generatedModComponents = new ArrayList<String>();
+	private File dirForMods;
+
 	ArrayList<File> allGeneratedFiles = new ArrayList<File>();
 	static boolean debug = false;
 
@@ -173,10 +176,11 @@ public class NeuronWriter extends BaseWriter {
 		return newExpr;
 	}
 
-	public String generate(File dirForMods) throws NeuroMLException,
-	IOException, JAXBException, GenerationException, ContentError,
-	ParseError {
+	public String generate(File pdirForMods) throws NeuroMLException,
+			IOException, JAXBException, GenerationException, ContentError,
+			ParseError {
 
+		this.dirForMods = pdirForMods;
 		reset();
 		StringBuilder main = new StringBuilder();
 
@@ -262,7 +266,6 @@ public class NeuronWriter extends BaseWriter {
 
 			}
 
-			ArrayList<String> generatedModComponents = new ArrayList<String>();
 
 			String mechName = popComp.getComponentType().getName();
 
@@ -313,61 +316,22 @@ public class NeuronWriter extends BaseWriter {
 
 				for (ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity()) {
 					String ionChannel = cd.getIonChannel();
-					if (!generatedModComponents.contains(ionChannel)) {
-						Component ionChannelComp = lems.getComponent(ionChannel);
-						ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-						option.erev = convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
-						String mod = generateModFile(ionChannelComp, option);
-						generatedModComponents.add(ionChannel);
+					ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+					option.erev = convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
 
-						File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
-						E.info("-- Writing to: " + modFile);
-
-						try {
-							FileUtil.writeStringToFile(mod, modFile);
-							allGeneratedFiles.add(modFile);
-						} catch (IOException ex) {
-							throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-						}
-					}
+					writeModFile(ionChannel, option);
 				}
 
 				for (ChannelDensityNernst cdn : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst()) {
 					String ionChannel = cdn.getIonChannel();
-					if (!generatedModComponents.contains(ionChannel)) {
-						Component ionChannelComp = lems.getComponent(ionChannel);
-						String mod = generateModFile(ionChannelComp, ChannelConductanceOption.USE_NERNST);
-						generatedModComponents.add(ionChannel);
-
-						File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
-						E.info("-- Writing to: " + modFile);
-
-						try {
-							FileUtil.writeStringToFile(mod, modFile);
-							allGeneratedFiles.add(modFile);
-						} catch (IOException ex) {
-							throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-						}
-					}
+					ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
+					writeModFile(ionChannel, option);
 				}
 
 				for (ChannelDensityGHK cdg : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK()) {
 					String ionChannel = cdg.getIonChannel();
-					if (!generatedModComponents.contains(ionChannel)) {
-						Component ionChannelComp = lems.getComponent(ionChannel);
-						String mod = generateModFile(ionChannelComp, ChannelConductanceOption.USE_GHK);
-						generatedModComponents.add(ionChannel);
-
-						File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
-						E.info("-- Writing to: " + modFile);
-
-						try {
-							FileUtil.writeStringToFile(mod, modFile);
-							allGeneratedFiles.add(modFile);
-						} catch (IOException ex) {
-							throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
-						}
-					}
+					ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
+					writeModFile(ionChannel, option);
 				}
 
 				for (Species sp : cell.getBiophysicalProperties().getIntracellularProperties().getSpecies()) {
@@ -1114,6 +1078,25 @@ public class NeuronWriter extends BaseWriter {
 		main.append("print \"Done\"\n\n");
 
 		return main.toString();
+	}
+
+	private void writeModFile(String ionChannel, ChannelConductanceOption option)
+			throws ContentError {
+		if (!generatedModComponents.contains(ionChannel)) {
+			Component ionChannelComp = lems.getComponent(ionChannel);
+			String mod = generateModFile(ionChannelComp, option);
+			generatedModComponents.add(ionChannel);
+
+			File modFile = new File(dirForMods, ionChannelComp.getID() + ".mod");
+			E.info("-- Writing to: " + modFile);
+
+			try {
+				FileUtil.writeStringToFile(mod, modFile);
+				allGeneratedFiles.add(modFile);
+			} catch (IOException ex) {
+				throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
+			}
+		}
 	}
 
 	public static Cell getCellFromComponent(Component comp)
