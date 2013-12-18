@@ -671,6 +671,11 @@ public class NeuronWriter extends BaseWriter {
 												if (c.getID().equals(channelDensId)) variable = "gion_" + c.getStringValue("ionChannel");
 											}
 										}
+										else if (variable.equals("iDensity")) {
+											for (Component c : channelDensityComps) {
+												if (c.getID().equals(channelDensId)) variable = "i" + c.getStringValue("ion");
+											}
+										}
 
 										varInst += "." + variable;
 
@@ -899,6 +904,11 @@ public class NeuronWriter extends BaseWriter {
 										for (Component c : channelDensityComps) {
 											if (c.getID().equals(channelDensId))
 												variable = "gion_" + c.getStringValue("ionChannel");
+										}
+									} else if (variable.equals("iDensity")) {
+										for (Component c : channelDensityComps) {
+											if (c.getID().equals(channelDensId))
+												variable = "i" + c.getStringValue("ion");
 										}
 									}
 
