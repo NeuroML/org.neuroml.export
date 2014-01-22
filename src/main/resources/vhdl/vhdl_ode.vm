@@ -1,0 +1,88 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+###################################################################
+-- VHDL script automatically generated from a LEMS/SEM description
+###################################################################
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- For Modelsim
+--use ieee.fixed_pkg.all;
+--use ieee.fixed_float_types.ALL;
+
+-- For ISE
+library ieee_proposed;
+use ieee_proposed.fixed_pkg.all;
+use ieee_proposed.fixed_float_types.ALL;
+
+###################################################################
+###################################################################
+
+entity iaf_cell_ac is
+    Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           ce : in STD_LOGIC;
+		   eventport_in_spikesIn : in STD_LOGIC;
+           exposure_voltage_v : out sfixed (2 downto -14);
+		   param_voltage_threshold : sfixed (2 downto -14) ;--:= to_sfixed(-0.030,10,-54);
+		   param_time_refractoryPeriod : sfixed (0 downto -22) ;-- := to_sfixed(0.004,10,-54);
+		   param_capacitance_capacitance : sfixed (-31 downto -47) ;-- := to_sfixed(0.000000000001,10,-54);
+           param_conductance_leakConductance : sfixed (-29 downto -45) ;-- := to_sfixed(0.000000000050,10,-54);
+           param_voltage_leakReversal : sfixed (2 downto -14) ;-- := to_sfixed(-0.050,10,-54);
+           param_voltage_deltaV : sfixed (2 downto -14) ;-- := to_sfixed(0.050,10,-54);
+           sysparam_time_timestep : sfixed (0 downto -22)-- := to_sfixed(0.001,10,-54)
+		   );
+end iaf_cell_ac;
+
+architecture RTL of iaf_cell_ac is
+
+signal statevariable_voltage_v : sfixed (2 downto -14);
+signal intermediate_statevariable_voltage_v_1 : sfixed (2 downto -14); -- AC Mod, was 10, changed to 11.
+signal intermediate_statevariable_voltage_v_2 : sfixed (2 downto -14);
+
+begin
+
+c0:process (clk,rst)
+begin
+if rst = '1' then  
+	statevariable_voltage_v <= (others => '0');
+elsif clk'event and clk = '1' then  
+    if ce = '1' then 
+            statevariable_voltage_v <= intermediate_statevariable_voltage_v_2 after 1 ns;
+    end if;
+end if;
+
+end process;
+
+p1:process (eventport_in_spikesIn,statevariable_voltage_v,param_voltage_deltaV)
+	variable temp_1 : sfixed (3 downto -14);
+begin
+	temp_1 := (statevariable_voltage_v + param_voltage_deltaV);
+    if eventport_in_spikesIn = '1' then
+        intermediate_statevariable_voltage_v_1 <= temp_1(2 downto -14);
+	else
+		intermediate_statevariable_voltage_v_1 <= statevariable_voltage_v;	
+    end if;
+end process;
+
+p2:process (intermediate_statevariable_voltage_v_1,param_conductance_leakConductance,param_voltage_leakReversal,param_capacitance_capacitance,sysparam_time_timestep)
+	variable temp_1: sfixed (-25 downto -59);
+	variable temp_2: sfixed (2 downto -14);
+begin
+	 temp_1 := param_conductance_leakConductance * (param_voltage_leakReversal - intermediate_statevariable_voltage_v_1);
+	 temp_2 := resize(intermediate_statevariable_voltage_v_1 + ( temp_1 / param_capacitance_capacitance) * sysparam_time_timestep,2,-14);
+    intermediate_statevariable_voltage_v_2 <= temp_2;
+end process;
+
+
+p3: exposure_voltage_v <= statevariable_voltage_v;
+
+
+end RTL;
+
+###################################################################
+###################################################################

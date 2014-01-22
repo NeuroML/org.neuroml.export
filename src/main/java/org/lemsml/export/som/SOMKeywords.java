@@ -50,7 +50,11 @@ public enum SOMKeywords
     STATE_FUNCTIONS,
     T_END,
     T_START,
-    COMMENT;
+    COMMENT,
+    EXPOSURES,
+    EVENTPORTS,
+    CONSTANT,
+    CONDITIONS;
 
 	public String get()
 	{

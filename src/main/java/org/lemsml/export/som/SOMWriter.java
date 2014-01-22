@@ -157,7 +157,7 @@ public class SOMWriter extends BaseWriter
 		// return sb.toString();
 	}
 
-	private void writeSOMForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	public void writeSOMForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 
 		g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
@@ -531,7 +531,7 @@ public class SOMWriter extends BaseWriter
 	// return dyn;
 	// }
 
-	private ComponentType getFlattenedCompType(Component compOrig) throws ContentError, ParseError
+	public ComponentType getFlattenedCompType(Component compOrig) throws ContentError, ParseError
 	{
 
 		ComponentType ctFlat = new ComponentType();
@@ -552,7 +552,7 @@ public class SOMWriter extends BaseWriter
 		return ctFlat;
 	}
 
-	private Component getFlattenedComp(Component compOrig) throws ContentError, ParseError
+	public Component getFlattenedComp(Component compOrig) throws ContentError, ParseError
 	{
 
 		Component comp = new Component();

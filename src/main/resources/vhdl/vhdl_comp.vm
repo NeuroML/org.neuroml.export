@@ -1,0 +1,173 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+###################################################################
+-- VHDL script automatically generated from a LEMS/SEM description
+###################################################################
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- For Modelsim
+--use ieee.fixed_pkg.all;
+--use ieee.fixed_float_types.ALL;
+
+-- For ISE
+library ieee_proposed;
+use ieee_proposed.fixed_pkg.all;
+use ieee_proposed.fixed_float_types.ALL;
+
+###################################################################
+###################################################################
+
+entity $name is
+    Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           ce : in STD_LOGIC;
+		   
+##Event Ports
+    #foreach ($par in $eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep : sfixed (0 downto -22)-- := to_sfixed(0.001,10,-54)
+		   );
+end $name;
+
+architecture RTL of $name is
+
+##StateVariables
+#foreach ($par in $state)
+#set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+
+
+begin
+
+
+##process to drive each state variable
+#set( $i = 0)
+#foreach ($par in $state)
+#set( $sensitivityList = "statevariable_" + $par.type +  "_" + $par.name + ""  )
+c$i :process (clk,rst,$sensitivityList)
+
+
+## FIRST CREATE THE TEMP SIGNALS
+#set( $temps = 1)
+#if ($dynamics.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_1 : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_1"  )
+#set( $temps = 2)
+#end
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+begin
+##first check for a timederivative
+#set( $temps = 1)
+#if ($dynamics.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " + (" + $dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+$foo
+#set( $temps = 2)
+#end
+
+##then check for all events that drive this state
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if $event.condition $event.direction then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + ""  )
+#set( $foo_new = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1)  )
+##get onstart details for this variable
+if rst = '1' then  
+#if ($par.onstart == "0")
+	$foo <= (others => '0');
+#else
+	$foo <= $par.onstart;
+#end
+elsif clk'event and clk = '1' then  
+    if ce = '1' then 
+            $foo <= $foo_new after 1 ns;
+    end if;
+end if;
+
+
+end process;
+#set( $i = $i + 1)
+#end
+
+
+
+
+
+##Asign Exposures to State Variables
+#foreach ($par in $state)
+#if ($par.exposure)
+#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " <= statevariable_" + $par.type + "_" + $par.exposure + ";"  )
+$foo 
+#end
+#end
+
+
+end RTL;
+
+###################################################################
+###################################################################
