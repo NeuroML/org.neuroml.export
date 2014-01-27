@@ -1,4 +1,4 @@
-package org.lemsml.export.modelica;
+package org.neuroml.export.pynn;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 
-public class ModelicaWriterTest extends TestCase {
+public class PyNNWriterTest extends TestCase {
 
 
 	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
@@ -26,7 +26,7 @@ public class ModelicaWriterTest extends TestCase {
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
-	
+	/*
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
@@ -37,7 +37,7 @@ public class ModelicaWriterTest extends TestCase {
 
     	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
     	generateMainScript(exampleSBML);
-	}
+	}*/
 	
 	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
@@ -45,9 +45,9 @@ public class ModelicaWriterTest extends TestCase {
         
         System.out.println("Loaded from: "+localFile);
 
-        ModelicaWriter mw = new ModelicaWriter(lems);
+        PyNNWriter mw = new PyNNWriter(lems);
 
-        String mod = mw.generateMainScriptAndCompFiles(AppTest.getTempDir());
+        String mod = mw.generateMainScriptAndCellFiles(AppTest.getTempDir());
         
         for (File genFile: mw.allGeneratedFiles)
         {
@@ -64,9 +64,9 @@ public class ModelicaWriterTest extends TestCase {
         
         System.out.println("Loaded: "+exampleFilename);
 
-        ModelicaWriter mw = new ModelicaWriter(lems);
+        PyNNWriter mw = new PyNNWriter(lems);
 
-        String mod = mw.generateMainScriptAndCompFiles(AppTest.getTempDir());
+        String mod = mw.generateMainScriptAndCellFiles(AppTest.getTempDir());
         
         for (File genFile: mw.allGeneratedFiles)
         {
