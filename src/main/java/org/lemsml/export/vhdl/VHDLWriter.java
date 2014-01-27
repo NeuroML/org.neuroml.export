@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 
 
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -56,6 +57,7 @@ import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
+import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
 import org.lemsml.jlems.core.type.dynamics.OnEvent;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
@@ -251,22 +253,28 @@ public class VHDLWriter extends BaseWriter {
 		
 		Target target = lems.getTarget();
 		Component simCpt = target.getComponent();
-		String targetId = simCpt.getStringValue("target");
-
-		Component tgtComp = lems.getComponent(targetId);
-		ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
-		if(pops.size() > 0)
+		//String targetId = simCpt.getStringValue("target");
+		//Component tgtComp = lems.getComponent(targetId);
+		ArrayList<Component> temppops = new ArrayList<Component>();
+		ArrayList<Component> pops = new ArrayList<Component>();
+		temppops.add(simCpt);//temppops.add(tgtComp);
+		while (temppops.size() > 0)
 		{
+			pops.clear();
+			pops.addAll(temppops);
+			temppops.clear();
 			for(Component pop : pops)
 			{
+				temppops.addAll(pop.getAllChildren());
 				try
 				{
 					StringWriter sw = new StringWriter();
 					JsonGenerator g = f.createJsonGenerator(sw);
 					g.useDefaultPrettyPrinter();
 					g.writeStartObject();
-					String compRef = pop.getStringValue("component");
-					Component popComp = lems.getComponent(compRef);
+					
+					String compRef = pop.getID();// pop.getStringValue("component");
+					Component popComp = pop;//pop.getComponentType();//lems.getComponent(compRef);
 					addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
 					
 					/*Component cpFlat = new Component();
@@ -287,7 +295,7 @@ public class VHDLWriter extends BaseWriter {
 					
 					writeSOMForComponent(g, cpFlat);*/
 					
-					writeSOMForComponent(g, popComp);
+					writeSOMForComponent(g, popComp,true);
 					g.writeStringField(SOMKeywords.T_END.get(), simCpt.getParamValue("length").stringValue());
 					g.writeStringField(SOMKeywords.T_START.get(), "0");
 					g.writeStringField(SOMKeywords.COMMENT.get(), Utils.getHeaderComment(format));
@@ -341,6 +349,7 @@ public class VHDLWriter extends BaseWriter {
 				}
 			}
 		}
+	
 		
 		return componentScripts;
 
@@ -351,7 +360,7 @@ public class VHDLWriter extends BaseWriter {
 	{
 			g.writeStartObject();
 			g.writeStringField("name",neuron.getName() + "_" + id);
-			writeSOMForComponent(g,neuron);
+			writeSOMForComponent(g,neuron,false);
 			g.writeEndObject();
 	}
 
@@ -359,7 +368,7 @@ public class VHDLWriter extends BaseWriter {
 	{
 			g.writeStartObject();
 			g.writeStringField("name",neuron.getName());
-			writeSOMForComponent(g,neuron);
+			writeSOMForComponent(g,neuron,false);
 			g.writeEndObject();
 	}
 	
@@ -404,7 +413,7 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 	
-	private void writeSOMForComponent(JsonGenerator g, Component comp) throws JsonGenerationException, IOException, ContentError
+	private void writeSOMForComponent(JsonGenerator g, Component comp, boolean writeChildren) throws JsonGenerationException, IOException, ContentError
 	{
 		ComponentType ct = comp.getComponentType();
 		
@@ -441,14 +450,28 @@ public class VHDLWriter extends BaseWriter {
 		g.writeObjectFieldStart(SOMKeywords.STATE_FUNCTIONS.get());
 		writeStateFunctions(g, comp);
 		g.writeEndObject();
+		
+		if (writeChildren)
+		{
+			g.writeArrayFieldStart("Children");
+			
+			for (int i = 0; i < comp.getAllChildren().size();i++)
+			{
+				Component comp2 = comp.getAllChildren().get(i);
+				writeNeuronComponent(g, comp2);
+			}
+			g.writeEndArray();
+		}
+		
 	}
 	
 
 	private void writeState(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
-		
-		for (StateVariable sv: ct.getDynamics().getStateVariables())
+		Dynamics dyn = ct.getDynamics();
+		if (dyn != null)
+		for (StateVariable sv: dyn.getStateVariables())
 		{
 			String init = "0";
 			for (OnStart os: ct.getDynamics().getOnStarts())
@@ -522,8 +545,9 @@ public class VHDLWriter extends BaseWriter {
 	private void writeStateFunctions(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
-		
-		for (DerivedVariable dv: ct.getDynamics().getDerivedVariables())
+		Dynamics dyn = ct.getDynamics();
+		if (dyn != null)
+		for (DerivedVariable dv: dyn.getDerivedVariables())
 		{
 			if (dv.value == null || dv.value.length()==0)
 			{
@@ -601,7 +625,11 @@ public class VHDLWriter extends BaseWriter {
 	
 	private void writeBitLengths(JsonGenerator g, String dimension) throws JsonGenerationException, IOException
 	{
-		if (dimension.equals("voltage"))
+		if (dimension == null || dimension.equals("none"))
+		{
+			g.writeStringField("integer","15");
+			g.writeStringField("fraction","0");
+		} else if (dimension.equals("voltage"))
 		{
 			g.writeStringField("integer","2");
 			g.writeStringField("fraction","-14");
@@ -631,8 +659,9 @@ public class VHDLWriter extends BaseWriter {
 		//E.info("---- getOnConditions: "+ct.getDynamics().getOnConditions()+"");
 		
 		//g.writeStartArray();
-		
-		for (OnCondition oc: ct.getDynamics().getOnConditions())
+		Dynamics dyn = ct.getDynamics();
+		if (dyn != null)
+		for (OnCondition oc: dyn.getOnConditions())
 		{
 			g.writeStartObject();
 
@@ -666,8 +695,9 @@ public class VHDLWriter extends BaseWriter {
 		//E.info("---- getOnConditions: "+ct.getDynamics().getOnConditions()+"");
 		
 		//g.writeStartArray();
-		
-		for (OnEvent oc: ct.getDynamics().getOnEvents())
+		Dynamics dyn = ct.getDynamics();
+		if (dyn != null)
+		for (OnEvent oc: dyn.getOnEvents())
 		{
 			g.writeStartObject();
 
@@ -722,8 +752,9 @@ public class VHDLWriter extends BaseWriter {
 	private void writeDynamics(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
-		
-		for (TimeDerivative td: ct.getDynamics().getTimeDerivatives())
+		Dynamics dyn = ct.getDynamics();
+		if (dyn != null)
+		for (TimeDerivative td: dyn.getTimeDerivatives())
 		{
 			g.writeStringField(td.getVariable(), 
 					encodeVariablesStyle(td.getValueExpression(),ct.getParameters(),ct.getDynamics().getStateVariables()));

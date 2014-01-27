@@ -45,6 +45,7 @@ public enum SOMKeywords
     DIRECTION,
     EFFECT,
     NAME,
+    ID,
     PARAMETERS,
     STATE,
     STATE_FUNCTIONS,

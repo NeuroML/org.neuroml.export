@@ -4,8 +4,16 @@
 ######################################################
 
 ###################################################################
+###################################################################
 -- VHDL script automatically generated from a LEMS/SEM description
 ###################################################################
+###################################################################
+
+
+###################################################################
+-- Standard Library bits 
+###################################################################
+
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -20,6 +28,10 @@ use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.fixed_float_types.ALL;
 
 ###################################################################
+
+
+###################################################################
+-- Entity Description
 ###################################################################
 
 entity $name is
@@ -50,21 +62,148 @@ entity $name is
 		   );
 end $name;
 
+###################################################################
+###################################################################
+###################################################################
+-- Architecture Begins
+###################################################################
+###################################################################
+
 architecture RTL of $name is
 
+###################################################################
+-- State internal Variables
+###################################################################
 ##StateVariables
 #foreach ($par in $state)
 #set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 $foo
 #end
+###################################################################
 
+###################################################################
+-- Output Port internal Variables
+###################################################################
+##OutputPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "signal eventport_" + $par.name + "_internal : std_logic; ")
+$foo
+#end
+#end
+###################################################################
+
+
+###################################################################
+-- Child Components
+###################################################################
+##add definitions for all children
+#foreach ($child in $Children)
+
+component $child.name
+    Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           ce : in STD_LOGIC;
+		   
+##Event Ports
+    #foreach ($par in $child.eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child.exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep : sfixed (0 downto -22)-- := sysparam_time_timestep
+		   );
+end component;
+
+#end
+
+
+###################################################################
+-- Begin Internal Processes
+###################################################################
 
 begin
 
 
+
+
+
+
+###################################################################
+-- Child Component Instantiations and corresponding internal variables
+###################################################################
+#foreach ($child in $Children)
+#set( $foo = $child.name + "_uut")
+$foo : $child.name
+    port map (	clk => clk,
+				rst => rst,
+				ce => ce,
+		   
+##Event Ports
+    #foreach ($par in $child.eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => eventport_" + $par.direction + "_" + $par.name + "_internal ,"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " downto " + $par.fraction + "),"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child.exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " => " + $child.name + "_exposure_" + $par.type +  "_" + $par.name + "," )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep => sysparam_time_timestep
+		   );
+		   
+##Exposure Signals
+#foreach ($par in $child.exposures)
+#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+
+##EventPorts
+#foreach ($par in $child.eventports)
+#set( $foo = "signal eventport_" + $par.direction + "_" + $par.name + "_internal : std_logic; ")
+$foo
+#end
+
+#end
+
+###################################################################
+
+
+
+
+
+#####################################################################################################
+-- State Variable Drivers
+#####################################################################################################
 ##process to drive each state variable
 #set( $i = 0)
 #foreach ($par in $state)
+
+###################################################################
+-- State variable: $par.name Driver Process
+###################################################################
 #set( $sensitivityList = "statevariable_" + $par.type +  "_" + $par.name + ""  )
 c$i :process (clk,rst,$sensitivityList)
 
@@ -152,7 +291,23 @@ end if;
 
 end process;
 #set( $i = $i + 1)
+###################################################################
 #end
+
+#####################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
