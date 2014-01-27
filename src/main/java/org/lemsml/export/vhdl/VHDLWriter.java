@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 
 
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -64,6 +65,7 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.lemsml.export.som.SOMKeywords;
 import org.neuroml.export.Utils;
+import org.neuroml.model.NetworkTypes;
 
 public class VHDLWriter extends BaseWriter {
 	
@@ -109,74 +111,6 @@ public class VHDLWriter extends BaseWriter {
 	}
 
 	
-	public String getJSonScript(SOMWriter somw) throws ContentError, ParseError, IOException
-	{
-		JsonFactory f = new JsonFactory();
-		StringWriter sw = new StringWriter();
-		JsonGenerator g = f.createJsonGenerator(sw);
-		g.useDefaultPrettyPrinter();
-		g.writeStartObject();
-		Target target = lems.getTarget();
-		Component simCpt = target.getComponent();
-
-		g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
-
-		E.info("simCpt: " + simCpt);
-
-		String targetId = simCpt.getStringValue("target");
-
-		Component tgtComp = lems.getComponent(targetId);
-
-		ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
-
-		
-		
-		if (pops.size()>0) {
-			///////////////////////////////////////for (Component pop : pops) {
-			Component pop = pops.get(0);
-				String compRef = pop.getStringValue("component");
-				Component popComp = lems.getComponent(compRef);
-
-				ComponentType ctFlat = null;
-				Component cpFlat = null;
-				ctFlat = somw.getFlattenedCompType(popComp);
-				cpFlat = somw.getFlattenedComp(popComp);
-				
-				somw.writeSOMForComponent(g, cpFlat);
-			/////////////////////////////////////////}
-		}
-		else {
-
-			somw.writeSOMForComponent(g, tgtComp);
-		}
-		
-		//
-		// if(pops.size() > 0)
-		// {
-		// for(Component pop : pops)
-		// {
-		// String compRef = pop.getStringValue("component");
-		// Component popComp = lems.getComponent(compRef);
-		// addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
-
-
-		g.writeStringField(SOMKeywords.T_END.get(), simCpt.getParamValue("length").stringValue());
-		g.writeStringField(SOMKeywords.T_START.get(), "0");
-		g.writeStringField(SOMKeywords.COMMENT.get(), Utils.getHeaderComment(format));
-		
-		g.writeEndObject();
-
-		g.close();
-
-		System.out.println(sw.toString() + "\r\n\r\n\r\n");
-		return sw.toString();
-
-
-
-		//
-		// System.out.println(sb);
-		// return sb.toString();
-	}
 	
 	
 	public String getMainScript() throws ContentError, ParseError {
@@ -201,7 +135,75 @@ public class VHDLWriter extends BaseWriter {
 			Target target = lems.getTarget();
 			Component simCpt = target.getComponent();
 			g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
+			g.writeStringField(SOMKeywords.SIMLENGTH.get(), simCpt.getParamValue("length").stringValue());
+			String targetId = simCpt.getStringValue("target");
+			
+			List<Component> simComponents = simCpt.getAllChildren();
+			writeDisplays(g, simComponents);
+			
+			Component networkComp = lems.getComponent(targetId);
+			List<Component> networkComponents = networkComp.getAllChildren();
+			//TODO: order networkComponents by type so all populations come through in one go
+			g.writeArrayFieldStart("NeuronComponents");
+			List<String> neuronTypes = new ArrayList<String>();
+			
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.matches("Population"))
+				{
+						//add a new neuron component
+					Component neuron = lems.getComponent(comp.getStringValue("component"));
+					if (!neuronTypes.contains(neuron.getName()))
+					{
+						writeNeuronComponent(g, neuron);
+						neuronTypes.add(neuron.getName());
+					}
+				}
+			}
+			g.writeEndArray();
+			g.writeArrayFieldStart("NeuronInstances");
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.matches("Population"))
+				{
+					for (int n = 1; n <= (int)(comp.getParamValue("size").value); n++)
+					{
+						//add a new neuron component
+						Component neuron = lems.getComponent(comp.getStringValue("component"));
+						writeNeuron(g, neuron, n);
+					}
+				}
+			}
+			g.writeEndArray();
+
+			g.close();
+			
+			String som = sw.toString();
+			
+			SOMWriter.putIntoVelocityContext(som, context);
 		
+			Properties props = new Properties();
+			props.put("resource.loader", "class");
+			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+			VelocityEngine ve = new VelocityEngine();
+			ve.init(props);
+			Template template = ve.getTemplate(method.TESTBENCH.getFilename());
+		   
+			sw = new StringWriter();
+
+			template.merge( context, sw );
+			
+			sb.append(sw);
+
+			System.out.println("TestBenchData");
+			System.out.println(sw.toString());
+			System.out.println(som);
+			
+			
 		//simCpt is the simulation tag which translates to the testbench and to the exporter top level
 		} 
 		catch (IOException e1) {
@@ -225,10 +227,8 @@ public class VHDLWriter extends BaseWriter {
 		}
 		
 
-		System.out.println("TestBenchData");
-		System.out.println(sb.toString());
 		
-		return "";
+		return sb.toString();
 	}
 	
 	
@@ -317,7 +317,7 @@ public class VHDLWriter extends BaseWriter {
 					
 					componentScripts.put(compRef,sb.toString());
 					sb = new StringBuilder();
-					System.out.println(compRef);
+					//System.out.println(compRef);
 					System.out.println(sb.toString());
 				} 
 				catch (IOException e1) {
@@ -344,6 +344,63 @@ public class VHDLWriter extends BaseWriter {
 		
 		return componentScripts;
 
+	}
+
+
+	private void writeNeuron(JsonGenerator g, Component neuron,int id) throws JsonGenerationException, IOException, ContentError
+	{
+			g.writeStartObject();
+			g.writeStringField("name",neuron.getName() + "_" + id);
+			writeSOMForComponent(g,neuron);
+			g.writeEndObject();
+	}
+
+	private void writeNeuronComponent(JsonGenerator g, Component neuron) throws JsonGenerationException, IOException, ContentError
+	{
+			g.writeStartObject();
+			g.writeStringField("name",neuron.getName());
+			writeSOMForComponent(g,neuron);
+			g.writeEndObject();
+	}
+	
+	private void writeDisplay(JsonGenerator g, Component display) throws JsonGenerationException, IOException, ContentError
+	{
+			g.writeObjectFieldStart(display.getName());
+			g.writeStringField("name",display.getName());
+			g.writeStringField("timeScale",display.getParamValue("timescale")+"");
+			g.writeStringField("xmin",display.getParamValue("xmin")+"");
+			g.writeStringField("xmax",display.getParamValue("xmax")+"");
+			g.writeArrayFieldStart("Lines");
+			List<Component> lines = display.getAllChildren();
+			for (int i = 0; i < lines.size(); i++)
+			{
+				Component line = lines.get(0);
+				g.writeStartObject();
+				g.writeStringField("id",line.getID()+""); 
+				g.writeStringField("quantity",line.getStringValue("quantity")+"");
+				g.writeStringField("scale",line.getStringValue("scale")+"");
+				g.writeStringField("timeScale",line.getStringValue("timeScale")+"");
+				g.writeEndObject();
+			}
+			g.writeEndArray();
+			g.writeEndObject();
+	}
+	
+	private void writeDisplays(JsonGenerator g, List<Component> displays) throws JsonGenerationException, IOException, ContentError
+	{
+		for (int i = 0; i < displays.size(); i++)
+		{
+			Component display = displays.get(i);
+			ComponentType comT = display.getComponentType();
+			if (comT.name.matches("Display"))
+			{
+				//add display processes with time resolution and start and end as specified
+				g.writeObjectFieldStart(SOMKeywords.DISPLAYS.get());
+				writeDisplay(g, display);
+				g.writeEndObject();
+			}
+		}
+		
 	}
 	
 	

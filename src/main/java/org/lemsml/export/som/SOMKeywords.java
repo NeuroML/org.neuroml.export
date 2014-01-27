@@ -54,7 +54,9 @@ public enum SOMKeywords
     EXPOSURES,
     EVENTPORTS,
     CONSTANT,
-    CONDITIONS;
+    CONDITIONS,
+    DISPLAYS,
+    SIMLENGTH;
 
 	public String get()
 	{
