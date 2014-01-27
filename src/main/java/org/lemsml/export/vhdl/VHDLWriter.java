@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 
 
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -58,6 +59,7 @@ import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
+import org.lemsml.jlems.core.type.dynamics.EventOut;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
 import org.lemsml.jlems.core.type.dynamics.OnEvent;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
@@ -239,7 +241,7 @@ public class VHDLWriter extends BaseWriter {
 		Map<String,String> componentScripts = new HashMap<String,String>();
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("--" + this.format+" simulator compliant export for:--\n--\n");
+		//sb.append("--" + this.format+" simulator compliant export for:--\n--\n");
 		
 		Velocity.init();
 		
@@ -275,7 +277,7 @@ public class VHDLWriter extends BaseWriter {
 					
 					String compRef = pop.getID();// pop.getStringValue("component");
 					Component popComp = pop;//pop.getComponentType();//lems.getComponent(compRef);
-					addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
+					//addComment(sb, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
 					
 					/*Component cpFlat = new Component();
 					ComponentFlattener cf = new ComponentFlattener(lems, popComp);
@@ -676,6 +678,15 @@ public class VHDLWriter extends BaseWriter {
 			for (StateAssignment sa: oc.getStateAssignments())
 			{
 				g.writeStringField(sa.getVariable(), encodeVariablesStyle(sa.getValueExpression(),ct.getParameters(),ct.getDynamics().getStateVariables()));
+			}
+
+			g.writeEndObject();
+			
+			g.writeObjectFieldStart(SOMKeywords.EVENTS.get());
+			
+			for (EventOut eo: oc.getEventOuts())
+			{
+				g.writeStringField(eo.getPortName(),eo.getPortName());
 			}
 
 			g.writeEndObject();

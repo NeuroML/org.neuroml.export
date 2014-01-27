@@ -3,16 +3,16 @@
 ### This is work in progress. Expect major changes.###
 ######################################################
 
-###################################################################
-###################################################################
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 -- VHDL script automatically generated from a LEMS/SEM description
-###################################################################
-###################################################################
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 
 
-###################################################################
+---------------------------------------------------------------------
 -- Standard Library bits 
-###################################################################
+---------------------------------------------------------------------
 
 
 library IEEE;
@@ -27,12 +27,12 @@ library ieee_proposed;
 use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.fixed_float_types.ALL;
 
-###################################################################
+---------------------------------------------------------------------
 
 
-###################################################################
+---------------------------------------------------------------------
 -- Entity Description
-###################################################################
+---------------------------------------------------------------------
 
 entity $name is
     Port ( clk : in STD_LOGIC;
@@ -62,41 +62,41 @@ entity $name is
 		   );
 end $name;
 
-###################################################################
-###################################################################
-###################################################################
+---------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------
 -- Architecture Begins
-###################################################################
-###################################################################
+-------------------------------------------------------------------------------------------
 
 architecture RTL of $name is
 
-###################################################################
+---------------------------------------------------------------------
 -- State internal Variables
-###################################################################
+---------------------------------------------------------------------
 ##StateVariables
 #foreach ($par in $state)
 #set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 $foo
 #end
-###################################################################
+---------------------------------------------------------------------
 
-###################################################################
+---------------------------------------------------------------------
 -- Output Port internal Variables
-###################################################################
+---------------------------------------------------------------------
 ##OutputPorts
 #foreach ($par in $eventports)
 #if ($par.direction == "out")
-#set( $foo = "signal eventport_" + $par.name + "_internal : std_logic; ")
+#set( $foo = "signal eventport_" + $par.direction + "_" + $par.name + "_internal : std_logic := '0'; ")
 $foo
 #end
 #end
-###################################################################
+---------------------------------------------------------------------
 
 
-###################################################################
+---------------------------------------------------------------------
 -- Child Components
-###################################################################
+---------------------------------------------------------------------
 ##add definitions for all children
 #foreach ($child in $Children)
 
@@ -130,10 +130,12 @@ end component;
 
 #end
 
+--------------------------------------------------------------------------------------------------
 
-###################################################################
+
+---------------------------------------------------------------------
 -- Begin Internal Processes
-###################################################################
+---------------------------------------------------------------------
 
 begin
 
@@ -142,9 +144,9 @@ begin
 
 
 
-###################################################################
+---------------------------------------------------------------------
 -- Child Component Instantiations and corresponding internal variables
-###################################################################
+---------------------------------------------------------------------
 #foreach ($child in $Children)
 #set( $foo = $child.name + "_uut")
 $foo : $child.name
@@ -188,23 +190,35 @@ $foo
 
 #end
 
-###################################################################
+---------------------------------------------------------------------
 
 
 
 
 
-#####################################################################################################
+------------------------------------------------------------------------------------------------------
 -- State Variable Drivers
-#####################################################################################################
+------------------------------------------------------------------------------------------------------
 ##process to drive each state variable
 #set( $i = 0)
 #foreach ($par in $state)
 
-###################################################################
+---------------------------------------------------------------------
 -- State variable: $par.name Driver Process
-###################################################################
-#set( $sensitivityList = "statevariable_" + $par.type +  "_" + $par.name + ""  )
+---------------------------------------------------------------------
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+#set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
+#end
+#end
+
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#end
+#end
+
 c$i :process (clk,rst,$sensitivityList)
 
 
@@ -291,10 +305,10 @@ end if;
 
 end process;
 #set( $i = $i + 1)
-###################################################################
+---------------------------------------------------------------------
 #end
 
-#####################################################################################################
+------------------------------------------------------------------------------------------------------
 
 
 
@@ -306,6 +320,101 @@ end process;
 
 
 
+------------------------------------------------------------------------------------------------------
+-- Output  Ports Drivers
+------------------------------------------------------------------------------------------------------
+##process to drive each state variable
+#set( $i = 0)
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+---------------------------------------------------------------------
+-- Eventport: $par.name Driver Process
+---------------------------------------------------------------------
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#set( $finalEventPort = "eventport_" + $par.direction + "_" + $par.name + "_internal <= "  )
+
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
+#end
+#end
+
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#end
+#end
+
+
+eventport_driver$i :process ( $sensitivityList )
+
+
+## FIRST CREATE THE TEMP SIGNALS
+#set( $temps = 1)
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic);"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic;"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+begin
+#set( $temps = 1)
+
+##then check for all events that drive this state
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+if $event.condition $event.direction then
+	$foo := '1';
+else
+	$foo := '0';
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+$finalEventPort ; 
+end process;
+#set( $i = $i + 1)
+---------------------------------------------------------------------
+#end
+#end
+
+------------------------------------------------------------------------------------------------------
 
 
 
@@ -313,6 +422,9 @@ end process;
 
 
 
+---------------------------------------------------------------------
+-- Assign state variables to exposures
+---------------------------------------------------------------------
 ##Asign Exposures to State Variables
 #foreach ($par in $state)
 #if ($par.exposure)
@@ -320,7 +432,19 @@ end process;
 $foo 
 #end
 #end
+---------------------------------------------------------------------
 
+---------------------------------------------------------------------
+-- Assign state variables to exposures
+---------------------------------------------------------------------
+##Assign internal variables to EventPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " <=  eventport_" + $par.direction + "_" + $par.name + "_internal ;"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
 
 end RTL;
 
