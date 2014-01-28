@@ -49,6 +49,7 @@ public enum SOMKeywords
     PARAMETERS,
     STATE,
     STATE_FUNCTIONS,
+    REGIMES,
     T_END,
     T_START,
     COMMENT,
@@ -57,7 +58,10 @@ public enum SOMKeywords
     CONSTANT,
     CONDITIONS,
     DISPLAYS,
-    SIMLENGTH;
+    SIMLENGTH,
+    TRANSITIONS,
+    ONENTRYS,
+    LINKS;
 
 	public String get()
 	{
