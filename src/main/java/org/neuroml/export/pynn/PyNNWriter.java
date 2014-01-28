@@ -29,8 +29,8 @@ public class PyNNWriter extends BaseWriter {
 	private final String runTemplateFile = "pynn/run.vm";
 	private final String cellTemplateFile = "pynn/cell.vm";
 
-	String comm = "'''";
-	String commPre = "#";
+	String comm = "#";
+	String commPre = "'''";
 	String commPost = "'''";
 
     public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
@@ -104,8 +104,8 @@ public class PyNNWriter extends BaseWriter {
 			{
 				E.info("Writing "+format+" files to: "+dirForFiles);
 				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
-				File mainScriptFile = new File(dirForFiles, "run_"+name+".py");
-				File cellScriptFile = new File(dirForFiles, name+".py");
+				File mainScriptFile = new File(dirForFiles, "run_"+name+"_pynn.py");
+				File cellScriptFile = new File(dirForFiles, name+"_pynn.py");
 	            FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
 	            allGeneratedFiles.add(mainScriptFile);
 	            FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);

@@ -26,6 +26,11 @@ public class PyNNWriterTest extends TestCase {
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
+	public void testPyNN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+
+    	String exampleFilename = "LEMS_NML2_Ex14_PyNN.xml";
+    	generateMainScript(exampleFilename);
+	}
 	/*
 	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 

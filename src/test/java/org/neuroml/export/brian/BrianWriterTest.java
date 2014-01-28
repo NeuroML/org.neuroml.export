@@ -44,42 +44,39 @@ public class BrianWriterTest extends TestCase {
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
         System.out.println("Loaded: "+localFile);
 
-        BrianWriter bw = new BrianWriter(lems);
-
-        String br = bw.getMainScript();
-
-
-        File brFile = new File(AppTest.getTempDir(),localFile.getName().replaceAll(".xml", "_brian.py"));
-        System.out.println("Writing to: "+brFile.getAbsolutePath());
+        generateMainScript(lems, localFile.getName(), false);
         
-        FileUtil.writeStringToFile(br, brFile);
-
-        
-        assertTrue(brFile.exists());
+        lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
+        generateMainScript(lems, localFile.getName(), true);
 	}
 	
 	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
-
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-        //exampleFile = new File("/home/padraig/neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecar.xml");
-        //exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/sbmlTestSuite/cases/semantic/00001/00001-sbml-l3v1_SBML.xml");
-        
         System.out.println("Loaded: "+exampleFilename);
 
+        generateMainScript(lems, exampleFilename, false);
+        
+        lems = AppTest.readLemsFileFromExamples(exampleFilename);
+        generateMainScript(lems, exampleFilename, true);
+	}
+    	
+	public void generateMainScript(Lems lems, String filename, boolean brian2) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+
         BrianWriter bw = new BrianWriter(lems);
+        bw.setBrian2(brian2);
 
         String br = bw.getMainScript();
 
-
-        File brFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", "_brian.py"));
+        String suffix = brian2 ? "_brian2.py" : "_brian.py";
+        File brFile = new File(AppTest.getTempDir(),filename.replaceAll(".xml", suffix));
         System.out.println("Writing to: "+brFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(br, brFile);
 
-        
         assertTrue(brFile.exists());
 	}
+    
 
 }

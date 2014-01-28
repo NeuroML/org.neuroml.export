@@ -35,10 +35,18 @@ import org.neuroml.export.base.BaseWriter;
 public class BrianWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
+    
+    boolean brian2 = true;
 
 	public BrianWriter(Lems lems) {
 		super(lems, "Brian");
 	}
+
+    public void setBrian2(boolean brian2) {
+        this.brian2 = brian2;
+    }
+    
+    
 
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
@@ -61,7 +69,11 @@ public class BrianWriter extends BaseWriter {
 
             addComment(sb, Utils.getHeaderComment(format));
 
-            sb.append("from brian import *\n\n");
+            if (!brian2)
+                sb.append("from brian import *\n\n");
+            else
+                sb.append("from brian2 import *\n\n");
+            
             sb.append("from math import *\n\n");
 
             Target target = lems.getTarget();
@@ -220,7 +232,8 @@ public class BrianWriter extends BaseWriter {
                                 var = ref;
                             }
                             preRunPlot.append(trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
-                            postRunPlot.append("plot(" + trace + ".times/second,"
+                            String times = brian2 ? "t " : "times";
+                            postRunPlot.append("plot(" + trace + "."+times+"/second,"
                                     + trace + "[" + num + "], color=\""
                                     + lineComp.getStringValue("color") + "\")\n");
                         }
