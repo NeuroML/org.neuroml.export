@@ -11,23 +11,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -535,6 +518,8 @@ public class VHDLWriter extends BaseWriter {
 				{
 					g.writeObjectFieldStart(reg.getName());
 					g.writeStringField("name",reg.getName());
+					if (reg.isInitial())
+					g.writeStringField("default","default");
 					
 					g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
 					writeTimeDerivatives(g, ct, reg.getTimeDerivatives());
@@ -744,11 +729,11 @@ public class VHDLWriter extends BaseWriter {
 		} else if (dimension.equals("voltage"))
 		{
 			g.writeStringField("integer","2");
-			g.writeStringField("fraction","-14");
+			g.writeStringField("fraction","-18");
 		} else if (dimension.equals("time"))
 		{
-			g.writeStringField("integer","0");
-			g.writeStringField("fraction","-22");
+			g.writeStringField("integer","4");
+			g.writeStringField("fraction","-24");
 		} else if (dimension.equals("capacitance"))
 		{
 			g.writeStringField("integer","-31");
