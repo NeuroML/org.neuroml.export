@@ -76,7 +76,10 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    refract: 0ms (0.0 s)\n"
             + "    a: 4nS (4.0E-9 S)\n"
             + "    b: 0.08nA (8.0E-11 A)\n"
-            + "    C: 281pF (2.81E-10 F)";
+            + "    C: 281pF (2.81E-10 F)\n"
+            + "Element fn1:\n"
+            + "    ID: fn1\n"
+            + "    I: 0.8";
         String tree = getInfoTreeAsString("NML2_AbstractCells.nml");
         Assert.assertEquals(expected, tree);
     }

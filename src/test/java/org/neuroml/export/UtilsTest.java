@@ -18,7 +18,7 @@ import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.type.Component;
-import org.neuroml.model.IaFTauCell;
+import org.neuroml.model.IafTauCell;
 import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
@@ -80,7 +80,7 @@ public class UtilsTest extends TestCase {
     
     public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
         
-        IaFTauCell iaf = new IaFTauCell();
+        IafTauCell iaf = new IafTauCell();
         iaf.setTau("10ms");
         iaf.setLeakReversal("-60mV");
         iaf.setReset("-70mV");
