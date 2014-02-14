@@ -613,6 +613,30 @@ public class VHDLWriter extends BaseWriter {
 					{
 						returnString = returnString.replaceAll(" t ","sysparam_time_simtime");
 					}
+					else if (tryParseFloat(toReplace))
+					{
+						float number = Float.parseFloat(toReplace);
+						int top = 30;
+						for (int j = 0; j < 30; j++)
+						{
+							if (Math.pow(2,j) > number)
+							{
+								top = j;
+								break;
+							}
+						}
+						int bottom = 1;
+						for (int j = 1; j < 30; j++)
+						{
+							if (Math.pow(2,j) * number % 1 == 0)
+							{
+								bottom = j;
+								break;
+							}
+						}
+						returnString = returnString.replaceAll(" " + toReplace + " "," to_sfixed ( " + toReplace + " ," + top + " , -" + bottom + ")");
+						
+					}
 			} catch (ContentError e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -624,6 +648,17 @@ public class VHDLWriter extends BaseWriter {
 		return returnString;
 	}
 	
+	private boolean tryParseFloat(String value)  
+	{  
+	     try  
+	     {  
+	    	 Float.parseFloat(value);  
+	         return true;  
+	      } catch(NumberFormatException nfe)  
+	      {  
+	          return false;  
+	      }  
+	}
 
 	private void writeStateFunctions(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
@@ -899,15 +934,15 @@ public class VHDLWriter extends BaseWriter {
 	{
 	    String ret = "???";
 	    if (cond.indexOf(".gt.")>0 )
-	    	return "> 0";
+	    	return " ,2,-18))(20)  = '0'";
 	    if (cond.indexOf(".geq.")>0)
-	    	return ">= 0";
+	    	return " ,2,-18))(20)  = '0'";
 	    if (cond.indexOf(".lt.")>0)
-	    	return "< 0";
+	    	return " ,2,-18))(20)  = '1'";
 	    if (cond.indexOf(".leq.")>0)
-	    	return "<= 0";
+	    	return ",2,-18))(20)  = '1'";
 	    if (cond.indexOf(".eq.")>0)
-	    	return "= 0";
+	    	return ",2,-18)) = (others => '0')";
 	    return ret;
 	}
 
@@ -916,7 +951,7 @@ public class VHDLWriter extends BaseWriter {
 	{
 	    String[] s = ineq.split("(\\.)[gleqt]+(\\.)");
 	    //E.info("Split: "+ineq+": len "+s.length+"; "+s[0]+", "+s[1]);
-	    String expr =  s[0].trim() + " - (" + s[1].trim() + ")";
+	    String expr =  "To_slv(resize( " + s[0].trim() + " - (" + s[1].trim() + ")";
 	    //sign = comp2sign(s.group(2))
 	    return expr;
 	}

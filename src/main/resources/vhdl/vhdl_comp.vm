@@ -102,6 +102,9 @@ $foo
 ##Regimes
 #set ($count = 0)
 type regime_type is ( #foreach ($regime in $regimes) 
+#if ($regime.default)
+#set ($defaultRegime = $regime.name)
+#end
 #set ($count = $count + 1)
 $regime.name 
 #if ($count != $regimes.size())
@@ -109,7 +112,8 @@ $regime.name
 #end
 #end 
 );
-signal current_regime,next_regime: regime_type;
+signal current_regime: regime_type := $defaultRegime;
+signal next_regime: regime_type;
 ---------------------------------------------------------------------
 #end 
 
@@ -225,14 +229,15 @@ $foo
 
 regime_state_process :process (clk,rst)
 begin 
+next_regime <= current_regime;
 
 #foreach ($regime in $regimes) 
-if ( current_regime = $regime.name ) then
+
 
 ##then check for all events that drive this state
 #foreach ($event in $regime.events)
 #foreach ($transition in $event.effect.transitions)
-if eventport_in_$event.name = '1' then
+if ( current_regime = $regime.name ) and eventport_in_$event.name = '1' then
 	next_regime <= $transition;
 end if;
 #set( $temps = $temps + 1)
@@ -242,26 +247,19 @@ end if;
 ##then check for all conditional events that drive this state
 #foreach ($event in $regime.conditions)
 #foreach ($transition in $event.effect.transitions)
-if $event.condition $event.direction then
+if ( current_regime = $regime.name ) and $event.condition $event.direction then
 	next_regime <= $transition;
 end if;
 #set( $temps = $temps + 1)
 #end
 #end
 
-end if;
 
 #end
 
 if rst = '1' then  
-#foreach ($regime in $regimes) 
-#if ($par.onstart == "0")
-	current_regime <= $regime.name ;
-#else
-	current_regime <= $regime.name ;
-#end
-#break
-#end
+
+	current_regime <= $defaultRegime ;
 elsif clk'event and clk = '1' then  
     if ce = '1' then 
             current_regime <= next_regime after 1 ns;
@@ -295,7 +293,7 @@ end process;
 
 #foreach ($event in $conditions)
 #if ($event.effect.state.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
 #end
 #end
 
@@ -387,10 +385,12 @@ $foo
 #end
 
 ##then check for all events that drive this state
-#foreach ($event in $events)
-#if ($event.effect.state.get($par.name))
 #set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
 #set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
+
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
 if eventport_in_$event.name = '1' then
@@ -419,7 +419,7 @@ end if;
 ##check for regimes
 
 #foreach ($regime in $regimes) 
-if ( current_regime = $regime.name ) then
+
 
 ##first check for a timederivative
 #if ($regime.dynamics.get($par.name))
@@ -436,7 +436,7 @@ $foo
 #set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
-if eventport_in_$event.name = '1' then
+if ( current_regime = $regime.name ) AND eventport_in_$event.name = '1' then
 	$foo
 else
 	$foo2
@@ -453,7 +453,7 @@ end if;
 #if ($temps == 1)
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  ";" )
 #end
-if $event.condition $event.direction then
+if ( current_regime = $regime.name ) AND $event.condition $event.direction then
 	$foo
 else
 	$foo2
@@ -462,7 +462,6 @@ end if;
 #end
 #end
 
-end if;
 
 #end
 
@@ -470,10 +469,10 @@ end if;
 ##check for regime changes indicating onentry statechanges
 
 #if ($regimes.size() > 0)
-if not ( current_regime = next_regime ) then
+
 
 #foreach ($regime in $regimes) 
-if ( next_regime = $regime.name ) then
+if (not ( current_regime = next_regime )) and ( next_regime = $regime.name ) then
 
 ##then check for all onentry
 #foreach ($onentry in $regime.onentrys)
@@ -494,7 +493,6 @@ $foo2
 
 end if;
 #end
-end if;
 
 #end
 
@@ -555,7 +553,7 @@ end process;
 
 #foreach ($event in $conditions)
 #if ($event.effect.events.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
 #end
 #end
 
@@ -637,14 +635,14 @@ begin
 ##check for regimes
 
 #foreach ($regime in $regimes) 
-if ( current_regime = $regime.name ) then
+
 
 ##then check for all events that drive this state
 #foreach ($event in $regime.events)
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
-if eventport_in_$event.name = '1' then
+if ( current_regime = $regime.name ) and eventport_in_$event.name = '1' then
 	$foo
 else
 	$foo2
@@ -657,7 +655,7 @@ end if;
 #foreach ($event in $regime.conditions)
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
-if $event.condition $event.direction then
+if ( current_regime = $regime.name ) and $event.condition $event.direction then
 	$foo := '1';
 else
 	$foo := '0';
@@ -666,7 +664,6 @@ end if;
 #end
 #end
 
-end if;
 
 #end
 
