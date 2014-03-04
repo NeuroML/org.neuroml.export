@@ -1,0 +1,59 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:ns_1="http://www.w3.org/2001/XMLSchema-instance" ns_1:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta2.xsd" id="Kdr">
+
+    <notes>ChannelML file containing a Kdr Channel description from cultured crustacean Stomatogastric Ganglion cells.
+        This model was initially described in Turrigiano, G., LeMasson, G., and Marder, E. (1995).
+    </notes>
+
+    <ionChannel id="Kdr" conductance="10pS" type="ionChannelHH" species="k">
+
+        <notes>ChannelML file containing a Kdr Channel description from cultured crustacean Stomatogastric Ganglion cells.
+        This model was initially described in Turrigiano, G., LeMasson, G., and Marder, E. (1995).
+    </notes>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="Kdr">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Gina Turrigiano, Gwendal LeMasson, and Eve Marder
+Selective regulation of current densities underlies spontaneous changes in the activity of cultured neurons
+Journal of Neuroscience, 15(5 Pt 1), 3640&#8211;52, 1995</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/7538565"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Astrid A. Prinz, Vatsala Thirumalai, and Eve  Marder
+The functional consequences of changes in the strength and duration of synaptic inputs to oscillatory neurons
+Journal of Neuroscience, 23(3), 943&#8211;54, 2003</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/12574423"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gateHHtauInf id="m" instances="4">
+            <timeCourse type="Kdr_m_tau_tau"/>
+            <steadyState type="HHSigmoidVariable" rate="1" scale="11.8mV" midpoint="-12.3mV"/>
+        </gateHHtauInf>
+                            
+    </ionChannel>
+
+    <ComponentType name="Kdr_m_tau_tau" extends="baseVoltageDepTime">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="(14.4 - (12.8 / (1 + exp ((V + 28.3) / (-19.2))))) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+</neuroml>
+

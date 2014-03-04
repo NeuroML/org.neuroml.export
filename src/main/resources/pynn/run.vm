@@ -1,0 +1,15 @@
+# Main PyNN script for: $name
+
+
+from pyNN.utility import get_script_args
+
+simulator_name = get_script_args(1)[0]  
+exec("from pyNN.%s import *" % simulator_name)
+
+
+tstop = $t_end
+
+setup(timestep=$dt)
+
+
+end()

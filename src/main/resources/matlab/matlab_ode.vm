@@ -4,38 +4,72 @@
 ######################################################
 
 ###################################################################
-% Matlab script automatically generated from a LEMS/SEM description
+% Matlab script automatically generated from a LEMS/SOM description
 ###################################################################
-##TODO: #parse("matlab_macros.vm") and remove them from here.
+##TODO: #parse("matlab_macros.vm") and remove macros from here.
 #macro (rollK $map)#foreach ($k in $map.keySet())$k, #end#end
-##
+###################################################################
 #macro (rollV $map)#foreach ($k in $map.keySet())$map.get($k), #end#end
-##
-#macro (unpackNames $map $indent)#foreach ($k in $map.keySet())$indent$k = $map.get($k);
+###################################################################
+#macro (rollV_dynsort $map)#foreach ($k in $dynamics.keySet())$map.get($k), #end#end
+###################################################################
+#macro (unpackNames $map)#foreach ($k in $map.keySet())$prefix$k = $map.get($k);
 #end#end##
-##
-#macro (idx2names $name $map $indent)#foreach ($k in $map.keySet())$indent$k = ${name}($velocityCount);
+###################################################################
+#macro (unpackNames_dynsort $map)#foreach ($k in $dynamics.keySet())$prefix$k = $map.get($k);
 #end#end##
+###################################################################
+#macro (idx2names $name $map)#foreach ($k in $map.keySet())$prefix$k = ${name}($velocityCount);
+#end#end##
+###################################################################
+#macro (idx2names_dynsort $name $map)#foreach ($k in $dynamics.keySet())$prefix$k = ${name}($velocityCount);
+#end#end##
+###################################################################
 #macro (sign2num $s)#if ($s == "+")1#elseif($s == "-")-1#elseif($s == "0")0#else???#end#end##
+###################################################################
+#macro (name2i $name $map)#foreach($k in $map.keySet())#if ($k == $name)$velocityCount#end#end#end##
+###################################################################
 #set ($idt1 = "    ")
 #set ($idt2 = "$idt1$idt1")
 #set ($idt3 = "$idt2$idt1")
 #set ($idt4 = "$idt2$idt2")
 ###################################################################
+#set ($output_idx = "[#foreach($x in $timeseries)#name2i($x, $state),#end]")
 
 ###################################################################
-###################################################################
-function integrate_${name}()
+#################
+## Entry point ##
+#################
+function ${name}()
     %Integrate the $name model using matlab odesuite
 
+    X_ = integrate();
+
+#if($display)
+    generate_plots(X_)
+#end
+
+#if($dump_to_file)
+    dump_output(X_)
+#end
+
+end
+
+###################################################################
+#################################
+## Perform the actual numerics ##
+#################################
+function X = integrate()
+#set($prefix = $idt1)
+
     %parameter list for your convenience
-#unpackNames($parameters, "    ")
+#unpackNames($parameters)
 
     %assemble parameter array    
     pars = [#rollK($parameters)];
     
     %initial conditions
-    x0 = [#rollV($state)];
+    x0_ = [#rollV_dynsort($state)];
     
    
     t_start = $t_start;
@@ -43,30 +77,30 @@ function integrate_${name}()
     dt = $dt;
     tint = t_start:dt:t_end;
     options = odeset('RelTol', 1e-6);
-#if($events)##
+#if($events.size() > 0)##
     options = odeset(options, 'Events',@(t,y) events(t, y, pars));
     %output initialization
     tout = t_start;
-    xout = x0;
+    xout = x0_;
     teout = [];
     xeout = [];
     ieout = [];
 #else##
-    [tout, xout] = ode45(@(t, x) dxdt(t, x, pars), tint, x0, options);
+    [tout, xout] = ode45(@(t, x) dxdt(t, x, pars), tint, x0_, options);
 #end
 
 
-#if($events)##
+#if($events.size() > 0)##
     while (1)
-        [t, x, te, xe, ie] = ode45(@(t, x) dxdt(t, x, pars), tint, x0, options);
-        x0 = x(end,:);
-        tout = [tout; t(2:end-1)];
-        xout = [xout; x(2:end-1, :)];
-        teout = [teout; te];
-        xeout = [xeout; xe];
-        ieout = [ieout; ie];
+        [t_, x_, te_, xe_, ie_] = ode45(@(t, x) dxdt(t, x, pars), tint, x0_, options);
+        x0_ = x_(end,:);
+        tout = [tout; t_(2:end-1)];
+        xout = [xout; x_(2:end-1, :)];
+        teout = [teout; te_];
+        xeout = [xeout; xe_];
+        ieout = [ieout; ie_];
     
-        if (te)
+        if (te_)
             %stopped at event
             switch ieout(end)
 #foreach($ev in $events)
@@ -75,13 +109,14 @@ function integrate_${name}()
 ##
 ## change state 
 #if($ev.effect.state)##
-#idx2names("x0", $state, $idt4)##
-                x0 = [#rollV($ev.effect.state)];
+#set ($prefix = $idt4)
+#idx2names("x0_", $state)##
+                x0_ = [#rollV_dynsort($ev.effect.state)];
 #end##
 ##
 ## change pars 
 #if($ev.effect.parameters)##
-#unpackNames($ev.effect.parameters, $idt4)
+#unpackNames($ev.effect.parameters)
                 pars = [#rollK($parameters)];
 #end
 #end##foreach($ev in $events)
@@ -90,33 +125,36 @@ function integrate_${name}()
             %stopped at t_end
             break
         end
-
-        options = odeset(options,'InitialStep',t(end)-t(end-1), 'MaxStep',t(end)-t(1));
-        t_start = t(end);
-        tint = t_start:dt:t_end;
-    
+        
+        %restart from discontinuity
+        options = odeset(options, 'InitialStep', t_(end)-t_(end-1), 'MaxStep', t_(end)-t_(1));
+        tint = [t_(end), tout(end)+dt:dt:t_end];
 
     end
-plot(tout, xout, '-', teout, xeout, '*r')    
-#else##if($events)
-    plot(tout, xout, '-')
+
+    %plot(tout, xout, '-', teout, xeout, '*r')    
 #end##if($events)
+
+    X = [tout, xout];
 
 end
 
 #############################################################
-#############################################################
-#if($events)
-function [value,isterminal,direction] = events(t, state, pars)
+###################################
+## Rootfinding (event) functions ##
+###################################
+#if($events.size() > 0)
 
+function [value,isterminal,direction] = events(t, state, pars)
+#set ($prefix = $idt1)
     value = [#foreach($e in $events)1,#end];
     isterminal = [#foreach($e in $events)1,#end];
     direction = [#foreach($e in $events)#sign2num($e.direction),#end];
    
 ##TODO: only unpack if necessary, check event{condition}
-#idx2names("state", $state, $idt1)
+#idx2names_dynsort("state", $state)
 
-#idx2names("pars", $parameters, $idt1)
+#idx2names("pars", $parameters)
 
 
 #foreach($e in $events)## 
@@ -128,19 +166,62 @@ end
 #end##if($events)
 
 #############################################################
-#############################################################
+#########################
+## Dynamics definition ##
+#########################
 function xdot = dxdt(t, state, pars)
-
+#set ($prefix = $idt1)
     xdot = zeros(length(state),1);
 
-#idx2names("state", $state, $idt1)
+#idx2names_dynsort("state", $state)
 
-#idx2names("pars", $parameters, $idt1)
+#idx2names("pars", $parameters)
 
-#unpackNames($state_functions, $idt1)
+#unpackNames($state_functions)
 
 #foreach ($xi in $dynamics.keySet())##
     xdot($velocityCount) = $dynamics.get($xi);
 #end
 
+end
+
+#############################################################
+#####################
+## Output handling ##
+#####################
+function generate_plots(X)
+
+    t = X(:, 1);
+#foreach ($t in $dynamics.keySet())##
+#set($i = $velocityCount + 1)##
+    $t = X(:, $i);
+#end##
+
+#foreach ($d in $display)##
+    figure($velocityCount);
+    hold on;
+    % uncomment below to bypass autoscaling
+    %axis([$d.abscissa_axis.min, $d.abscissa_axis.max, $d.ordinate_axis.min, $d.ordinate_axis.max])
+#foreach ($c in $d.curves)##
+    plot($c.abscissa, $c.ordinate, 'Color', hex2rgb('$c.colour'))
+#end##foreach($c in $d.curves)##
+
+#end##foreach($d in $display)##
+end
+
+#############################################################
+#if($dump_to_file)
+function dump_output(X)
+    disp(['Dumping timeseries to file ', '$dump_to_file'])
+    save('$dump_to_file', 'X', '-ascii');
+end
+#end
+
+#############################################################
+#######################
+## Utility functions ##
+#######################
+function c = hex2rgb(hexstring)
+    f = @(i) hex2dec(hexstring(i:i+1))/255;
+    c = arrayfun(f, 2:2:6);
 end

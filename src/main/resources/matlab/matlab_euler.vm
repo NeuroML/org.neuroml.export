@@ -1,20 +1,22 @@
 % MATLAB script automatically generated from a LEMS/SOM description
-
+% This is work in progress, expect substantial changes
+########################################################################
 #macro (rollK $hash)#foreach ($k in $hash.keySet())$k, #end#end##
-##
+########################################################################
 #macro (rollV $hash)#foreach ($k in $hash.keySet())$hash.get($k), #end#end##
-##
-#macro (num2cond $num)#if ($num == "-1") < #elseif ($num == "1") > #else ???#end#end##
-##
-#macro (unpackNames $hash $indent)#foreach ($k in $hash.keySet())$indent$k = $hash.get($k);
+########################################################################
+#macro (sign2sym $s)#if ($s == "+")>#elseif($s == "-")<#elseif($s == "0")==#else???#end#end##
+########################################################################
+#macro (unpackNames $hash)#foreach ($k in $hash.keySet())$indent$k = $hash.get($k);
 #end#end##
-##
-#macro (dyn2euler $hash $indent)#foreach ($k in $hash.keySet())$indent$k = $k + dt * ($hash.get($k));
+########################################################################
+#macro (dyn2euler $hash)#foreach ($k in $hash.keySet())$indent$k = $k + dt * ($hash.get($k));
 #end#end##
-##
-#macro (vals2idx $name $hash)#foreach ($k in $hash.keySet())    ${name}($velocityCount) = $hash.get($k);
-#end#end##
-##
+########################################################################
+#set($idt1 = "    ")
+########################################################################
+########################################################################
+
 function integrate_${name}()
     %Integrate the $name model using Euler's method.
 
@@ -22,43 +24,47 @@ function integrate_${name}()
 ###foreach ($par in $parameters.keySet())##
 ##    $par = $parameters.get($par);
 ###end
-#unpackNames($parameters, "    ")##
+#set ($indent = $idt1)##
+#unpackNames($parameters)##
 
     %assemble parameter array    
     pars = [#rollK($parameters)];
     
     %initial conditions
 ##x0 = [#rollV($state)];
-#unpackNames($state, "    ")##
+#unpackNames($state)##
     
     %timestep
     dt = $dt;
     
-    t = $t_start:dt:$t_end;
-    timeseries = zeros(length(t), length([#rollK($state)]));
+    T = $t_start:dt:$t_end;
+    timeseries = zeros(length(T), length([#rollK($state)]));
     timeseries(1, :) = [#rollK($state)];
 
-    for i = 1:length(t) - 1
-#unpackNames($state_functions, "        ")
-#dyn2euler($dynamics, "        ")##
+    for i = 1:length(T) - 1
+#set ($indent = "$indent$idt1")##
+        t = T(i);
+#unpackNames($state_functions)
+#dyn2euler($dynamics)##
 
-#if ($event)##
+#if ($events)##
         %handle events
-        if($event.condition #num2cond($event.direction) 0)
-#if ($event.effect.state)##
-#unpackNames($event.effect.state, "            ")#end
-#if ($event.effect.parameters)##
-#unpackNames($event.effect.parameters, "            ")#end
-            %repack pars
+#set ($indent = "$indent$idt1")##
+#foreach($ev in $events)
+        if($ev.condition #sign2sym($ev.direction) 0)
+#if ($ev.effect.state)##
+#unpackNames($ev.effect.state)#end
+#if ($ev.effect.parameters)##
+#unpackNames($ev.effect.parameters)##
             pars = [#rollK($parameters)];
+#end##
         end
-        
-#end
+#end##foreach ev
+#end##if events
         %repack state vars
         timeseries(i + 1, :) = [#rollK($state)];
-       
     end  
 
-    plot(t, timeseries, '-')
+    plot(T, timeseries, '-')
 end
 

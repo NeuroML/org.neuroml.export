@@ -13,20 +13,21 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.lemsml.export.som.SOMKeywords;
-import org.lemsml.export.som.SOMWriter;
-import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.export.base.GenerationException;
+import org.lemsml.export.dlems.DLemsKeywords;
+import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.BaseWriter;
 
+
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class ModelicaWriter extends BaseWriter {
 
-	private String classTemplateFile = "modelica/main_class.vm";
-	private String runTemplateFile = "modelica/run.vm";
+	private final String classTemplateFile = "modelica/main_class.vm";
+	private final String runTemplateFile = "modelica/run.vm";
 
 	String comm = "// ";
 	String commPre = "/*";
@@ -51,11 +52,11 @@ public class ModelicaWriter extends BaseWriter {
 	
 
 	@Override
-	public String getMainScript() throws ContentError, ParseError {
+	public String getMainScript() throws GenerationException {
 		return generateMainScriptAndCompFiles(null);
 	}
 		
-	public String generateMainScriptAndCompFiles(File dirForFiles) throws ContentError, ParseError {
+	public String generateMainScriptAndCompFiles(File dirForFiles) throws GenerationException {
 
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder compScript = new StringBuilder();
@@ -70,13 +71,13 @@ public class ModelicaWriter extends BaseWriter {
 		
 		VelocityContext context = new VelocityContext();
 
-        SOMWriter somw = new SOMWriter(lems);
+        DLemsWriter somw = new DLemsWriter(lems);
 
 		try
 		{
 			String som = somw.getMainScript();
 			
-			SOMWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(som, context);
         
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -102,7 +103,7 @@ public class ModelicaWriter extends BaseWriter {
 			if (dirForFiles!=null && dirForFiles.exists())
 			{
 				E.info("Writing Modelica files to: "+dirForFiles);
-				String name = (String)context.internalGet(SOMKeywords.NAME.get());
+				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
 				File mainScriptFile = new File(dirForFiles, "run_"+name+".mos");
 				File compScriptFile = new File(dirForFiles, name+".mo");
 	            FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
@@ -118,23 +119,23 @@ public class ModelicaWriter extends BaseWriter {
 			
 		} 
 		catch (IOException e1) {
-			throw new ParseError("Problem converting LEMS to SOM",e1);
+			throw new GenerationException("Problem converting LEMS to SOM",e1);
 		}
 		catch( ResourceNotFoundException e )
 		{
-			throw new ParseError("Problem finding template",e);
+			throw new GenerationException("Problem finding template",e);
 		}
 		catch( ParseErrorException e )
 		{
-			throw new ParseError("Problem parsing",e);
+			throw new GenerationException("Problem parsing",e);
 		}
 		catch( MethodInvocationException e )
 		{
-			throw new ParseError("Problem finding template",e);
+			throw new GenerationException("Problem finding template",e);
 		}
 		catch( Exception e )
 		{
-			throw new ParseError("Problem using template",e);
+			throw new GenerationException("Problem using template",e);
 		}
 		
 		return mainRunScript.toString();	

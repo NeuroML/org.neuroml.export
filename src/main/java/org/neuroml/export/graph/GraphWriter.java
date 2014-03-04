@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -13,6 +14,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class GraphWriter extends BaseWriter {
 
     String netShape = "rectangle";
@@ -45,136 +47,141 @@ public class GraphWriter extends BaseWriter {
 
     static boolean rankdirLR = false;
 
-    private static ArrayList<String> suppressChildren = new ArrayList<String>();
+    private static final ArrayList<String> suppressChildren = new ArrayList<String>();
 
 
     public GraphWriter(Lems lems) {
         super(lems, "GraphViz");
     }
 
+    @Override
     protected void addComment(StringBuilder sb, String comment) {
 
         String comm = "# ";
         sb.append(comm + comment + "\n");
     }
 
+    @Override
+	public String getMainScript() throws GenerationException {
+
+        try {
+            main = new StringBuilder();
+            net = new StringBuilder();
+            comps = new StringBuilder();
+            compTypes = new StringBuilder();
+            extern = new StringBuilder();
 
 
-	public String getMainScript() throws ContentError {
+            if (!compTypesOnly) {
+                Target target = lems.getTarget();
 
-        main = new StringBuilder();
-        net = new StringBuilder();
-        comps = new StringBuilder();
-        compTypes = new StringBuilder();
-        extern = new StringBuilder();
+                Component simCpt = target.getComponent();
+                E.info("simCpt: "+simCpt);
 
 
-        if (!compTypesOnly) {
-            Target target = lems.getTarget();
+                String targetId = simCpt.getStringValue("target");
 
-            Component simCpt = target.getComponent();
-            E.info("simCpt: "+simCpt);
+                Component tgtNet = lems.getComponent(targetId);
 
-            
-            String targetId = simCpt.getStringValue("target");
+                addComment(main, "GraphViz compliant export for:" + tgtNet.summary()+"\n");
 
-            Component tgtNet = lems.getComponent(targetId);
+                main.append("digraph " + simCpt.getID() + " {\n");
+                main.append("fontsize=10;\n\n");
+                if (rankdirLR) main.append("rankdir=\"LR\"\n");
 
-            addComment(main, "GraphViz compliant export for:" + tgtNet.summary()+"\n");
+                net.append("node [shape=" + netShape + "]; " + tgtNet.getID() + ";\n");
 
-            main.append("digraph " + simCpt.getID() + " {\n");
-            main.append("fontsize=10;\n\n");
-            if (rankdirLR) main.append("rankdir=\"LR\"\n");
+                ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 
-            net.append("node [shape=" + netShape + "]; " + tgtNet.getID() + ";\n");
+                for (Component pop : pops) {
+                    String compRef = pop.getStringValue("component");
+                    Component popComp = lems.getComponent(compRef);
 
-            ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
+                    addComment(net, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
+                    net.append("node [shape=" + popShape + "]; " + pop.getID() + ";\n");
 
-            for (Component pop : pops) {
-                String compRef = pop.getStringValue("component");
-                Component popComp = lems.getComponent(compRef);
+                    net.append(tgtNet.getID() + " -> " + pop.getID() + " [len=1.00, arrowhead=" + childLink + "]\n");
 
-                addComment(net, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
-                net.append("node [shape=" + popShape + "]; " + pop.getID() + ";\n");
+                    addCompAndChildren(popComp, pop.getID(), pop.getStringValue("size"));
 
-                net.append(tgtNet.getID() + " -> " + pop.getID() + " [len=1.00, arrowhead=" + childLink + "]\n");
+                }
+                if (pops.isEmpty()){  // i.e. simulate 1 component
+                    addCompAndChildren(tgtNet, tgtNet.getID(), null);
+                }
 
-                addCompAndChildren(popComp, pop.getID(), pop.getStringValue("size"));
+                main.append("\nsubgraph cluster_network {\n");
+                main.append("    style=filled;\n");
+                main.append("    color=\"#D6eeEA\";\n");
+                main.append("    node [style=filled,color=white];\n");
+                main.append("    label = \"Network to be simulated\";\n\n");
 
-            }
-            if (pops.isEmpty()){  // i.e. simulate 1 component
-                addCompAndChildren(tgtNet, tgtNet.getID(), null);
-            }
+                main.append(net.toString());
+                main.append("   }\n\n");
 
-            main.append("\nsubgraph cluster_network {\n");
-            main.append("    style=filled;\n");
-            main.append("    color=\"#D6eeEA\";\n");
-            main.append("    node [style=filled,color=white];\n");
-            main.append("    label = \"Network to be simulated\";\n\n");
+                main.append("subgraph cluster_comps {\n");
+                main.append("    style=filled;\n");
+                main.append("    color=\"#CCFFCC\";\n");
+                main.append("    node [style=filled,color=white];\n");
+                main.append("    label = \"Components\";\n\n");
+                main.append(comps.toString());
 
-            main.append(net.toString());
-            main.append("   }\n\n");
-
-            main.append("subgraph cluster_comps {\n");
-            main.append("    style=filled;\n");
-            main.append("    color=\"#CCFFCC\";\n");
-            main.append("    node [style=filled,color=white];\n");
-            main.append("    label = \"Components\";\n\n");
-            main.append(comps.toString());
-
-            main.append("   }\n\n");
-        }
-        else
-        {
-            main.append("digraph " + rootCompType.getName() + " {\n");
-            main.append("fontsize=10;\n");
-            main.append("bgcolor=\"#D6E0EA\";\n");
-            //main.append("size=\"29,5\"\n");
-
-            addCompTypeAndChildrenAndExtends(rootCompType, null, null, 0);
-        }
-
-        if (!compTypesOnly) {
-            main.append("subgraph cluster_compTypes {\n");
-            main.append("   style=filled;\n");
-            main.append("   color=\""+compTypeCol+"\";\n");
-            main.append("   node [style="+compTypeStyle+",color=white];\n");
-            main.append("   label = \"Component Types\";\n");
-        }
-
-        int maxDepth = 30;
-
-        for (int depth: compTypeSubnets.keySet()){
-            if (depth<=maxDepth){
-                main.append("    subgraph cluster_"+depth+" {\n");
-                main.append("        node[style=filled];\n");
-                main.append("        color=\""+compTypeCol+"\";\n");
-                //main.append("        color=black;\n");
-                main.append("        node [style="+compTypeStyle+",color=white];\n");
-                main.append("        "+compTypeSubnets.get(depth).toString().replaceAll("\n", "\n        "));
-                main.append("\n    }\n\n");
+                main.append("   }\n\n");
             }
             else
             {
-                compTypes.append("    "+compTypeSubnets.get(depth).toString().replaceAll("\n", "\n    "));
+                main.append("digraph " + rootCompType.getName() + " {\n");
+                main.append("fontsize=10;\n");
+                main.append("bgcolor=\"#D6E0EA\";\n");
+                //main.append("size=\"29,5\"\n");
 
+                addCompTypeAndChildrenAndExtends(rootCompType, null, null, 0);
             }
-        }
 
-        main.append("   node [style="+compTypeStyle+",color=white];\n");
-        main.append(compTypes.toString());
-        
-        if (!compTypesOnly) {
-            main.append("   }\n\n");
-        }
+            if (!compTypesOnly) {
+                main.append("subgraph cluster_compTypes {\n");
+                main.append("   style=filled;\n");
+                main.append("   color=\""+compTypeCol+"\";\n");
+                main.append("   node [style="+compTypeStyle+",color=white];\n");
+                main.append("   label = \"Component Types\";\n");
+            }
 
-        main.append(extern.toString());
+            int maxDepth = 30;
 
-        main.append("}\n");
+            for (int depth: compTypeSubnets.keySet()){
+                if (depth<=maxDepth){
+                    main.append("    subgraph cluster_"+depth+" {\n");
+                    main.append("        node[style=filled];\n");
+                    main.append("        color=\""+compTypeCol+"\";\n");
+                    //main.append("        color=black;\n");
+                    main.append("        node [style="+compTypeStyle+",color=white];\n");
+                    main.append("        "+compTypeSubnets.get(depth).toString().replaceAll("\n", "\n        "));
+                    main.append("\n    }\n\n");
+                }
+                else
+                {
+                    compTypes.append("    "+compTypeSubnets.get(depth).toString().replaceAll("\n", "\n    "));
+
+                }
+            }
+
+            main.append("   node [style="+compTypeStyle+",color=white];\n");
+            main.append(compTypes.toString());
+
+            if (!compTypesOnly) {
+                main.append("   }\n\n");
+            }
+
+            main.append(extern.toString());
+
+            main.append("}\n");
 
 
-        //System.out.println(main);
-        return main.toString();
+            //System.out.println(main);
+            return main.toString();
+            
+        } catch (ContentError e) {
+            throw new GenerationException("Error with LEMS content", e);
+        } 
     }
 
     HashMap<String, Integer> noIdComps = new HashMap<String, Integer>();
@@ -546,7 +553,7 @@ public class GraphWriter extends BaseWriter {
 
     }
 
-    private static void generatePng(Lems lems, File targetDir, String name) throws ContentError, IOException, InterruptedException {
+    private static void generatePng(Lems lems, File targetDir, String name) throws IOException, InterruptedException, GenerationException {
 
         GraphWriter gw = new GraphWriter(lems);
 
