@@ -1,0 +1,49 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+---------------------------------------------------------------------
+-- Begin Internal Processes
+---------------------------------------------------------------------
+
+begin
+
+---------------------------------------------------------------------
+-- Child Component Instantiations and corresponding internal variables
+---------------------------------------------------------------------
+#foreach ($child in $Children)
+#set( $foo = $child.name + "_uut")
+$foo : $child.name
+    port map (	clk => clk,
+				rst => rst,
+				ce => ce,
+		   
+##Event Ports
+    #foreach ($par in $child.eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => eventport_" + $par.direction + "_" + $child.name + "_" + $par.name + "_internal ,"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " downto " + $par.fraction + "),"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child.exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "," )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep => sysparam_time_timestep,
+           sysparam_time_simtime => sysparam_time_simtime
+		   );
+		   
+#end
+
+---------------------------------------------------------------------
+
+

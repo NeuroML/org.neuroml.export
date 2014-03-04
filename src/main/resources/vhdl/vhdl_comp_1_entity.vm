@@ -1,0 +1,67 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+-- VHDL script automatically generated from a LEMS/SEM description
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+-- Standard Library bits 
+---------------------------------------------------------------------
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- For Modelsim
+--use ieee.fixed_pkg.all;
+--use ieee.fixed_float_types.ALL;
+
+-- For ISE
+library ieee_proposed;
+use ieee_proposed.fixed_pkg.all;
+use ieee_proposed.fixed_float_types.ALL;
+
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+-- Entity Description
+---------------------------------------------------------------------
+
+entity $name is
+    Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           ce : in STD_LOGIC;
+		   
+##Event Ports
+    #foreach ($par in $eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep : sfixed (0 downto -22);
+           sysparam_time_simtime : sfixed (0 downto -22)
+		   );
+end $name;
+
+---------------------------------------------------------------------
+

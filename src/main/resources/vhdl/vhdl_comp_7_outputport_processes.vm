@@ -1,0 +1,214 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------
+-- Output  Ports Drivers
+------------------------------------------------------------------------------------------------------
+##process to drive each state variable
+#set( $i = 0)
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+---------------------------------------------------------------------
+-- Eventport: $par.name Driver Process
+---------------------------------------------------------------------
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#set( $finalEventPort = "eventport_" + $par.direction + "_" + $par.name + "_internal <= "  )
+
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
+#end
+#end
+
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#end
+#end
+
+
+eventport_driver$i :process ( $sensitivityList )
+
+
+## FIRST CREATE THE TEMP SIGNALS
+#set( $temps = 1)
+
+
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic);"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic;"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+#foreach ($regime in $regimes) 
+
+#foreach ($event in $regime.events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic);"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+
+#foreach ($event in $regime.conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "variable eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " : std_logic;"  )
+#if ($temps > 1)
+#set( $finalEventPort =  $finalEventPort + " || ");
+#end
+#set( $finalEventPort =  $finalEventPort + "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+#end
+
+
+
+begin
+#set( $temps = 1)
+
+
+##check for regimes
+
+#foreach ($regime in $regimes) 
+
+
+##then check for all events that drive this state
+#foreach ($event in $regime.events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if ( current_regime = $regime.name ) and eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $regime.conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+if ( current_regime = $regime.name ) and $event.condition $event.direction then
+	$foo := '1';
+else
+	$foo := '0';
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+#end
+
+##then check for all events that drive this state
+#foreach ($event in $events)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+##then check for all conditional events that drive this state
+#foreach ($event in $conditions)
+#if ($event.effect.events.get($par.name))
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+if $event.condition $event.direction then
+	$foo := '1';
+else
+	$foo := '0';
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+$finalEventPort ; 
+end process;
+#set( $i = $i + 1)
+---------------------------------------------------------------------
+#end
+#end
+
+------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+---------------------------------------------------------------------
+-- Assign state variables to exposures
+---------------------------------------------------------------------
+##Asign Exposures to State Variables
+#foreach ($par in $state)
+#if ($par.exposure)
+#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " <= statevariable_" + $par.type + "_" + $par.exposure + ";"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
+
+---------------------------------------------------------------------
+-- Assign state variables to exposures
+---------------------------------------------------------------------
+##Assign internal variables to EventPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " <=  eventport_" + $par.direction + "_" + $par.name + "_internal ;"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
+
+end RTL;

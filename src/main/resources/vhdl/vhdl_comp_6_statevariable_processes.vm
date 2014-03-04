@@ -1,0 +1,257 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+
+------------------------------------------------------------------------------------------------------
+-- State Variable Drivers
+------------------------------------------------------------------------------------------------------
+##process to drive each state variable
+#set( $i = 0)
+#foreach ($par in $state)
+
+---------------------------------------------------------------------
+-- State variable: $par.name Driver Process
+---------------------------------------------------------------------
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+#set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
+#end
+#end
+
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#end
+#end
+
+state_variable_process_$i :process (clk,rst,$sensitivityList)
+
+
+## FIRST CREATE THE TEMP SIGNALS
+#set( $temps = 1)
+#if ($dynamics.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_1 : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_1"  )
+#set( $temps = 2)
+#end
+
+
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+##check for regime changes indicating onentry statechanges
+
+#if ($regimes.size() > 0)
+
+#foreach ($regime in $regimes) 
+
+##then check for all onentry
+#foreach ($onentry in $regime.onentrys)
+#if ($onentry.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $temps = $temps + 1)
+#end
+#end
+
+#end
+
+
+#foreach ($regime in $regimes) 
+
+##first check for a timederivative
+#if ($regime.dynamics.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $temps = $temps + 1)
+#end
+
+#foreach ($event in $regime.events)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + ",eventport_in_" + $event.name  )
+#set( $temps = $temps + 1)
+#end
+#end
+#foreach ($event in $regime.conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "variable statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $sensitivityList = $sensitivityList + ",statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps  )
+#set( $temps = $temps + 1)
+#end
+#end
+
+#end
+
+#end
+
+begin
+##first check for a timederivative
+#set( $temps = 1)
+#if ($dynamics.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " + (" + $dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+$foo
+#set( $temps = 2)
+#end
+
+##then check for all events that drive this state
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
+
+#foreach ($event in $events)
+#if ($event.effect.state.get($par.name))
+
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if $event.condition $event.direction then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##check for regimes
+
+#foreach ($regime in $regimes) 
+
+
+##first check for a timederivative
+#if ($regime.dynamics.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " + (" + $regime.dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+$foo
+#set( $temps = $temps + 1)
+#end
+
+
+##then check for all events that drive this state
+#foreach ($event in $regime.events)
+#if ($event.effect.state.get($par.name))
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+if ( current_regime = $regime.name ) AND eventport_in_$event.name = '1' then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $regime.conditions)
+#if ($event.effect.state.get($par.name))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#if ($temps == 1)
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  ";" )
+#end
+if ( current_regime = $regime.name ) AND $event.condition $event.direction then
+	$foo
+else
+	$foo2
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+#end
+
+
+##check for regime changes indicating onentry statechanges
+
+#if ($regimes.size() > 0)
+
+
+#foreach ($regime in $regimes) 
+if (not ( current_regime = next_regime )) and ( next_regime = $regime.name ) then
+
+##then check for all onentry
+#foreach ($onentry in $regime.onentrys)
+#if ($onentry.effect.state.get($par.name))
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $onentry.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#if ($temps == 1)
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  ";" )
+#end
+$foo
+else
+$foo2
+#set( $temps = $temps + 1)
+#end
+#end
+
+end if;
+#end
+
+#end
+
+
+
+
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + ""  )
+#set( $foo_new = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1)  )
+##get onstart details for this variable
+if rst = '1' then  
+#if ($par.onstart == "0")
+	$foo <= (others => '0');
+#else
+	$foo <= $par.onstart;
+#end
+elsif clk'event and clk = '1' then  
+    if ce = '1' then 
+            $foo <= $foo_new after 1 ns;
+    end if;
+end if;
+
+
+end process;
+#set( $i = $i + 1)
+---------------------------------------------------------------------
+#end
+
+------------------------------------------------------------------------------------------------------
+
+
+
+

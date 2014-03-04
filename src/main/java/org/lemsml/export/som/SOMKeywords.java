@@ -61,7 +61,9 @@ public enum SOMKeywords
     SIMLENGTH,
     TRANSITIONS,
     ONENTRYS,
-    LINKS;
+    LINKS,
+    DERIVEDPARAMETERS,
+    DERIVEDVARIABLES;
 
 	public String get()
 	{

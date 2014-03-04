@@ -1,0 +1,56 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+#if ($regimes.size() > 0)
+---------------------------------------------------------------------
+-- Regime State Machine Process
+---------------------------------------------------------------------
+##Regimes
+
+regime_state_process :process (clk,rst)
+begin 
+next_regime <= current_regime;
+
+#foreach ($regime in $regimes) 
+
+
+##then check for all events that drive this state
+#foreach ($event in $regime.events)
+#foreach ($transition in $event.effect.transitions)
+if ( current_regime = $regime.name ) and eventport_in_$event.name = '1' then
+	next_regime <= $transition;
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+##then check for all conditional events that drive this state
+#foreach ($event in $regime.conditions)
+#foreach ($transition in $event.effect.transitions)
+if ( current_regime = $regime.name ) and $event.condition $event.direction then
+	next_regime <= $transition;
+end if;
+#set( $temps = $temps + 1)
+#end
+#end
+
+
+#end
+
+if rst = '1' then  
+
+	current_regime <= $defaultRegime ;
+elsif clk'event and clk = '1' then  
+    if ce = '1' then 
+            current_regime <= next_regime after 1 ns;
+    end if;
+end if;
+
+end process;
+
+---------------------------------------------------------------------
+#end 
+
+

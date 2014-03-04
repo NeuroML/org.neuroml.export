@@ -1,0 +1,130 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+-------------------------------------------------------------------------------------------
+-- Architecture Begins
+-------------------------------------------------------------------------------------------
+
+architecture RTL of $name is
+
+
+---------------------------------------------------------------------
+-- Derived Variables and Parameters
+---------------------------------------------------------------------
+##DerivedVariables
+#foreach ($par in $derivedvariables)
+#set( $foo = "signal derivedvariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+##DerivedParameters
+#foreach ($par in $derivedparameters)
+#set( $foo = "signal derivedparameter_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+-- State internal Variables
+---------------------------------------------------------------------
+##StateVariables
+#foreach ($par in $state)
+#set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+---------------------------------------------------------------------
+
+---------------------------------------------------------------------
+-- Output Port internal Variables
+---------------------------------------------------------------------
+##OutputPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "signal eventport_" + $par.direction + "_" + $par.name + "_internal : std_logic := '0'; ")
+$foo
+#end
+#end
+---------------------------------------------------------------------
+
+
+#if ($regimes.size() > 0)
+---------------------------------------------------------------------
+-- Regime State Machine Variables
+---------------------------------------------------------------------
+##Regimes
+#set ($count = 0)
+type regime_type is ( #foreach ($regime in $regimes) 
+#if ($regime.default)
+#set ($defaultRegime = $regime.name)
+#end
+#set ($count = $count + 1)
+$regime.name 
+#if ($count != $regimes.size())
+, 
+#end
+#end 
+);
+signal current_regime: regime_type := $defaultRegime;
+signal next_regime: regime_type;
+---------------------------------------------------------------------
+#end 
+
+
+---------------------------------------------------------------------
+-- Child Components
+---------------------------------------------------------------------
+##add definitions for all children
+#foreach ($child in $Children)
+
+component $child.name
+    Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           ce : in STD_LOGIC;
+		   
+##Event Ports
+    #foreach ($par in $child.eventports)
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child.exposures)
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		   
+##System Parameters
+           sysparam_time_timestep : sfixed (0 downto -22);
+           sysparam_time_simtime : sfixed (0 downto -22)
+		   );
+end component;
+
+
+##Exposure Signals
+#foreach ($par in $child.exposures)
+#set( $foo = "signal exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#end
+
+##EventPorts
+#foreach ($par in $child.eventports)
+#set( $foo = "signal eventport_" + $par.direction + "_" + $child.name + "_" + $par.name + "_internal : std_logic; ")
+$foo
+#end
+
+
+#end
+
+
+
+--------------------------------------------------------------------------------------------------
+
+

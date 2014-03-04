@@ -1,0 +1,43 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+---------------------------------------------------------------------
+-- Derived Variable and Parameters Process
+---------------------------------------------------------------------
+##Derived Variable and Parameters
+
+
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#foreach ($par in $derivedvariables)
+#if ( "$!par.sensitivityList" != "" )
+#set( $sensitivityList = $sensitivityList + ", " + $par.sensitivityList  )
+#end
+#end
+#foreach ($par in $derivedparameters)
+#if ( "$!par.sensitivityList" != "" )
+#set( $sensitivityList = $sensitivityList + ", " + $par.sensitivityList  )
+#end
+#end
+
+
+
+
+derived_variable_process :process ( $sensitivityList )
+begin 
+
+##DerivedVariables
+#foreach ($par in $derivedvariables)
+#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + " <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
+$foo
+#end
+##DerivedParameters
+#foreach ($par in $derivedparameters)
+#set( $foo = "derivedparameter_" + $par.type +  "_" + $par.name + " <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
+$foo
+#end
+
+
+end process;
+---------------------------------------------------------------------
