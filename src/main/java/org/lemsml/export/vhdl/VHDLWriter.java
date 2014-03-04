@@ -10,9 +10,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-
-
-
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -20,7 +23,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.lemsml.export.som.SOMWriter;
+import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
@@ -29,13 +32,6 @@ import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.base.BaseWriter;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.TypeReference;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
@@ -61,12 +57,46 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.core.util.StringUtil;
-import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.lemsml.export.som.SOMKeywords;
 import org.neuroml.export.Utils;
-import org.neuroml.model.NetworkTypes;
+
+
 
 public class VHDLWriter extends BaseWriter {
+	
+	enum SOMKeywords
+	{
+	    DT,
+	    DYNAMICS,
+	    EVENTS,
+	    CONDITION,
+	    DIRECTION,
+	    EFFECT,
+	    NAME,
+	    ID,
+	    PARAMETERS,
+	    STATE,
+	    STATE_FUNCTIONS,
+	    REGIMES,
+	    T_END,
+	    T_START,
+	    COMMENT,
+	    EXPOSURES,
+	    EVENTPORTS,
+	    CONSTANT,
+	    CONDITIONS,
+	    DISPLAYS,
+	    SIMLENGTH,
+	    TRANSITIONS,
+	    ONENTRYS,
+	    LINKS,
+	    DERIVEDPARAMETERS,
+	    DERIVEDVARIABLES;
+
+		public String get()
+		{
+		return this.toString().toLowerCase();
+		}
+	}
 	
 	public enum Method {
 		TESTBENCH("vhdl/vhdl_tb.vm"),
@@ -124,7 +154,7 @@ public class VHDLWriter extends BaseWriter {
 		//context.put( "name", new String("VelocityOnOSB") );
 		try
 		{
-			SOMWriter somw = new SOMWriter(lems);
+			DLemsWriter somw = new DLemsWriter(lems);
 			JsonFactory f = new JsonFactory();
 			StringWriter sw = new StringWriter();
 			JsonGenerator g = f.createJsonGenerator(sw);
@@ -218,7 +248,7 @@ public class VHDLWriter extends BaseWriter {
 			
 			String som = sw.toString();
 			
-			SOMWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(som, context);
 		
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -363,7 +393,7 @@ public class VHDLWriter extends BaseWriter {
 
 		//context.put( "name", new String("VelocityOnOSB") );
 
-        SOMWriter somw = new SOMWriter(lems);
+		DLemsWriter somw = new DLemsWriter(lems);
 		
 		JsonFactory f = new JsonFactory();
 		
@@ -386,7 +416,7 @@ public class VHDLWriter extends BaseWriter {
 				{
 					StringWriter sw = new StringWriter();
 					JsonGenerator g = f.createJsonGenerator(sw);
-					g.useDefaultPrettyPrinter();
+					//g.useDefaultPrettyPrinter();
 					g.writeStartObject();
 					pop.getComponentType().getLinks();
 					String compRef = pop.getID();// pop.getStringValue("component");
@@ -424,7 +454,7 @@ public class VHDLWriter extends BaseWriter {
 					
 					String som = sw.toString();
 				
-					SOMWriter.putIntoVelocityContext(som, context);
+					DLemsWriter.putIntoVelocityContext(som, context);
 				
 					Properties props = new Properties();
 					props.put("resource.loader", "class");
