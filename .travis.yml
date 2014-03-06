@@ -18,4 +18,9 @@ install:
     - mvn install
     - cd ..
     
+script:
+    - pwd
+    - cd src/test/resources
+    - ls
+    #- make
 

@@ -1,5 +1,9 @@
 package org.neuroml.export;
 
+import java.io.File;
+import java.io.IOException;
+import javax.xml.bind.JAXBException;
+import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -13,6 +17,9 @@ import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
+import org.lemsml.jlems.core.type.Component;
+import org.neuroml.model.IafTauCell;
+import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
 /*
@@ -35,22 +42,55 @@ public class UtilsTest extends TestCase {
 	public void testReadLemsNeuroMLFile() throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
 
 		System.out.println("Testing: readLemsNeuroMLFile(String contents)");
-		
 		String[] filenames = new String[]{"NML2_SynapseTypes.nml", "NML2_SimpleIonChannel.nml", "NML2_SimpleMorphology.nml", "NML2_FullNeuroML.nml", "NML2_PyNNCells.nml"};
 		
 		for (String filename: filenames) {
-			loadNeuroMLExample(filename);
+            
+			Utils.readLemsNeuroMLFile(new File(filename));
 		}
-		
 	}*/
+    
+    
 	
-	public void testGetMagnitudeInSI() throws ParseError, ContentError {
+	public void testGetMagnitudeInSI() throws NeuroMLException {
 		System.out.println("Testing: getMagnitudeInSI()");
 		
 		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
 		
 		assertEquals(50.0, Utils.getMagnitudeInSI("50 Hz"), 1e-6);
+        
+		assertEquals(0.3, Utils.getMagnitudeInSI("0.3 ohm_m"), 1e-6);
+        
+		assertEquals(0.3, Utils.getMagnitudeInSI("0.03 kohm_cm"), 1e-6);
+        
+		assertEquals(60, Utils.getMagnitudeInSI("1 min"), 1e-6);
+        
+		assertEquals(1f/3600, Utils.getMagnitudeInSI("1 per_hour"), 1e-6);
+        
+		assertEquals(1e-3, Utils.getMagnitudeInSI("1 litre"), 1e-6);
 	}
+    
+    
+    public void testFilesInJar() throws IOException, ContentError
+    {
+        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
+        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+    }
+    
+    public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
+        
+        IafTauCell iaf = new IafTauCell();
+        iaf.setTau("10ms");
+        iaf.setLeakReversal("-60mV");
+        iaf.setReset("-70mV");
+        iaf.setThresh("-40mV");
+        iaf.setId("iaf00");
+        System.out.println("Converting: "+iaf);
+        Component comp = Utils.convertNeuroMLToComponent(iaf);
+        System.out.println("Now: "+comp.details("    "));
+        
+    }
 	
 
 }

@@ -1,11 +1,11 @@
 package org.neuroml.export.svg;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
+import org.lemsml.export.base.GenerationException;
 
 
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.XMLWriter;
 import org.neuroml.model.NeuroMLDocument;
@@ -21,13 +21,13 @@ public class SVGWriter extends XMLWriter {
 	
 	enum Orientation {xy, yz, xz};
 
-    private String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-    private String SVG_VERSION = "1.1";
+    private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+    private final String SVG_VERSION = "1.1";
 
     int axisWidth = 1;
-	private String styleXaxis = "stroke:rgb(0,255,0);stroke-width:"+axisWidth;
-	private String styleYaxis = "stroke:rgb(255,255,0);stroke-width:"+axisWidth;
-	private String styleZaxis = "stroke:rgb(255,0,0);stroke-width:"+axisWidth;
+	private final String styleXaxis = "stroke:rgb(0,255,0);stroke-width:"+axisWidth;
+	private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:"+axisWidth;
+	private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:"+axisWidth;
 
     public SVGWriter(NeuroMLDocument nmlDocument, String originalFilename) {
         super(nmlDocument, "SVG");
@@ -35,7 +35,7 @@ public class SVGWriter extends XMLWriter {
     }
 
 	@Override
-	public String getMainScript() throws ContentError {
+	public String getMainScript() throws GenerationException {
 
         StringBuilder main = new StringBuilder();
         main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
@@ -92,7 +92,7 @@ public class SVGWriter extends XMLWriter {
 		
 		
 		if (cell.getMorphology() != null) {
-    		Hashtable<Integer, Segment> segs = new Hashtable<Integer, Segment>();
+    		HashMap<Integer, Segment> segs = new HashMap<Integer, Segment>();
 			for(Segment segment: cell.getMorphology().getSegment()) {
 				int segId = segment.getId();
 				// <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2"/>

@@ -1,0 +1,9 @@
+// Main NEST script for: $name
+
+import nest
+import nest.voltage_trace
+nest.set_verbosity("M_WARNING")
+nest.ResetKernel()
+
+neuron = nest.Create("iaf_neuron")
+voltmeter = nest.Create("voltmeter")

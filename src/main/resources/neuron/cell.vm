@@ -1,0 +1,159 @@
+########################################################################
+## Neuron script automatically generated from a NeuroML 2 description ##
+## This is work in progress...                                        ##
+########################################################################
+
+
+
+begintemplate ${id}
+
+public init, topol, basic_shape, subsets, geom, memb
+public x, y, z, position
+
+
+//  Some methods for referencing the cells
+
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
+
+
+#foreach ($s in $sections)##
+// Section: $s.name, id: $s.id, parent: $s.parent
+create $s.name
+public $s.name
+#end##
+
+#foreach ($g in $groups)##
+// Group: $g
+objref $g.name
+#end##
+
+objref synlist
+
+proc init() {
+    topol()
+    subsets()
+    geom()
+    biophys()
+    geom_nseg()
+    synlist = new List()
+    x = y = z = 0
+    
+}
+
+proc set_initial_v() {
+    // Taken from the initMembPotential value
+#foreach ($imp in $initMembPotential)##
+    forsec $imp.group v = $imp.value  // units: mV
+#end##
+}
+
+
+proc set_initial_ion_properties() {
+    // From species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        ${sp.ion}i = $sp.initialConcentration  // units: mM
+        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
+    }
+#end##
+}
+
+
+proc topol() {
+    /////////// Only works for 1 section!!!
+    //connect dend(0), soma(1.0)
+    basic_shape()
+}
+
+proc basic_shape() {
+
+#foreach ($s in $sections)##
+// Section: $s.name, id: $s.id, parent: $s.parent
+$s.name {pt3dclear() #foreach ($p in $s.points3d) pt3dadd( $p ) #end##
+}
+#end##
+
+}
+
+proc subsets() { local i
+#foreach ($g in $groups)##
+
+    // Group: $g
+    $g.name = new SectionList()
+#foreach ($s in $g.sections)##
+    $s ${g.name}.append()
+#end##
+#foreach ($gg in $g.groups)##
+    forsec $gg ${g.name}.append()
+#end##
+#end##
+
+}
+
+proc geom() {
+}
+
+proc biophys() {
+
+    // Specific capacitance
+#foreach ($sc in $specificCapacitance)##
+    forsec $sc.group cm = $sc.value  // units: uF/cm2
+#end##
+
+    // Specific axial resistance/resistivity
+#foreach ($res in $resistivity)##
+    forsec $res.group Ra = $res.value  // units: ohm cm
+#end##
+
+    // Channel densities
+#foreach ($cd in $channelDensity)##
+    forsec $cd.group {
+        insert $cd.ionChannel
+#if( $cd.erev == 'calculated_by_GHK_equation' )##
+        // current calculated through GHK flux equation 
+        permeability_$cd.ionChannel = $cd.permeability  // units: cm / s 
+#else##
+        gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
+#if( $cd.ion == 'non_specific' )##
+        e_$cd.ionChannel = $cd.erev  // units: mV
+#else##
+#if( $cd.erev == 'calculated_by_Nernst_equation' )##
+        // erev is calculated by Nernst equation
+#else## fixed erev
+        e$cd.ion = $cd.erev  // units: mV
+#end## if( $cd.erev == 'calculated_by_Nernst_equation' )
+#end## if( $cd.ion == 'non_specific' )
+#end## if( $cd.erev == 'calculated_by_GHK_equation' )
+    }
+#end##foreach ($cd in $channelDensity)
+
+    // Concentration models for species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        insert $sp.concentrationModel
+    }
+#end##
+
+}
+
+proc geom_nseg() {
+    // All sections not mentioned here have nseg = 1
+
+}
+
+
+proc position() { local i
+    forsec all {
+        for i = 0, n3d()-1 {
+            pt3dchange(i, $1+x3d(i), $2+y3d(i), $3+z3d(i), diam3d(i))
+        }
+    }
+    x = $1  y = $2  z = $3
+}
+
+
+endtemplate ${id}
+
+
