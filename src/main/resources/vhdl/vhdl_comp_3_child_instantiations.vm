@@ -9,31 +9,43 @@
 
 begin
 
+#if (!$name.contains("syn"))
+		   step_once_complete <= '0';
+#end   
+
 ---------------------------------------------------------------------
 -- Child Component Instantiations and corresponding internal variables
 ---------------------------------------------------------------------
+#set( $count = 0)
 #foreach ($child in $Children)
 #set( $foo = $child.name + "_uut")
 $foo : $child.name
     port map (	clk => clk,
 				rst => rst,
 				ce => ce,
-		   
+				step_once_go => step_once_go,
 ##Event Ports
     #foreach ($par in $child.eventports)
-		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => eventport_" + $par.direction + "_" + $child.name + "_" + $par.name + "_internal ,"  )
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => eventport_in_spike_aggregate(" + $count + "),"  )
 		$foo
+		#set( $count = $count + 1)
 	#end
 
 ##Parameters
 	#foreach ($par in $child.parameters)
-		#set( $foo = "param_" + $par.type +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " downto " + $par.fraction + "),"  )
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " => param_"  + $par.type +  "_" + $child.name + "_" + $par.name + ","  )
 		$foo
 	#end
 
+##Requirements
+	#foreach ($par in $child.requirements)
+		#set( $foo = "requirement_" + $par.type +  "_" + $par.name + " => statevariable_" + $par.type +  "_" + $par.name + ","  )
+		$foo
+	#end
+	
 ##Exposures
 	#foreach ($par in $child.exposures)
-		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "," )
+		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "_internal," )
 		$foo
 	#end
 		   
@@ -42,6 +54,16 @@ $foo : $child.name
            sysparam_time_simtime => sysparam_time_simtime
 		   );
 		   
+		   
+
+##Exposure Signals
+#foreach ($par in $child.exposures)
+#set( $foo = "exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + " <= exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "_internal;" )
+$foo
+#end
+
+
+
 #end
 
 ---------------------------------------------------------------------

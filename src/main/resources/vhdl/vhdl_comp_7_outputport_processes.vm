@@ -193,14 +193,26 @@ end process;
 ##Asign Exposures to State Variables
 #foreach ($par in $state)
 #if ($par.exposure)
-#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " <= statevariable_" + $par.type + "_" + $par.exposure + ";"  )
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 
 #end
 #end
 ---------------------------------------------------------------------
 
 ---------------------------------------------------------------------
--- Assign state variables to exposures
+-- Assign derived variables to exposures
+---------------------------------------------------------------------
+##Asign Exposures to Derived Variables
+#foreach ($par in $derivedvariables)
+#if ($par.exposure)
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
+
+---------------------------------------------------------------------
+-- Assign event ports to exposures
 ---------------------------------------------------------------------
 ##Assign internal variables to EventPorts
 #foreach ($par in $eventports)

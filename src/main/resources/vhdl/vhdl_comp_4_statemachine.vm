@@ -9,7 +9,7 @@
 ---------------------------------------------------------------------
 ##Regimes
 
-regime_state_process :process (clk,rst)
+regime_state_process :process (step_once_go,rst)
 begin 
 next_regime <= current_regime;
 
@@ -42,7 +42,7 @@ end if;
 if rst = '1' then  
 
 	current_regime <= $defaultRegime ;
-elsif clk'event and clk = '1' then  
+elsif step_once_go'event and step_once_go = '1' then  
     if ce = '1' then 
             current_regime <= next_regime after 1 ns;
     end if;

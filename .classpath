@@ -33,5 +33,24 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="/jLEMS"/>
+	<classpathentry kind="lib" path="C:/Users/gebruiker/.m2/repository/org/codehaus/jackson/jackson-core-asl/0.9.8/jackson-core-asl-0.9.8.jar" sourcepath="C:/Users/gebruiker/.m2/repository/org/codehaus/jackson/jackson-core-asl/0.9.8/jackson-core-asl-0.9.8-sources.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="org.codehaus.jackson"/>
+			<attribute name="maven.artifactId" value="jackson-core-asl"/>
+			<attribute name="maven.version" value="0.9.8"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/gebruiker/.m2/repository/org/codehaus/jackson/jackson-mapper-asl/0.9.8/jackson-mapper-asl-0.9.8.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="org.codehaus.jackson"/>
+			<attribute name="maven.artifactId" value="jackson-mapper-asl"/>
+			<attribute name="maven.version" value="0.9.8"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.neuroml.model"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

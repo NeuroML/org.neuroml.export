@@ -35,10 +35,17 @@ use ieee_proposed.fixed_float_types.ALL;
 ---------------------------------------------------------------------
 
 entity $name is
-    Port ( clk : in STD_LOGIC;
-           rst : in STD_LOGIC;
-           ce : in STD_LOGIC;
+    Port (
+		   clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES
+           rst : in STD_LOGIC; --SYNCHRONOUS RESET
+           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS
+
+		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
 		   
+#if (!$name.contains("syn"))
+			step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
+		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
+#end   
 ##Event Ports
     #foreach ($par in $eventports)
 		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
@@ -50,16 +57,42 @@ entity $name is
 		#set( $foo = "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	
+	
+##Requirements
+	#foreach ($par in $requirements)
+		#set( $foo = "requirement_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
 
 ##Exposures
 	#foreach ($par in $exposures)
 		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	
+	
+	
+##THE CHILDREN
+#foreach ($child in $Children)
+
+	##Parameters
+		#foreach ($par in $child.parameters)
+			#set( $foo = "param_" + $par.type  +  "_" + $child.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+		#end
+
+	##Exposures
+		#foreach ($par in $child.exposures)
+			#set( $foo = "exposure_" + $par.type +  "_" + $child.name +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+		#end
+#end
+## END THE CHILDREN
 		   
 ##System Parameters
-           sysparam_time_timestep : sfixed (0 downto -22);
-           sysparam_time_simtime : sfixed (0 downto -22)
+           sysparam_time_timestep : in sfixed (0 downto -22);
+           sysparam_time_simtime : in sfixed (0 downto -22)
 		   );
 end $name;
 

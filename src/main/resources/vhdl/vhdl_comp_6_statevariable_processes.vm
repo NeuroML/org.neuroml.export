@@ -27,7 +27,7 @@
 #end
 #end
 
-state_variable_process_$i :process (clk,rst,$sensitivityList)
+state_variable_process_$i :process (step_once_go,rst,$sensitivityList)
 
 
 ## FIRST CREATE THE TEMP SIGNALS
@@ -236,9 +236,9 @@ if rst = '1' then
 #if ($par.onstart == "0")
 	$foo <= (others => '0');
 #else
-	$foo <= $par.onstart;
+	$foo <= resize( $par.onstart , $par.integer , $par.fraction ) ;
 #end
-elsif clk'event and clk = '1' then  
+elsif step_once_go'event and step_once_go = '1' then  
     if ce = '1' then 
             $foo <= $foo_new after 1 ns;
     end if;
