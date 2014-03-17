@@ -8,6 +8,10 @@ public class Main
 
     public static String getLemsExamplesResourcesDir()
     {
+        return "/LEMSexamples";
+    }
+    public static String getNeuroMLCompTypeResourcesDir()
+    {
         return "/NeuroML2CoreTypes";
     }
     public static String getNeuroMLExamplesResourcesDir()

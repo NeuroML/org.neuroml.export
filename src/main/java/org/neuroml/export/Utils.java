@@ -84,6 +84,23 @@ public class Utils {
 		
 	}
     
+	/*
+	 * Gets the Dimension of a NeuroML 2 quantity string in SI units (e.g. -60mV returns Dimension with values for Voltage)
+	 */
+	public static Dimension getDimension(String nml2Quantity) throws NeuroMLException {
+		
+        try {
+            DimensionalQuantity dq = QuantityReader.parseValue(nml2Quantity, getLemsWithNML2CompTypes().getUnits());
+
+            return dq.getDimension();
+        } catch (ParseError ex) {
+            throw new NeuroMLException("Problem getting magnitude in SI for: "+nml2Quantity, ex);
+        } catch (ContentError ex) {
+            throw new NeuroMLException("Problem getting magnitude in SI for: "+nml2Quantity, ex);
+        }
+		
+	}
+    
     public static Unit getSIUnitInNeuroML(Dimension dim) throws NeuroMLException
     {
         try {
@@ -178,7 +195,7 @@ public class Utils {
         NeuroMLConverter nmlc = new NeuroMLConverter();
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" +
 "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-"      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 "+NeuroMLElements.TARGET_SCHEMA_LOCATION+"\">"+compString+"</neuroml>");
+"      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 "+NeuroMLElements.LATEST_SCHEMA_LOCATION+"\">"+compString+"</neuroml>");
         LinkedHashMap<String,Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
         return els;
     }

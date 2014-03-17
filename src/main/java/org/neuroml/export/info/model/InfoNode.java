@@ -65,6 +65,10 @@ public class InfoNode
 				main.append(indent + key + ":\n");
 				main.append(((InfoNode) obj).toTreeString(indent + INDENT));
 			}
+            else if(obj instanceof PlotNode)
+			{
+				main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
+			}
 			else
 			{
 				main.append(indent + key + ": " + obj + "\n");
