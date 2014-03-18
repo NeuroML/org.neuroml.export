@@ -2016,8 +2016,11 @@ public class NeuronWriter extends BaseWriter {
 			for (String rateName : rateNameVsRateExpr.keySet()) {
 				String rateExpr = rateNameVsRateExpr.get(rateName);
 				// ratesMethod.insert(0,rateName + " = " + rateExpr + " \n");
-                ////////if (rateName.equals("rate_concentration"))
-				ratesMethod.append(rateName + " = " + rateExpr + " ????\n");
+                if (rateName.equals("rate_concentration") && rateExpr.indexOf("Faraday")>=0) {
+                    ratesMethod.append(rateName + " = (1e6) * " + rateExpr + " ? To correct units...\n");
+                } else {
+                    ratesMethod.append(rateName + " = " + rateExpr + " \n");
+                }
 			}
 
 			ratesMethod.append("\n" + ratesMethodFinal + " \n");
