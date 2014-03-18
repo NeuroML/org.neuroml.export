@@ -56,6 +56,7 @@ import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends BaseWriter {
 
 	private ArrayList<String> generatedModComponents = new ArrayList<String>();
@@ -63,7 +64,7 @@ public class NeuronWriter extends BaseWriter {
 
 	ArrayList<File> allGeneratedFiles = new ArrayList<File>();
 	static boolean debug = false;
-
+    
 	public enum ChannelConductanceOption {
 		FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK;
 		float erev;
@@ -1188,8 +1189,8 @@ public class NeuronWriter extends BaseWriter {
 
 		boolean hasCaDependency = false;
 
-		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
-			mechName = comp.getID();
+		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {			
+            mechName = NRNConst.getSafeName(comp.getID());
 			blockNeuron.append("SUFFIX " + mechName + "\n");
 
 			String species = comp.getTextParam("species");
@@ -1267,7 +1268,7 @@ public class NeuronWriter extends BaseWriter {
 			blockAssigned.append("\ngion   (S/cm2)                          : Transient conductance density of the channel");
 
 		} else if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE)) {
-			mechName = comp.getID();
+			mechName = NRNConst.getSafeName(comp.getID());
 			blockNeuron.append("SUFFIX " + mechName + "\n");
 
 			String ion = comp.getStringValue("ion");
@@ -2015,7 +2016,8 @@ public class NeuronWriter extends BaseWriter {
 			for (String rateName : rateNameVsRateExpr.keySet()) {
 				String rateExpr = rateNameVsRateExpr.get(rateName);
 				// ratesMethod.insert(0,rateName + " = " + rateExpr + " \n");
-				ratesMethod.append(rateName + " = " + rateExpr + " \n");
+                ////////if (rateName.equals("rate_concentration"))
+				ratesMethod.append(rateName + " = " + rateExpr + " ????\n");
 			}
 
 			ratesMethod.append("\n" + ratesMethodFinal + " \n");
@@ -2357,6 +2359,9 @@ public class NeuronWriter extends BaseWriter {
 		lemsFile = new File("../neuroConstruct/osb/showcase/neuroConstructShowcase/Ex4_HHcell/generatedNeuroML2/LEMS_Ex4_HHcell.xml");
 		lemsFile = new File("src/test/resources/BIOMD0000000185_LEMS.xml"); 
 		lemsFile = new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml");
+        
+		lemsFile = new File("../git/BlueBrainProjectShowcase/SynapseExample/LEMS_SimpleNet.xml");
+		lemsFile = new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml");
 
 		Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
 		File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));

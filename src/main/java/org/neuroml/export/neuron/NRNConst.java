@@ -70,16 +70,20 @@ public class NRNConst {
 	// TODO Add more keywords / builtin mechanisms
 	static final Set<String> NRNKeywords = new HashSet<String>() {{
 		add("IClamp");
+        add("pas");
+        add("hh");
+        add("extracellular");
+        add("fastpas");
 	}};
 	
 	
 	public static String getSafeName(String id) {
-		String prefix = "";
+		String suffix = "";
 
 		if (NRNKeywords.contains(id)) {
-			prefix = "my";
+			suffix = "_nml2";
 		}
 
-		return prefix + id;
+		return id+suffix;
 	}
 }

@@ -13,6 +13,7 @@ import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.neuroml.export.Utils;
 import org.neuroml.export.neuron.NeuronWriter;
+import org.neuroml.export.neuron.NRNConst;
 import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
@@ -172,7 +173,8 @@ public class JSONCellSerializer {
 		for (ChannelDensity cd: mp.getChannelDensity()) {
 			g.writeStartObject();
 			g.writeStringField("id",cd.getId());
-			g.writeStringField("ionChannel",cd.getIonChannel());
+            
+			g.writeStringField("ionChannel",NRNConst.getSafeName(cd.getIonChannel()));
 	
 			if (cd.getIon()!=null) {
 				g.writeStringField("ion",cd.getIon());
@@ -194,7 +196,7 @@ public class JSONCellSerializer {
 		for (ChannelDensityNernst cdn: mp.getChannelDensityNernst()) {
 			g.writeStartObject();
 			g.writeStringField("id",cdn.getId());
-			g.writeStringField("ionChannel",cdn.getIonChannel());
+			g.writeStringField("ionChannel",NRNConst.getSafeName(cdn.getIonChannel()));
 	
 			g.writeStringField("ion",cdn.getIon());
 	
@@ -212,7 +214,7 @@ public class JSONCellSerializer {
 		for (ChannelDensityGHK cdg: mp.getChannelDensityGHK()) {
 			g.writeStartObject();
 			g.writeStringField("id",cdg.getId());
-			g.writeStringField("ionChannel",cdg.getIonChannel());
+			g.writeStringField("ionChannel",NRNConst.getSafeName(cdg.getIonChannel()));
 	
 			g.writeStringField("ion",cdg.getIon());
 	
