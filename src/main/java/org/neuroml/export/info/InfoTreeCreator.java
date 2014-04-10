@@ -6,13 +6,16 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Unit;
 import org.neuroml.export.Utils;
 
 import org.neuroml.export.info.model.ChannelInfoExtractor;
 import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.Cell;
+import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.IonChannel;
+import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.Network;
 import org.neuroml.model.NeuroMLDocument;
@@ -46,6 +49,41 @@ public class InfoTreeCreator
                 if(cell.getNotes() != null && cell.getNotes().length() > 0) cellProps.put("Description", formatNotes(cell.getNotes()));
                 Morphology morph = cell.getMorphology();
                 cellProps.put("Number of segments", morph.getSegment().size());
+                cellProps.put("Number of segment groups", morph.getSegmentGroup().size());
+                if (cell.getBiophysicalProperties()==null) 
+                {
+                    cellProps.put("Biophysical properties", "none");
+                }
+                else
+                {
+                    MembraneProperties mp = cell.getBiophysicalProperties().getMembraneProperties();
+                    for (ChannelDensity cd: mp.getChannelDensity()) 
+                    {
+                        
+                        InfoNode cProps = new InfoNode();
+                        cellProps.put("Channel density: "+cd.getId(), cProps);
+                        cProps.put("ID", cd.getId());
+                        cProps.put("IonChannel", cd.getIonChannel());
+                        cProps.put("Ion", cd.getIon());
+                        if (cd.getErev()!=null)
+                        {
+                            cProps.put("Reversal potential", formatDimensionalQuantity(cd.getErev()));
+                        }
+                        cProps.put("Conductance density", formatDimensionalQuantity(cd.getCondDensity()));
+                        if (cd.getSegmentGroup()!=null)
+                        {
+                            cProps.put("Segment group", cd.getSegmentGroup());
+                        } 
+                        else if (cd.getSegment()!=null)
+                        {
+                            cProps.put("Segment", cd.getSegment());
+                        }
+                        else
+                        {
+                            cProps.put("Segment group", "all");
+                        }
+                    }
+                }
 
                 infoRoot.put("Cell " + cell.getId(), cellProps);
             }
@@ -120,17 +158,8 @@ public class InfoTreeCreator
                     for (ParamValue pv: comp.getParamValues()) {
                         if (comp.hasAttribute(pv.getName())) {
                             String orig = comp.getStringValue(pv.getName());
-                            String siSymbol = Utils.getSIUnitInNeuroML(pv.getFinalParam().getDimension()).getSymbol();
-                            
-                            //TODO: replace with DecimalFormat
-                            String val = (float)pv.getDoubleValue()+"";
-                            if (val.endsWith("0") && val.indexOf("E")<0 && !val.endsWith(".0") && val.indexOf(".")>0)
-                                val = val.substring(0,val.length()-1);
-                            
-                            String si = val + (siSymbol.equals(Unit.NO_UNIT)?"": " "+siSymbol);
-                            if (!orig.equals(si))
-                                orig = orig +" ("+si+")";
-                            elementProps.put(pv.getName(), orig);
+                            String formatted = formatDimensionalQuantity(orig);
+                            elementProps.put(pv.getName(), formatted);
                         }
                     }
                 } catch (ContentError ce) {
@@ -142,6 +171,37 @@ public class InfoTreeCreator
 
 		return infoRoot;
 	}
+    
+    private static String formatDimensionalQuantity(String value) throws NeuroMLException 
+    {
+        if (value==null)
+            return "Null quantity!!";
+        String returnVal = value;
+        try
+        {
+            float v = Float.parseFloat(value);
+            return v+"";
+        }
+        catch (NumberFormatException e) 
+        {
+            // continue...
+        }
+        String siSymbol = Utils.getSIUnitInNeuroML(Utils.getDimension(value)).getSymbol();
+        
+        String[] magUnit = QuantityReader.splitToMagnitudeAndUnit(value);
+
+        //TODO: replace with DecimalFormat
+        String val = Utils.getMagnitudeInSI(value)+"";
+        if (val.endsWith("0") && val.indexOf("E") < 0 && !val.endsWith(".0") && val.indexOf(".") > 0) {
+            val = val.substring(0, val.length() - 1);
+        }
+
+        String si = val + (siSymbol.equals(Unit.NO_UNIT) ? "" : " " + siSymbol);
+        if (!value.equals(si)) {
+            returnVal = returnVal + " (" + si + ")";
+        }
+        return returnVal;
+    }
 	
 	/**
 	 * @param notes

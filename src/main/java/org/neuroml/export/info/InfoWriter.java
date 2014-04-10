@@ -49,10 +49,11 @@ public class InfoWriter extends BaseWriter
 		// fileName = "../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/SupAxAx.nml";
 		// fileName = "../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/Gran_KDr_98.nml";
 		fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
+		fileName = "../NeuroML2/examples/NML2_SimpleMorphology.nml";
+		fileName = "../NeuroML2/examples/NML2_SingleCompHHCell.nml";
 		//fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
 		//fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
 		//fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
-        fileName = "../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/WhichModel.nml";
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));

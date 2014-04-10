@@ -73,9 +73,9 @@ public class UtilsTest extends TestCase {
     
     public void testFilesInJar() throws IOException, ContentError
     {
-        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        String ret = JUtil.getRelativeResource(this.getClass(), "/LEMSexamples/LEMS_NML2_Ex0_IaF.xml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
-        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+        //ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SimpleIonChannel.nml");
     }
     
     public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
