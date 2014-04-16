@@ -3,10 +3,7 @@ package org.neuroml.export;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 

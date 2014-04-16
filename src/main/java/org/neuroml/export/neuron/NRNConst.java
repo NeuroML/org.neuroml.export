@@ -19,7 +19,6 @@ public class NRNConst {
 	final static String RATE_PREFIX = "rate_";
 	final static String REGIME_PREFIX = "regime_";
 	final static String V_COPY_PREFIX = "copy_";
-	final static String DUMMY_POPULATION_PREFIX = "population_";
 	
     final static String comm = "# ";
     final static String commPre = "'''";
