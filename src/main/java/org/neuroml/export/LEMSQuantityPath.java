@@ -114,6 +114,7 @@ public class LEMSQuantityPath {
     @Override
     public String toString() {
         return "Original:       " + quantity + "\n"
+             + "Type: " + myType + "\n"
              + "Variable parts: " + getVariableParts() + "\n"
              + "Variable:       " + getVariable() + "\n"
              + "Is population:  " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "") + "\n"

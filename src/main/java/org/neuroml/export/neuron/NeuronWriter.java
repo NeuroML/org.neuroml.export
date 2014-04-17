@@ -426,11 +426,11 @@ public class NeuronWriter extends BaseWriter {
 					int preCellId = Integer.parseInt(conn.getStringValue("preCellId").split("/")[2]);
 					int postCellId = Integer.parseInt(conn.getStringValue("postCellId").split("/")[2]);
 
-					int preSegmentId = Integer.parseInt(conn.getStringValue("preSegmentId"));
-					int postSegmentId = Integer.parseInt(conn.getStringValue("postSegmentId"));
+					int preSegmentId = conn.hasTextParam("preSegmentId") ? Integer.parseInt(conn.getStringValue("preSegmentId")) : 0;
+					int postSegmentId = conn.hasTextParam("postSegmentId") ? Integer.parseInt(conn.getStringValue("postSegmentId")) : 0;
 
-					float preFractionAlong = Float.parseFloat(conn.getStringValue("preFractionAlong"));
-					float postFractionAlong = Float.parseFloat(conn.getStringValue("postFractionAlong"));
+					float preFractionAlong = conn.hasTextParam("preFractionAlong") ? Float.parseFloat(conn.getStringValue("preFractionAlong")) : 0.5f;
+					float postFractionAlong = conn.hasTextParam("postFractionAlong") ? Float.parseFloat(conn.getStringValue("postFractionAlong")) : 0.5f;
 
 					if (preSegmentId != 0 || postSegmentId != 0) {
 						throw new GenerationException(
@@ -575,7 +575,7 @@ public class NeuronWriter extends BaseWriter {
 
 						plots.get(dispGraph).add("# Line, plotting: " + lqp.getQuantity());
 						//plots.get(dispGraph).add("# compMechNamesHoc: " + compMechNamesHoc);
-						//plots.get(dispGraph).add("# lqp: " + lqp.toString().replaceAll("\n", "\n#"));
+						plots.get(dispGraph).add("# " + lqp.toString().replaceAll("\n", "\n# "));
 
 						plots.get(dispGraph).add(dispGraph + ".addexpr(\"" + lqp.getNeuronVariableReference() + "\", \"" + lqp.getNeuronVariableReference() + "\", " + plotColour + ", 1, 0.8, 0.9, 2)");
 						plotColour++;
@@ -1883,7 +1883,7 @@ public class NeuronWriter extends BaseWriter {
 				}
 
 				if (sv.getName().equals(NRNConst.NEURON_VOLTAGE)) {
-					blockNeuron.append("\n\nNONSPECIFIC_CURRENT i                    : To ensure v of section follows " + svName);
+					blockNeuron.append("\n\nNONSPECIFIC_CURRENT i                    : To ensure v of section follows " + svName+"\n");
 					// //blockNeuron.append("\nRANGE " + HIGH_CONDUCTANCE_PARAM
 							// +
 							// "                  : High conductance for above current");
@@ -2378,6 +2378,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
 
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
