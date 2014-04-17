@@ -450,12 +450,6 @@ public class NeuronWriter extends BaseWriter {
 				}
 			}
 
-			// main.append(String.format("h(\"objectvar %s\")\n", synObjName));
-
-			// {a_CG2[0].Soma syn_NetConn_1_DoubExpSyn[0] = new DoubExpSyn(0.5)}
-			// {a_CG1[0].Soma a_CG2[0].synlist.append(new NetCon(&v(0.5),
-			// syn_NetConn_1_DoubExpSyn[0], -20.0, 5.0, 1.0))}
-
 		}
 
 		ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
@@ -537,7 +531,6 @@ public class NeuronWriter extends BaseWriter {
 				cell = compIdsVsCells.get(cellId);
 			}
 
-
 			addComment(main, "Adding input: " + explInput);
 
 			main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
@@ -582,7 +575,7 @@ public class NeuronWriter extends BaseWriter {
 
 						plots.get(dispGraph).add("# Line, plotting: " + lqp.getQuantity());
 						//plots.get(dispGraph).add("# compMechNamesHoc: " + compMechNamesHoc);
-						//plots.get(dispGraph).add("# lqp: " + lqp);
+						//plots.get(dispGraph).add("# lqp: " + lqp.toString().replaceAll("\n", "\n#"));
 
 						plots.get(dispGraph).add(dispGraph + ".addexpr(\"" + lqp.getNeuronVariableReference() + "\", \"" + lqp.getNeuronVariableReference() + "\", " + plotColour + ", 1, 0.8, 0.9, 2)");
 						plotColour++;
@@ -2380,9 +2373,11 @@ public class NeuronWriter extends BaseWriter {
                 */
         
         ArrayList<File> lemsFiles = new ArrayList<File>();
-		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
 
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
