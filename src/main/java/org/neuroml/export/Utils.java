@@ -98,6 +98,33 @@ public class Utils {
 		
 	}
     
+    /*
+         For example, ../Pop0[0] returns Pop0; ../Gran/0/Granule_98 returns Gran
+    */
+    public static String parseCellRefStringForPopulation(String cellRef) {
+        System.out.println("Parsing for population: "+cellRef);
+        int loc = cellRef.startsWith("../") ? 1 : 0;
+        String ref = cellRef.indexOf("/")>=0 ? cellRef.split("/")[loc] : cellRef;
+        if (ref.indexOf("[")>=0)
+            return ref.substring(0, ref.indexOf("["));
+        else
+            return ref;
+    }
+    
+    /*
+         For example, ../Pop0[0] returns 0; ../Gran/0/Granule_98 returns 0; Gran/1/Granule_98 returns 0
+    */
+    public static int parseCellRefStringForCellNum(String cellRef) {
+        System.out.println("Parsing for cell num: "+cellRef);
+        if (cellRef.indexOf("[")>=0) {
+            return Integer.parseInt(cellRef.substring(cellRef.indexOf("[")+1, cellRef.indexOf("]")));
+        } else {
+            int loc = cellRef.startsWith("../") ? 2 : 1;
+            String ref = cellRef.split("/")[loc];
+            return Integer.parseInt(ref);
+        }
+    }
+    
     public static Unit getSIUnitInNeuroML(Dimension dim) throws NeuroMLException
     {
         try {

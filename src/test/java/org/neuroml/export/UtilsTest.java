@@ -91,6 +91,18 @@ public class UtilsTest extends TestCase {
         System.out.println("Now: "+comp.details("    "));
         
     }
+    
+    public void testParseCellRefString() throws JAXBException, Exception {
+        
+        String r1 = "../Pop0[0]";
+        String r2 = "../Gran/0/Granule_98";
+        assertEquals("Pop0", Utils.parseCellRefStringForPopulation(r1));        
+        assertEquals("Gran", Utils.parseCellRefStringForPopulation(r2));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r1));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r2));
+
+    }
+    
 	
 
 }

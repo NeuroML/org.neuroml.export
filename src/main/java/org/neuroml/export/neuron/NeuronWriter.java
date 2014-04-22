@@ -177,6 +177,10 @@ public class NeuronWriter extends BaseWriter {
 
 		return newExpr;
 	}
+    
+    public static String getMechanismName(String compType, String popName) {
+        return String.format("m_%s_%s", compType, popName);
+    }
 
 	public String generate(File pdirForMods) throws NeuroMLException,
 			IOException, JAXBException, GenerationException, ContentError,
@@ -269,7 +273,7 @@ public class NeuronWriter extends BaseWriter {
 			}
 
 
-			String mechName = popComp.getComponentType().getName();
+			String compTypeName = popComp.getComponentType().getName();
 
 			main.append("print \"Population " + popName + " contains " + number
 					+ " instance(s) of component: " + popComp.getID()
@@ -347,7 +351,7 @@ public class NeuronWriter extends BaseWriter {
 
 				main.append("h(\" n_" + popName + " = " + number + " \")\n");
 				main.append("h(\" create " + popName + "[" + number + "]\")\n");
-				main.append("h(\" objectvar m_" + mechName + "[" + number + "] \")\n\n");
+				main.append("h(\" objectvar " + getMechanismName(compTypeName, popName)+ "[" + number + "] \")\n\n");
 
 				main.append("for i in range(int(h.n_" + popName + ")):\n");
 				String instName = popName + "[i]";
@@ -366,18 +370,18 @@ public class NeuronWriter extends BaseWriter {
 				}
 
 				main.append("    h." + instName + ".push()\n");
-				main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { m_" + mechName + "[%i] = new " + mechName + "(0.5) } \"%(i,i))\n\n");
+				main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { " + getMechanismName(compTypeName, popName)+ "[%i] = new " + compTypeName + "(0.5) } \"%(i,i))\n\n");
 
-				if (!compMechsCreated.containsKey(mechName)) {
-					compMechsCreated.put(mechName, 0);
+				if (!compMechsCreated.containsKey(compTypeName)) {
+					compMechsCreated.put(compTypeName, 0);
 				}
 
-				compMechsCreated.put(mechName,
-						compMechsCreated.get(mechName) + 1);
+				compMechsCreated.put(compTypeName,
+						compMechsCreated.get(compTypeName) + 1);
 
 				// String hocMechName = mechName + "[" +
 						// (compMechsCreated.get(mechName) - 1) + "]";
-				String hocMechName = "m_" + mechName + "[i]";
+				String hocMechName = getMechanismName(compTypeName, popName) + "[i]";
 
 				compMechNamesHoc.put(instName, hocMechName);
 
@@ -417,14 +421,14 @@ public class NeuronWriter extends BaseWriter {
 
 			String synObjName = String.format("syn_%s_%s", id, synapse);
 
-			main.append(String.format("h(\"objectvar %s[%d]\")\n", synObjName, number));
+			main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synObjName, number));
 
 			int index = 0;
 			for (Component conn : projection.getAllChildren()) {
 
 				if (conn.getComponentType().getName().equals(NeuroMLElements.CONNECTION)) {
-					int preCellId = Integer.parseInt(conn.getStringValue("preCellId").split("/")[2]);
-					int postCellId = Integer.parseInt(conn.getStringValue("postCellId").split("/")[2]);
+					int preCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("preCellId"));
+					int postCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("postCellId"));
 
 					int preSegmentId = conn.hasTextParam("preSegmentId") ? Integer.parseInt(conn.getStringValue("preSegmentId")) : 0;
 					int postSegmentId = conn.hasTextParam("postSegmentId") ? Integer.parseInt(conn.getStringValue("postSegmentId")) : 0;
@@ -436,16 +440,38 @@ public class NeuronWriter extends BaseWriter {
 						throw new GenerationException(
 								"Connections on locations other than segment id=0 not yet supported...");
 					}
-					String preSecName = getNrnSectionName(preCell.getMorphology().getSegment().get(0));
-					String postSecName = getNrnSectionName(postCell.getMorphology().getSegment().get(0));
+                    
+                    
+					String preSecName;
 
-					main.append(String.format("h(\"a_%s[%d].%s %s[%d] = new %s(%f)\")\n",
-							postPop, postCellId, postSecName, synObjName,
+                    if (preCell!=null) {
+                        preSecName = String.format("a_%s[%s].%s", prePop, preCellId, getNrnSectionName(preCell.getMorphology().getSegment().get(0)));
+                    } else {
+                        preSecName = prePop+"["+preCellId+"]";
+                    }
+
+					String postSecName;
+                    if (postCell!=null) {
+                        postSecName = String.format("a_%s[%s].%s", postPop, postCellId, getNrnSectionName(postCell.getMorphology().getSegment().get(0)));
+                    } else {
+                        postSecName = postPop+"["+postCellId+"]";
+                    }
+
+					main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n",
+							postSecName, synObjName,
 							index, synapse, postFractionAlong));
-					main.append(String.format("h(\"a_%s[%d].%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, 0, 1))\")\n\n",
-							prePop, preCellId, preSecName, postPop,
-							postCellId, preFractionAlong, synObjName,
-							index));
+                    
+                    if (preCell!=null) {
+                        main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, 0, 1))\")\n\n",
+                                preSecName, postPop,
+                                postCellId, preFractionAlong, synObjName,
+                                index));
+                    } else {
+                        main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synObjName, index));
+                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(&v(%f), %s[%d], 0, 0, 1)\")\n\n",
+                                preSecName, synObjName, index, preFractionAlong, synObjName,
+                                index));
+                    }
 					index++;
 				}
 			}
@@ -461,36 +487,32 @@ public class NeuronWriter extends BaseWriter {
 			String mod = generateModFile(inputComp);
 			dumpModToFile(inputComp, mod);
 
-			String pop = inputList.getStringValue("population");
 			ArrayList<Component> inputs = inputList.getChildrenAL("inputs");
 
 			for (Component input : inputs) {
 				String targetString = input.getStringValue("target");
-				Cell cell;
-				String cellNum;
+		
+                int cellNum = Utils.parseCellRefStringForCellNum(targetString);
+                String popName = Utils.parseCellRefStringForPopulation(targetString);
+                
+                String secName;
+                String cellId = popIdsVsCellIds.get(popName);
+                Cell cell = compIdsVsCells.get(cellId);
+                
+                if (cell!=null) {
+                    secName = String.format("a_%s[%s].%s", popName,
+						cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)));
+                } else {
+                    secName = popName+"["+cellNum+"]";
+                }
 
-				if (targetString.indexOf("[") > 0) {
-					String[] parts1 = targetString.split("/");
-					String[] parts2 = parts1[1].split("\\[");
-					cellNum = parts2[1].split("\\]")[0];
-					String popName = parts2[0];
-					String cellId = popIdsVsCellIds.get(popName);
-					cell = compIdsVsCells.get(cellId);
-
-				} else {
-					String[] parts = targetString.split("/");
-					cellNum = parts[2];
-					String cellId = parts[3];
-					cell = compIdsVsCells.get(cellId);
-				}
 
 				String inputName = NRNConst.getSafeName(inputList.getID()) + "_" + input.getID();
 
 				addComment(main, "Adding input: " + input);
 
 				main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-				main.append(String.format("h(\"a_%s[%s].%s { %s = new %s(0.5) } \")\n\n", pop,
-						cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)), inputName,
+				main.append(String.format("h(\"%s { %s = new %s(0.5) } \")\n\n", secName, inputName,
 						NRNConst.getSafeName(inputComp.getID())));
 
 			}
@@ -513,30 +535,25 @@ public class NeuronWriter extends BaseWriter {
 
 
 			String targetString = explInput.getStringValue("target");
-			Cell cell;
-			String cellNum;
-			String popName = null;
 
-			Pattern p = Pattern.compile("(.+)\\[(\\d+)\\]");
-			Matcher m = p.matcher(targetString);
-			if(m.find()) {
-				popName = m.group(1);
-				cellNum = m.group(2);
-				String cellId = popIdsVsCellIds.get(popName);
-				cell = compIdsVsCells.get(cellId);
-			} else {
-				String[] parts = targetString.split("/");
-				cellNum = parts[2];
-				String cellId = parts[3];
-				cell = compIdsVsCells.get(cellId);
-			}
+            int cellNum = Utils.parseCellRefStringForCellNum(targetString);
+            String popName = Utils.parseCellRefStringForPopulation(targetString);
+
+            String secName;
+            String cellId = popIdsVsCellIds.get(popName);
+            Cell cell = compIdsVsCells.get(cellId);
+
+            if (cell!=null) {
+                secName = String.format("a_%s[%s].%s", popName,
+                    cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)));
+            } else {
+                secName = popName+"["+cellNum+"]";
+            }
 
 			addComment(main, "Adding input: " + explInput);
 
 			main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-			main.append(String.format("h(\"a_%s[%s].%s { %s = new %s(0.5) } \")\n\n", popName,
-					cellNum, getNrnSectionName(cell.getMorphology().getSegment().get(0)), inputName,
-					safeName));
+			main.append(String.format("h(\"%s { %s = new %s(0.5) } \")\n\n", secName, inputName, safeName));
 
 		}
 
@@ -2379,6 +2396,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
+        lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
 
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
