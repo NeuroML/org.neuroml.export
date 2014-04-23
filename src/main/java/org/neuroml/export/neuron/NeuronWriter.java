@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 
@@ -23,10 +21,12 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
+import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.Case;
@@ -220,6 +220,7 @@ public class NeuronWriter extends BaseWriter {
 
 		HashMap<String, Cell> compIdsVsCells = new HashMap<String, Cell>();
 		HashMap<String, String> popIdsVsCellIds = new HashMap<String, String>();
+		HashMap<String, Component> popIdsVsComps = new HashMap<String, Component>();
 
 		boolean simulatingNetwork = true;
 
@@ -251,6 +252,7 @@ public class NeuronWriter extends BaseWriter {
 				popComp = lems.getComponent(compReference);
 				popName = popsOrComponent.getID();
 				popIdsVsCellIds.put(popName, compReference);
+                popIdsVsComps.put(popName, popComp);
 			} else if (popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST)) {
 				compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
 				popComp = lems.getComponent(compReference);
@@ -264,6 +266,8 @@ public class NeuronWriter extends BaseWriter {
 				popComp.getAllChildren().size();
 				popName = popsOrComponent.getID();
 				popIdsVsCellIds.put(popName, compReference);
+                
+                popIdsVsComps.put(popName, popComp);
 			} else {
 				// compReference = popsOrComponent.getComponentType().getName();
 				number = 1;
@@ -461,16 +465,23 @@ public class NeuronWriter extends BaseWriter {
 							postSecName, synObjName,
 							index, synapse, postFractionAlong));
                     
+                    
                     if (preCell!=null) {
                         main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, 0, 1))\")\n\n",
                                 preSecName, postPop,
                                 postCellId, preFractionAlong, synObjName,
                                 index));
                     } else {
+                        Component preComp = popIdsVsComps.get(prePop);
+                        float threshold = 0;
+                        if (preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+                            preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) {
+                            threshold = convertToNeuronUnits(preComp.getStringValue("thresh"));
+                        }
                         main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synObjName, index));
-                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(&v(%f), %s[%d], 0, 0, 1)\")\n\n",
+                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(&v(%f), %s[%d], %f, 0, 1)\")  \n\n",
                                 preSecName, synObjName, index, preFractionAlong, synObjName,
-                                index));
+                                index, threshold));
                     }
 					index++;
 				}
@@ -2289,6 +2300,11 @@ public class NeuronWriter extends BaseWriter {
 			return "? Don't know units for : (" + dimensionName + ")";
 		}
 	}
+    
+	private float convertToNeuronUnits(String neuromlQuantity) throws ParseError, ContentError {
+        DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
+        return convertToNeuronUnits((float)dq.getDoubleValue(), dq.getDimension().getName());
+    }
 
 	private static float convertToNeuronUnits(float val, String dimensionName) {
 		float newVal = val * getNeuronUnitFactor(dimensionName);
@@ -2393,20 +2409,27 @@ public class NeuronWriter extends BaseWriter {
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
         lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
 
+        NeuronWriter nw = null;
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
-            NeuronWriter nw = new NeuronWriter(lems);
+            nw = new NeuronWriter(lems);
             ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
             for (File f : ff) {
                 System.out.println("Generated: " + f.getAbsolutePath());
             }
+        }
+        
+        String[] qs = {"1 mV", "1.234mV", "1.2e-4V", "1.23e-5A", "1.23e4A", "1.45E-8 m", "1.23E-8m2", "60", "6000", "123000"};
+        for (String s : qs) {
+            DimensionalQuantity dq = QuantityReader.parseValue(s, nw.lems.getUnits());
+            System.out.println("String "+s+" converts to: "+nw.convertToNeuronUnits(s)+" (units: "+getNeuronUnit(dq.getDimension().getName())+")");
         }
         
 	}
