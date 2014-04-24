@@ -12,7 +12,6 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.xml.XMLException;
-import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.xineml.XineMLWriter.Variant;
 
@@ -47,22 +46,27 @@ public class XineMLWriterTest extends TestCase {
         System.out.println("Loaded: "+exampleFilename);
 
         XineMLWriter nw = new XineMLWriter(lems, Variant.NineML);
+            
+        File mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
 
-        String nr = nw.getMainScript();
+        ArrayList<File> nr = nw.generateAllFiles(mainFile);
         
         System.out.println("Generated: "+nr);
         
-        for (File f: nw.getFilesGenerated()) {
+        for (File f: nr) {
             System.out.println("Checking file: "+f.getAbsolutePath());
 	        assertTrue(f.exists());
         }
+        assertTrue(!nw.getFilesGenerated().isEmpty());
 
+        
         // Refresh..
     	lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
         XineMLWriter sw = new XineMLWriter(lems, Variant.SpineML);
+        mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
 
-        String sr = sw.getMainScript();
+        ArrayList<File> sr = sw.generateAllFiles(mainFile);
         
         System.out.println("Generated: "+sr);
         
@@ -70,6 +74,7 @@ public class XineMLWriterTest extends TestCase {
             System.out.println("Checking file: "+f.getAbsolutePath());
 	        assertTrue(f.exists());
         }
+        assertTrue(!sw.getFilesGenerated().isEmpty());
 	}
 
 }
