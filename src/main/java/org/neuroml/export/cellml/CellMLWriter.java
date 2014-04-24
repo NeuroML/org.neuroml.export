@@ -4,8 +4,6 @@
 package org.neuroml.export.cellml;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import org.lemsml.export.base.GenerationException;
 
@@ -17,16 +15,12 @@ import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.expression.ParseTree;
 import org.lemsml.jlems.core.expression.Parser;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.type.Component;
-import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
@@ -39,7 +33,6 @@ public class CellMLWriter extends XMLWriter {
     public static final String LOCAL_CELLML_SCHEMA = "???.xsd";
 
     public static final String GLOBAL_TIME_CELLML = "time";
-    public static final String GLOBAL_TIME_CELLML_MATHML = "<ci>time</ci>";
 
     //private final String sbmlTemplateFile = "sbml/template.sbml";
     public CellMLWriter(Lems l) {
@@ -83,7 +76,15 @@ public class CellMLWriter extends XMLWriter {
             endElement(main, "p");
             endElement(main, "notes");
             main.append("\n");
+            
+            
 
+            startElement(main, "units", "name=per_second");
+            startEndElement(main, "unit", "units=second", "exponent=-1");
+            endElement(main, "units");
+            main.append("\n");
+        
+        
             startElement(main, "component", "name=environment");
             startEndElement(main, "variable", "name=time", "units=millisecond", "public_interface=out");
             endElement(main, "component");
@@ -143,44 +144,52 @@ public class CellMLWriter extends XMLWriter {
             for (StateVariable sv : dyn.getStateVariables()) {
                 startEndElement(main,
                         "variable",
-                        "name=" + sv.getName(), 
+                        "name=" + sv.getName(),
                         "initial_value=0",
                         "units=dimensionless");
 
             }
-        
 
-            startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
-            
-            for (DerivedVariable dv: dyn.getDerivedVariables()) {
+            startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
+
+            for (DerivedVariable dv : dyn.getDerivedVariables()) {
                 startElement(main, "apply");
                 startElement(main, "eq");
                 startEndTextElement(main, "ci", dv.getName());
                 processMathML(main, dv.getParseTree(), false);
                 endElement(main, "eq");
                 endElement(main, "apply");
-                
-            }
-        /*
-            for (TimeDerivative td : dyn.getTimeDerivatives()) {
-                startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
-                            //MathMLWriter mmlw = new MathMLWriter();
-                //E.info("TD: "+mmlw.serialize(td.getParseTree()));
-                processMathML(main, td.getParseTree(), false);
-                endElement(main, "rateRule");
 
-            }*/
+            }
+
+            for (TimeDerivative td : dyn.getTimeDerivatives()) {
+
+                startElement(main, "apply");
+                startElement(main, "eq");
+                startEndElement(main, "diff");
+                startElement(main, "bvar");
+                startEndTextElement(main, "ci", GLOBAL_TIME_CELLML);
+                endElement(main, "bvar");
+                startEndTextElement(main, "ci", td.getVariable());
+                processMathML(main, td.getParseTree(), false);
+                endElement(main, "eq");
+                endElement(main, "apply");
+
+            }
 
             for (OnStart os : dyn.getOnStarts()) {
                 for (StateAssignment sa : os.getStateAssignments()) {
-                    startElement(main, "assignmentRule", "variable=" + sa.getStateVariable().getName());
+                    startElement(main, "apply");
+                    startElement(main, "eq");
+                    startEndTextElement(main, "ci", sa.getStateVariable().getName());
                     processMathML(main, sa.getParseTree(), false);
-                    endElement(main, "assignmentRule");
+                    endElement(main, "eq");
+                    endElement(main, "apply");
 
                 }
             }
-            
-            endElement(main,"math");
+
+            endElement(main, "math");
         }
 
         endElement(main, "component");
