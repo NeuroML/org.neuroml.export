@@ -1,0 +1,69 @@
+########################################################################
+## Neuron script automatically generated from a NeuroML 2 description ##
+## This is work in progress...                                        ##
+##                                                                    ##
+## Test file for use with abstract cell (i.e. point neuron in nml2)   ##
+########################################################################
+
+
+
+begintemplate ${id}
+
+public init, topol, basic_shape, subsets, geom, memb
+public x, y, z, position
+
+
+//  Some methods for referencing the cells
+
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
+
+
+create component
+public component
+
+
+objref synlist
+
+proc init() {
+    geom()
+    biophys()
+    geom_nseg()
+    synlist = new List()
+    x = y = z = 0
+    
+}
+
+proc geom() {
+}
+
+
+proc set_initial_v() {
+    // Taken from the initMembPotential value
+#foreach ($imp in $initMembPotential)##
+    forsec $imp.group v = $imp.value  // units: mV
+#end
+}
+
+
+
+
+proc position() { local i
+    forsec all {
+        for i = 0, n3d()-1 {
+            pt3dchange(i, $1+x3d(i), $2+y3d(i), $3+z3d(i), diam3d(i))
+        }
+    }
+    x = $1  y = $2  z = $3
+}
+
+
+
+
+endtemplate ${id}
+
+
+
+
+
+
+

@@ -7,14 +7,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
-
 /**
  * @author borismarin
  * 
  */
 public class InfoNode
 {
-
+    public static String INDENT = "    ";
+    
 	private Map<String, Object> _properties = new LinkedHashMap<String, Object>();
 
 	/**
@@ -44,9 +44,6 @@ public class InfoNode
 		
 	}
 	
-	/**
-	 * 
-	 */
 	public boolean isEmpty()
 	{
 		return _properties.isEmpty();
@@ -66,7 +63,11 @@ public class InfoNode
 			if(obj instanceof InfoNode)
 			{
 				main.append(indent + key + ":\n");
-				main.append(((InfoNode) obj).toTreeString(indent + "\t"));
+				main.append(((InfoNode) obj).toTreeString(indent + INDENT));
+			}
+            else if(obj instanceof PlotNode)
+			{
+				main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
 			}
 			else
 			{
@@ -76,9 +77,7 @@ public class InfoNode
 		return main.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+    @Override
 	public String toString()
 	{
 		return toTreeString("").trim();

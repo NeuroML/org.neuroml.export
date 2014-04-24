@@ -14,5 +14,9 @@ public class GenerationException extends Exception {
     {
         super(comment, t);
     }
+    public GenerationException(String comment)
+    {
+        super(comment);
+    }
     
 }

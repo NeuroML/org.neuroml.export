@@ -6,10 +6,10 @@ package org.neuroml.export.info;
 
 import java.io.File;
 
-import org.lemsml.export.base.GenerationException;
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * 
@@ -29,7 +29,7 @@ public class InfoWriter extends BaseWriter
 	 * @see org.neuroml.export.base.BaseWriter#getMainScript()
 	 */
 	@Override
-	public String getMainScript() throws GenerationException
+	public String getMainScript() throws NeuroMLException
 	{
 		StringBuilder main = new StringBuilder();
 		main.append("Information on contents of NeuroML 2 file\n");
@@ -48,10 +48,12 @@ public class InfoWriter extends BaseWriter
 		//fileName = "../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/CA1.nml";
 		// fileName = "../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/SupAxAx.nml";
 		// fileName = "../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/Gran_KDr_98.nml";
-		//fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
+		fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
+		fileName = "../NeuroML2/examples/NML2_SimpleMorphology.nml";
+		fileName = "../NeuroML2/examples/NML2_SingleCompHHCell.nml";
 		//fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
 		//fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
-		fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
+		//fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));

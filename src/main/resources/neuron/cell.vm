@@ -13,19 +13,21 @@ public x, y, z, position
 
 //  Some methods for referencing the cells
 
-public toString, netInfo, set_initial_v
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
 
 
 #foreach ($s in $sections)##
 // Section: $s.name, id: $s.id, parent: $s.parent
 create $s.name
 public $s.name
-#end
+#end##
 
 #foreach ($g in $groups)##
 // Group: $g
 objref $g.name
-#end
+#end##
+
+objref synlist
 
 proc init() {
     topol()
@@ -33,6 +35,7 @@ proc init() {
     geom()
     biophys()
     geom_nseg()
+    synlist = new List()
     x = y = z = 0
     
 }
@@ -41,8 +44,21 @@ proc set_initial_v() {
     // Taken from the initMembPotential value
 #foreach ($imp in $initMembPotential)##
     forsec $imp.group v = $imp.value  // units: mV
-#end
+#end##
 }
+
+
+proc set_initial_ion_properties() {
+    // From species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        ${sp.ion}i = $sp.initialConcentration  // units: mM
+        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
+    }
+#end##
+}
+
 
 proc topol() {
     /////////// Only works for 1 section!!!
@@ -54,9 +70,9 @@ proc basic_shape() {
 
 #foreach ($s in $sections)##
 // Section: $s.name, id: $s.id, parent: $s.parent
-$s.name {pt3dclear() #foreach ($p in $s.points3d) pt3dadd( $p ) #end
+$s.name {pt3dclear() #foreach ($p in $s.points3d) pt3dadd( $p ) #end##
 }
-#end
+#end##
 
 }
 
@@ -67,11 +83,11 @@ proc subsets() { local i
     $g.name = new SectionList()
 #foreach ($s in $g.sections)##
     $s ${g.name}.append()
-#end
+#end##
 #foreach ($gg in $g.groups)##
     forsec $gg ${g.name}.append()
-#end
-#end
+#end##
+#end##
 
 }
 
@@ -83,39 +99,42 @@ proc biophys() {
     // Specific capacitance
 #foreach ($sc in $specificCapacitance)##
     forsec $sc.group cm = $sc.value  // units: uF/cm2
-#end
+#end##
 
     // Specific axial resistance/resistivity
 #foreach ($res in $resistivity)##
     forsec $res.group Ra = $res.value  // units: ohm cm
-#end
+#end##
 
     // Channel densities
 #foreach ($cd in $channelDensity)##
     forsec $cd.group {
         insert $cd.ionChannel
+#if( $cd.erev == 'calculated_by_GHK_equation' )##
+        // current calculated through GHK flux equation 
+        permeability_$cd.ionChannel = $cd.permeability  // units: cm / s 
+#else##
         gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
 #if( $cd.ion == 'non_specific' )##
         e_$cd.ionChannel = $cd.erev  // units: mV
-#else
+#else##
 #if( $cd.erev == 'calculated_by_Nernst_equation' )##
         // erev is calculated by Nernst equation
-#else
+#else## fixed erev
         e$cd.ion = $cd.erev  // units: mV
-#end
-#end
+#end## if( $cd.erev == 'calculated_by_Nernst_equation' )
+#end## if( $cd.ion == 'non_specific' )
+#end## if( $cd.erev == 'calculated_by_GHK_equation' )
     }
-#end
+#end##foreach ($cd in $channelDensity)
 
     // Concentration models for species
 #foreach ($sp in $species)##
     // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
     forsec $sp.group {
         insert $sp.concentrationModel
-        ${sp.ion}i = $sp.initialConcentration  // units: mM
-        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
     }
-#end
+#end##
 
 }
 
@@ -135,13 +154,6 @@ proc position() { local i
 }
 
 
-
-
 endtemplate ${id}
-
-
-
-
-
 
 

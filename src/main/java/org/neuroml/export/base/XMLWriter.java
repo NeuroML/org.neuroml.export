@@ -272,13 +272,20 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 
 	public void processMathML(StringBuilder main, ParseTree pt) throws ContentError{
+        processMathML(main, pt, true);
+    }
+    
+	public void processMathML(StringBuilder main, ParseTree pt, boolean wrapInMathMLElement) throws ContentError{
 
-		startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
+		if (wrapInMathMLElement)
+            startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
 
 		//addComment(main,"Complete export to MathML not yet implemented!");
-		MathMLWriter mmlw = new MathMLWriter();
+		MathMLWriter mmlw = new MathMLWriter(INDENT, "        ");
 		main.append(mmlw.serialize(pt));
-		endElement(main,"math");
+        
+		if (wrapInMathMLElement)
+            endElement(main,"math");
 	}
 
 

@@ -1,7 +1,7 @@
 language: java
 
 install:
-    - export main_repo_branch=$TRAVIS_BRANCH
+    - export main_repo_branch=development
     - echo $main_repo_branch
     - git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
     - cd org.neuroml.model.injectingplugin
@@ -18,4 +18,9 @@ install:
     - mvn install
     - cd ..
     
+script:
+    - pwd
+    - cd src/test/resources
+    - ls
+    #- make
 

@@ -18,7 +18,8 @@ import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.type.Component;
-import org.neuroml.model.IaFTauCell;
+import org.neuroml.model.IafTauCell;
+import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
 /*
@@ -51,7 +52,7 @@ public class UtilsTest extends TestCase {
     
     
 	
-	public void testGetMagnitudeInSI() throws ParseError, ContentError {
+	public void testGetMagnitudeInSI() throws NeuroMLException {
 		System.out.println("Testing: getMagnitudeInSI()");
 		
 		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
@@ -61,19 +62,25 @@ public class UtilsTest extends TestCase {
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.3 ohm_m"), 1e-6);
         
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.03 kohm_cm"), 1e-6);
+        
+		assertEquals(60, Utils.getMagnitudeInSI("1 min"), 1e-6);
+        
+		assertEquals(1f/3600, Utils.getMagnitudeInSI("1 per_hour"), 1e-6);
+        
+		assertEquals(1e-3, Utils.getMagnitudeInSI("1 litre"), 1e-6);
 	}
     
     
     public void testFilesInJar() throws IOException, ContentError
     {
-        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        String ret = JUtil.getRelativeResource(this.getClass(), "/LEMSexamples/LEMS_NML2_Ex0_IaF.xml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
-        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+        //ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SimpleIonChannel.nml");
     }
     
     public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
         
-        IaFTauCell iaf = new IaFTauCell();
+        IafTauCell iaf = new IafTauCell();
         iaf.setTau("10ms");
         iaf.setLeakReversal("-60mV");
         iaf.setReset("-70mV");
@@ -84,6 +91,18 @@ public class UtilsTest extends TestCase {
         System.out.println("Now: "+comp.details("    "));
         
     }
+    
+    public void testParseCellRefString() throws JAXBException, Exception {
+        
+        String r1 = "../Pop0[0]";
+        String r2 = "../Gran/0/Granule_98";
+        assertEquals("Pop0", Utils.parseCellRefStringForPopulation(r1));        
+        assertEquals("Gran", Utils.parseCellRefStringForPopulation(r2));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r1));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r2));
+
+    }
+    
 	
 
 }

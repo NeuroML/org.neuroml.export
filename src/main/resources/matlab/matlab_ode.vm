@@ -192,7 +192,7 @@ end
 function generate_plots(X)
 
     t = X(:, 1);
-#foreach ($t in $dynamics)##
+#foreach ($t in $dynamics.keySet())##
 #set($i = $velocityCount + 1)##
     $t = X(:, $i);
 #end##

@@ -16,23 +16,47 @@ import org.neuroml.export.AppTest;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
+import org.neuroml.export.Utils;
 
 public class XppWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
-        //Note: only works with this example at the moment!!
+    
+	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-    	
-        
-        ///exampleFile = new File("/home/padraig/org.neuroml.import/src/test/resources/Simple3Species_SBML.xml");
+    	generateMainScript(exampleFilename);
+	}
+    
+    public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
 
+    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+    	generateMainScript(exampleSBML);
+	}
+	
+	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+
+    	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
+        
+        System.out.println("Loaded from: "+localFile);
+        
+		XppWriter xppw = new XppWriter(lems);
+        String ode = xppw.getMainScript();
+
+        File odeFile = new File(AppTest.getTempDir(),localFile.getName().replaceAll("xml", "ode"));
+        System.out.println("Writing to: "+odeFile.getAbsolutePath());
+        
+        FileUtil.writeStringToFile(ode, odeFile);
+
+        
+        assertTrue(odeFile.exists());
+	}
+    
+	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+        
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
 		XppWriter xppw = new XppWriter(lems);
         String ode = xppw.getMainScript();
-
-        //System.out.println(ode);
 
         File odeFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll("xml", "ode"));
         System.out.println("Writing to: "+odeFile.getAbsolutePath());
