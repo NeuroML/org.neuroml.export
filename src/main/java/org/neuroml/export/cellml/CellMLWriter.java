@@ -173,11 +173,13 @@ public class CellMLWriter extends XMLWriter {
 
                 startElement(main, "apply");
                 startEndElement(main, "eq");
+                startElement(main, "apply");
                 startEndElement(main, "diff");
                 startElement(main, "bvar");
                 startEndTextElement(main, "ci", GLOBAL_TIME_CELLML);
                 endElement(main, "bvar");
                 startEndTextElement(main, "ci", td.getVariable());
+                endElement(main, "apply");
                 processMathML(main, td.getParseTree(), false);
                 endElement(main, "apply");
 
@@ -205,6 +207,7 @@ public class CellMLWriter extends XMLWriter {
         startEndElement(connections, "map_components", "component_1="+comp.id, "component_2=environment");
         startEndElement(connections, "map_variables", "variable_1=time", "variable_2=time");
         endElement(connections, "connection");
+        connections.append("\n");
 
     }
 
