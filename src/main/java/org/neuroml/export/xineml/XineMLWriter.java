@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.jlems.core.expression.ParseError;
 
 import org.lemsml.jlems.core.expression.Parser;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
@@ -15,10 +16,12 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
+import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.EventPort;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Parameter;
+import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
@@ -63,7 +66,7 @@ public class XineMLWriter extends XMLWriter {
         return allGeneratedFiles;
     }
 
-    public ArrayList<File> generateAllFiles(File mainFile) throws ContentError, GenerationException, IOException {
+    public ArrayList<File> generateAllFiles(File mainFile) throws ContentError, GenerationException, IOException, ParseError {
 
         String main = generate(mainFile.getParentFile(), mainFile.getName());
         try {
@@ -81,13 +84,15 @@ public class XineMLWriter extends XMLWriter {
             return generate(null, "Test");
         } catch (ContentError e) {
             throw new GenerationException("Error with LEMS content", e);
-        } catch (IOException ex) {
+		} catch (ParseError e) {
+			throw new GenerationException("Error parsing LEMS content", e);
+        } catch (IOException e) {
             throw new GenerationException("Error with file I/O", e);
         }
 
     }
 
-    public String generate(File dirForFiles, String reference) throws GenerationException, IOException, ContentError {
+    public String generate(File dirForFiles, String reference) throws GenerationException, IOException, ContentError, ParseError {
 
         Parser p = new Parser();
 
@@ -154,11 +159,11 @@ public class XineMLWriter extends XMLWriter {
             ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
             if (variant.equals(Variant.SpineML)) {
                 startElement(expLayer, "Experiment", "name=" + simCpt.getID() + "description=Export from LEMS", expLayerFlag);
-                startElement(expLayer, "Model", "network_layer_url=network_" + tgtNet.id + "/>", expLayerFlag);
+                startEndElement(expLayer, "Model", "network_layer_url=network_" + tgtNet.id , expLayerFlag);
 
                 //<Simulation duration="1" preferred_simulator="BRAHMS"><EulerIntegration dt="0.1"/></Simulation>
-                startElement(expLayer, "Simulation", "duration=" + simCpt.getStringValue("length"), expLayerFlag);
-                startEndElement(expLayer, "EulerIntegration", "dt=" + simCpt.getStringValue("step"), expLayerFlag);
+                startElement(expLayer, "Simulation", "duration=" + convertToSIUnits(simCpt.getStringValue("length")), expLayerFlag);
+                startEndElement(expLayer, "EulerIntegration", "dt=" + convertToSIUnits(simCpt.getStringValue("step")), expLayerFlag);
                 endElement(expLayer, "Simulation", expLayerFlag);
 
             }
@@ -406,7 +411,6 @@ public class XineMLWriter extends XMLWriter {
         }
 
         if (variant.equals(Variant.SpineML)) {
-            endElement(expLayer, "Model", expLayerFlag);
             endElement(expLayer, "Experiment", expLayerFlag);
             endElement(expLayer, root, expLayerFlag);
 
@@ -418,6 +422,11 @@ public class XineMLWriter extends XMLWriter {
         }
 
         return mainFile.toString();
+    }
+    
+	private float convertToSIUnits(String neuromlQuantity) throws ParseError, ContentError {
+        DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
+        return (float)dq.getDoubleValue();
     }
 
     private String getSuitableId(String str) {
