@@ -29,7 +29,8 @@ import org.lemsml.jlems.io.util.FileUtil;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class CellMLWriter extends XMLWriter {
 
-    public static final String PREF_CELLML_SCHEMA = "cellml.xsd";
+    public static final String PREF_CELLML_SCHEMA = "http://www.cellml.org/cellml/cellml_1_1.xsd";
+    public static final String PREF_CELLML_VERSION = "http://www.cellml.org/cellml/1.1#";
     public static final String LOCAL_CELLML_SCHEMA = "???.xsd";
 
     public static final String GLOBAL_TIME_CELLML = "time";
@@ -45,6 +46,7 @@ public class CellMLWriter extends XMLWriter {
         Parser p = new Parser();
 
         StringBuilder main = new StringBuilder();
+        StringBuilder connections = new StringBuilder();
 
         try {
             Target target = lems.getTarget();
@@ -60,21 +62,25 @@ public class CellMLWriter extends XMLWriter {
             ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 
             main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
-            //<model name="van_der_pol_model_1928" cmeta:id="van_der_pol_model_1928" xmlns="http://www.cellml.org/cellml/1.0#" 
-            //  xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
 
             String[] attrs = new String[]{"name=" + netId,
-                "cmeta:id=" + netId,
-                "xmlns=http://www.cellml.org/cellml/1.0#",
-                "xmlns:cellml=http://www.cellml.org/cellml/1.0#",
-                "xmlns:cmeta=http://www.cellml.org/metadata/1.0#"};
+                /*"cmeta:id=" + netId,*/
+                "xmlns="+PREF_CELLML_VERSION,
+                /*"xmlns:cellml="+PREF_CELLML_VERSION,
+                "xmlns:cmeta="+PREF_CELLML_VERSION,*/
+                "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation="+PREF_CELLML_VERSION+" "+PREF_CELLML_SCHEMA};
+            
             startElement(main, "model", attrs);
-            startElement(main, "notes");
+            
+            main.append("<!--\n");
+            startElement(main, "documentation");
             startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
             main.append("\n" + Utils.getHeaderComment(format) + "\n");
             main.append("\nExport of model:\n" + lems.textSummary(false, false) + "\n");
             endElement(main, "p");
-            endElement(main, "notes");
+            endElement(main, "documentation");
+            main.append("-->\n");
             main.append("\n");
             
             
@@ -96,10 +102,10 @@ public class CellMLWriter extends XMLWriter {
             int onCondNum = 0;
 
             for (Component pop : pops) {
-                handleComponent(main, pop);
+                handleComponent(main, connections, pop);
                 String compRef = pop.getStringValue("component");
                 Component popComp = lems.getComponent(compRef);
-                handleComponent(main, popComp);
+                handleComponent(main, connections, popComp);
 
                 /*
                  ComponentType type = popComp.getComponentType();
@@ -115,6 +121,8 @@ public class CellMLWriter extends XMLWriter {
             }
 
             main.append("\n");
+            
+            main.append(connections.toString());
 
             endElement(main, "model");
 
@@ -124,7 +132,7 @@ public class CellMLWriter extends XMLWriter {
         return main.toString();
     }
 
-    private void handleComponent(StringBuilder main, Component comp) throws ContentError {
+    private void handleComponent(StringBuilder main, StringBuilder connections, Component comp) throws ContentError {
 
         startElement(main, "component", "name=" + comp.id);
 
@@ -154,10 +162,9 @@ public class CellMLWriter extends XMLWriter {
 
             for (DerivedVariable dv : dyn.getDerivedVariables()) {
                 startElement(main, "apply");
-                startElement(main, "eq");
+                startEndElement(main, "eq");
                 startEndTextElement(main, "ci", dv.getName());
                 processMathML(main, dv.getParseTree(), false);
-                endElement(main, "eq");
                 endElement(main, "apply");
 
             }
@@ -165,14 +172,13 @@ public class CellMLWriter extends XMLWriter {
             for (TimeDerivative td : dyn.getTimeDerivatives()) {
 
                 startElement(main, "apply");
-                startElement(main, "eq");
+                startEndElement(main, "eq");
                 startEndElement(main, "diff");
                 startElement(main, "bvar");
                 startEndTextElement(main, "ci", GLOBAL_TIME_CELLML);
                 endElement(main, "bvar");
                 startEndTextElement(main, "ci", td.getVariable());
                 processMathML(main, td.getParseTree(), false);
-                endElement(main, "eq");
                 endElement(main, "apply");
 
             }
@@ -180,10 +186,9 @@ public class CellMLWriter extends XMLWriter {
             for (OnStart os : dyn.getOnStarts()) {
                 for (StateAssignment sa : os.getStateAssignments()) {
                     startElement(main, "apply");
-                    startElement(main, "eq");
+                    startEndElement(main, "eq");
                     startEndTextElement(main, "ci", sa.getStateVariable().getName());
                     processMathML(main, sa.getParseTree(), false);
-                    endElement(main, "eq");
                     endElement(main, "apply");
 
                 }
@@ -194,6 +199,12 @@ public class CellMLWriter extends XMLWriter {
 
         endElement(main, "component");
         main.append("\n\n");
+        
+                
+        startElement(connections, "connection");
+        startEndElement(connections, "map_components", "component_1="+comp.id, "component_2=environment");
+        startEndElement(connections, "map_variables", "variable_1=time", "variable_2=time");
+        endElement(connections, "connection");
 
     }
 
