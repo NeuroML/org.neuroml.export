@@ -92,7 +92,7 @@ public class CellMLWriter extends XMLWriter {
         
         
             startElement(main, "component", "name=environment");
-            startEndElement(main, "variable", "name=time", "units=millisecond", "public_interface=out");
+            startEndElement(main, "variable", "name=time", "units=second", "public_interface=out");
             endElement(main, "component");
             main.append("\n");
 
@@ -137,7 +137,7 @@ public class CellMLWriter extends XMLWriter {
         startElement(main, "component", "name=" + comp.id);
 
         //<variable name="time" units="millisecond" public_interface="in"/>
-        startEndElement(main, "variable", "name=time", "units=millisecond", "public_interface=in");
+        startEndElement(main, "variable", "name=time", "units=second", "public_interface=in");
 
         for (FinalParam param : comp.getComponentType().getFinalParams()) {
             startEndElement(main,
