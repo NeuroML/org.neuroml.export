@@ -14,7 +14,6 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroML2Validator;
@@ -32,9 +31,16 @@ public class SBMLWriterTest extends TestCase {
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
         generateSBMLAndTestScript(lems, exampleFilename);
         
+	}/*
+	public void testGetMainScript2() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, GenerationException {
+
+    	String exampleFilename = "/home/padraig/git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"; 
+    	Lems lems = Utils.readLemsNeuroMLFile(new File(exampleFilename)).getLems();
+        generateSBMLAndTestScript(lems, "Run_Regular_HindmarshRose.xml");
+        
 	}
-	/*
-	public void testGetMainScript2() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
+	
+	public void testGetMainScript3() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
 
     	String exampleFilename = "LEMS_NML2_Ex0_IaF.xml"; 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

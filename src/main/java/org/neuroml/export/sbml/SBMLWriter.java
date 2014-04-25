@@ -4,6 +4,7 @@
 package org.neuroml.export.sbml;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -36,7 +37,10 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
+import org.lemsml.jlems.io.util.FileUtil;
 
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -183,13 +187,21 @@ public class SBMLWriter extends XMLWriter {
                                 "parameter",
                                 "id=" + param.getName(),
                                 "value=" + (float) popComp.getParamValue(param.getName()).getDoubleValue(),
-                                "constant=false");
+                                "constant=true");
                     }
 
                     for (StateVariable sv : popComp.getComponentType().getDynamics().getStateVariables()) {
                         startEndElement(main,
                                 "parameter",
                                 "id=" + sv.getName(),
+                                "value=0",
+                                "constant=false");
+
+                    }
+                    for (DerivedVariable dv : popComp.getComponentType().getDynamics().getDerivedVariables()) {
+                        startEndElement(main,
+                                "parameter",
+                                "id=" + dv.getName(),
                                 "value=0",
                                 "constant=false");
 
@@ -246,21 +258,15 @@ public class SBMLWriter extends XMLWriter {
 
                     for (TimeDerivative td : type.getDynamics().getTimeDerivatives()) {
                         startElement(main, "rateRule", "variable=" + td.getStateVariable().getName());
-                        //MathMLWriter mmlw = new MathMLWriter();
-                        //E.info("TD: "+mmlw.serialize(td.getParseTree()));
                         processMathML(main, td.getParseTree());
                         endElement(main, "rateRule");
-
+                    }
+                    for (DerivedVariable dv: type.getDynamics().getDerivedVariables()) {
+                        startElement(main, "assignmentRule", "variable=" + dv.getName());
+                        processMathML(main, dv.getParseTree());
+                        endElement(main, "assignmentRule");
                     }
 
-                    for(OnStart os: type.getDynamics().getOnStarts()){
-                        for(StateAssignment sa: os.getStateAssignments()){
-                        startElement(main,"assignmentRule", "variable="+sa.getStateVariable().getName());
-                        processMathML(main, sa.getParseTree());
-                        endElement(main,"assignmentRule");
-
-                        }
-                    }
                 }
 
 
@@ -324,6 +330,32 @@ public class SBMLWriter extends XMLWriter {
 
     private String getSuitableId(String str) {
         return str.replace(" ", "_").replace(".", "").replace("(", "_").replace(")", "_").replace("*", "mult").replace("+", "plus").replace("/", "div");
+    }
+    
+    public static void main(String[] args) throws Exception {
+
+        E.setDebug(false);
+
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
+        //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+
+        for (File lemsFile : lemsFiles) {
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sbml"));
+
+            SBMLWriter cw = new SBMLWriter(lems);
+            String ff = cw.getMainScript();
+            FileUtil.writeStringToFile(ff, mainFile);
+            System.out.println("Generated: " + mainFile.getAbsolutePath());
+        }
+
     }
     
 
