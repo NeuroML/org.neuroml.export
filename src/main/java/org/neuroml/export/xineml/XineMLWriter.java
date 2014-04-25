@@ -20,6 +20,7 @@ import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.EventPort;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Target;
@@ -38,7 +39,17 @@ public class XineMLWriter extends XMLWriter {
 
     public enum Variant {
 
-        NineML, SpineML
+        NineML("9ml"), SpineML("spineml");
+
+        private final String extension;
+
+        private Variant(String e) {
+            extension = e;
+        }
+
+        public String getExtension() {
+            return extension;
+        }
     };
 
     Variant variant = null;
@@ -84,24 +95,23 @@ public class XineMLWriter extends XMLWriter {
             return generate(null, "Test");
         } catch (ContentError e) {
             throw new GenerationException("Error with LEMS content", e);
-		} catch (ParseError e) {
-			throw new GenerationException("Error parsing LEMS content", e);
+        } catch (ParseError e) {
+            throw new GenerationException("Error parsing LEMS content", e);
         } catch (IOException e) {
             throw new GenerationException("Error with file I/O", e);
         }
 
     }
 
-    public String generate(File dirForFiles, String reference) throws GenerationException, IOException, ContentError, ParseError {
-
-        Parser p = new Parser();
+    public String generate(File dirForFiles, String mainFileName) throws GenerationException, IOException, ContentError, ParseError {
 
         StringBuilder mainFile = new StringBuilder();
 
         StringBuilder abstLayer = new StringBuilder();
-        StringBuilder userLayer = new StringBuilder();
+        StringBuilder userNetLayer = new StringBuilder();  // User Layer: 9ml; Network Layer: SpineML
         StringBuilder expLayer = new StringBuilder();
         int expLayerFlag = 3;
+        int userNetLayerFlag = 4; // User Layer: 9ml; Network Layer: SpineML
 
         mainFile.append("<?xml version='1.0' encoding='UTF-8'?>\n");
 
@@ -133,19 +143,34 @@ public class XineMLWriter extends XMLWriter {
 
         startElement(mainFile, root, attrs);
 
-        if (variant.equals(variant.SpineML)) {
+        String info = "\n" + Utils.getHeaderComment(format) + "\n"
+                + "\nExport of model:\n" + lems.textSummary(false, false);
+
+        addComment(mainFile, info);
+        
+        if (variant.equals(Variant.SpineML)) {
+            
+            expLayer.append("<?xml version='1.0' encoding='UTF-8'?>\n");
             String[] attrs_exp = new String[]{"xmlns=" + NAMESPACE_SPINEML_EXP_LAYER,
                 extraAttr,
                 "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
                 "xsi:schemaLocation=" + NAMESPACE_SPINEML_EXP_LAYER + " " + SCHEMA_SPINEML_EXP_LAYER};
 
             startElement(expLayer, root, attrs_exp, expLayerFlag);
+            
+            addComment(expLayer, info);
+            
+            userNetLayer.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+            String[] attrs_net = new String[]{"xmlns=" + NAMESPACE_SPINEML_NET_LAYER,
+                extraAttr,
+                "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation=" + NAMESPACE_SPINEML_NET_LAYER + " " + SCHEMA_SPINEML_NET_LAYER};
+
+            startElement(userNetLayer, root, attrs_net, userNetLayerFlag);
+            
+            addComment(userNetLayer, info);
         }
 
-        String info = "\n" + Utils.getHeaderComment(format) + "\n"
-                + "\nExport of model:\n" + lems.textSummary(false, false) + "\n";
-
-        addComment(mainFile, info);
 
         Target target = lems.getTarget();
         Component simCpt = target.getComponent();
@@ -159,19 +184,19 @@ public class XineMLWriter extends XMLWriter {
             ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
             if (variant.equals(Variant.SpineML)) {
                 startElement(expLayer, "Experiment", "name=" + simCpt.getID() + "description=Export from LEMS", expLayerFlag);
-                startEndElement(expLayer, "Model", "network_layer_url=network_" + tgtNet.id , expLayerFlag);
+                startEndElement(expLayer, "Model", "network_layer_url=network_" + tgtNet.id, expLayerFlag);
 
                 //<Simulation duration="1" preferred_simulator="BRAHMS"><EulerIntegration dt="0.1"/></Simulation>
                 startElement(expLayer, "Simulation", "duration=" + convertToSIUnits(simCpt.getStringValue("length")), expLayerFlag);
                 startEndElement(expLayer, "EulerIntegration", "dt=" + convertToSIUnits(simCpt.getStringValue("step")), expLayerFlag);
                 endElement(expLayer, "Simulation", expLayerFlag);
-
+                
             }
 
             ////addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
             String netId = tgtNet.getID();
             ///startElement(userLayer, "network", "id=" + netId, "name=" + netId);
-            userLayer.append("\n");
+            userNetLayer.append("\n");
 
             //indent="";
             ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
@@ -189,16 +214,28 @@ public class XineMLWriter extends XMLWriter {
                 onCondNum = onCondNum + type.getDynamics().getOnConditions().size();
 
                 int num = Integer.parseInt(pop.getStringValue("size"));
-                addComment(userLayer, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
+                addComment(userNetLayer, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
 
-                for (int i = 0; i < num; i++) {
-                    startEndElement(userLayer, "population", "id=" + pop.getID() + "_" + i, "size=1");
+                startElement(userNetLayer, "Population", userNetLayerFlag);
+                
+                startElement(userNetLayer, "Neuron", "name="+pop.id, "size="+num, "url="+mainFileName, userNetLayerFlag);
+                
+                for (ParamValue pv: popComp.getParamValues()) {
+                    //<Property name="tau_refractory" dimension="mS"><FixedValue value="5"/></Property>
+                    startElement(userNetLayer, "Property", "name="+pv.getName(), "dimension="+defaultDimension, userNetLayerFlag);
+                    startEndElement(userNetLayer, "FixedValue", "value="+pv.getDoubleValue(), userNetLayerFlag);
+                    endElement(userNetLayer, "Property", userNetLayerFlag);
+                    
                 }
+                endElement(userNetLayer, "Neuron", userNetLayerFlag);
+                
+                endElement(userNetLayer, "Population", userNetLayerFlag);
+                
 
             }
 
             ///endElement(userLayer, "groups?");
-            userLayer.append("\n");
+            userNetLayer.append("\n");
 
             ArrayList<String> compTypesAdded = new ArrayList<String>();
 
@@ -407,26 +444,33 @@ public class XineMLWriter extends XMLWriter {
         } catch (ContentError e) {
             throw new GenerationException("Error with LEMS content", e);
 
-     
         }
 
         if (variant.equals(Variant.SpineML)) {
             endElement(expLayer, "Experiment", expLayerFlag);
             endElement(expLayer, root, expLayerFlag);
 
-            String expFilename = "Experiment_" + reference;
+            String expFilename = "Experiment_" + mainFileName;
             File expFile = new File(dirForFiles, expFilename);
 
             FileUtil.writeStringToFile(expLayer.toString(), expFile);
             allGeneratedFiles.add(expFile);
+            
+            
+            endElement(userNetLayer, root, userNetLayerFlag);
+            String userFilename = "NetLayer_" + mainFileName;
+            File netFile = new File(dirForFiles, userFilename);
+
+            FileUtil.writeStringToFile(userNetLayer.toString(), netFile);
+            allGeneratedFiles.add(netFile);
         }
 
         return mainFile.toString();
     }
-    
-	private float convertToSIUnits(String neuromlQuantity) throws ParseError, ContentError {
+
+    private float convertToSIUnits(String neuromlQuantity) throws ParseError, ContentError {
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
-        return (float)dq.getDoubleValue();
+        return (float) dq.getDoubleValue();
     }
 
     private String getSuitableId(String str) {
@@ -441,23 +485,27 @@ public class XineMLWriter extends XMLWriter {
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex2_Izh.xml"));
+        lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
 
-        for (File lemsFile : lemsFiles) {
-            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".9ml"));
+        for (Variant v : new Variant[]{Variant.NineML, Variant.SpineML}) {
 
-            XineMLWriter cw = new XineMLWriter(lems, Variant.NineML);
-            ArrayList<File> sr = cw.generateAllFiles(mainFile);
+            for (File lemsFile : lemsFiles) {
+                Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+                File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "."+v.getExtension()));
 
-            System.out.println("Generated: " + sr);
+                XineMLWriter cw = new XineMLWriter(lems, v);
+                ArrayList<File> sr = cw.generateAllFiles(mainFile);
 
-            for (File f : cw.getFilesGenerated()) {
-                System.out.println("Generated file: " + f.getAbsolutePath());
+                System.out.println("Generated: " + sr);
+
+                for (File f : sr) {
+                    System.out.println("Generated file: " + f.getAbsolutePath());
+                }
             }
         }
 
