@@ -157,9 +157,29 @@ public class CellMLWriter extends XMLWriter {
                         "units=dimensionless");
 
             }
+            
+            for (DerivedVariable dv : dyn.getDerivedVariables()) {
+                startEndElement(main,
+                        "variable",
+                        "name=" + dv.getName(),
+                        "initial_value=0",
+                        "units=dimensionless");
+
+            }
 
             startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
 
+            for (OnStart os : dyn.getOnStarts()) {
+                for (StateAssignment sa : os.getStateAssignments()) {
+                    startElement(main, "apply");
+                    startEndElement(main, "eq");
+                    startEndTextElement(main, "ci", sa.getStateVariable().getName());
+                    processMathML(main, sa.getParseTree(), false);
+                    endElement(main, "apply");
+
+                }
+            }
+            
             for (DerivedVariable dv : dyn.getDerivedVariables()) {
                 startElement(main, "apply");
                 startEndElement(main, "eq");
@@ -185,16 +205,6 @@ public class CellMLWriter extends XMLWriter {
 
             }
 
-            for (OnStart os : dyn.getOnStarts()) {
-                for (StateAssignment sa : os.getStateAssignments()) {
-                    startElement(main, "apply");
-                    startEndElement(main, "eq");
-                    startEndTextElement(main, "ci", sa.getStateVariable().getName());
-                    processMathML(main, sa.getParseTree(), false);
-                    endElement(main, "apply");
-
-                }
-            }
 
             endElement(main, "math");
         }

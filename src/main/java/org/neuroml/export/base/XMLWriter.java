@@ -133,18 +133,22 @@ public abstract class XMLWriter extends BaseWriter {
 		main.append("<"+name+">"+text+"</"+name+">\n");
 	}
 
+	protected void startElement(StringBuilder main, String name, String a1, String a2, Integer flag){
+		startElement(main, name, a1, a2, false, flag);
+	}
+    
 	protected void startElement(StringBuilder main, String name, String a1, String a2){
-		startElement(main, name, a1, a2, false);
+		startElement(main, name, a1, a2, false, DEFAULT_INDENT_FLAG);
 	}
 	protected void startEndElement(StringBuilder main, String name, String a1, String a2){
-		startElement(main, name, a1, a2, true);
+		startElement(main, name, a1, a2, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String a1, String a2, boolean endToo){
+	protected void startElement(StringBuilder main, String name, String a1, String a2, boolean endToo, Integer flag){
 
-		main.append(getIndent(DEFAULT_INDENT_FLAG));
+		main.append(getIndent(flag));
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+end+">\n");
-		if (!endToo) increaseIndent(DEFAULT_INDENT_FLAG);
+		if (!endToo) increaseIndent(flag);
 	}
 	
 	protected String processAttr(String attr) {
@@ -155,18 +159,22 @@ public abstract class XMLWriter extends BaseWriter {
 		
 	}
 
+	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, Integer flag){
+		startElement(main, name, a1, a2, a3, false, flag);
+	}
+
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3){
-		startElement(main, name, a1, a2, a3, false);
+		startElement(main, name, a1, a2, a3, false, DEFAULT_INDENT_FLAG);
 	}
 	protected void startEndElement(StringBuilder main, String name, String a1, String a2, String a3){
-		startElement(main, name, a1, a2, a3, true);
+		startElement(main, name, a1, a2, a3, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, boolean endToo){
+	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, boolean endToo, Integer flag){
 
-		main.append(getIndent(DEFAULT_INDENT_FLAG));
+		main.append(getIndent(flag));
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+end+">\n");
-		if (!endToo) increaseIndent(DEFAULT_INDENT_FLAG);
+		if (!endToo) increaseIndent(flag);
 	}
 
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4){
@@ -194,11 +202,6 @@ public abstract class XMLWriter extends BaseWriter {
 
 		main.append(getIndent(DEFAULT_INDENT_FLAG));
 
-		String[] aa = a1.split("=");
-		String[] aaa = a2.split("=");
-		String[] aaaa = a3.split("=");
-		String[] aaaaa = a4.split("=");
-		String[] aaaaaa = a5.split("=");
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+" "+processAttr(a5)+end+">\n");
 		if (!endToo) increaseIndent(DEFAULT_INDENT_FLAG);
