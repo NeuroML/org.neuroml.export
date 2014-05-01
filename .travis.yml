@@ -22,5 +22,5 @@ script:
     - pwd
     - cd src/test/resources
     - ls
-    #- make
+    - mvn install
 
