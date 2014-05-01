@@ -353,7 +353,7 @@ public class NeuronWriter extends BaseWriter {
 				String mod = generateModFile(popComp);
 				dumpModToFile(popComp, mod);
 
-				main.append("h(\" n_" + popName + " = " + number + " \")\n");
+				main.append("h(\" {n_" + popName + " = " + number + "} \")\n");
 				main.append("h(\" create " + popName + "[" + number + "]\")\n");
 				main.append("h(\" objectvar " + getMechanismName(compTypeName, popName)+ "[" + number + "] \")\n\n");
 
@@ -2093,7 +2093,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));

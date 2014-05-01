@@ -140,6 +140,10 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 var = topSubstitutions.get(key);
             }
         }
+        
+        if (var.equals(NRNConst.NEURON_VOLTAGE)) {
+            var += "(0.5)";
+        }
 
         return var;
 
@@ -156,7 +160,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
 
             if (popComp != null
                     && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)
-                    || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))) {
+                    || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
+                    || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
                     String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
