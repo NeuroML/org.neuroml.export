@@ -44,9 +44,12 @@ public class LEMSQuantityPath {
     }
 
     public String getVariableParts() {
+        return getVariableParts("_");
+    }
+    public String getVariableParts(String separator) {
         StringBuilder var = new StringBuilder();
         for (String varPart: variableParts) {
-            var.append("_").append(varPart);
+            var.append(separator).append(varPart);
         }
         return var.toString().substring(1);
     }
@@ -62,6 +65,20 @@ public class LEMSQuantityPath {
                 return getVariableParts();
             
             default: return getVariableParts();
+        }
+    }
+    
+    public String getVariablePathInPopComp() {
+                
+        switch (myType) {
+            case VAR_IN_SINGLE_COMP: 
+                return variableParts[0];
+            case VAR_IN_CELL_IN_POP: 
+                return getVariableParts("/");
+            case VAR_IN_CELL_IN_POP_LIST: 
+                return getVariableParts("/");
+            
+            default: return getVariableParts("/");
         }
     }
 

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
+import org.lemsml.jlems.core.type.Dimension;
+import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.LEMSQuantityPath;
 import static org.neuroml.export.neuron.NeuronWriter.getNrnSectionName;
@@ -44,6 +47,34 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
             }
         }
 
+    }
+    
+    private Exposure getExposure(Component c, String path) throws ContentError {
+           
+        //System.out.println("Path: "+path+", Comp: "+c);
+        try {
+            Exposure e = c.getComponentType().getExposure(path);
+            return e;
+        } catch (ContentError e) {
+            String child = path.substring(0,path.indexOf("/"));
+            String pathInChild = path.substring(path.indexOf("/")+1);
+            Component ch = null;
+            for (Component chi: c.getAllChildren())
+                if (chi.getID()!=null && chi.getID().equals(child))
+                    ch = chi;
+            if (ch == null)
+                for (Component chi: c.getAllChildren())
+                    if (chi.getTypeName().equals(child))
+                        ch = chi;
+            
+            return getExposure(ch, pathInChild);
+        }
+         
+    }
+    
+    public Dimension getDimension() throws ContentError {
+        String path = getVariablePathInPopComp();
+        return getExposure(popComp, path).getDimension();
     }
 
     public String getNeuronVariableLabel() throws ContentError {

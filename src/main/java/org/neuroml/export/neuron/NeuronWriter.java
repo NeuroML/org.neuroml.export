@@ -603,7 +603,7 @@ public class NeuronWriter extends BaseWriter {
 
 						plots.get(dispGraph).add("# Line, plotting: " + lqp.getQuantity());
 						//plots.get(dispGraph).add("# compMechNamesHoc: " + compMechNamesHoc);
-						plots.get(dispGraph).add("# " + lqp.toString().replaceAll("\n", "\n# "));
+						//plots.get(dispGraph).add("# " + lqp.toString().replaceAll("\n", "\n# "));
 
 						plots.get(dispGraph).add(dispGraph + ".addexpr(\"" + lqp.getNeuronVariableReference() + "\", \"" + lqp.getNeuronVariableReference() + "\", " + plotColour + ", 1, 0.8, 0.9, 2)");
 						plotColour++;
@@ -667,7 +667,7 @@ public class NeuronWriter extends BaseWriter {
 		columnsPre.get(timeRef).add("h(' { v_" + timeRef + " = new Vector() } ')");
 		columnsPre.get(timeRef).add("h(' v_" + timeRef + ".record(&t) ')");
 		columnsPre.get(timeRef).add("h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
-		columnsPost.get(timeRef).add("    f_" + timeRef + "_contents += '%f'%h.v_" + timeRef + ".get(i)");
+		columnsPost.get(timeRef).add("    f_" + timeRef + "_contents += '%f'% (float(h.v_" + timeRef + ".get(i))/1000.0)  # Save in SI units...");
 
 		for (Component ofComp : simCpt.getAllChildren()) {
 			if (ofComp.getName().indexOf("OutputFile") >= 0) {
@@ -679,7 +679,7 @@ public class NeuronWriter extends BaseWriter {
                 if (columnsPost.get(outfileId) == null)
                     columnsPost.put(outfileId, new ArrayList<String>());
                 
-                columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'%h.v_" + timeRef + ".get(i) # Time in first column");
+                columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0) # Time in first column, save in SI units...");
 
 				for (Component colComp : ofComp.getAllChildren()) {
 
@@ -701,8 +701,10 @@ public class NeuronWriter extends BaseWriter {
 								"h(' v_" + colId + ".record(&" + lqp.getNeuronVariableReference()
 								+ ") ')");
 						columnsPre.get(outfileId).add("h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
-
-						columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'%h.v_" + colId + ".get(i)");
+                        
+                        float conv = getNeuronUnitFactor(lqp.getDimension().getName());
+                        String factor = (conv==1) ? "" : " / "+conv;
+						columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'%(float(h.v_" + colId + ".get(i))"+factor+") # Saving as SI, variable has dim: "+lqp.getDimension().getName());
                         
 					}
 				}
@@ -2089,7 +2091,7 @@ public class NeuronWriter extends BaseWriter {
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
         lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
