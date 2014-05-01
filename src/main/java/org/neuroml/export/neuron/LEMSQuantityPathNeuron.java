@@ -46,7 +46,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 }
             }
         }
-
+        
     }
     
     private Exposure getExposure(Component c, String path) throws ContentError {
@@ -74,7 +74,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
     
     public Dimension getDimension() throws ContentError {
         String path = getVariablePathInPopComp();
-        return getExposure(popComp, path).getDimension();
+        Component comp = (myType != Type.VAR_IN_SINGLE_COMP) ? popComp : targetComp;
+        return getExposure(comp, path).getDimension();
     }
 
     public String getNeuronVariableLabel() throws ContentError {
