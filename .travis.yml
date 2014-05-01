@@ -17,10 +17,4 @@ install:
     - cd jLEMS
     - mvn install
     - cd ..
-    
-script:
-    - pwd
-    - cd src/test/resources
-    - ls
-    - mvn install
 
