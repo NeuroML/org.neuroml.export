@@ -1966,6 +1966,8 @@ public class NeuronWriter extends BaseWriter {
 			return "(um2)";
 		} else if (dimensionName.equals("volume")) {
 			return "(um3)";
+		} else if (dimensionName.equals("resistance")) {
+			return "(Mohm)";
 		} else if (dimensionName.equals("concentration")) {
 			return "(mM)";
 		} else if (dimensionName.equals("charge_per_mole")) {
@@ -2015,6 +2017,8 @@ public class NeuronWriter extends BaseWriter {
 			return 1e12f;
 		} else if (dimensionName.equals("volume")) {
 			return 1e18f;
+		} else if (dimensionName.equals("resistance")) {
+			return 1e-6f;
 		} else if (dimensionName.equals("concentration")) {
 			return 1f;
 		} else if (dimensionName.equals("charge_per_mole")) {
@@ -2095,6 +2099,7 @@ public class NeuronWriter extends BaseWriter {
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+        //lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
 
