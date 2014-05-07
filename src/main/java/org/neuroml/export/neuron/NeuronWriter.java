@@ -560,7 +560,7 @@ public class NeuronWriter extends BaseWriter {
             } else {
                 secName = popName+"["+cellNum+"]";
             }
-            inputName += "_"+popName+"_"+cellNum+"_"+secName.replaceAll("\\[", "").replaceAll("\\]", "");
+            inputName += "_"+popName+"_"+cellNum+"_"+secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
 
 			addComment(main, "Adding input: " + explInput);
 
@@ -2106,7 +2106,7 @@ public class NeuronWriter extends BaseWriter {
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
         lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
-        //lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
+        lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
 
