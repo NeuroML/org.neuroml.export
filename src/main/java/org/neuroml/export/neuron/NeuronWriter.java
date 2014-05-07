@@ -681,12 +681,18 @@ public class NeuronWriter extends BaseWriter {
                     columnsPost.put(outfileId, new ArrayList<String>());
                 
                 columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0) # Time in first column, save in SI units...");
-
+                
+                ArrayList<String> colIds =  new ArrayList<String>();
+                        
 				for (Component colComp : ofComp.getAllChildren()) {
 
 					if (colComp.getName().indexOf("OutputColumn") >= 0) {
 
 						String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
+                        while (colIds.contains(colId)) {
+                            colId += "_";
+                        }
+                        colIds.add(colId);
 						String quantity = colComp.getStringValue("quantity");
 						String scale = "1";
                         
@@ -2099,7 +2105,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
-        //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+        lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
         //lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
