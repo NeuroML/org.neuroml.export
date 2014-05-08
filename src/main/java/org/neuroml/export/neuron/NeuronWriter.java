@@ -375,6 +375,7 @@ public class NeuronWriter extends BaseWriter {
 
 				main.append("    h." + instName + ".push()\n");
 				main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { " + getMechanismName(compTypeName, popName)+ "[%i] = new " + compTypeName + "(0.5) } \"%(i,i))\n\n");
+				
 
 				if (!compMechsCreated.containsKey(compTypeName)) {
 					compMechsCreated.put(compTypeName, 0);
@@ -393,6 +394,7 @@ public class NeuronWriter extends BaseWriter {
 				for (ParamValue pv : pvs) {
 					main.append("    " + "h." + hocMechName + "." + pv.getName() + " = " + convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
 				}
+                main.append("    h.pop_section()\n");
 
 			}
 
@@ -668,7 +670,7 @@ public class NeuronWriter extends BaseWriter {
 		columnsPre.get(timeRef).add("h(' { v_" + timeRef + " = new Vector() } ')");
 		columnsPre.get(timeRef).add("h(' v_" + timeRef + ".record(&t) ')");
 		columnsPre.get(timeRef).add("h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
-		columnsPost.get(timeRef).add("    f_" + timeRef + "_contents += '%f'% (float(h.v_" + timeRef + ".get(i))/1000.0)  # Save in SI units...");
+		columnsPost.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% (float(h.v_" + timeRef + ".get(i))/1000.0))  # Save in SI units...");
 
 		for (Component ofComp : simCpt.getAllChildren()) {
 			if (ofComp.getName().indexOf("OutputFile") >= 0) {
@@ -680,7 +682,7 @@ public class NeuronWriter extends BaseWriter {
                 if (columnsPost.get(outfileId) == null)
                     columnsPost.put(outfileId, new ArrayList<String>());
                 
-                columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0) # Time in first column, save in SI units...");
+                columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%f\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0)) # Time in first column, save in SI units...");
                 
                 ArrayList<String> colIds =  new ArrayList<String>();
                         
@@ -711,7 +713,7 @@ public class NeuronWriter extends BaseWriter {
                         
                         float conv = getNeuronUnitFactor(lqp.getDimension().getName());
                         String factor = (conv==1) ? "" : " / "+conv;
-						columnsPost.get(outfileId).add("    f_" + outfileId + "_contents += '%f\\t'%(float(h.v_" + colId + ".get(i))"+factor+") # Saving as SI, variable has dim: "+lqp.getDimension().getName());
+						columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%f\\t'%(float(h.v_" + colId + ".get(i))"+factor+")) # Saving as SI, variable has dim: "+lqp.getDimension().getName());
                         
 					}
 				}
@@ -742,16 +744,18 @@ public class NeuronWriter extends BaseWriter {
 
 		for (String f : outfiles.keySet()) {
 			addComment(main, "File to save: " + f);
-            String contents = "f_" + f + "_contents";
-			main.append(contents+" = ''\n");
+            //String contents = "f_" + f + "_contents";
+			//main.append(contents+" = ''\n");
+            
+			main.append("f_" + f + "_f2 = open('"+outfiles.get(f)+"', 'w')\n");
 			main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
 			for (String col : columnsPost.get(f)) {
 				main.append(col + "\n");
 			}
-            main.append("    "+contents+" += \"\\n\"\n");
+            main.append("    f_" + f + "_f2.write(\"\\n\")\n");
             
-			main.append("f_" + f + "_f2 = open('"+outfiles.get(f)+"', 'w')\n");
-			main.append("f_" + f + "_f2.write(f_" + f + "_contents)\n");
+			//main.append("f_" + f + "_f2.write(f_" + f + "_contents)\n");
+			main.append("f_" + f + "_f2.close()\n");
 			main.append("print(\"Saved data to: " + outfiles.get(f) + "\")\n");
 
 			main.append("\n");
@@ -2101,16 +2105,18 @@ public class NeuronWriter extends BaseWriter {
         ArrayList<File> lemsFiles = new ArrayList<File>();
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
-        lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+        //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
 
         NeuronWriter nw = null;
+        String testScript = "";
+        
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
@@ -2120,7 +2126,20 @@ public class NeuronWriter extends BaseWriter {
             for (File f : ff) {
                 System.out.println("Generated: " + f.getAbsolutePath());
             }
+            testScript += "\necho Testing "+lemsFile.getAbsolutePath()+"\n";
+            testScript += "echo\n";
+            testScript += "echo\n";
+            testScript += "cd "+lemsFile.getParentFile().getCanonicalPath()+"\n";
+            testScript += "nrnivmodl\n";
+            testScript += "nrngui -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
+            testScript += "\n";
         }
+        File t = new File("test.sh");
+        FileUtil.writeStringToFile(testScript, t);
+        System.out.println("Written file to test conversions to: "+t.getAbsolutePath());
+        
+        
+        
         
         String[] qs = {"1 mV", "1.234mV", "1.2e-4V", "1.23e-5A", "1.23e4A", "1.45E-8 m", "1.23E-8m2", "60", "6000", "123000"};
         for (String s : qs) {

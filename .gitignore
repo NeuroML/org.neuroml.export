@@ -1,3 +1,4 @@
+/test.sh
 /NML2_Overview.gv
 /.pydevproject
 *.*~
@@ -8,3 +9,7 @@
 target
 
 src/test/resources/tmp
+src/test/resources/*.mod
+src/test/resources/*.dat
+src/test/resources/*nrn*
+x86_64
