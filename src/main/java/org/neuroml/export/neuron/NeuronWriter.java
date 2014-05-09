@@ -1892,7 +1892,7 @@ public class NeuronWriter extends BaseWriter {
 								if (eqn.length() > 0) {
 									eqn = eqn + op;
 								}
-								eqn = eqn + childComp.getID() + "_" + path;
+								eqn = eqn + (childComp.getID()!=null?childComp.getID():childComp.getName()) + "_" + path;
 							}
 							eqn = eqn + " ? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren() + ")";
 						}
@@ -1933,14 +1933,14 @@ public class NeuronWriter extends BaseWriter {
 					String rate = checkForStateVarsAndNested(c.getValueExpression(), comp, paramMappings);
 
 					String cond = "\n} else ";
-				if (c.condition != null) {
-					String cond_ = checkForStateVarsAndNested(c.condition, comp, paramMappings);
-					cond = "if (" + cond_ + ") ";
-					if (block.length() != 0)
-						cond = "else " + cond;
-				}
+                    if (c.condition != null) {
+                        String cond_ = checkForStateVarsAndNested(c.condition, comp, paramMappings);
+                        cond = "if (" + cond_ + ") ";
+                        if (block.length() != 0)
+                            cond = "\n} else " + cond;
+                    }
 
-				block.append(cond + " { \n    " + prefix + cdv.getName() + " = " + rate + " ? evaluable cdv");
+                    block.append(cond + " { \n    " + prefix + cdv.getName() + " = " + rate + " ? evaluable cdv");
 				}
 
 				blockForEqns.append(block + "\n}\n\n");
