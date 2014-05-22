@@ -3,6 +3,7 @@
  */
 package org.neuroml.export.base;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -24,12 +25,14 @@ import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.Member;
 import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
+import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
 import org.neuroml.model.Resistivity;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpecificCapacitance;
+import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
 /**
@@ -55,7 +58,7 @@ public class JSONCellSerializer {
 		g.writeArrayFieldStart("sections");
 		Morphology morph = cell.getMorphology();
 		HashMap<Integer, String> idsVsNames = new HashMap<Integer, String>();
-	
+            
 		for (Segment seg: morph.getSegment()) {
 	
 			g.writeStartObject();
@@ -64,8 +67,12 @@ public class JSONCellSerializer {
 			//g.writeObjectFieldStart(name);
 			g.writeStringField("name",name);
 			g.writeStringField("id",seg.getId()+"");
-			String parent = (seg.getParent()==null || seg.getParent().getSegment()==null) ? "-1" : idsVsNames.get(seg.getParent().getSegment());
-			g.writeStringField("parent",parent);
+            if (seg.getParent()!=null && seg.getParent().getSegment()!=null)
+            {
+                String parent = idsVsNames.get(seg.getParent().getSegment());
+                g.writeStringField("parent",parent);
+                g.writeNumberField("fractionAlong", seg.getParent().getFractionAlong());
+            }
 			String comments = null;
 			g.writeArrayFieldStart("points3d");
 			Point3DWithDiam p0 = seg.getDistal();
@@ -264,5 +271,17 @@ public class JSONCellSerializer {
 		return sw.toString();
 	
 	}
+    
+    
+	public static void main(String[] args) throws Exception {
+        NeuroMLConverter conv = new NeuroMLConverter();
+        NeuroMLDocument nml2 = conv.loadNeuroML(new File("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml"));
+        
+        Cell cell = nml2.getCell().get(0);
+        System.out.println("cell: "+cell.getId());
+        
+        String json = cellToJson(cell, NeuronWriter.SupportedUnits.NEURON);
+        System.out.println(json);
+    }
 
 }
