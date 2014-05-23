@@ -57,18 +57,22 @@ public class JSONCellSerializer {
 	
 		g.writeArrayFieldStart("sections");
 		Morphology morph = cell.getMorphology();
-		HashMap<Integer, String> idsVsNames = new HashMap<Integer, String>();
+		HashMap<Integer, Segment> idsVsSegments = new HashMap<Integer, Segment>();
+        HashMap<Integer, String> idsVsNames = new HashMap<Integer, String>();
             
 		for (Segment seg: morph.getSegment()) {
-	
+            System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
 			g.writeStartObject();
 			String name = NeuronWriter.getNrnSectionName(seg);
-			idsVsNames.put(seg.getId(), name);
+			idsVsSegments.put(seg.getId(), seg);
+            idsVsNames.put(seg.getId(), name);
 			//g.writeObjectFieldStart(name);
 			g.writeStringField("name",name);
 			g.writeStringField("id",seg.getId()+"");
+            Segment parentSegment = null;
             if (seg.getParent()!=null && seg.getParent().getSegment()!=null)
             {
+                parentSegment = idsVsSegments.get(seg.getParent().getSegment());
                 String parent = idsVsNames.get(seg.getParent().getSegment());
                 g.writeStringField("parent",parent);
                 g.writeNumberField("fractionAlong", seg.getParent().getFractionAlong());
@@ -78,6 +82,8 @@ public class JSONCellSerializer {
 			Point3DWithDiam p0 = seg.getDistal();
 			g.writeString(String.format("%g, %g, %g, %g", p0.getX(), p0.getY(), p0.getZ(), p0.getDiameter()));
 			Point3DWithDiam p1 = seg.getProximal();
+            if (p1==null)
+                p1 = parentSegment.getDistal();
 			if (p0.getX() == p1.getX() &&
 					p0.getY() == p1.getY() &&
 					p0.getZ() == p1.getZ() &&
@@ -275,7 +281,10 @@ public class JSONCellSerializer {
     
 	public static void main(String[] args) throws Exception {
         NeuroMLConverter conv = new NeuroMLConverter();
-        NeuroMLDocument nml2 = conv.loadNeuroML(new File("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml"));
+        //String test = "/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml";
+        String test = "/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml";
+        NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));
+        
         
         Cell cell = nml2.getCell().get(0);
         System.out.println("cell: "+cell.getId());
