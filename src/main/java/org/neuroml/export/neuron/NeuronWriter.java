@@ -167,12 +167,14 @@ public class NeuronWriter extends BaseWriter {
 		// Change to: 100 * v
 		if (newExpr.charAt(0) == '(') {
 			int nextBracket = newExpr.indexOf(")");
-			String num = newExpr.substring(1, nextBracket - 1).trim();
+			String num = newExpr.substring(1, nextBracket).trim();
 			try {
 				float f = Float.parseFloat(num);
 				newExpr = f + " " + newExpr.substring(nextBracket + 1);
+                //System.out.println("--------------------num: "+num+", f "+f+", newExpr "+newExpr);
 			} catch (NumberFormatException e) {
 			}
+            
 		}
 
 		return newExpr;
@@ -244,7 +246,7 @@ public class NeuronWriter extends BaseWriter {
 			String compReference;
 			String popName;
 			int number;
-			Component popComp;
+			Component popComp; 
 
 			if (popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION)) {
 				compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
@@ -285,7 +287,7 @@ public class NeuronWriter extends BaseWriter {
 					+ " \"\n\n");
 
 			if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
-
+                
 				Cell cell = getCellFromComponent(popComp);
 				compIdsVsCells.put(popComp.getID(), cell);
 				String cellString = generateCellFile(cell);
@@ -2105,14 +2107,16 @@ public class NeuronWriter extends BaseWriter {
         ArrayList<File> lemsFiles = new ArrayList<File>();
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
 
         NeuronWriter nw = null;
         String testScript = "";

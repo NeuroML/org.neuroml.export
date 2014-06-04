@@ -1,5 +1,6 @@
 package org.lemsml.export.dlems;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -388,5 +389,34 @@ public class DLemsWriter extends BaseWriter
 		}
 		return comp;
 	}
+    
+    
+	public static void main(String[] args) throws Exception {
+
+		
+        
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+
+        DLemsWriter dw = null;
+        String testScript = "";
+        
+        for (File lemsFile: lemsFiles) {
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
+
+            dw = new DLemsWriter(lems);
+            String ff = dw.getMainScript();
+            System.out.println("Output from "+lemsFile+": ------------\n"+ff);
+            
+            
+        }
+        
+        
+        
+	}
+
 
 }
