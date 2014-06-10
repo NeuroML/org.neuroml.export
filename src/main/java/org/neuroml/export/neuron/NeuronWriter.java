@@ -288,7 +288,7 @@ public class NeuronWriter extends BaseWriter {
 
 			if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
                 
-				Cell cell = getCellFromComponent(popComp);
+				Cell cell = Utils.getCellFromComponent(popComp);
 				compIdsVsCells.put(popComp.getID(), cell);
 				String cellString = generateCellFile(cell);
 				String cellName = popComp.getID();
@@ -794,13 +794,6 @@ public class NeuronWriter extends BaseWriter {
 		} catch (IOException ex) {
 			throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
 		}
-	}
-
-	public static Cell getCellFromComponent(Component comp)
-			throws ContentError, ParseError, IOException, JAXBException {
-		LinkedHashMap<String, Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
-		Cell cell = (Cell) els.values().iterator().next();
-		return cell;
 	}
 
 	public static String generateCellFile(Cell cell) throws ContentError, ParseError, IOException, JAXBException, NeuroMLException {

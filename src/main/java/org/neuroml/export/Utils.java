@@ -26,6 +26,7 @@ import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.model.Cell;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroML2Validator;
@@ -214,7 +215,6 @@ public class Utils {
     {
         XMLSerializer xmlSer = XMLSerializer.newInstance();
         String compString = xmlSer.writeObject(comp);
-        System.out.println(compString);
         
         NeuroMLConverter nmlc = new NeuroMLConverter();
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" +
@@ -235,6 +235,13 @@ public class Utils {
 			throw new NeuroMLException(e);
 		}
     }
+    
+	public static Cell getCellFromComponent(Component comp)
+			throws ContentError, ParseError, IOException, JAXBException {
+		LinkedHashMap<String, Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
+		Cell cell = (Cell) els.values().iterator().next();
+		return cell;
+	}
 
     public static Sim convertNeuroMLToSim(Standalone nmlElement) throws NeuroMLException
     {
