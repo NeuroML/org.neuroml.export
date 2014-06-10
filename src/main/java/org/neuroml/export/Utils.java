@@ -22,6 +22,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.io.IOUtil;
 import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
@@ -311,6 +312,25 @@ public class Utils {
             }
         }
         return list;
+    }
+    
+    public static void runLemsFile(File f) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
+        loadLemsFile(f, true);
+    }
+
+    public static void loadLemsFile(File f, boolean run) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError {
+
+        Sim sim = Utils.readLemsNeuroMLFile(f);
+        sim.build();
+
+        if (run) {
+            sim.run();
+            IOUtil.saveReportAndTimesFile(sim);
+            E.info("Finished reading, building, running and displaying LEMS model");
+        } else {
+            E.info("Finished reading and building LEMS model");
+        }
+
     }
     
 

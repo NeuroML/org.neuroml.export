@@ -18,7 +18,11 @@ import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.run.ConnectionError;
+import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.ParseException;
+import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
@@ -42,6 +46,7 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
+import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.LEMSQuantityPath;
 import org.neuroml.export.Utils;
@@ -64,13 +69,31 @@ public class NeuronWriter extends BaseWriter {
 	private File dirForMods;
 
 	ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+	boolean nogui = false;
 	static boolean debug = false;
+    
     
 	public enum ChannelConductanceOption {
 		FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK;
 		float erev;
 
 	};
+    
+    
+    
+    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws ContentError, ParseError, ConnectionError, BuildException, BuildException, RuntimeError, ParseException, XMLException, GenerationException, NeuroMLException, IOException {
+        
+        Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+
+        NeuronWriter nw = new NeuronWriter(lems);
+        nw.nogui = nogui;
+        String nrn = nw.getMainScript();
+
+        File nrnFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
+        E.info("Writing to: " + nrnFile.getAbsolutePath());
+
+        FileUtil.writeStringToFile(nrn, nrnFile);
+    }
 
 	public NeuronWriter(Lems l) {
 		super(l, NRNConst.NEURON_FORMAT);
@@ -90,6 +113,16 @@ public class NeuronWriter extends BaseWriter {
 	private void reset() {
 		allGeneratedFiles.clear();
 	}
+    
+    public void setNoGui(boolean nogui) {
+        this.nogui = nogui;
+    }
+
+    public boolean isNoGui() {
+        return nogui;
+    }
+    
+    
 
 	public ArrayList<File> generateMainScriptAndMods(File mainFile)
 			throws ContentError, ParseError, IOException, JAXBException,
@@ -131,7 +164,7 @@ public class NeuronWriter extends BaseWriter {
 	private static String checkForBinaryOperators(String expr) {
 		return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=")
 				.replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=")
-				.replace("\\.and\\.", "&&");
+				.replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
 	}
 
 	private static String checkForStateVarsAndNested(String expr,
@@ -151,6 +184,7 @@ public class NeuronWriter extends BaseWriter {
 		newExpr = newExpr.replaceAll("\\.leq\\.", "<=");
 		newExpr = newExpr.replaceAll("\\.lt\\.", "<=");
 		newExpr = newExpr.replaceAll("\\.eq\\.", "==");
+		newExpr = newExpr.replaceAll("\\.neq\\.", "!=");
 		newExpr = newExpr.replaceAll("\\.and.", "&&");
 
 		newExpr = newExpr.replaceAll(" ln\\(", " log(");
@@ -196,7 +230,12 @@ public class NeuronWriter extends BaseWriter {
 
 		main.append("import neuron\n");
 		main.append("h = neuron.h\n");
-		main.append("h.load_file(\"nrngui.hoc\")\n\n");
+        if (nogui) {
+            main.append("h.load_file(\"stdlib.hoc\")\n\n");
+            main.append("h.load_file(\"stdgui.hoc\")\n\n");
+        } else {
+            main.append("h.load_file(\"nrngui.hoc\")\n\n");
+        }
 		main.append("h(\"objref p\")\n");
 		main.append("h(\"p = new PythonObject()\")\n\n");
 
@@ -584,42 +623,44 @@ public class NeuronWriter extends BaseWriter {
 		ArrayList<String> displayGraphs = new ArrayList<String>();
 		HashMap<String, ArrayList<String>> plots = new HashMap<String, ArrayList<String>>();
 
-		for (Component dispComp : simCpt.getAllChildren()) {
-			if (dispComp.getName().indexOf("Display") >= 0) {
+        if (!nogui) {
+            for (Component dispComp : simCpt.getAllChildren()) {
+                if (dispComp.getName().indexOf("Display") >= 0) {
 
-				String dispId = dispComp.getID();
-				int plotColour = 1;
+                    String dispId = dispComp.getID();
+                    int plotColour = 1;
 
-                String dispGraph = "display_" + dispId;
-                if (!displayGraphs.contains(dispGraph)) {
-                    displayGraphs.add(dispGraph);
+                    String dispGraph = "display_" + dispId;
+                    if (!displayGraphs.contains(dispGraph)) {
+                        displayGraphs.add(dispGraph);
+                    }
+
+                    for (Component lineComp : dispComp.getAllChildren()) {
+                        if (lineComp.getName().indexOf("Line") >= 0) {
+
+                            String quantity = lineComp.getStringValue("quantity");
+                            String scale = lineComp.getStringValue("scale");
+
+                            LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
+
+                            if (plots.get(dispGraph) == null)
+                                plots.put(dispGraph, new ArrayList<String>());
+
+                            plots.get(dispGraph).add("# Line, plotting: " + lqp.getQuantity());
+                            //plots.get(dispGraph).add("# compMechNamesHoc: " + compMechNamesHoc);
+                            //plots.get(dispGraph).add("# " + lqp.toString().replaceAll("\n", "\n# "));
+
+                            plots.get(dispGraph).add(dispGraph + ".addexpr(\"" + lqp.getNeuronVariableReference() + "\", \"" + lqp.getNeuronVariableReference() + "\", " + plotColour + ", 1, 0.8, 0.9, 2)");
+                            plotColour++;
+                            if (plotColour > 10) {
+                                plotColour = 1;
+                            }
+
+                        }
+                    }
                 }
-
-				for (Component lineComp : dispComp.getAllChildren()) {
-					if (lineComp.getName().indexOf("Line") >= 0) {
-
-						String quantity = lineComp.getStringValue("quantity");
-						String scale = lineComp.getStringValue("scale");
-                        
-                        LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
-                        
-						if (plots.get(dispGraph) == null)
-							plots.put(dispGraph, new ArrayList<String>());
-
-						plots.get(dispGraph).add("# Line, plotting: " + lqp.getQuantity());
-						//plots.get(dispGraph).add("# compMechNamesHoc: " + compMechNamesHoc);
-						//plots.get(dispGraph).add("# " + lqp.toString().replaceAll("\n", "\n# "));
-
-						plots.get(dispGraph).add(dispGraph + ".addexpr(\"" + lqp.getNeuronVariableReference() + "\", \"" + lqp.getNeuronVariableReference() + "\", " + plotColour + ", 1, 0.8, 0.9, 2)");
-						plotColour++;
-						if (plotColour > 10) {
-							plotColour = 1;
-						}
-
-					}
-				}
-			}
-		}
+            }
+        }
 		main.append(toRec);
 
 		String len = simCpt.getStringValue("length");
@@ -640,18 +681,20 @@ public class NeuronWriter extends BaseWriter {
 		main.append("h.dt = " + dt + "\n\n");
 		main.append("h.steps_per_ms = " + (float) (1d / Double.parseDouble(dt)) + "\n\n");
 
-		// main.append("objref SampleGraph\n");
-		for (String dg : displayGraphs) {
-			addComment(main, "Display: " + dg);
-			main.append(dg + " = h.Graph(0)\n");
-			main.append(dg + ".size(0,h.tstop,-80.0,50.0)\n");
-			main.append(dg + ".view(0, -80.0, h.tstop, 130.0, 80, 330, 330, 250)\n");
-			main.append("h.graphList[0].append(" + dg + ")\n");
-			for (String plot : plots.get(dg)) {
-				main.append(plot + "\n");
-			}
-			main.append("\n");
-		}
+        
+        if (!nogui) {
+            for (String dg : displayGraphs) {
+                addComment(main, "Display: " + dg);
+                main.append(dg + " = h.Graph(0)\n");
+                main.append(dg + ".size(0,h.tstop,-80.0,50.0)\n");
+                main.append(dg + ".view(0, -80.0, h.tstop, 130.0, 80, 330, 330, 250)\n");
+                main.append("h.graphList[0].append(" + dg + ")\n");
+                for (String plot : plots.get(dg)) {
+                    main.append(plot + "\n");
+                }
+                main.append("\n");
+            }
+        }
 
 		main.append("\n\n");
 
@@ -734,7 +777,7 @@ public class NeuronWriter extends BaseWriter {
 
 		main.append("\n\n");
 
-		main.append("h.nrncontrolmenu()\n");
+		if (!nogui) main.append("h.nrncontrolmenu()\n");
 
 		main.append("h.run()\n\n");
 
@@ -764,6 +807,9 @@ public class NeuronWriter extends BaseWriter {
 		}
 
 		main.append("print \"Done\"\n\n");
+        if (nogui) {
+            main.append("quit()\n");
+        }
 
 		return main.toString();
 	}
@@ -2101,6 +2147,7 @@ public class NeuronWriter extends BaseWriter {
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
@@ -2109,7 +2156,7 @@ public class NeuronWriter extends BaseWriter {
         
         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));*/
 
         NeuronWriter nw = null;
         String testScript = "";
@@ -2119,6 +2166,7 @@ public class NeuronWriter extends BaseWriter {
             File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
             nw = new NeuronWriter(lems);
+            nw.setNoGui(true);
             ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
             for (File f : ff) {
                 System.out.println("Generated: " + f.getAbsolutePath());
@@ -2128,7 +2176,8 @@ public class NeuronWriter extends BaseWriter {
             testScript += "echo\n";
             testScript += "cd "+lemsFile.getParentFile().getCanonicalPath()+"\n";
             testScript += "nrnivmodl\n";
-            testScript += "nrngui -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
+            String nrn = nw.isNoGui() ? "nrniv" : "nrngui";
+            testScript += nrn+" -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
             testScript += "\n";
         }
         File t = new File("test.sh");
