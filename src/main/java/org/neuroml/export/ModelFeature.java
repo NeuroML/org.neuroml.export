@@ -30,8 +30,11 @@ public enum ModelFeature {
     
     SINGLE_COMP_MODEL("Model with only a single component (no network)"),
     NETWORK_MODEL("Network model"),
+    MULTI_POPULATION_MODEL("Network model with multiple populations of cells"),
+    NETWORK_WITH_INPUTS_MODEL("Network model with external inputs to cells"),
+    NETWORK_WITH_PROJECTIONS_MODEL("Network model with projections between populations"),
     ABSTRACT_CELL_MODEL("Model with abstract (non conductance based) cell(s)"),
-    SINGLE_COMP_COND_BASED_CELL_MODEL("Model with single compartment cell(s)"),
+    COND_BASED_CELL_MODEL("Model with conductance based cell(s)"),
     MULTICOMPARTMENTAL_CELL_MODEL("Model with multicompartmental cell(s)"),
     HH_CHANNEL_MODEL("Model with HH ion channel(s)");
         
@@ -58,26 +61,34 @@ public enum ModelFeature {
 
 		Component targetComp = lems.getComponent(targetId);
         
-        ArrayList<Component> popsOrComponents = targetComp.getChildrenAL("populations");
+        ArrayList<Component> populations = targetComp.getChildrenAL("populations");
 
-		if (popsOrComponents.isEmpty()) {
+		if (populations.isEmpty()) {
 			addIfNotPresent(mfs, SINGLE_COMP_MODEL);
 		} else {
 			addIfNotPresent(mfs, NETWORK_MODEL);
-            for (Component popsOrComponent : popsOrComponents) {
+            if (populations.size()>1) 
+            {
+                addIfNotPresent(mfs, MULTI_POPULATION_MODEL);
+            }
+            for (Component pop : populations) {
         
-                if (popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION) ||
-                    popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST)) {
+                if (pop.getComponentType().getName().equals(NeuroMLElements.POPULATION) ||
+                    pop.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST)) {
 
-                    String compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
+                    String compReference = pop.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
                     Component popComp = lems.getComponent(compReference);
                     
-                    if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
-                        Cell cell = Utils.getCellFromComponent(popComp);
-                        if (cell.getMorphology().getSegment().size()>1) {
-                            addIfNotPresent(mfs, MULTICOMPARTMENTAL_CELL_MODEL);
-                        } else {
-                            addIfNotPresent(mfs, SINGLE_COMP_COND_BASED_CELL_MODEL);
+                    if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) ||
+                        popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_POINT_COND_BASED) ||
+                        popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_POINT_COND_BASED_CA)) {
+                        
+                        addIfNotPresent(mfs, COND_BASED_CELL_MODEL);
+                        if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
+                            Cell cell = Utils.getCellFromComponent(popComp);
+                            if (cell.getMorphology().getSegment().size()>1) {
+                                addIfNotPresent(mfs, MULTICOMPARTMENTAL_CELL_MODEL);
+                            } 
                         }
                     } else {
                          addIfNotPresent(mfs, ABSTRACT_CELL_MODEL);
@@ -85,6 +96,20 @@ public enum ModelFeature {
                 }
             }
         }
+        
+        if (targetComp.getChildrenAL("inputs").size() > 0 ||
+            targetComp.getChildrenAL("explicitInputs").size() > 0)
+        {
+            addIfNotPresent(mfs, NETWORK_WITH_INPUTS_MODEL);
+        };
+        
+        if (targetComp.getChildrenAL("projections").size() > 0 ||
+            targetComp.getChildrenAL("synapticConnections").size() > 0)
+        {
+            addIfNotPresent(mfs, NETWORK_WITH_PROJECTIONS_MODEL);
+        };
+        
+        
         
         return mfs;
     }
