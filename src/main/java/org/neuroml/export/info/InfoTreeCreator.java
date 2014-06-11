@@ -14,6 +14,7 @@ import org.neuroml.export.info.model.ChannelInfoExtractor;
 import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
+import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.IonChannel;
 import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
@@ -21,6 +22,8 @@ import org.neuroml.model.Network;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Population;
 import org.neuroml.model.Projection;
+import org.neuroml.model.Resistivity;
+import org.neuroml.model.SpecificCapacitance;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
@@ -83,6 +86,41 @@ public class InfoTreeCreator
                             cProps.put("Segment group", "all");
                         }
                     }
+                    for (SpecificCapacitance sc: mp.getSpecificCapacitance()) 
+                    {
+                        InfoNode scProps = new InfoNode();
+                        scProps.put("Value", formatDimensionalQuantity(sc.getValue()));
+                        
+                        if (sc.getSegmentGroup() !=null) {
+                            cellProps.put("Specific capacitance on group "+sc.getSegmentGroup(), scProps);
+                            scProps.put("Segment group", sc.getSegmentGroup());
+                        } else if (sc.getSegment() !=null) {
+                            cellProps.put("Specific capacitance on segment "+sc.getSegment(), scProps);
+                            scProps.put("Segment", sc.getSegment());
+                        } else {
+                            cellProps.put("Specific capacitance", scProps);
+                            scProps.put("Segment group", "all");
+                        } 
+                    }
+                    IntracellularProperties ip = cell.getBiophysicalProperties().getIntracellularProperties();
+                    
+                    for (Resistivity res: ip.getResistivity()) 
+                    {
+                        InfoNode resProps = new InfoNode();
+                        resProps.put("Value", formatDimensionalQuantity(res.getValue()));
+                        
+                        if (res.getSegmentGroup() !=null) {
+                            cellProps.put("Resistivity on group "+res.getSegmentGroup(), resProps);
+                            resProps.put("Segment group", res.getSegmentGroup());
+                        } else if (res.getSegment() !=null) {
+                            cellProps.put("Resistivity on segment "+res.getSegment(), resProps);
+                            resProps.put("Segment", res.getSegment());
+                        } else {
+                            cellProps.put("Resistivity", resProps);
+                            resProps.put("Segment group", "all");
+                        } 
+                    }
+                    
                 }
 
                 infoRoot.put("Cell " + cell.getId(), cellProps);

@@ -103,7 +103,16 @@ public class InfoTreeCreatorTest extends TestCase {
             + "        Ion: null\n"
             + "        Reversal potential: 50mV (0.05 V)\n"
             + "        Conductance density: 120.0 mS_per_cm2 (1200.0 S_per_m2)\n"
-            + "        Segment group: soma_group";
+            + "        Segment group: soma_group\n"
+            + "    Specific capacitance on group soma_group:\n"
+            + "        Value: 1.0 uF_per_cm2 (0.01 F_per_m2)\n"
+            + "        Segment group: soma_group\n"
+            + "    Specific capacitance on group dendrite_group:\n"
+            + "        Value: 2.0 uF_per_cm2 (0.02 F_per_m2)\n"
+            + "        Segment group: dendrite_group\n"
+            + "    Resistivity on group all:\n"
+            + "        Value: 0.1 kohm_cm (1.0 ohm_m)\n"
+            + "        Segment group: all";
         
         compare(expected, getInfoTreeAsString("NML2_FullCell.nml"));
     }
