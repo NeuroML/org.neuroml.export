@@ -4,28 +4,22 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.xineml.XineMLWriter.Variant;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.jlems.core.sim.LEMSException;
 
 public class XineMLWriterTest extends TestCase {
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testFN() throws LEMSException, IOException, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
-	public void testIzh() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testIzh() throws LEMSException, IOException, GenerationException {
 
     	String exampleFilename = "LEMS_NML2_Ex2_Izh.xml";
     	generateMainScript(exampleFilename);
@@ -38,7 +32,7 @@ public class XineMLWriterTest extends TestCase {
     	generateMainScript(exampleFilename);
 	}*/
 	
-	public void generateMainScript(String exampleFilename) throws XMLException, IOException, ConnectionError, RuntimeError, ContentError, ParseError, ParseException, BuildException, GenerationException {
+	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

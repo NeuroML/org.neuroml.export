@@ -10,17 +10,18 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsKeywords;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -71,10 +72,10 @@ public class NestWriter extends BaseWriter {
 		
 		VelocityContext context = new VelocityContext();
 
-        DLemsWriter somw = new DLemsWriter(lems);
 
 		try
 		{
+            DLemsWriter somw = new DLemsWriter(lems);
 			String som = somw.getMainScript();
 			
 			DLemsWriter.putIntoVelocityContext(som, context);
@@ -119,24 +120,17 @@ public class NestWriter extends BaseWriter {
 			
 		} 
 		catch (IOException e1) {
-			throw new GenerationException("Problem converting LEMS to "+format,e1);
-		}
-		catch( ResourceNotFoundException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( ParseErrorException e )
-		{
-			throw new GenerationException("Problem parsing",e);
-		}
-		catch( MethodInvocationException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( Exception e )
-		{
-			throw new GenerationException("Problem using template",e);
-		}
+			throw new GenerationException("Problem converting LEMS to dLEMS",e1);
+		} catch( VelocityException e ) {
+			throw new GenerationException("Problem using Velocity template",e);
+		} catch (LEMSException e) {
+			throw new GenerationException("Problem generating the files",e);
+        } catch (ModelFeatureSupportException e) {
+			throw new GenerationException("Problem with the types of models currently supported in "+format,e);
+        } catch (NeuroMLException e) {
+			throw new GenerationException("Problem generating the files",e);
+        }
+		
 		
 		return mainRunScript.toString();	
 

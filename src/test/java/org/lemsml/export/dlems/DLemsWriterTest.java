@@ -11,17 +11,14 @@ import junit.framework.TestCase;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.logging.E;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * @author matteocantarelli
@@ -30,26 +27,26 @@ import org.neuroml.export.AppTest;
 public class DLemsWriterTest extends TestCase
 {
 
-	public void testIzhikevich() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	public void testIzhikevich() throws LEMSException, GenerationException, IOException, ModelFeatureSupportException, NeuroMLException 
 	{
 		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex2_Izh.xml",
 				         "./src/test/resources/tmp/izhikevich.json");
 	}
 
-	public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	public void testHH() throws LEMSException, GenerationException, IOException, ModelFeatureSupportException, NeuroMLException
 	{
 		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex1_HH.xml",
 				           "./src/test/resources/tmp/LEMS_NML2_Ex1_HH.json");
 	}
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError
+	public void testFN() throws LEMSException, GenerationException, IOException, ModelFeatureSupportException, NeuroMLException
 	{
 		generateMainScript("../org.neuroml.model/src/main/resources/NeuroML2CoreTypes/LEMS_NML2_Ex9_FN.xml",
 				           "./src/test/resources/tmp/LEMS_NML2_Ex9_FN.json");
 	}
 	
 
-	public void generateMainScript(String lemsFilename, String dlemsFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScript(String lemsFilename, String dlemsFileName) throws LEMSException, GenerationException, IOException, ModelFeatureSupportException, NeuroMLException {
 		String exampleFilename = lemsFilename.substring(lemsFilename.lastIndexOf('/')+1);
         System.out.println("Loading: "+exampleFilename);
         
@@ -72,7 +69,7 @@ public class DLemsWriterTest extends TestCase
 	}
 		
 	
-	public void testVelocity() throws Exception {
+	public void testVelocity() throws LEMSException, GenerationException, IOException {
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
@@ -99,7 +96,7 @@ public class DLemsWriterTest extends TestCase
 			
 	
 
-	public void generateMainScriptAPI(String lemsFilename, String dlemsFileName) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+	public void generateMainScriptAPI(String lemsFilename, String dlemsFileName) throws LEMSException, GenerationException, IOException {
 		
 		
 		/*
