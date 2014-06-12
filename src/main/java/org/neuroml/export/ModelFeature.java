@@ -2,18 +2,16 @@
 package org.neuroml.export;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import javax.xml.bind.JAXBException;
-import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
-import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.neuroml.model.Cell;
 import org.neuroml.model.util.NeuroMLElements;
+import org.neuroml.model.util.NeuroMLException;
 
 
 /**
@@ -44,7 +42,8 @@ public enum ModelFeature {
     }
     
 
-    public static ArrayList<ModelFeature> analyseModelFeatures(Lems lems) throws ContentError, ParseError, IOException, JAXBException {
+    public static ArrayList<ModelFeature> analyseModelFeatures(Lems lems) throws LEMSException, NeuroMLException {
+        
         ArrayList<ModelFeature> mfs = new ArrayList<ModelFeature>();
         
 		Target target = lems.getTarget();

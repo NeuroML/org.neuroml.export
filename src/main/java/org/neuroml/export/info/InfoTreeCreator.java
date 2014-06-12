@@ -1,8 +1,8 @@
 package org.neuroml.export.info;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.ParamValue;
@@ -190,9 +190,9 @@ public class InfoTreeCreator
                 if(element.getNotes() != null && element.getNotes().length() > 0) elementProps.put("Description", formatNotes(element.getNotes()));
 
                 infoRoot.put("Element " + element.getId(), elementProps);
-                Component comp = Utils.convertNeuroMLToComponent(element);
-                ComponentType ct = comp.getComponentType();
                 try {
+                    Component comp = Utils.convertNeuroMLToComponent(element);
+                    ComponentType ct = comp.getComponentType();
                     for (ParamValue pv: comp.getParamValues()) {
                         if (comp.hasAttribute(pv.getName())) {
                             String orig = comp.getStringValue(pv.getName());
@@ -200,7 +200,7 @@ public class InfoTreeCreator
                             elementProps.put(pv.getName(), formatted);
                         }
                     }
-                } catch (ContentError ce) {
+                } catch (LEMSException ce) {
                     throw new NeuroMLException("Problem extracting info from NeuroML component",ce);
                 }
 

@@ -9,17 +9,11 @@ import javax.xml.bind.JAXBException;
 import junit.framework.TestCase;
 
 import org.lemsml.export.base.GenerationException;
-import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
@@ -31,7 +25,7 @@ import org.neuroml.model.util.NeuroMLException;
 public class NeuronWriterTest extends TestCase {
 
     
-    public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
+    public void testHH() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
         testGetMainScript(exampleFilename);
@@ -44,30 +38,30 @@ public class NeuronWriterTest extends TestCase {
         testGetMainScript(exampleFilename, lems);
     }*/
 
-    public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
+    public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         testGetMainScript(exampleFilename);
     }
 
-    public void testGHK() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
+    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException {
     	
     	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
          testGetMainScript(exampleFilename);
      }
        
     
-    public void testChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testChannel() throws LEMSException, IOException, GenerationException {
 
         testComponentToMod("NML2_SimpleIonChannel.nml", "na");
     }
 
-    public void testSynapse() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testSynapse() throws LEMSException, IOException, GenerationException {
 
         testComponentToMod("NML2_SynapseTypes.nml", "blockStpSynDepFac");
     }
 
-    public void testIaFCells() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testIaFCells() throws LEMSException, IOException, GenerationException {
 
         testComponentToMod("NML2_AbstractCells.nml", "iafTau");
         testComponentToMod("NML2_AbstractCells.nml", "iafTauRef");
@@ -75,7 +69,7 @@ public class NeuronWriterTest extends TestCase {
         testComponentToMod("NML2_AbstractCells.nml", "iafRef");
     }
     
-    public void testInputs() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
+    public void testInputs() throws LEMSException, IOException, GenerationException {
 
         testComponentToMod("NML2_Inputs.nml", "pulseGen");
         testComponentToMod("NML2_Inputs.nml", "sineGen");
@@ -83,7 +77,7 @@ public class NeuronWriterTest extends TestCase {
         testComponentToMod("NML2_Inputs.nml", "vClamp");
     }
 
-    public void testComponentToMod(String nmlFilename, String compId) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError, IOException {
+    public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
         E.info("Loading: " + nmlFilename);
         
 		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
@@ -106,13 +100,13 @@ public class NeuronWriterTest extends TestCase {
         E.info("Written to file: " + newMechFile);
     }
     
-    public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException, JAXBException, NeuroMLException {
+    public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException {
 
     	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
     	generateMainScript(exampleSBML);
 	}
 	
-	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException, JAXBException, NeuroMLException {
+	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
        
@@ -133,8 +127,7 @@ public class NeuronWriterTest extends TestCase {
         }
     }
 
-    public void testGetMainScript(String exampleFilename) throws ContentError, ParseError,
-            ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, NeuroMLException {
+    public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         MinimalMessageHandler.setVeryMinimal(true);
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

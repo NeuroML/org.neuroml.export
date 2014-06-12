@@ -1,8 +1,7 @@
 /**
- * 
+ *
  */
 package org.neuroml.export.sbml;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -27,21 +26,22 @@ import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.sim.ContentError;
 import java.util.Properties;
 
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.io.util.FileUtil;
-
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class SBMLWriter extends XMLWriter {
@@ -51,24 +51,35 @@ public class SBMLWriter extends XMLWriter {
 
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
-    
-    private final String sbmlTemplateFile = "sbml/template.sbml";
 
-    public SBMLWriter(Lems l) {
+    private final String sbmlTemplateFile = "sbml/template.sbml";
+    
+    SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
+
+    public SBMLWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         super(l, "SBML");
+
+        sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+
+        sli.checkAllFeaturesSupported(format, lems);
     }
 
     /*private String getPopPrefix(Component pop) {
-        return pop.getID() + "_";
-    }*/
-
+     return pop.getID() + "_";
+     }*/
     @Override
     public String getMainScript() throws GenerationException {
 
         Parser p = new Parser();
 
         StringBuilder main = new StringBuilder();
-        
 
         try {
             Target target = lems.getTarget();
@@ -83,50 +94,44 @@ public class SBMLWriter extends XMLWriter {
 
             ArrayList<Component> pops = tgtNet.getChildrenAL("populations");
 
-            if (false /************************************************************pops.isEmpty() || (pops.size()==1 && pops.get(0).getStringValue("size").equals("1"))*/) {
+            if (false /**
+                     * **********************************************************pops.isEmpty()
+                     * || (pops.size()==1 && pops.get(0).getStringValue("size").equals("1"))
+                     */
+                    ) {
 
-		Velocity.init();
-		VelocityContext context = new VelocityContext();
-                DLemsWriter somw = new DLemsWriter(lems);
+                Velocity.init();
+                VelocityContext context = new VelocityContext();
 
-                try
-		{
-			String som = somw.getMainScript();
-                        som = som.replaceAll("This dLEMS file", "This SBML file");
-                        System.out.println(som);
-			DLemsWriter.putIntoVelocityContext(som, context);
+                try {
+                    DLemsWriter somw = new DLemsWriter(lems);
+                    String som = somw.getMainScript();
+                    som = som.replaceAll("This dLEMS file", "This SBML file");
+                    System.out.println(som);
+                    DLemsWriter.putIntoVelocityContext(som, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(sbmlTemplateFile);
+                    Properties props = new Properties();
+                    props.put("resource.loader", "class");
+                    props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+                    VelocityEngine ve = new VelocityEngine();
+                    ve.init(props);
+                    Template template = ve.getTemplate(sbmlTemplateFile);
 
-			StringWriter sw1 = new StringWriter();
-			template.merge( context, sw1 );
-			main.append(sw1);
-		}
-		catch (IOException e1) {
-			throw new GenerationException("Problem converting LEMS to SOM",e1);
-		}
-		catch( ResourceNotFoundException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( ParseErrorException e )
-		{
-			throw new GenerationException("Problem parsing",e);
-		}
-		catch( MethodInvocationException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( Exception e )
-		{
-			throw new GenerationException("Problem using template",e);
-		}
-                
+                    StringWriter sw1 = new StringWriter();
+                    template.merge(context, sw1);
+                    main.append(sw1);
+                } catch (IOException e1) {
+                    throw new GenerationException("Problem converting LEMS to dLEMS", e1);
+                } catch (VelocityException e) {
+                    throw new GenerationException("Problem using Velocity template", e);
+                } catch (LEMSException e) {
+                    throw new GenerationException("Problem generating the files", e);
+                } catch (ModelFeatureSupportException e) {
+                    throw new GenerationException("Problem with the types of models currently supported in " + format, e);
+                } catch (NeuroMLException e) {
+                    throw new GenerationException("Problem generating the files", e);
+                }
+
             } else {
 
                 main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
@@ -136,11 +141,11 @@ public class SBMLWriter extends XMLWriter {
                     "level=2",
                     "version=2",
                     "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-                    "xsi:schemaLocation=http://www.sbml.org/sbml/level2/version2 "+PREF_SBML_SCHEMA};
+                    "xsi:schemaLocation=http://www.sbml.org/sbml/level2/version2 " + PREF_SBML_SCHEMA};
                 startElement(main, "sbml", attrs);
                 startElement(main, "notes");
                 startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-                main.append("\n"+Utils.getHeaderComment(format) + "\n");
+                main.append("\n" + Utils.getHeaderComment(format) + "\n");
                 main.append("\nExport of model:\n" + lems.textSummary(false, false) + "\n");
                 endElement(main, "p");
                 endElement(main, "notes");
@@ -181,7 +186,6 @@ public class SBMLWriter extends XMLWriter {
                     String compRef = pop.getStringValue("component");
                     Component popComp = lems.getComponent(compRef);
 
-
                     for (FinalParam param : popComp.getComponentType().getFinalParams()) {
                         startEndElement(main,
                                 "parameter",
@@ -207,22 +211,21 @@ public class SBMLWriter extends XMLWriter {
 
                     }
                     /*
-                    for(Constant c: popComp.getComponentClass().getConstants())
-                    {
-                    startEndElement(main,
-                    "parameter",
-                    "id="+c.getName(),
-                    "value="+(float)popComp.getParamValue(c.getName()).getDoubleValue(),
-                    "constant=false");
+                     for(Constant c: popComp.getComponentClass().getConstants())
+                     {
+                     startEndElement(main,
+                     "parameter",
+                     "id="+c.getName(),
+                     "value="+(float)popComp.getParamValue(c.getName()).getDoubleValue(),
+                     "constant=false");
 
-                    }*/
+                     }*/
                 }
 
                 endElement(main, "listOfParameters");
                 main.append("\n");
 
-                if (initAssNum>0)
-                {
+                if (initAssNum > 0) {
                     startElement(main, "listOfInitialAssignments");
 
                     for (Component pop : pops) {
@@ -233,12 +236,9 @@ public class SBMLWriter extends XMLWriter {
                         for (OnStart os : type.getDynamics().getOnStarts()) {
                             for (StateAssignment sa : os.getStateAssignments()) {
 
-
                                 startElement(main, "initialAssignment", "symbol=" + sa.getStateVariable().getName());
                                 processMathML(main, sa.getParseTree());
                                 endElement(main, "initialAssignment");
-
-
 
                             }
                         }
@@ -261,7 +261,7 @@ public class SBMLWriter extends XMLWriter {
                         processMathML(main, td.getParseTree());
                         endElement(main, "rateRule");
                     }
-                    for (DerivedVariable dv: type.getDynamics().getDerivedVariables()) {
+                    for (DerivedVariable dv : type.getDynamics().getDerivedVariables()) {
                         startElement(main, "assignmentRule", "variable=" + dv.getName());
                         processMathML(main, dv.getParseTree());
                         endElement(main, "assignmentRule");
@@ -269,13 +269,10 @@ public class SBMLWriter extends XMLWriter {
 
                 }
 
-
                 endElement(main, "listOfRules");
                 main.append("\n");
 
-
-                if (onCondNum>0)
-                {
+                if (onCondNum > 0) {
                     startElement(main, "listOfEvents");
 
                     for (Component pop : pops) {
@@ -315,9 +312,7 @@ public class SBMLWriter extends XMLWriter {
                     endElement(main, "listOfEvents");
                 }
 
-
                 main.append("\n");
-
 
                 endElement(main, "model");
                 endElement(main, "sbml");
@@ -331,7 +326,7 @@ public class SBMLWriter extends XMLWriter {
     private String getSuitableId(String str) {
         return str.replace(" ", "_").replace(".", "").replace("(", "_").replace(")", "_").replace("*", "mult").replace("+", "plus").replace("/", "div");
     }
-    
+
     public static void main(String[] args) throws Exception {
 
         E.setDebug(false);
@@ -342,7 +337,7 @@ public class SBMLWriter extends XMLWriter {
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
 
@@ -357,6 +352,5 @@ public class SBMLWriter extends XMLWriter {
         }
 
     }
-    
 
 }

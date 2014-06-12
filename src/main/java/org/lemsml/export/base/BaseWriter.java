@@ -3,8 +3,7 @@ package org.lemsml.export.base;
 
 import java.io.IOException;
 
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 
 public abstract class BaseWriter {
@@ -18,7 +17,7 @@ public abstract class BaseWriter {
 	}
 	
 
-	public abstract String getMainScript() throws ContentError, ParseError, IOException;
+	public abstract String getMainScript() throws LEMSException, IOException;
 
 	public class CompInfo
 	{

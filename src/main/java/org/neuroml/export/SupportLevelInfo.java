@@ -7,7 +7,9 @@ import java.util.HashMap;
 import javax.xml.bind.JAXBException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  *
@@ -78,13 +80,13 @@ public class SupportLevelInfo {
             HashMap<ModelFeature, Level> ht = support.get(format);
             for (ModelFeature mf: ht.keySet()) {
                 Level l = ht.get(mf);
-                sb.append("    "+mf+": "+l+"\n");
+                sb.append("    "+(l.isSupported() ? '\u2713' : "x")+" "+mf+": "+l+"\n");
             }
         }
         return sb.toString();
     }
     
-    public void checkAllFeaturesSupported(String format, Lems lems) throws ContentError, ParseError, IOException, JAXBException, ModelFeatureSupportException {
+    public void checkAllFeaturesSupported(String format, Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         boolean passed = true;
         StringBuilder report = new StringBuilder();
         for (ModelFeature mf: ModelFeature.analyseModelFeatures(lems)){
@@ -116,6 +118,9 @@ public class SupportLevelInfo {
         test("NEURONa", ModelFeature.NETWORK_MODEL);
         test("NEURONa", ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL);
         test("SBML", ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL);
+        
+        System.out.println("\nSummary of all:\n");
+        System.out.println(sli);
         
     }    
     

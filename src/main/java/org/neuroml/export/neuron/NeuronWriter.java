@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 
-import javax.xml.bind.JAXBException;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -18,11 +16,8 @@ import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
@@ -46,7 +41,6 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.LEMSQuantityPath;
 import org.neuroml.export.Utils;
@@ -58,7 +52,6 @@ import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.Segment;
 import org.neuroml.model.Species;
-import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -81,7 +74,7 @@ public class NeuronWriter extends BaseWriter {
     
     
     
-    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws ContentError, ParseError, ConnectionError, BuildException, BuildException, RuntimeError, ParseException, XMLException, GenerationException, NeuroMLException, IOException {
+    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException {
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
 
@@ -124,16 +117,14 @@ public class NeuronWriter extends BaseWriter {
     
     
 
-	public ArrayList<File> generateMainScriptAndMods(File mainFile)
-			throws ContentError, ParseError, IOException, JAXBException,
-			GenerationException, NeuroMLException {
-		String main = generate(mainFile.getParentFile());
+	public ArrayList<File> generateMainScriptAndMods(File mainFile) throws LEMSException, GenerationException, NeuroMLException {
 		try {
+            String main = generate(mainFile.getParentFile());
 			FileUtil.writeStringToFile(main, mainFile);
 			allGeneratedFiles.add(mainFile);
 		} catch (IOException ex) {
-			throw new ContentError("Error writing to file: " + mainFile.getAbsolutePath(), ex);
-		}
+			throw new GenerationException("Error writing to file: " + mainFile.getAbsolutePath(), ex);
+		} 
 		return allGeneratedFiles;
 	}
 
@@ -141,15 +132,11 @@ public class NeuronWriter extends BaseWriter {
 	public String getMainScript() throws GenerationException, NeuroMLException {
 		try {
 			return generate(null);
-		} catch (ContentError e) {
+		} catch (LEMSException e) {
 			throw new GenerationException("Error with LEMS content", e);
-		} catch (ParseError e) {
-			throw new GenerationException("Error parsing LEMS content", e);
 		} catch (IOException e) {
 			throw new GenerationException("Error with file I/O", e);
-		} catch (JAXBException e) {
-			throw new GenerationException("Error with parsing XML", e);
-		}
+		} 
 
 	}
 
@@ -218,9 +205,7 @@ public class NeuronWriter extends BaseWriter {
         return String.format("m_%s_%s", compType, popName);
     }
 
-	public String generate(File pdirForMods) throws NeuroMLException,
-			IOException, JAXBException, GenerationException, ContentError,
-			ParseError {
+	public String generate(File pdirForMods) throws NeuroMLException, IOException, GenerationException, LEMSException {
 
 		this.dirForMods = pdirForMods;
 		reset();
@@ -842,7 +827,7 @@ public class NeuronWriter extends BaseWriter {
 		}
 	}
 
-	public static String generateCellFile(Cell cell) throws ContentError, ParseError, IOException, JAXBException, NeuroMLException {
+	public static String generateCellFile(Cell cell) throws LEMSException, NeuroMLException {
 		StringBuilder cellString = new StringBuilder();
 
 		cellString.append("// Cell: " + cell.getId() + "\n");
@@ -852,8 +837,12 @@ public class NeuronWriter extends BaseWriter {
 		Velocity.init();
 
 		VelocityContext context = new VelocityContext();
-
-		DLemsWriter.putIntoVelocityContext(json, context);
+       
+        try {
+            DLemsWriter.putIntoVelocityContext(json, context);
+        } catch (IOException ex) {
+            throw new NeuroMLException("Problem converting Cell to JSON format", ex);
+        }
 
 		Properties props = new Properties();
 		props.put("resource.loader", "class");
