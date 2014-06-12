@@ -1,8 +1,13 @@
 
 package org.neuroml.export;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
+import javax.xml.bind.JAXBException;
+import org.lemsml.jlems.core.expression.ParseError;
+import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Lems;
 
 /**
  *
@@ -10,21 +15,21 @@ import java.util.Hashtable;
  */
 public class SupportLevelInfo {
     
-    private Hashtable<String, Hashtable<ModelFeature, Level>> support = new Hashtable<String, Hashtable<ModelFeature, Level>>();
+    private HashMap<String, HashMap<ModelFeature, Level>> support = new HashMap<String, HashMap<ModelFeature, Level>>();
     
     private static SupportLevelInfo myInstance = null;
     
     public static final String SUPPORTED = "Supported";
     
     public enum Level {
-        OUT_OF_SCOPE,
+        OUTSIDE_CURRENT_SCOPE,
         NONE,
         LOW,
         MEDIUM,
         HIGH;
         
         public boolean isSupported() {
-            return !(this==OUT_OF_SCOPE || this==NONE);
+            return !(this==OUTSIDE_CURRENT_SCOPE || this==NONE);
         }
     }
     
@@ -41,9 +46,9 @@ public class SupportLevelInfo {
     public void addSupportInfo(String format, ModelFeature mf, Level level) {
         if (!support.containsKey(format))
         {
-            support.put(format, new Hashtable<ModelFeature, Level>());
+            support.put(format, new HashMap<ModelFeature, Level>());
         }
-        Hashtable<ModelFeature, Level> ht = support.get(format);
+        HashMap<ModelFeature, Level> ht = support.get(format);
         ht.put(mf, level);
     }
     
@@ -51,7 +56,7 @@ public class SupportLevelInfo {
         if (!support.containsKey(format))
             return "Unknown format: "+format;
         else {
-            Hashtable<ModelFeature, Level> ht = support.get(format);
+            HashMap<ModelFeature, Level> ht = support.get(format);
             if (!ht.containsKey(mf)){
                 return "No information about whether "+format+" supports "+mf.name();
             } else {
@@ -65,17 +70,36 @@ public class SupportLevelInfo {
         }
     }
     
+    @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
         for (String format: support.keySet()) {
             sb.append("Format: "+format+"\n");
-            Hashtable<ModelFeature, Level> ht = support.get(format);
+            HashMap<ModelFeature, Level> ht = support.get(format);
             for (ModelFeature mf: ht.keySet()) {
                 Level l = ht.get(mf);
-                sb.append("    "+mf+": "+l+" (supported: "+l.isSupported()+")\n");
+                sb.append("    "+mf+": "+l+"\n");
             }
         }
         return sb.toString();
+    }
+    
+    public void checkAllFeaturesSupported(String format, Lems lems) throws ContentError, ParseError, IOException, JAXBException, ModelFeatureSupportException {
+        boolean passed = true;
+        StringBuilder report = new StringBuilder();
+        for (ModelFeature mf: ModelFeature.analyseModelFeatures(lems)){
+            String supp = myInstance.isSupported(format, mf);
+            if (!supp.equals(SUPPORTED)) {
+                passed = false;
+                report.append("Feature not supported in "+format+": "+mf+"\n    "+myInstance.isSupported(format, mf)+"\n");
+            }
+        };
+        if (!passed) {
+            report.append("Info on supported features:\n"+myInstance);
+            throw new ModelFeatureSupportException(report.toString());
+        }
+        
+        
     }
     
     
@@ -84,7 +108,7 @@ public class SupportLevelInfo {
         
         sli.addSupportInfo("NEURON", ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.HIGH);
         sli.addSupportInfo("NEURON", ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo("SBML", ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUT_OF_SCOPE);
+        sli.addSupportInfo("SBML", ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
         
         System.out.println(sli);
         
@@ -101,5 +125,6 @@ public class SupportLevelInfo {
         
         System.out.println(sli.isSupported(format, mf));
     }
+    
     
 }

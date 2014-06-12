@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import javax.xml.bind.JAXBException;
 
 import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
@@ -35,13 +36,20 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import static org.neuroml.export.SupportLevelInfo.getSupportLevelInfo;
 import org.neuroml.export.Utils;
 
 public class DLemsWriter extends BaseWriter
 {
 
 	static String DEFAULT_POP = "OneComponentPop";
+    
 	CommonLangWriter writer;
+    
+    SupportLevelInfo sli = getSupportLevelInfo();
 
 	public DLemsWriter(Lems lems, CommonLangWriter writer)
 	{
@@ -49,10 +57,22 @@ public class DLemsWriter extends BaseWriter
 		this.writer = writer;
 	}
 
-	public DLemsWriter(Lems lems)
+	public DLemsWriter(Lems lems) throws ContentError, ParseError, IOException, JAXBException, ModelFeatureSupportException
 	{
 		super(lems, "dLEMS");
 		this.writer = null;
+        
+        
+        sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        
+        sli.checkAllFeaturesSupported(format, lems);
 	}
 
 	public static void putIntoVelocityContext(String dlems, VelocityContext context) throws JsonParseException, JsonMappingException, IOException 
@@ -398,7 +418,7 @@ public class DLemsWriter extends BaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
 
         DLemsWriter dw = null;
         String testScript = "";

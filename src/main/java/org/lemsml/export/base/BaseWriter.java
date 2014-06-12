@@ -10,9 +10,9 @@ import org.lemsml.jlems.core.type.Lems;
 public abstract class BaseWriter {
 
 	protected Lems lems;
-	protected String format;
+	protected final String format;
 
-	public BaseWriter(Lems lems, String format) {
+	public BaseWriter(Lems lems, String format){
 		this.lems = lems;
 		this.format = format;
 	}
