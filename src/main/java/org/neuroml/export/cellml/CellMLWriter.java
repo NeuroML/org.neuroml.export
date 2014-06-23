@@ -21,10 +21,15 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class CellMLWriter extends XMLWriter {
@@ -36,8 +41,25 @@ public class CellMLWriter extends XMLWriter {
     public static final String GLOBAL_TIME_CELLML = "time";
 
     //private final String sbmlTemplateFile = "sbml/template.sbml";
-    public CellMLWriter(Lems l) {
+    public CellMLWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         super(l, "CellML");
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
     }
 
     @Override
@@ -76,7 +98,7 @@ public class CellMLWriter extends XMLWriter {
             main.append("<!--\n");
             startElement(main, "documentation");
             startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-            main.append("\n" + Utils.getHeaderComment(format) + "\n");
+            main.append("\n" + Utils.getHeaderComment(FORMAT) + "\n");
             main.append("\nExport of model:\n" + lems.textSummary(false, false) + "\n");
             endElement(main, "p");
             endElement(main, "documentation");

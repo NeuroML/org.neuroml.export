@@ -18,6 +18,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Main;
+import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
@@ -25,7 +26,7 @@ import org.neuroml.model.util.NeuroMLException;
 public class NeuronWriterTest extends TestCase {
 
     
-    public void testHH() throws LEMSException, IOException, GenerationException, NeuroMLException {
+    public void testHH() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
         testGetMainScript(exampleFilename);
@@ -38,13 +39,13 @@ public class NeuronWriterTest extends TestCase {
         testGetMainScript(exampleFilename, lems);
     }*/
 
-    public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException {
+    public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         testGetMainScript(exampleFilename);
     }
 
-    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException {
+    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
     	
     	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
          testGetMainScript(exampleFilename);
@@ -100,13 +101,13 @@ public class NeuronWriterTest extends TestCase {
         E.info("Written to file: " + newMechFile);
     }
     
-    public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException {
+    public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
 
     	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
     	generateMainScript(exampleSBML);
 	}
 	
-	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException {
+	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
        
@@ -127,7 +128,7 @@ public class NeuronWriterTest extends TestCase {
         }
     }
 
-    public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException {
+    public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         MinimalMessageHandler.setVeryMinimal(true);
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

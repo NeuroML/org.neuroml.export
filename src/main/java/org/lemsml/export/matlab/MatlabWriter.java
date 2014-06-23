@@ -15,8 +15,13 @@ import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class MatlabWriter extends BaseWriter {
 	
@@ -37,15 +42,32 @@ public class MatlabWriter extends BaseWriter {
 	
 	private Method method = Method.ODE;
 
-	public MatlabWriter(Lems lems) {
-		super(lems, "MATLAB");
-		MinimalMessageHandler.setVeryMinimal(true);
-		E.setDebug(false);
-	}
-
 	String comm = "% ";
 	String commPre = "%{";
 	String commPost = "%}";
+
+	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
+		super(lems, "MATLAB");
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
 	
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
@@ -65,7 +87,7 @@ public class MatlabWriter extends BaseWriter {
 
 		StringBuilder sb = new StringBuilder();
 
-		addComment(sb, this.format+" simulator compliant export for:\n\n"
+		addComment(sb, FORMAT+" simulator compliant export for:\n\n"
 		+ lems.textSummary(false, false));
 		
 		Velocity.init();

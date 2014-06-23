@@ -5,24 +5,35 @@ import javax.xml.bind.JAXBException;
 
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.model.NeuroMLDocument;
 
 public abstract class BaseWriter {
 
 	protected Lems lems;
 	protected NeuroMLDocument nmlDocument;
-	protected String format;
+	protected static String FORMAT;
+    
+    protected static SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
 
+	private BaseWriter() {
+        
+    }
+    
 	public BaseWriter(Lems lems, String format) {
 		this.lems = lems;
-		this.format = format;
+		this.FORMAT = format;
+        setSupportedFeatures();
 	}
 	
 	public BaseWriter(NeuroMLDocument nmlDocument, String format) {
 		this.nmlDocument = nmlDocument;
-		this.format = format;
+		this.FORMAT = format;
+        setSupportedFeatures();
 	}
 
+	protected abstract void setSupportedFeatures();
+    
 	protected abstract void addComment(StringBuilder sb, String comment);
 
 

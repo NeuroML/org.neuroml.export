@@ -280,16 +280,18 @@ public class Utils {
         return list;
     }
     
-    public static void runLemsFile(File f) throws LEMSException {
+    public static void runLemsFile(File f) throws LEMSException, ModelFeatureSupportException, NeuroMLException {
         loadLemsFile(f, true);
     }
 
-    public static void loadLemsFile(File f, boolean run) throws LEMSException {
+    public static void loadLemsFile(File f, boolean run) throws LEMSException, ModelFeatureSupportException, NeuroMLException {
 
         Sim sim = Utils.readLemsNeuroMLFile(f);
         sim.build();
 
         if (run) {
+            SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
+            sli.checkAllFeaturesSupported(SupportLevelInfo.LEMS_NATIVE_EXECUTION, sim.getLems());
             sim.run();
             IOUtil.saveReportAndTimesFile(sim);
             E.info("Finished reading, building, running and displaying LEMS model");

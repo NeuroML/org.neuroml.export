@@ -17,7 +17,11 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class CWriter extends BaseWriter {
 	
@@ -46,15 +50,33 @@ public class CWriter extends BaseWriter {
 	
 	private Solver solver = Solver.CVODE;
 
-	public CWriter(Lems lems) {
-		super(lems, "C");
-		MinimalMessageHandler.setVeryMinimal(true);
-		E.setDebug(false);
-	}
-
 	String comm = "// ";
 	String commPre = "/*";
 	String commPost = "*/";
+    
+    
+	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException {
+		super(lems, "C");
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
 	
 	@Override
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -90,7 +112,7 @@ public class CWriter extends BaseWriter {
 
 		StringBuilder sb = new StringBuilder();
 
-		addComment(sb, this.format+" simulator compliant export for:\n\n"
+		addComment(sb, FORMAT+" simulator compliant export for:\n\n"
 		+ lems.textSummary(false, false));
 		
 		Velocity.init();

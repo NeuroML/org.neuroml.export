@@ -54,26 +54,29 @@ public class SBMLWriter extends XMLWriter {
 
     private final String sbmlTemplateFile = "sbml/template.sbml";
     
-    SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
+    
 
     public SBMLWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         super(l, "SBML");
-
-        sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
-        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
-        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
-        sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
-
-        sli.checkAllFeaturesSupported(format, lems);
+        sli.checkAllFeaturesSupported(FORMAT, lems);
     }
 
-    /*private String getPopPrefix(Component pop) {
-     return pop.getID() + "_";
-     }*/
+    
+    @Override
+    protected void setSupportedFeatures() {
+
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.OUTSIDE_CURRENT_SCOPE);
+
+    }
+    
     @Override
     public String getMainScript() throws GenerationException {
 
@@ -127,7 +130,7 @@ public class SBMLWriter extends XMLWriter {
                 } catch (LEMSException e) {
                     throw new GenerationException("Problem generating the files", e);
                 } catch (ModelFeatureSupportException e) {
-                    throw new GenerationException("Problem with the types of models currently supported in " + format, e);
+                    throw new GenerationException("Problem with the types of models currently supported in " + FORMAT, e);
                 } catch (NeuroMLException e) {
                     throw new GenerationException("Problem generating the files", e);
                 }
@@ -145,7 +148,7 @@ public class SBMLWriter extends XMLWriter {
                 startElement(main, "sbml", attrs);
                 startElement(main, "notes");
                 startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-                main.append("\n" + Utils.getHeaderComment(format) + "\n");
+                main.append("\n" + Utils.getHeaderComment(FORMAT) + "\n");
                 main.append("\nExport of model:\n" + lems.textSummary(false, false) + "\n");
                 endElement(main, "p");
                 endElement(main, "notes");

@@ -10,10 +10,12 @@ import org.neuroml.export.AppTest;
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.model.util.NeuroMLException;
 
 public class GraphWriterTest extends TestCase {
 
-	public void testGetMainScript() throws LEMSException, IOException, GenerationException {
+	public void testGetMainScript() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
         //Note: only works with this example at the moment!!
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";

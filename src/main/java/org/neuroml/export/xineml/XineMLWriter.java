@@ -13,6 +13,7 @@ import org.lemsml.jlems.core.expression.Parser;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
@@ -32,8 +33,12 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class XineMLWriter extends XMLWriter {
 
@@ -68,9 +73,26 @@ public class XineMLWriter extends XMLWriter {
     ArrayList<File> allGeneratedFiles = new ArrayList<File>();
 
     //public static final String LOCAL_9ML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
-    public XineMLWriter(Lems l, Variant v) {
+    public XineMLWriter(Lems l, Variant v) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         super(l, v.toString());
         this.variant = v;
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
     }
 
     public ArrayList<File> getFilesGenerated() {
@@ -143,7 +165,7 @@ public class XineMLWriter extends XMLWriter {
 
         startElement(mainFile, root, attrs);
 
-        String info = "\n" + Utils.getHeaderComment(format) + "\n"
+        String info = "\n" + Utils.getHeaderComment(FORMAT) + "\n"
                 + "\nExport of model:\n" + lems.textSummary(false, false);
 
         addComment(mainFile, info);

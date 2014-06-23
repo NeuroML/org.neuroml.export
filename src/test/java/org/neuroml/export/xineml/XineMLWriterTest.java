@@ -11,15 +11,17 @@ import org.neuroml.export.xineml.XineMLWriter.Variant;
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.model.util.NeuroMLException;
 
 public class XineMLWriterTest extends TestCase {
 
-	public void testFN() throws LEMSException, IOException, GenerationException {
+	public void testFN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
-	public void testIzh() throws LEMSException, IOException, GenerationException {
+	public void testIzh() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex2_Izh.xml";
     	generateMainScript(exampleFilename);
@@ -32,7 +34,7 @@ public class XineMLWriterTest extends TestCase {
     	generateMainScript(exampleFilename);
 	}*/
 	
-	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException {
+	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);

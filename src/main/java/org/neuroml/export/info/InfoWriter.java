@@ -5,6 +5,11 @@
 package org.neuroml.export.info;
 
 import java.io.File;
+import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import org.neuroml.export.Utils;
 
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.NeuroMLDocument;
@@ -20,10 +25,26 @@ public class InfoWriter extends BaseWriter
 	/**
 	 * @param nmlDocument
 	 */
-	public InfoWriter(NeuroMLDocument nmlDocument)
+	public InfoWriter(NeuroMLDocument nmlDocument) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(nmlDocument, "Information");
+        sli.checkAllFeaturesSupported(FORMAT, Utils.convertNeuroMLToSim(nmlDocument).getLems());
 	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+    }
 
 	/* (non-Javadoc)
 	 * @see org.neuroml.export.base.BaseWriter#getMainScript()

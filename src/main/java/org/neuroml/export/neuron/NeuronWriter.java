@@ -43,6 +43,9 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.LEMSQuantityPath;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.export.base.JSONCellSerializer;
@@ -72,9 +75,32 @@ public class NeuronWriter extends BaseWriter {
 
 	};
     
+
+	public NeuronWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
+		super(l, NRNConst.NEURON_FORMAT);
+
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
     
     
-    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException {
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
+    
+    
+    
+    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException {
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
 
@@ -87,10 +113,6 @@ public class NeuronWriter extends BaseWriter {
 
         FileUtil.writeStringToFile(nrn, nrnFile);
     }
-
-	public NeuronWriter(Lems l) {
-		super(l, NRNConst.NEURON_FORMAT);
-	}
 
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
@@ -211,7 +233,7 @@ public class NeuronWriter extends BaseWriter {
 		reset();
 		StringBuilder main = new StringBuilder();
 
-		addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n"); 
+		addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(FORMAT) + "\n"); 
 
 		main.append("import neuron\n");
 		main.append("h = neuron.h\n");
@@ -943,7 +965,7 @@ public class NeuronWriter extends BaseWriter {
 
 		boolean hasCaDependency = false;
 
-		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {			
+		if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE)) {			
             mechName = NRNConst.getSafeName(comp.getID());
 			blockNeuron.append("SUFFIX " + mechName + "\n");
 
@@ -1091,7 +1113,7 @@ public class NeuronWriter extends BaseWriter {
 		parseParameters(comp, prefix, prefix, rangeVars, stateVars,
 				blockNeuron, blockParameter, paramMappings);
 
-		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
+		if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE)) {
 			blockAssigned.append("? Standard Assigned variables with ionChannel\n");
 			blockAssigned.append("v (mV)\n");
 			blockAssigned.append(NRNConst.NEURON_TEMP + " (degC)\n");
@@ -1124,7 +1146,7 @@ public class NeuronWriter extends BaseWriter {
 
 		// ratesMethod.append("? + \n");
 
-		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
+		if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE)) {
 
 			if (condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL)|| condOption.equals(ChannelConductanceOption.USE_NERNST)) {
 				blockBreakpoint.append("gion = gmax * fopen \n\n");
@@ -1255,7 +1277,7 @@ public class NeuronWriter extends BaseWriter {
 
 		blockInitial.append("rates()\n");
 
-		if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)
+		if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE)
 				|| comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) {
 			blockInitial.append("\n" + NeuroMLElements.TEMPERATURE + " = " + NRNConst.NEURON_TEMP + " + 273.15\n");
 		}
@@ -1821,7 +1843,7 @@ public class NeuronWriter extends BaseWriter {
 		if (comp.getComponentType().hasDynamics()) {
 
 			StringBuilder blockForEqns = ratesMethod;
-			if (comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_COMP_TYPE)) {
+			if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE)) {
 				blockForEqns = blockBreakpoint;
 			}
 

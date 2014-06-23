@@ -12,13 +12,14 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Main;
+import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriterTest extends TestCase {
 
-	public void testGetMainScript() throws LEMSException, IOException, GenerationException, NeuroMLException {
+	public void testGetMainScript() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException {
 
     	String exampleFilename = "NML2_FullCell.nml";    
 

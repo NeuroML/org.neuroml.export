@@ -1,12 +1,7 @@
 
 package org.neuroml.export;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import javax.xml.bind.JAXBException;
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.model.util.NeuroMLException;
@@ -23,6 +18,8 @@ public class SupportLevelInfo {
     
     public static final String SUPPORTED = "Supported";
     
+    public static final String LEMS_NATIVE_EXECUTION = "LEMS";
+    
     public enum Level {
         OUTSIDE_CURRENT_SCOPE,
         NONE,
@@ -36,6 +33,18 @@ public class SupportLevelInfo {
     }
     
     private SupportLevelInfo() {
+        
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(LEMS_NATIVE_EXECUTION, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
     }
     
     public static SupportLevelInfo getSupportLevelInfo()
@@ -45,7 +54,7 @@ public class SupportLevelInfo {
         return myInstance;
     }
     
-    public void addSupportInfo(String format, ModelFeature mf, Level level) {
+    public final void addSupportInfo(String format, ModelFeature mf, Level level) {
         if (!support.containsKey(format))
         {
             support.put(format, new HashMap<ModelFeature, Level>());

@@ -10,11 +10,13 @@ import org.neuroml.export.AppTest;
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.model.util.NeuroMLException;
 
 public class CellMLWriterTest extends TestCase {
 	
 
-	public void testGetMainScript1() throws LEMSException, IOException, GenerationException {
+	public void testGetMainScript1() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml"; 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -31,7 +33,7 @@ public class CellMLWriterTest extends TestCase {
         
 	}*/
         
-    public void generateCellMLAndTestScript(Lems lems, String exampleFileName)  throws LEMSException, IOException, GenerationException {
+    public void generateCellMLAndTestScript(Lems lems, String exampleFileName)  throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
 
         CellMLWriter cellmlw = new CellMLWriter(lems);
