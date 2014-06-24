@@ -32,6 +32,18 @@ public class Utils {
 	
 	private static Lems lemsWithNML2CompTypes;
     
+    public static final String ARCH_I686 = "i686";
+    public static final String ARCH_I386 = "i386";
+    public static final String ARCH_64BIT = "amd64";
+    public static final String ARCH_POWERPC = "ppc";
+    public static final String ARCH_UMAC = "umac";
+
+    public static final String DIR_I386 = "i386";
+    public static final String DIR_I686 = "i686";
+    public static final String DIR_64BIT = "x86_64";
+    public static final String DIR_POWERPC = "powerpc";
+    public static final String DIR_UMAC = "umac";
+    
     private static Lems getLemsWithNML2CompTypes() throws LEMSException {
         if (lemsWithNML2CompTypes==null) {
 
@@ -299,6 +311,62 @@ public class Utils {
             E.info("Finished reading and building LEMS model");
         }
 
+    }
+    
+    public static boolean isWindowsBasedPlatform()
+    {
+        return System.getProperty("os.name").toLowerCase().indexOf("indows") > 0;
+    }
+    
+    public static boolean isLinuxBasedPlatform()
+    {
+        ///if (true) return false;
+        /** @todo See if this is general enough */
+        return System.getProperty("os.name").toLowerCase().indexOf("nix") >= 0 ||
+            System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0;
+    }
+
+
+    public static boolean isMacBasedPlatform()
+    {
+        ///if (true) return true;
+        /** @todo See if this is general enough */
+        if (isWindowsBasedPlatform()) return false;
+        if (isLinuxBasedPlatform()) return false;
+
+        return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+    }
+        
+    /**
+     * @return i686 for most, x86_64 if "64" present in system properties os.arch, 
+     * e.g. amd64. Will need updating as Neuron tested on more platforms...
+     *
+     */
+    public static String getArchSpecificDir()
+    {
+        if (!isMacBasedPlatform() &&
+            (System.getProperty("os.arch").equals(ARCH_64BIT) ||
+            System.getProperty("os.arch").indexOf("64")>=0))
+        {
+            return DIR_64BIT;
+        }
+        else if (isMacBasedPlatform() && System.getProperty("os.arch").indexOf(ARCH_POWERPC)>=0)
+        {
+            return DIR_POWERPC;
+        }
+        else if (isMacBasedPlatform() && System.getProperty("os.arch").indexOf(ARCH_I386)>=0)
+        {
+            return DIR_I686;
+        }
+        else
+        {
+            return DIR_I686;
+        }
+    }
+
+    public static boolean is64bitPlatform()
+    {
+        return System.getProperty("os.arch").indexOf("64")>=0; // should be enough in most cases
     }
     
 
