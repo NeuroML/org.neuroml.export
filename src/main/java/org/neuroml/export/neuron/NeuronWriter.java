@@ -16,6 +16,7 @@ import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
@@ -63,27 +64,29 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends BaseWriter {
 
-	private ArrayList<String> generatedModComponents = new ArrayList<String>();
-	private File dirForMods;
+    private ArrayList<String> generatedModComponents = new ArrayList<String>();
+    private File dirForMods;
 
-	ArrayList<File> allGeneratedFiles = new ArrayList<File>();
-	boolean nogui = false;
-	static boolean debug = false;
+    ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+    boolean nogui = false;
+    static boolean debug = false;
     
-    
-	public enum ChannelConductanceOption {
-		FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK;
-		float erev;
+    public static final String NEURON_HOME_ENV_VAR = "NEURON_HOME";
 
-	};
-    
 
-	public NeuronWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
-		super(l, NRNConst.NEURON_FORMAT);
+    public enum ChannelConductanceOption {
+            FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK;
+            float erev;
 
-        sli.checkAllFeaturesSupported(FORMAT, lems);
-	}
-    
+    };
+
+
+    public NeuronWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
+            super(l, NRNConst.NEURON_FORMAT);
+
+    sli.checkAllFeaturesSupported(FORMAT, lems);
+    }
+
     
     @Override
     protected void setSupportedFeatures() {
@@ -2151,64 +2154,62 @@ public class NeuronWriter extends BaseWriter {
 		StringBuilder initInfo = new StringBuilder();
 	}
 
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-		E.setDebug(false);
+        MinimalMessageHandler.setVeryMinimal(true);
+        E.setDebug(false);
 
-
-        
         ArrayList<File> lemsFiles = new ArrayList<File>();
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         /*
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
-        //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
-        lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
+         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
+         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
-        lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));*/
+         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
+         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+         //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));*/
 
         NeuronWriter nw = null;
         String testScript = "";
-        
-        for (File lemsFile: lemsFiles) {
+
+        for (File lemsFile : lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
             NeuronWriter.exportToNeuron(lemsFile, false, true);
-            
+
             nw = new NeuronWriter(lems);
             /*
-            nw.setNoGui(true);
-            ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
-            for (File f : ff) {
-                System.out.println("Generated: " + f.getAbsolutePath());
-            }
-            testScript += "\necho Testing "+lemsFile.getAbsolutePath()+"\n";
-            testScript += "echo\n";
-            testScript += "echo\n";
-            testScript += "cd "+lemsFile.getParentFile().getCanonicalPath()+"\n";
-            testScript += "nrnivmodl\n";
-            String nrn = nw.isNoGui() ? "nrniv" : "nrngui";
-            testScript += nrn+" -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
-            testScript += "\n";
-                    */
+             nw.setNoGui(true);
+             ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
+             for (File f : ff) {
+             System.out.println("Generated: " + f.getAbsolutePath());
+             }
+             testScript += "\necho Testing "+lemsFile.getAbsolutePath()+"\n";
+             testScript += "echo\n";
+             testScript += "echo\n";
+             testScript += "cd "+lemsFile.getParentFile().getCanonicalPath()+"\n";
+             testScript += "nrnivmodl\n";
+             String nrn = nw.isNoGui() ? "nrniv" : "nrngui";
+             testScript += nrn+" -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
+             testScript += "\n";
+             */
         }
         File t = new File("test.sh");
         FileUtil.writeStringToFile(testScript, t);
-        System.out.println("Written file to test conversions to: "+t.getAbsolutePath());
-        
+        System.out.println("Written file to test conversions to: " + t.getAbsolutePath());
+
         String[] qs = {"1 mV", "1.234mV", "1.2e-4V", "1.23e-5A", "1.23e4A", "1.45E-8 m", "1.23E-8m2", "60", "6000", "123000"};
         for (String s : qs) {
             DimensionalQuantity dq = QuantityReader.parseValue(s, nw.lems.getUnits());
-            System.out.println("String "+s+" converts to: "+nw.convertToNeuronUnits(s)+" (units: "+getNeuronUnit(dq.getDimension().getName())+")");
+            System.out.println("String " + s + " converts to: " + nw.convertToNeuronUnits(s) + " (units: " + getNeuronUnit(dq.getDimension().getName()) + ")");
         }
-        
-	}
 
+    }
 
 }
