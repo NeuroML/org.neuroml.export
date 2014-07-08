@@ -116,7 +116,7 @@ public class Utils {
          For example, ../Pop0[0] returns 0; ../Gran/0/Granule_98 returns 0; Gran/1/Granule_98 returns 0
     */
     public static int parseCellRefStringForCellNum(String cellRef) {
-        System.out.println("Parsing for cell num: "+cellRef);
+        //System.out.println("Parsing for cell num: "+cellRef);
         if (cellRef.indexOf("[")>=0) {
             return Integer.parseInt(cellRef.substring(cellRef.indexOf("[")+1, cellRef.indexOf("]")));
         } else {

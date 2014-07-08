@@ -72,6 +72,8 @@ public class NeuronWriter extends BaseWriter {
     static boolean debug = false;
     
     public static final String NEURON_HOME_ENV_VAR = "NEURON_HOME";
+    
+    public HashMap<String, String> modWritten = new HashMap<String, String>();
 
 
     public enum ChannelConductanceOption {
@@ -874,11 +876,16 @@ public class NeuronWriter extends BaseWriter {
 
 	private void dumpModToFile(Component comp, String mod) throws ContentError {
 		File modFile = new File(dirForMods, NRNConst.getSafeName(comp.getID()) + ".mod");
+        if (modWritten.containsKey(comp.getID()) && modWritten.get(comp.getID()).equals(mod)) {
+            E.info("-- Mod file for: " + comp.getID() + " has already been written");
+            return;
+        }
 		E.info("-- Writing to: " + modFile.getAbsolutePath());
 
 		try {
 			FileUtil.writeStringToFile(mod, modFile);
 			allGeneratedFiles.add(modFile);
+            modWritten.put(comp.getID(), mod);
 		} catch (IOException ex) {
 			throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
 		}
@@ -2160,13 +2167,14 @@ public class NeuronWriter extends BaseWriter {
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
         /*
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
          lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
          lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
          lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
          lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
-         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml"));
+         
          //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
          lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
         
@@ -2181,7 +2189,7 @@ public class NeuronWriter extends BaseWriter {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
-            NeuronWriter.exportToNeuron(lemsFile, false, true);
+            NeuronWriter.exportToNeuron(lemsFile, false, false);
 
             nw = new NeuronWriter(lems);
             /*
