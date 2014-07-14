@@ -49,7 +49,7 @@ public class SEDMLWriter extends XMLWriter {
         startElement(main, "sedML", attrs);
         startElement(main, "notes");
         startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-        main.append("\nSBML export for:\n" + lems.textSummary(false, false) + "\n");
+        main.append("\n"+format+" export for:\n" + lems.textSummary(false, false) + "\n");
         endElement(main, "p");
         endElement(main, "notes");
 

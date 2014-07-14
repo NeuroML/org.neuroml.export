@@ -7,23 +7,15 @@ import java.io.IOException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.model.IzhikevichCell;
 import org.neuroml.model.NeuroMLDocument;
 
 import org.neuroml.model.util.NeuroML2Validator;
-import org.neuroml.model.util.NeuroMLElements;
 import org.lemsml.jlems.core.xml.XMLElementReader;
 
 /**
@@ -118,7 +110,7 @@ public class AppTest extends TestCase
     }
 
 
-    public static Lems readLemsFileFromExamples(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError
+    public static Lems readLemsFileFromExamples(String exampleFilename) throws LEMSException
     {
     	NeuroML2Validator nmlv = new NeuroML2Validator();
     	
@@ -126,7 +118,7 @@ public class AppTest extends TestCase
 		
 		return Utils.readLemsNeuroMLFile(content).getLems();
     }
-    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, ConnectionError, RuntimeError
+    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws LEMSException
     {
     	NeuroML2Validator nmlv = new NeuroML2Validator();
     	

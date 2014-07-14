@@ -10,17 +10,20 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsKeywords;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -35,11 +38,28 @@ public class PyNNWriter extends BaseWriter {
 
     public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
 
-	public PyNNWriter(Lems lems) {
+	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
 		super(lems, "PyNN");
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);
+        sli.checkAllFeaturesSupported(FORMAT, lems);
 	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
 	
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
@@ -61,20 +81,19 @@ public class PyNNWriter extends BaseWriter {
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 
-		addComment(mainRunScript, this.format+" simulator compliant export for:\n\n"
+		addComment(mainRunScript, FORMAT+" simulator compliant export for:\n\n"
 		+ lems.textSummary(false, false));
 		
-		addComment(cellScript, this.format+" simulator compliant export for:\n\n"
+		addComment(cellScript, FORMAT+" simulator compliant export for:\n\n"
 		+ lems.textSummary(false, false));
 		
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
 
-        DLemsWriter somw = new DLemsWriter(lems);
-
 		try
 		{
+            DLemsWriter somw = new DLemsWriter(lems);
 			String som = somw.getMainScript();
 			
 			DLemsWriter.putIntoVelocityContext(som, context);
@@ -102,7 +121,7 @@ public class PyNNWriter extends BaseWriter {
 			
 			if (dirForFiles!=null && dirForFiles.exists())
 			{
-				E.info("Writing "+format+" files to: "+dirForFiles);
+				E.info("Writing "+FORMAT+" files to: "+dirForFiles);
 				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
 				File mainScriptFile = new File(dirForFiles, "run_"+name+"_pynn.py");
 				File cellScriptFile = new File(dirForFiles, name+"_pynn.py");
@@ -113,30 +132,21 @@ public class PyNNWriter extends BaseWriter {
 			}
 			else
 			{
-				E.info("Not writing "+format+" scripts to files! Problem with target dir: "+dirForFiles);
+				E.info("Not writing "+FORMAT+" scripts to files! Problem with target dir: "+dirForFiles);
 			}
 			
 			
-		} 
-		catch (IOException e1) {
-			throw new GenerationException("Problem converting LEMS to "+format,e1);
-		}
-		catch( ResourceNotFoundException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( ParseErrorException e )
-		{
-			throw new GenerationException("Problem parsing",e);
-		}
-		catch( MethodInvocationException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( Exception e )
-		{
-			throw new GenerationException("Problem using template",e);
-		}
+		}  catch (IOException e1) {
+			throw new GenerationException("Problem converting LEMS to dLEMS",e1);
+		} catch( VelocityException e ) {
+			throw new GenerationException("Problem using Velocity template",e);
+		} catch (LEMSException e) {
+			throw new GenerationException("Problem generating the files",e);
+        } catch (ModelFeatureSupportException e) {
+			throw new GenerationException("Problem with the types of models currently supported in "+FORMAT,e);
+        } catch (NeuroMLException e) {
+			throw new GenerationException("Problem generating the files",e);
+        }
 		
 		return mainRunScript.toString();	
 

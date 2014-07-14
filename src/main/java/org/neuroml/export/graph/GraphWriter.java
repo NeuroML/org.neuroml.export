@@ -8,11 +8,16 @@ import org.lemsml.export.base.GenerationException;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.*;
 import org.lemsml.jlems.core.type.dynamics.*;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class GraphWriter extends BaseWriter {
@@ -50,8 +55,25 @@ public class GraphWriter extends BaseWriter {
     private static final ArrayList<String> suppressChildren = new ArrayList<String>();
 
 
-    public GraphWriter(Lems lems) {
+    public GraphWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException {
         super(lems, "GraphViz");
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
     }
 
     @Override
@@ -553,25 +575,31 @@ public class GraphWriter extends BaseWriter {
 
     }
 
-    private static void generatePng(Lems lems, File targetDir, String name) throws IOException, InterruptedException, GenerationException {
+    private static void generatePng(Lems lems, File targetDir, String name) throws IOException, InterruptedException, GenerationException, ModelFeatureSupportException {
 
-        GraphWriter gw = new GraphWriter(lems);
+        try {
+            GraphWriter gw = new GraphWriter(lems);
 
-        File imgFile = new File(targetDir, name+".png");
-        File gv = new File(targetDir, name+".gv");
+            File imgFile = new File(targetDir, name+".png");
+            File gv = new File(targetDir, name+".gv");
 
-        FileUtil.writeStringToFile(gw.getMainScript(), gv);
+            FileUtil.writeStringToFile(gw.getMainScript(), gv);
 
-        E.info("Graph details written to file: "+gv);
+            E.info("Graph details written to file: "+gv);
 
 
-        String cmd = "dot -Tpng  " + gv.getAbsolutePath() + " -o " + imgFile.getAbsolutePath();
-        String[] env = new String[]{};
-        Runtime run = Runtime.getRuntime();
-        Process pr = run.exec(cmd, env, gv.getParentFile());
+            String cmd = "dot -Tpng  " + gv.getAbsolutePath() + " -o " + imgFile.getAbsolutePath();
+            String[] env = new String[]{};
+            Runtime run = Runtime.getRuntime();
+            Process pr = run.exec(cmd, env, gv.getParentFile());
 
-        int ret = pr.waitFor();
+            int ret = pr.waitFor();
 
-        E.info("Written out to image file: "+imgFile+"\nUsed: "+cmd+"\nReturn value: "+ret);
+            E.info("Written out to image file: "+imgFile+"\nUsed: "+cmd+"\nReturn value: "+ret);
+        } catch (NeuroMLException e) {
+            throw new GenerationException("Problem generating PNG", e);
+        } catch (LEMSException e) {
+            throw new GenerationException("Problem generating PNG", e);
+        }
     }
 }

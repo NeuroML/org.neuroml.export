@@ -4,9 +4,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Hashtable;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.jlems.core.sim.LEMSException;
 
 
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
@@ -14,6 +19,7 @@ import org.neuroml.model.Segment;
 
 import org.neuroml.model.Cell;
 import org.neuroml.model.util.NeuroMLConverter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriter extends XMLWriter {
 
@@ -29,9 +35,26 @@ public class SVGWriter extends XMLWriter {
 	private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:"+axisWidth;
 	private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:"+axisWidth;
 
-    public SVGWriter(NeuroMLDocument nmlDocument, String originalFilename) {
+    public SVGWriter(NeuroMLDocument nmlDocument, String originalFilename) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
         super(nmlDocument, "SVG");
         this.originalFilename = originalFilename;
+        lems = Utils.convertNeuroMLToSim(nmlDocument).getLems();
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
 
 	@Override

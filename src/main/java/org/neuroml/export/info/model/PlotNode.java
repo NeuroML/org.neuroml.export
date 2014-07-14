@@ -68,6 +68,11 @@ public class PlotNode
 	{
 		return "PlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + ", Data=" + toTruncatedArray(_data) + "]";
 	}
+    
+	public String toShortString()
+	{
+		return "PlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + ", Num data points=" + _data.size() + "]";
+	}
 
 	private String toTruncatedArray(List<Data> _data) {
 		StringBuilder sb = new StringBuilder();

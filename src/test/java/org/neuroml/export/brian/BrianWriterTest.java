@@ -3,24 +3,20 @@ package org.neuroml.export.brian;
 import java.io.File;
 import java.io.IOException;
 
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.export.Utils;
+import org.neuroml.model.util.NeuroMLException;
 
 public class BrianWriterTest extends TestCase {
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testFN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
@@ -33,13 +29,13 @@ public class BrianWriterTest extends TestCase {
 	}*/
     
     
-	public void testSBML() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testSBML() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
     	generateMainScript(exampleSBML);
 	}
     
-	public void generateMainScript(File localFile) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
         System.out.println("Loaded: "+localFile);
@@ -50,7 +46,7 @@ public class BrianWriterTest extends TestCase {
         generateMainScript(lems, localFile.getName(), true);
 	}
 	
-	public void generateMainScript(String exampleFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
@@ -62,7 +58,7 @@ public class BrianWriterTest extends TestCase {
         generateMainScript(lems, exampleFilename, true);
 	}
     	
-	public void generateMainScript(Lems lems, String filename, boolean brian2) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void generateMainScript(Lems lems, String filename, boolean brian2) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
         BrianWriter bw = new BrianWriter(lems);
         bw.setBrian2(brian2);

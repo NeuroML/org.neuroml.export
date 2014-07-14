@@ -5,6 +5,11 @@
 package org.neuroml.export.info;
 
 import java.io.File;
+import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
+import org.neuroml.export.Utils;
 
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.NeuroMLDocument;
@@ -20,10 +25,26 @@ public class InfoWriter extends BaseWriter
 	/**
 	 * @param nmlDocument
 	 */
-	public InfoWriter(NeuroMLDocument nmlDocument)
+	public InfoWriter(NeuroMLDocument nmlDocument) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(nmlDocument, "Information");
+        sli.checkAllFeaturesSupported(FORMAT, Utils.convertNeuroMLToSim(nmlDocument).getLems());
 	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+    }
 
 	/* (non-Javadoc)
 	 * @see org.neuroml.export.base.BaseWriter#getMainScript()
@@ -49,10 +70,11 @@ public class InfoWriter extends BaseWriter
 		// fileName = "../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/SupAxAx.nml";
 		// fileName = "../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/Gran_KDr_98.nml";
 		fileName = "../NeuroML2/examples/NML2_AbstractCells.nml";
+		fileName = "../NeuroML2/examples/NML2_SimpleMorphology.nml";
+		fileName = "../NeuroML2/examples/NML2_SingleCompHHCell.nml";
 		//fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
 		//fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
 		//fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
-        fileName = "../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/WhichModel.nml";
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));

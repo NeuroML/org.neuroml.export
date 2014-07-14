@@ -73,9 +73,9 @@ public class UtilsTest extends TestCase {
     
     public void testFilesInJar() throws IOException, ContentError
     {
-        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        String ret = JUtil.getRelativeResource(this.getClass(), "/LEMSexamples/LEMS_NML2_Ex0_IaF.xml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
-        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+        //ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SimpleIonChannel.nml");
     }
     
     public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
@@ -91,6 +91,18 @@ public class UtilsTest extends TestCase {
         System.out.println("Now: "+comp.details("    "));
         
     }
+    
+    public void testParseCellRefString() throws JAXBException, Exception {
+        
+        String r1 = "../Pop0[0]";
+        String r2 = "../Gran/0/Granule_98";
+        assertEquals("Pop0", Utils.parseCellRefStringForPopulation(r1));        
+        assertEquals("Gran", Utils.parseCellRefStringForPopulation(r2));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r1));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r2));
+
+    }
+    
 	
 
 }

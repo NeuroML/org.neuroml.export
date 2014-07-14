@@ -32,7 +32,6 @@ objref synlist
 proc init() {
     topol()
     subsets()
-    geom()
     biophys()
     geom_nseg()
     synlist = new List()
@@ -61,9 +60,15 @@ proc set_initial_ion_properties() {
 
 
 proc topol() {
-    /////////// Only works for 1 section!!!
-    //connect dend(0), soma(1.0)
     basic_shape()
+#foreach ($s in $sections)##
+    // Connections in $s.name
+#if ($s.parent)##
+    // Connect $s.name to $s.parent
+    connect ${s.name}(0), ${s.parent}(${s.fractionAlong})
+#end##
+#end##
+
 }
 
 proc basic_shape() {
@@ -91,8 +96,6 @@ proc subsets() { local i
 
 }
 
-proc geom() {
-}
 
 proc biophys() {
 
