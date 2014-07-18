@@ -9,6 +9,26 @@
 
 architecture RTL of $name is
 
+#if ($name.contains("neuron_model"))
+signal COUNT : unsigned(2 downto 0) := "000";
+
+constant cNSpikeSources : integer := 32;	-- The number of spike sources.
+constant cNOutputs		: integer := 32;	-- The number of Synapses in the neuron model.
+constant cNSelectBits	: integer := 5;		-- Log2(NOutputs), rounded up.
+
+component ParamMux
+	generic( 
+		NSpikeSources 	: integer := 32;	-- The number of spike sources.
+		NOutputs		: integer := 32;	-- The number of Synapses in the neuron model.
+		NSelectBits		: integer := 5);	-- Log2(NSpikeSources), rounded up.
+	port(
+		SpikeIn			: In  Std_logic_vector(NSpikeSources-1 downto 0);
+		SelectIn		: In  Std_logic_vector((NOutputs*NSelectBits)-1 downto 0);
+		SpikeOut		: Out Std_logic_vector((NOutputs-1) downto 0));
+end component;
+signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);
+
+#end
 
 ---------------------------------------------------------------------
 -- Derived Variables and Parameters
@@ -32,6 +52,8 @@ $foo
 ##StateVariables
 #foreach ($par in $state)
 #set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $foo = "signal statevariable_" + $par.type +  "_" + $par.name + "_next : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 $foo
 #end
 ---------------------------------------------------------------------
@@ -108,8 +130,8 @@ component $child.name
 	#end
 		   
 ##System Parameters
-           sysparam_time_timestep : in sfixed (0 downto -22);
-           sysparam_time_simtime : in sfixed (0 downto -22)
+           sysparam_time_timestep : in sfixed (-6 downto -22);
+           sysparam_time_simtime : in sfixed (6 downto -22)
 		   );
 end component;
 

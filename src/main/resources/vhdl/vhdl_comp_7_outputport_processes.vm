@@ -30,7 +30,7 @@
 
 #foreach ($event in $conditions)
 #if ($event.effect.events.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $event.condition.replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#set( $sensitivityList = $sensitivityList + "," + $event.SENSITIVITYLIST )
 #end
 #end
 
@@ -132,7 +132,7 @@ end if;
 #foreach ($event in $regime.conditions)
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
-if ( current_regime = $regime.name ) and $event.condition $event.direction then
+if ( current_regime = $regime.name ) and $event.condition  then
 	$foo := '1';
 else
 	$foo := '0';
@@ -163,7 +163,7 @@ end if;
 #foreach ($event in $conditions)
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
-if $event.condition $event.direction then
+if $event.condition then
 	$foo := '1';
 else
 	$foo := '0';
@@ -192,7 +192,7 @@ end process;
 ---------------------------------------------------------------------
 ##Asign Exposures to State Variables
 #foreach ($par in $state)
-#if ($par.exposure)
+#if ($par.exposure.length() > 0)
 #set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 
 #end
@@ -204,13 +204,34 @@ $foo
 ---------------------------------------------------------------------
 ##Asign Exposures to Derived Variables
 #foreach ($par in $derivedvariables)
-#if ($par.exposure)
+#if ($par.exposure.length() > 0)
 #set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 
 #end
 #end
 ---------------------------------------------------------------------
 
+
+
+
+
+#if ($name.contains("neuron_model"))
+---------------------------------------------------------------------
+-- Control the done signal
+---------------------------------------------------------------------
+count_proc:process(CLK)
+  	begin 
+  		if (CLK'EVENT AND CLK = '1') then
+  			if step_once_go = '1' OR COUNT /= "000" then
+  				COUNT <= COUNT + 1;
+  			end if;
+  		end if;
+  	end process count_proc;
+count_comb:process(COUNT)
+begin
+	if COUNT = "111" then
+		step_once_complete <= '1';
+		
 ---------------------------------------------------------------------
 -- Assign event ports to exposures
 ---------------------------------------------------------------------
@@ -222,5 +243,26 @@ $foo
 #end
 #end
 ---------------------------------------------------------------------
+		
+	else
+		step_once_complete <= '0';
+		
+---------------------------------------------------------------------
+-- Assign event ports to exposures
+---------------------------------------------------------------------
+##Assign internal variables to EventPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " <=  '0';"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
+		
+	end if;
+  	end process count_comb;
+---------------------------------------------------------------------
+#end
+
 
 end RTL;

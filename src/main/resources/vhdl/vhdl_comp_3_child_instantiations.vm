@@ -9,24 +9,36 @@
 
 begin
 
-#if (!$name.contains("syn"))
-		   step_once_complete <= '0';
-#end   
+
+#if ($name.contains("neuron_model"))
+-- Instantiate the mux.
+	--
+dut : ParamMux
+	generic map (
+		NSpikeSources	=> cNSpikeSources,
+		NOutputs		=> cNOutputs,
+		NSelectBits		=> cNSelectBits)
+	port map(
+		SpikeIn 	=> eventport_in_spike_aggregate,
+		SelectIn	=> SelectSpikesIn,
+		SpikeOut	=> SpikeOut);
+
+#end
 
 ---------------------------------------------------------------------
 -- Child Component Instantiations and corresponding internal variables
 ---------------------------------------------------------------------
 #set( $count = 0)
 #foreach ($child in $Children)
-#set( $foo = $child.name + "_uut")
-$foo : $child.name
+#set( $foo = " " + $child.name + "_uut : " + $child.name)
+$foo 
     port map (	clk => clk,
 				rst => rst,
 				ce => ce,
 				step_once_go => step_once_go,
 ##Event Ports
     #foreach ($par in $child.eventports)
-		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => eventport_in_spike_aggregate(" + $count + "),"  )
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => SpikeOut(" + $count + "),"  )
 		$foo
 		#set( $count = $count + 1)
 	#end

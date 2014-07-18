@@ -26,6 +26,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 library ieee_proposed;
 use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.fixed_float_types.ALL;
+use IEEE.numeric_std.all;
 
 ---------------------------------------------------------------------
 
@@ -34,6 +35,7 @@ use ieee_proposed.fixed_float_types.ALL;
 -- Entity Description
 ---------------------------------------------------------------------
 
+ 
 entity $name is
     Port (
 		   clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES
@@ -42,9 +44,10 @@ entity $name is
 
 		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
 		   
-#if (!$name.contains("syn"))
+#if ($name.contains("neuron_model"))
 			step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
 		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
+		   SelectSpikesIn			: Std_logic_vector((32*5)-1 downto 0) := (others => '0');
 #end   
 ##Event Ports
     #foreach ($par in $eventports)
@@ -75,7 +78,6 @@ entity $name is
 	
 ##THE CHILDREN
 #foreach ($child in $Children)
-
 	##Parameters
 		#foreach ($par in $child.parameters)
 			#set( $foo = "param_" + $par.type  +  "_" + $child.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
@@ -91,8 +93,8 @@ entity $name is
 ## END THE CHILDREN
 		   
 ##System Parameters
-           sysparam_time_timestep : in sfixed (0 downto -22);
-           sysparam_time_simtime : in sfixed (0 downto -22)
+           sysparam_time_timestep : in sfixed (-6 downto -22);
+           sysparam_time_simtime : in sfixed (6 downto -22)
 		   );
 end $name;
 

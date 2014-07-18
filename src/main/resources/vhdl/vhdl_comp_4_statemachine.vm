@@ -9,7 +9,7 @@
 ---------------------------------------------------------------------
 ##Regimes
 
-regime_state_process :process (step_once_go,rst)
+regime_state_process_comb :process (sysparam_time_simtime,statevariable_voltage_v)
 begin 
 next_regime <= current_regime;
 
@@ -29,7 +29,7 @@ end if;
 ##then check for all conditional events that drive this state
 #foreach ($event in $regime.conditions)
 #foreach ($transition in $event.effect.transitions)
-if ( current_regime = $regime.name ) and $event.condition $event.direction then
+if ( current_regime = $regime.name ) and $event.condition then
 	next_regime <= $transition;
 end if;
 #set( $temps = $temps + 1)
@@ -39,11 +39,16 @@ end if;
 
 #end
 
+end process;
+
+
+regime_state_process_syn :process (clk,rst)
+begin
 if rst = '1' then  
 
 	current_regime <= $defaultRegime ;
-elsif step_once_go'event and step_once_go = '1' then  
-    if ce = '1' then 
+elsif clk'event and clk = '1' then  
+    if ce = '1' and step_once_go = '1' then 
             current_regime <= next_regime after 1 ns;
     end if;
 end if;

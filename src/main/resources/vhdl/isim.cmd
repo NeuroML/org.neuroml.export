@@ -1,4 +1,4 @@
 onerror {resume}
 wave add /
-run 200 us;
+run 20000 us;
 exit

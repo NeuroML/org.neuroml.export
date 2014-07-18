@@ -30,7 +30,7 @@ end tb_simulation;
 
 architecture tb of tb_simulation is
 
-FILE test_out_data: TEXT open WRITE_MODE is "VHDLoutput.txt";
+FILE test_out_data: TEXT open WRITE_MODE is "VHDLoutput.csv";
 
 ## Go through each component and gets it definition here
 
@@ -43,6 +43,7 @@ component $neuron.name
 		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
 		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
 		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
+		   SelectSpikesIn :  in STD_LOGIC_VECTOR(159 downto 0);
 		   
 ##Event Ports
     #foreach ($par in $neuron.eventports)
@@ -80,8 +81,8 @@ component $neuron.name
 ## END THE CHILDREN
 		   
 ##System Parameters
-           sysparam_time_timestep : sfixed (0 downto -22);
-           sysparam_time_simtime : sfixed (0 downto -22)
+           sysparam_time_timestep : sfixed (-6 downto -22);
+           sysparam_time_simtime : sfixed (6 downto -22)
 		   );
 end component;
 #end
@@ -95,9 +96,10 @@ end component;
 	signal step_once_go 			: std_logic := '0';
 	signal step_once_complete 			: std_logic := '0';
 	signal eventport_in_spike_aggregate : STD_LOGIC_VECTOR(31 downto 0);
-	signal sysparam_time_simtime  : sfixed ( 0 downto -22) := to_sfixed (0.0,0 , -22);
+	signal SelectSpikesIn : STD_LOGIC_VECTOR(159 downto 0);
+	signal sysparam_time_simtime  : sfixed ( 6 downto -22) := to_sfixed (0.0,6 , -22);
 	signal Errors		: integer;
-	signal sysparam_time_timestep : sfixed (0 downto -22) := to_sfixed( $dt ,0,-22);
+	signal sysparam_time_timestep : sfixed (-6 downto -22) := to_sfixed( $dt ,-6,-22);
 #foreach ($child in $NeuronComponents)
 ##Exposure Signals
 #foreach ($par in $child.exposures)
@@ -135,6 +137,8 @@ $foo
 file stimulus: TEXT open read_mode is "stimulus.csv";
 
 begin
+SelectSpikesIn(79 downto 0) <= "01111011100110101100010110101001001010000011100110001010010000011000100000100000";
+SelectSpikesIn(159 downto 80) <= (others => '0');
 
 ##instantiate each neuron
 
@@ -147,6 +151,7 @@ $foo : $child.name
 		   step_once_go  => step_once_go,
 		   step_once_complete  => step_once_complete,
 		   eventport_in_spike_aggregate => eventport_in_spike_aggregate,
+		   SelectSpikesIn => SelectSpikesIn,
 		   
 ##Event Ports
     #foreach ($par in $child.eventports)
@@ -197,10 +202,12 @@ receive_data: process
 variable l: line;
 
 variable char : character; 
-variable s : STD_LOGIC; 
+#set ($SynapseCountM1 = $SynapseCount -  1)
+#if ($SynapseCount > 0 )
+variable s : STD_LOGIC_VECTOR($SynapseCountM1 downto 0); 
+#end
    
 begin            
-   --eventport_in_spike_aggregate(31 downto 1) <= (others =>'0');
    -- wait for Reset to complete
    -- wait until rst='1';
    wait until rst='0';
@@ -210,8 +217,20 @@ begin
 
      -- read digital data from input file
      readline(stimulus, l);
+#if ($SynapseCount > 0 )
      read(l, s);
-     eventport_in_spike_aggregate(0) <= s;
+	 
+     eventport_in_spike_aggregate($SynapseCountM1 downto 0) <= 
+	 #set($range = [0..$SynapseCountM1])
+#foreach($i in $range)
+   s($i)
+#if ($i <  $SynapseCountM1)
+  &
+#else
+  ;
+#end
+#end
+#end
      
      wait until step_once_go = '1';
 
@@ -267,21 +286,40 @@ $foo
 	
 	clk <= not(clk) after 10 ns;
 	
-	step_once_go <= not(step_once_go) after 100 ns;
 	
-	
+
+
+step_once_go_proc: process 
+  
+begin            
+   -- wait for Reset to complete
+   -- wait until rst='1';
+   wait until rst='0';
+
+   
+   while 1 = 1 loop
+	wait for 180 ns;
+	step_once_go <= '1';
+	wait for 20 ns;
+	step_once_go <= '0';
+   end loop;
+    
+
+ end process step_once_go_proc;
+ 
+ 
 	--
 	-- Print the results at each clock tick.
 	--
-	process(clk)
+	process(step_once_go)
 	variable L1              : LINE;
 	begin
 		if (rst = '1') then
 		
-				sysparam_time_simtime <= to_sfixed (0.0,0, -22);
+				sysparam_time_simtime <= to_sfixed (0.0,6, -22);
 		else
 			if (step_once_go'event and step_once_go = '1') then
-				sysparam_time_simtime <= resize(sysparam_time_simtime + sysparam_time_timestep,0, -22);
+				sysparam_time_simtime <= resize(sysparam_time_simtime + sysparam_time_timestep,6, -22);
 				write(L1, real'image(to_real( sysparam_time_simtime )));  -- nth value in row
 						write(L1, " ");
 			#foreach ($child in $NeuronComponents)
