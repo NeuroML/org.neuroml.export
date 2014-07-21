@@ -343,8 +343,6 @@ public class NeuronWriter extends BaseWriter {
 				popComp = lems.getComponent(compReference);
 				number = 0;
 				for (Component comp : popsOrComponent.getAllChildren()) {
-
-					// main.append("print \""+comp+"\"");
 					if (comp.getComponentType().getName().equals(NeuroMLElements.INSTANCE))
 						number++;
 				}
@@ -364,10 +362,10 @@ public class NeuronWriter extends BaseWriter {
 
 			String compTypeName = popComp.getComponentType().getName();
 
-			main.append("print \"Population " + popName + " contains " + number
+			main.append("print(\"Population " + popName + " contains " + number
 					+ " instance(s) of component: " + popComp.getID()
 					+ " of type: " + popComp.getComponentType().getName()
-					+ " \"\n\n");
+					+ "\")\n\n");
 
 			if (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)) {
                 
@@ -823,7 +821,9 @@ public class NeuronWriter extends BaseWriter {
 
 		if (!nogui) main.append("h.nrncontrolmenu()\n");
 
+		main.append("print(\"Running a simulation of %s ms (dt = %s)\" % (h.tstop, h.dt))\n\n");
 		main.append("h.run()\n\n");
+		main.append("print(\"Finished simulation, saving results...\")\n\n");
 
 		// main.append("objref SampleGraph\n");
 		for (String dg : displayGraphs) {
@@ -850,7 +850,7 @@ public class NeuronWriter extends BaseWriter {
 			main.append("\n");
 		}
 
-		main.append("print \"Done\"\n\n");
+		main.append("print(\"Done\")\n\n");
         if (nogui) {
             main.append("quit()\n");
         }
@@ -2168,19 +2168,21 @@ public class NeuronWriter extends BaseWriter {
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
+
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml"));
         /*
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
-         
-         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
-         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
-        
-         lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
-         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
-         //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));*/
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
+
+        //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
+        lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
+
+        lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));*/
 
         NeuronWriter nw = null;
         String testScript = "";
@@ -2192,21 +2194,21 @@ public class NeuronWriter extends BaseWriter {
             NeuronWriter.exportToNeuron(lemsFile, false, false);
 
             nw = new NeuronWriter(lems);
-            /*
-             nw.setNoGui(true);
-             ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
-             for (File f : ff) {
-             System.out.println("Generated: " + f.getAbsolutePath());
-             }
-             testScript += "\necho Testing "+lemsFile.getAbsolutePath()+"\n";
-             testScript += "echo\n";
-             testScript += "echo\n";
-             testScript += "cd "+lemsFile.getParentFile().getCanonicalPath()+"\n";
-             testScript += "nrnivmodl\n";
-             String nrn = nw.isNoGui() ? "nrniv" : "nrngui";
-             testScript += nrn+" -python "+lemsFile.getName().replaceAll(".xml", "_nrn.py")+" \n";
-             testScript += "\n";
-             */
+
+            //nw.setNoGui(true);
+            ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
+            for (File f : ff) {
+                System.out.println("Generated: " + f.getAbsolutePath());
+            }
+            testScript += "\necho Testing " + lemsFile.getAbsolutePath() + "\n";
+            testScript += "echo\n";
+            testScript += "echo\n";
+            testScript += "cd " + lemsFile.getParentFile().getCanonicalPath() + "\n";
+            testScript += "nrnivmodl\n";
+            String nrn = nw.isNoGui() ? "nrniv" : "nrngui";
+            testScript += nrn + " -python " + lemsFile.getName().replaceAll(".xml", "_nrn.py") + " \n";
+            testScript += "\n";
+
         }
         File t = new File("test.sh");
         FileUtil.writeStringToFile(testScript, t);
