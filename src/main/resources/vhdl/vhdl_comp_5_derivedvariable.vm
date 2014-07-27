@@ -15,6 +15,11 @@
 #set( $sensitivityList = $sensitivityList + ", " + $par.sensitivityList  )
 #end
 #end
+#foreach ($par in $conditionalderivedvariables)
+#if ( "$!par.sensitivityList" != "" )
+#set( $sensitivityList = $sensitivityList + ", " + $par.sensitivityList  )
+#end
+#end
 #foreach ($par in $derivedparameters)
 #if ( "$!par.sensitivityList" != "" )
 #set( $sensitivityList = $sensitivityList + ", " + $par.sensitivityList  )
@@ -31,6 +36,15 @@ begin
 #foreach ($par in $derivedvariables)
 #set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + " <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
 $foo
+#end
+##ConditionalDerivedVariables
+#foreach ($cdvar in $conditionalderivedvariables)
+#foreach ($case in $cdvar.cases)
+#set( $foo = "derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + " <= resize((" + $case.value + ")," + $cdvar.integer + "," + $cdvar.fraction + ");"  )
+if $case.condition then
+	$foo
+end if;
+#end
 #end
 ##DerivedParameters
 #foreach ($par in $derivedparameters)

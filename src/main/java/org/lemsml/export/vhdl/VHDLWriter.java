@@ -45,6 +45,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.DerivedParameter;
+import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.EventPort;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.FinalExposed;
@@ -56,6 +57,8 @@ import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.dynamics.Case;
+import org.lemsml.jlems.core.type.dynamics.ConditionalDerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.EventOut;
@@ -104,9 +107,11 @@ public class VHDLWriter extends BaseWriter {
 	    LINKS,
 	    DERIVEDPARAMETERS,
 	    DERIVEDVARIABLES,
+	    CONDITIONALDERIVEDVARIABLES,
 	    ATTACHMENTS,
 	    REQUIREMENTS,
 	    SENSITIVITYLIST,
+	    CASES,
 	    STEPS;
 
 		public String get()
@@ -117,6 +122,8 @@ public class VHDLWriter extends BaseWriter {
 	
 	public enum Method {
 		TESTBENCH("vhdl/vhdl_tb.vm"),
+		SYNTH_TOP("vhdl/vhdl_synth_top.vm"),
+		DEFAULTJSON("vhdl/json_default.vm"),
 		COMPONENT1("vhdl/vhdl_comp_1_entity.vm"),
 		COMPONENT2("vhdl/vhdl_comp_2_arch.vm"),
 		COMPONENT3("vhdl/vhdl_comp_3_child_instantiations.vm"),
@@ -125,6 +132,7 @@ public class VHDLWriter extends BaseWriter {
 		COMPONENT6("vhdl/vhdl_comp_6_statevariable_processes.vm"),
 		COMPONENT7("vhdl/vhdl_comp_7_outputport_processes.vm"),
 		MUX("vhdl/ParamMux.vhd");
+		
 		
 	 private String filename;
 	 
@@ -158,6 +166,175 @@ public class VHDLWriter extends BaseWriter {
 	
 	
 	
+	
+
+	
+	
+
+	public String getMainScript_Synth() throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("--" + this.FORMAT+" simulator compliant export for:--\n--\n");
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+
+		//context.put( "name", new String("VelocityOnOSB") );
+		try
+		{
+			DLemsWriter somw = new DLemsWriter(lems);
+			JsonFactory f = new JsonFactory();
+			StringWriter sw = new StringWriter();
+			JsonGenerator g = f.createJsonGenerator(sw);
+			//g.useDefaultPrettyPrinter();
+			g.writeStartObject();
+			Target target = lems.getTarget();
+			Component simCpt = target.getComponent();
+			g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
+			g.writeStringField(SOMKeywords.SIMLENGTH.get(), simCpt.getParamValue("length").stringValue());
+			String lengthStr = simCpt.getParamValue("length").stringValue();
+			String stepStr = simCpt.getParamValue("step").stringValue();
+			Double numsteps = Double.parseDouble(lengthStr)
+					/ Double.parseDouble(stepStr);
+			numsteps = Math.ceil(numsteps);
+			g.writeStringField(SOMKeywords.STEPS.get(), numsteps.toString());
+			String targetId = simCpt.getStringValue("target");
+			
+			List<Component> simComponents = simCpt.getAllChildren();
+			writeDisplays(g, simComponents);
+			
+			Component networkComp = lems.getComponent(targetId);
+			List<Component> networkComponents = networkComp.getAllChildren();
+			//TODO: order networkComponents by type so all populations come through in one go
+			g.writeObjectFieldStart("NeuronComponents");
+			List<String> neuronTypes = new ArrayList<String>();
+
+			int count = 0;
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.toLowerCase().matches("population"))
+				{
+						//add a new neuron component
+					Component neuron = lems.getComponent(comp.getStringValue("component"));
+					if (!neuronTypes.contains(neuron.getID()) && !neuron.getID().contains("spikeGen"))
+					{
+						writeNeuronComponent(g, neuron);
+						neuronTypes.add(neuron.getID());
+					}
+					else if (neuron.getID().contains("spikeGen"))
+					{
+						count++;
+					}
+				}
+			}
+			g.writeEndObject();
+			g.writeArrayFieldStart("NeuronInstances");
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.toLowerCase().matches("population"))
+				{
+					for (int n = 1; n <= (int)(comp.getParamValue("size").value); n++)
+					{
+						//add a new neuron component
+						Component neuron = lems.getComponent(comp.getStringValue("component"));
+						writeNeuron(g, neuron, n);
+					}
+				}
+			}
+			g.writeEndArray();
+			
+			g.writeArrayFieldStart("Connections");
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.matches("EventConnectivity"))
+				{
+					String sourceNeuronID = networkComp.components.getByID(comp.getStringValue("source")).getStringValue("component");
+					String targetNeuronID = networkComp.components.getByID(comp.getStringValue("target")).getStringValue("component");
+
+					Component sourceComp = lems.getComponent(sourceNeuronID);
+					Component targetComp = lems.getComponent(targetNeuronID);
+
+					g.writeStartObject();
+					
+						g.writeObjectFieldStart("Source");
+						g.writeStringField("Name",sourceNeuronID);
+						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
+						writeEventPorts(g, sourceComp.getComponentType());
+						g.writeEndObject();
+						g.writeEndObject();
+						
+						g.writeObjectFieldStart("Target");
+						g.writeStringField("Name",targetNeuronID);
+						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
+						writeEventPorts(g, targetComp.getComponentType());
+						g.writeEndObject();
+						g.writeEndObject();
+					
+					g.writeEndObject();
+				}
+			}
+			g.writeEndArray();
+			g.writeNumberField("SynapseCount",count);
+			
+			
+
+			g.close();
+			
+			String som = sw.toString();
+			
+			DLemsWriter.putIntoVelocityContext(som, context);
+		
+			Properties props = new Properties();
+			props.put("resource.loader", "class");
+			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+			VelocityEngine ve = new VelocityEngine();
+			ve.init(props);
+			Template template = ve.getTemplate(Method.SYNTH_TOP.getFilename());
+		   
+			sw = new StringWriter();
+
+			template.merge( context, sw );
+			
+			sb.append(sw);
+
+			System.out.println("TestBenchData");
+			System.out.println(sw.toString());
+			System.out.println(som);
+			
+			
+		//simCpt is the simulation tag which translates to the testbench and to the exporter top level
+		} 
+		catch (IOException e1) {
+			throw new ParseError("Problem converting LEMS to SOM",e1);
+		}
+		catch( ResourceNotFoundException e )
+		{
+			throw new ParseError("Problem finding template",e);
+		}
+		catch( ParseErrorException e )
+		{
+			throw new ParseError("Problem parsing",e);
+		}
+		catch( MethodInvocationException e )
+		{
+			throw new ParseError("Problem finding template",e);
+		}
+		catch( Exception e )
+		{
+			throw new ParseError("Problem using template",e);
+		}
+		
+
+		
+		return sb.toString();
+	}
 
 	public String getMainScript() throws ContentError, ParseError {
 		
@@ -330,8 +507,10 @@ public class VHDLWriter extends BaseWriter {
 
 	public String getDefaultVariables() throws ContentError, ParseError {
 		
+
 		StringBuilder sb = new StringBuilder();
 
+		
 		Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
@@ -339,6 +518,7 @@ public class VHDLWriter extends BaseWriter {
 		//context.put( "name", new String("VelocityOnOSB") );
 		try
 		{
+			DLemsWriter somw = new DLemsWriter(lems);
 			JsonFactory f = new JsonFactory();
 			StringWriter sw = new StringWriter();
 			JsonGenerator g = f.createJsonGenerator(sw);
@@ -346,13 +526,23 @@ public class VHDLWriter extends BaseWriter {
 			g.writeStartObject();
 			Target target = lems.getTarget();
 			Component simCpt = target.getComponent();
+			g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
+			g.writeStringField(SOMKeywords.SIMLENGTH.get(), simCpt.getParamValue("length").stringValue());
+			String lengthStr = simCpt.getParamValue("length").stringValue();
+			String stepStr = simCpt.getParamValue("step").stringValue();
+			Double numsteps = Double.parseDouble(lengthStr)
+					/ Double.parseDouble(stepStr);
+			numsteps = Math.ceil(numsteps);
+			g.writeStringField(SOMKeywords.STEPS.get(), numsteps.toString());
 			String targetId = simCpt.getStringValue("target");
 			
+			List<Component> simComponents = simCpt.getAllChildren();
+			writeDisplays(g, simComponents);
 			
 			Component networkComp = lems.getComponent(targetId);
 			List<Component> networkComponents = networkComp.getAllChildren();
 			//TODO: order networkComponents by type so all populations come through in one go
-			g.writeObjectFieldStart("default_parameters");
+			g.writeObjectFieldStart("NeuronComponents");
 			List<String> neuronTypes = new ArrayList<String>();
 
 			int count = 0;
@@ -366,7 +556,7 @@ public class VHDLWriter extends BaseWriter {
 					Component neuron = lems.getComponent(comp.getStringValue("component"));
 					if (!neuronTypes.contains(neuron.getID()) && !neuron.getID().contains("spikeGen"))
 					{
-						writeNeuronDefaults(g, neuron);
+						writeNeuronComponent(g, neuron);
 						neuronTypes.add(neuron.getID());
 					}
 					else if (neuron.getID().contains("spikeGen"))
@@ -376,13 +566,82 @@ public class VHDLWriter extends BaseWriter {
 				}
 			}
 			g.writeEndObject();
-			g.writeEndObject();
+			g.writeArrayFieldStart("NeuronInstances");
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.toLowerCase().matches("population"))
+				{
+					for (int n = 1; n <= (int)(comp.getParamValue("size").value); n++)
+					{
+						//add a new neuron component
+						Component neuron = lems.getComponent(comp.getStringValue("component"));
+						writeNeuron(g, neuron, n);
+					}
+				}
+			}
+			g.writeEndArray();
+			
+			g.writeArrayFieldStart("Connections");
+			for (int i = 0; i < networkComponents.size();i++)
+			{
+				Component comp = networkComponents.get(i);
+				ComponentType comT = comp.getComponentType();
+				if (comT.name.matches("EventConnectivity"))
+				{
+					String sourceNeuronID = networkComp.components.getByID(comp.getStringValue("source")).getStringValue("component");
+					String targetNeuronID = networkComp.components.getByID(comp.getStringValue("target")).getStringValue("component");
+
+					Component sourceComp = lems.getComponent(sourceNeuronID);
+					Component targetComp = lems.getComponent(targetNeuronID);
+
+					g.writeStartObject();
+					
+						g.writeObjectFieldStart("Source");
+						g.writeStringField("Name",sourceNeuronID);
+						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
+						writeEventPorts(g, sourceComp.getComponentType());
+						g.writeEndObject();
+						g.writeEndObject();
+						
+						g.writeObjectFieldStart("Target");
+						g.writeStringField("Name",targetNeuronID);
+						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
+						writeEventPorts(g, targetComp.getComponentType());
+						g.writeEndObject();
+						g.writeEndObject();
+					
+					g.writeEndObject();
+				}
+			}
+			g.writeEndArray();
+			g.writeNumberField("SynapseCount",count);
+			
 			
 
 			g.close();
 			
 			String som = sw.toString();
-			sb.append(som);
+			
+			DLemsWriter.putIntoVelocityContext(som, context);
+		
+			Properties props = new Properties();
+			props.put("resource.loader", "class");
+			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+			VelocityEngine ve = new VelocityEngine();
+			ve.init(props);
+			Template template = ve.getTemplate(Method.DEFAULTJSON.getFilename());
+		   
+			sw = new StringWriter();
+
+			template.merge( context, sw );
+			
+			sb.append(sw);
+
+			System.out.println("TestBenchData");
+			System.out.println(sw.toString());
+			System.out.println(som);
 			
 			
 		//simCpt is the simulation tag which translates to the testbench and to the exporter top level
@@ -470,7 +729,7 @@ public class VHDLWriter extends BaseWriter {
 			Component comp = lems.getComponent("neuron_model");
 
 			g.writeObjectFieldStart(SOMKeywords.PARAMETERS.get());
-			writeParameters(g, comp);
+			writeParameters(g, comp, comp.getComponentType().getFinalParams(), comp.getParamValues());
 			g.writeEndObject();
 			g.writeEndObject();
 			
@@ -1017,35 +1276,43 @@ public class VHDLWriter extends BaseWriter {
 	{
 		ComponentType ct = comp.getComponentType();
 		Dynamics dyn =  ct.getDynamics();
+		
+		
+		LemsCollection<FinalParam> parameters = new LemsCollection<FinalParam>();
+		parameters.addAll(comp.getComponentType().getFinalParams());
+		LemsCollection<ParamValue> parameterValues = new LemsCollection<ParamValue>();
+		parameterValues.addAll(comp.getParamValues());
+		
 		g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
 		if (dyn != null)
-		writeTimeDerivatives(g, ct, dyn.getTimeDerivatives());
+		writeTimeDerivatives(g, ct, dyn.getTimeDerivatives(),parameters,parameterValues);
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.DERIVEDPARAMETERS.get());
-		writeDerivedParameters(g, ct, ct.getDerivedParameters());
+		writeDerivedParameters(g, ct, ct.getDerivedParameters(),parameters,parameterValues);
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.DERIVEDVARIABLES.get());
 		if (dyn != null)
-		writeDerivedVariables(g, ct, dyn.getDerivedVariables(),comp);
+		writeDerivedVariables(g, ct, dyn.getDerivedVariables(),comp,parameters,parameterValues);
+		g.writeEndObject();
+
+		g.writeObjectFieldStart(SOMKeywords.CONDITIONALDERIVEDVARIABLES.get());
+		if (dyn != null)
+		writeConditionalDerivedVariables(g, ct, dyn.getConditionalDerivedVariables(),comp,parameters,parameterValues);
 		g.writeEndObject();
 		
 		g.writeArrayFieldStart(SOMKeywords.CONDITIONS.get());
 		if (dyn != null)
-		writeConditions(g, ct,dyn.getOnConditions());
+		writeConditions(g, ct,dyn.getOnConditions(),parameters,parameterValues);
 		g.writeEndArray();
 
 		g.writeArrayFieldStart(SOMKeywords.EVENTS.get());
 		if (dyn != null)
-		writeEvents(g, ct, dyn.getOnEvents());
+		writeEvents(g, ct, dyn.getOnEvents(),parameters,parameterValues);
 		g.writeEndArray();
 
 		g.writeStringField(SOMKeywords.NAME.get(), comp.getID());
-
-		g.writeObjectFieldStart(SOMKeywords.PARAMETERS.get());
-		writeParameters(g, comp);
-		g.writeEndObject();
 		
 		g.writeObjectFieldStart(SOMKeywords.REQUIREMENTS.get());
 		writeRequirements(g, comp.getComponentType().getRequirements());
@@ -1060,7 +1327,7 @@ public class VHDLWriter extends BaseWriter {
 		g.writeEndObject();
 		
 		g.writeObjectFieldStart(SOMKeywords.STATE.get());
-		writeState(g, comp);
+		writeState(g, comp,parameters,parameterValues);
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.STATE_FUNCTIONS.get());
@@ -1106,12 +1373,18 @@ public class VHDLWriter extends BaseWriter {
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.REGIMES.get());
-		writeRegimes(g, comp,writeChildren);
+		writeRegimes(g, comp,writeChildren, parameters, parameterValues );
+		g.writeEndObject();
+
+
+		g.writeObjectFieldStart(SOMKeywords.PARAMETERS.get());
+		writeParameters(g, comp, parameters, parameterValues );
 		g.writeEndObject();
 		
 	}
 	
-	private void writeRegimes(JsonGenerator g, Component comp, boolean writeChildren) throws JsonGenerationException, IOException, ContentError
+	private void writeRegimes(JsonGenerator g, Component comp, boolean writeChildren
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws JsonGenerationException, IOException, ContentError
 	{
 		ComponentType ct = comp.getComponentType();
 		ct.getAbout();
@@ -1128,7 +1401,7 @@ public class VHDLWriter extends BaseWriter {
 					g.writeStringField("default","default");
 					
 					g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
-					writeTimeDerivatives(g, ct, reg.getTimeDerivatives());
+					writeTimeDerivatives(g, ct, reg.getTimeDerivatives(),params,combinedParameterValues);
 					g.writeEndObject();
 
 					g.writeObjectFieldStart(SOMKeywords.ATTACHMENTS.get());
@@ -1136,19 +1409,19 @@ public class VHDLWriter extends BaseWriter {
 					g.writeEndObject();
 					
 					g.writeObjectFieldStart(SOMKeywords.DERIVEDPARAMETERS.get());
-					writeDerivedParameters(g, ct, ct.getDerivedParameters());
+					writeDerivedParameters(g, ct, ct.getDerivedParameters(),params,combinedParameterValues);
 					g.writeEndObject();
 
 					g.writeArrayFieldStart(SOMKeywords.CONDITIONS.get());
-					writeConditions(g, ct,reg.getOnConditions());
+					writeConditions(g, ct,reg.getOnConditions(),params,combinedParameterValues);
 					g.writeEndArray();
 
 					g.writeArrayFieldStart(SOMKeywords.EVENTS.get());
-					writeEvents(g, ct, reg.getOnEvents());
+					writeEvents(g, ct, reg.getOnEvents(),params,combinedParameterValues);
 					g.writeEndArray();
 
 					g.writeArrayFieldStart(SOMKeywords.ONENTRYS.get());
-					writeEntrys(g, ct, reg.getOnEntrys());
+					writeEntrys(g, ct, reg.getOnEntrys(),params,combinedParameterValues);
 					g.writeEndArray();
 					
 					
@@ -1158,7 +1431,8 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 
-	private void writeState(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	private void writeState(JsonGenerator g, Component comp
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
 		Dynamics dyn = ct.getDynamics();
@@ -1175,7 +1449,7 @@ public class VHDLWriter extends BaseWriter {
 					{
 						init = encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 								ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-								ct.getRequirements(), sensitivityList);
+								ct.getRequirements(), sensitivityList,params,combinedParameterValues);
 					}
 				}
 			}
@@ -1193,9 +1467,10 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 	
-	private String encodeVariablesStyle(String toEncode, LemsCollection<FinalParam> params, 
+	private String encodeVariablesStyle(String toEncode, LemsCollection<FinalParam> paramsOrig, 
 			LemsCollection<StateVariable> stateVariables,LemsCollection<DerivedVariable> derivedVariables,
-			LemsCollection<Requirement> requirements, StringBuilder sensitivityList )
+			LemsCollection<Requirement> requirements, StringBuilder sensitivityList 
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError
 	{
 		char[] arrOperators = { '(',' ', ')', '*', '/', '\\', '+', '-', '^' };
 	    String regex = "(" + new String(arrOperators).replaceAll("(.)", "\\\\$1|").replaceAll("\\|$", ")"); // escape every char with \ and turn into "OR"
@@ -1214,14 +1489,15 @@ public class VHDLWriter extends BaseWriter {
 		list.addAll(hs);
 		java.util.Collections.sort(list, comparator );
 		returnString = " " + returnString.replaceAll("\\*"," \\* ").replaceAll("\\^"," \\** ").replaceAll("/"," / ").replaceAll("\\("," \\( ").replaceAll("\\)"," \\) ").replaceAll("-"," - ").replaceAll("\\+"," \\+ ") + " ";
+
 		for (int i = list.size() -1; i >= 0 ; i --)
 		{
 			String toReplace = list.get(i);
 			try {
-				if (params.hasName(toReplace))
+				if (paramsOrig.hasName(toReplace))
 				{
-					sensitivityList.append(" param_" + params.getByName(toReplace).r_dimension.getName() + "_" + toReplace + ",");
-					returnString = returnString.replaceAll(" " + toReplace + " "," param_" + params.getByName(toReplace).r_dimension.getName() + "_" + toReplace + " ");
+					sensitivityList.append(" param_" + paramsOrig.getByName(toReplace).r_dimension.getName() + "_" + toReplace + ",");
+					returnString = returnString.replaceAll(" " + toReplace + " "," param_" + paramsOrig.getByName(toReplace).r_dimension.getName() + "_" + toReplace + " ");
 				}
 				else
 				if (requirements.hasName(toReplace))
@@ -1232,8 +1508,8 @@ public class VHDLWriter extends BaseWriter {
 				else
 				if (stateVariables.hasName(toReplace))
 				{
-					sensitivityList.append(" statevariable_" + stateVariables.getByName(toReplace).dimension + "_" + toReplace + " ,");
-					returnString = returnString.replaceAll(" " + toReplace + " "," statevariable_" + stateVariables.getByName(toReplace).dimension + "_" + toReplace + " ");
+					sensitivityList.append(" statevariable_" + stateVariables.getByName(toReplace).dimension + "_" + toReplace + "_in ,");
+					returnString = returnString.replaceAll(" " + toReplace + " "," statevariable_" + stateVariables.getByName(toReplace).dimension + "_" + toReplace + "_in ");
 				}
 				else
 				if (derivedVariables.hasName(toReplace))
@@ -1277,6 +1553,58 @@ public class VHDLWriter extends BaseWriter {
 			}
 			
 		}
+		returnString.replace("  ", " ");
+		for (FinalParam param1 : paramsOrig)
+		{
+			for (FinalParam param2 : paramsOrig)
+			{
+				String param1_s = " param_" + param1.r_dimension.getName() + "_" + param1.name;
+				String param2_s = " param_" + param2.r_dimension.getName() + "_" + param2.name;
+				if (returnString.contains(param1_s + " / " + param2_s))
+				{
+					returnString = returnString.replace(param1_s + " / " + param2_s," param_" + param1.r_dimension.getName() + "_" + param1.name + "_div_" + param2.name);
+					FinalParam fp = new FinalParam(param1.name + "_div_" + param2.name, new Dimension(param1.r_dimension.getName() + "_div_" + param2.r_dimension.getName()));
+					if (!params.hasName(fp.name))
+					{
+						params.add(fp);
+						combinedParameterValues.add(new ParamValue(fp, combinedParameterValues.getByName(param1.name).getDoubleValue() / combinedParameterValues.getByName(param2.name).getDoubleValue()));
+					}
+				}
+			}
+		}
+		
+		for (FinalParam param1 : paramsOrig)
+		{
+				String param1_s = " param_" + param1.r_dimension.getName() + "_" + param1.name;
+				if (returnString.contains(" / "+param1_s))
+				{
+					returnString = returnString.replace(" / " + param1_s," * param_" + param1.r_dimension.getName() + "_inv_" + param1.name + "_inv");
+					FinalParam fp = new FinalParam(param1.name + "_inv", new Dimension(param1.r_dimension.getName() + "_inv"));
+					if (!params.hasName(fp.name))
+					{
+						params.add(fp);
+						combinedParameterValues.add(new ParamValue(fp, 1 / combinedParameterValues.getByName(param1.name).getDoubleValue()));
+					}
+				}
+		}
+
+		
+		//replace all param_ / param_ with one precalculated parameter
+		
+		
+		
+		//replace all param_ * param_ with one precalculated parameter
+
+		//replace all / param_ with one precalculated inverse parameter
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		return returnString;
@@ -1335,19 +1663,29 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 
-	private void writeParameters(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	private void writeParameters(JsonGenerator g, Component comp, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
 
-		for(FinalParam p: ct.getFinalParams())
+		for(FinalParam p: params)
 		{
-			ParamValue pv = comp.getParamValue(p.getName());
+			ParamValue pv = combinedParameterValues.getByName(p.getName());
 			g.writeObjectFieldStart(p.getName());
 			g.writeStringField("name",p.getName());
-			g.writeStringField("type",pv.getDimensionName()+"");
-			g.writeStringField("value",(float)pv.getDoubleValue()+"");
-			writeBitLengths(g,pv.getDimensionName());
 			
+			if (pv != null)
+			{
+				g.writeStringField("type",pv.getDimensionName()+"");
+				g.writeStringField("value",(float)pv.getDoubleValue()+"");
+				writeBitLengths(g,pv.getDimensionName());
+			}
+			else
+			{
+				pv = combinedParameterValues.getByName(p.getName());
+				g.writeStringField("type",pv.getDimensionName()+"");
+				g.writeStringField("value",(float)pv.getDoubleValue()+"");
+				writeBitLengths(g,pv.getDimensionName());
+			}
 			g.writeEndObject();
 		}
 		
@@ -1430,38 +1768,93 @@ public class VHDLWriter extends BaseWriter {
 	
 	private void writeBitLengths(JsonGenerator g, String dimension) throws JsonGenerationException, IOException
 	{
-		if (dimension == null || dimension.equals("none"))
+		String[] splitDims = dimension.split("_");
+		if (splitDims.length == 1)
 		{
-			g.writeStringField("integer","15");
-			g.writeStringField("fraction","0");
-		} else if (dimension.equals("voltage"))
-		{
-			g.writeStringField("integer","2");
-			g.writeStringField("fraction","-24");
-		}  else if (dimension.equals("current")) //todo figure out what the ideal bitwidth for current is
-		{
-			g.writeStringField("integer","-28");
-			g.writeStringField("fraction","-54");
-		} else if (dimension.equals("time"))
-		{
-			g.writeStringField("integer","6");
-			g.writeStringField("fraction","-24");
-		} else if (dimension.equals("capacitance"))
-		{
-			g.writeStringField("integer","-33");
-			g.writeStringField("fraction","-47");
-		} else if (dimension.equals("conductance"))
-		{
-			g.writeStringField("integer","-29");
-			g.writeStringField("fraction","-53");
-		} else if (dimension.equals("per_time"))
-		{
-			g.writeStringField("integer","20");
-			g.writeStringField("fraction","-2");
+			g.writeStringField("integer",getBitLengthInteger(dimension).toString());
+			g.writeStringField("fraction",getBitLengthFraction(dimension).toString());
 		}
+		else
+			if (splitDims.length == 2 && splitDims[1].matches("inv"))
+			{
+				Integer inte = 0-getBitLengthFraction(splitDims[0]);
+				Integer fract = 0-getBitLengthInteger(splitDims[0]);
+				g.writeStringField("integer",inte.toString());
+				g.writeStringField("fraction",fract.toString());
+			} else
+				if (splitDims.length == 3 && splitDims[1].matches("div"))
+				{
+					Integer inte1 = 0-getBitLengthFraction(splitDims[0]);
+					Integer fract1 = 0-getBitLengthInteger(splitDims[0]);
+					Integer inte2 = 0-getBitLengthFraction(splitDims[2]);
+					Integer fract2 = 0-getBitLengthInteger(splitDims[2]);
+					Integer inte = inte1 + inte2;
+					Integer fract = fract1 + fract2;
+					g.writeStringField("integer",inte.toString());
+					g.writeStringField("fraction",fract.toString());
+				}
+			
 	}
 
-	private void writeConditions(JsonGenerator g,ComponentType ct, LemsCollection<OnCondition> onConditions) throws ContentError, JsonGenerationException, IOException
+	private Integer getBitLengthFraction(String dimension)
+	{
+		int fract = 0;
+		if (dimension == null || dimension.equals("none"))
+		{
+			 fract = 0;
+		} else if (dimension.equals("voltage"))
+		{
+			 fract = -24;
+		}  else if (dimension.equals("current")) //todo figure out what the ideal bitwidth for current is
+		{
+			 fract = -54;
+		} else if (dimension.equals("time"))
+		{
+			 fract = -24;
+		} else if (dimension.equals("capacitance"))
+		{
+			 fract = -47;
+		} else if (dimension.equals("conductance"))
+		{
+			 fract =  -53;
+		} else if (dimension.equals("per_time"))
+		{
+			 fract = -2;
+		} 
+		
+		return fract;
+	}
+
+	private Integer getBitLengthInteger(String dimension)
+	{
+		int integer = 0;
+		if (dimension == null || dimension.equals("none"))
+		{
+			integer = 15;
+		} else if (dimension.equals("voltage"))
+		{
+			integer = 2;
+		}  else if (dimension.equals("current")) //todo figure out what the ideal bitwidth for current is
+		{
+			integer = -28;
+		} else if (dimension.equals("time"))
+		{
+			integer = 6;
+		} else if (dimension.equals("capacitance"))
+		{
+			integer = -33;
+		} else if (dimension.equals("conductance"))
+		{
+			integer = -29;
+		} else if (dimension.equals("per_time"))
+		{
+			integer = 20;
+		} 
+		return integer;
+	}
+
+	private void writeConditions(JsonGenerator g,ComponentType ct, LemsCollection<OnCondition> onConditions
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 		
 		for (OnCondition oc: onConditions)
@@ -1471,7 +1864,7 @@ public class VHDLWriter extends BaseWriter {
 
 			g.writeStringField(SOMKeywords.NAME.get(), oc.test.replace(' ', '_').replace('.', '_'));
 			
-			writeConditionList(g, ct,oc,sensitivityList);
+			writeConditionList(g, ct,oc.test,sensitivityList,params,combinedParameterValues);
 			
 			g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
 
@@ -1481,7 +1874,7 @@ public class VHDLWriter extends BaseWriter {
 			{
 				g.writeStringField(sa.getVariable(), encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList));
+						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 			}
 
 			g.writeEndObject();
@@ -1517,7 +1910,8 @@ public class VHDLWriter extends BaseWriter {
 
 	}
 
-	private void writeEvents(JsonGenerator g, ComponentType ct, LemsCollection<OnEvent> onEvents) throws ContentError, JsonGenerationException, IOException
+	private void writeEvents(JsonGenerator g, ComponentType ct, LemsCollection<OnEvent> onEvents
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 		for (OnEvent oc: onEvents)
 		{
@@ -1534,7 +1928,7 @@ public class VHDLWriter extends BaseWriter {
 			{
 				g.writeStringField(sa.getVariable(), encodeVariablesStyle(sa.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList));
+						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 			}
 
 			g.writeEndObject();
@@ -1569,7 +1963,8 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 
-	private void writeEntrys(JsonGenerator g, ComponentType ct, LemsCollection<OnEntry> onEntrys) throws ContentError, JsonGenerationException, IOException
+	private void writeEntrys(JsonGenerator g, ComponentType ct, LemsCollection<OnEntry> onEntrys
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 		for (OnEntry oe: onEntrys)
 		{
@@ -1584,7 +1979,7 @@ public class VHDLWriter extends BaseWriter {
 			{
 				g.writeStringField(sa.getVariable(), encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList));
+						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 			}
 
 			g.writeEndObject();
@@ -1631,15 +2026,16 @@ public class VHDLWriter extends BaseWriter {
 	    if (cond.indexOf(".leq.")>0)
 	    	return ",2,-18))(20)  = '1'";
 	    if (cond.indexOf(".eq.")>0)
-	    	return ",2,-18)) = (others => '0')";
+	    	return ",2,-18)) = (20 downto 0 => '0')";
+	    if (cond.indexOf(".neq.")>0)
+	    	return ",2,-18)) /= (20 downto 0 => '0')";
 	    return ret;
 	}
 
 	
 	
-	private void writeConditionList(JsonGenerator g, ComponentType ct, OnCondition oc, StringBuilder sensitivityList) throws ContentError, JsonGenerationException, IOException
+	private void writeConditionList(JsonGenerator g, ComponentType ct, String ineq, StringBuilder sensitivityList, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
-		String ineq = oc.test;//.replace(' ', '_').replace('.', '_');
 	    String[] conditions = ineq.split("(\\.)[andor]+(\\.)");
 	    String completeExpr ="";
 	    int i = 0;
@@ -1647,10 +2043,10 @@ public class VHDLWriter extends BaseWriter {
 	    {
 	    	completeExpr = completeExpr + encodeVariablesStyle(inequalityToCondition(conditions[i]),ct.getFinalParams(),
 	    			ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-	    			ct.getRequirements(),sensitivityList)+ " " + cond2sign(conditions[i]);
+	    			ct.getRequirements(),sensitivityList,params,combinedParameterValues)+ " " + cond2sign(conditions[i]);
 	    	if ( i < conditions.length - 1 )
 	    	{
-	    		String testForAndOR = oc.test.substring(oc.test.indexOf(conditions[i]) + conditions[i].length(), oc.test.indexOf(conditions[i]) + conditions[i].length()+6).toLowerCase();
+	    		String testForAndOR = ineq.substring(ineq.indexOf(conditions[i]) + conditions[i].length(), ineq.indexOf(conditions[i]) + conditions[i].length()+6).toLowerCase();
 	    		if (testForAndOR.contains("and"))
 	    			completeExpr = completeExpr + " AND ";
 	    		else
@@ -1666,7 +2062,7 @@ public class VHDLWriter extends BaseWriter {
 	private String inequalityToCondition(String ineq)
 	{
 
-		    String[] s = ineq.split("(\\.)[gleqt]+(\\.)");
+		    String[] s = ineq.split("(\\.)[gt|lt|neq|eq]+(\\.)");
 		    //E.info("Split: "+ineq+": len "+s.length+"; "+s[0]+", "+s[1]);
 		    String expr =  "To_slv(resize( " + s[0].trim() + " - (" + s[1].trim() + ")";
 		    //sign = comp2sign(s.group(2))
@@ -1674,7 +2070,8 @@ public class VHDLWriter extends BaseWriter {
 	    return expr;
 	}
 
-	private void writeTimeDerivatives(JsonGenerator g, ComponentType ct, LemsCollection<TimeDerivative> timeDerivatives) throws ContentError, JsonGenerationException, IOException
+	private void writeTimeDerivatives(JsonGenerator g, ComponentType ct, LemsCollection<TimeDerivative> timeDerivatives
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
 		for (TimeDerivative td: timeDerivatives)
 		{
@@ -1682,14 +2079,15 @@ public class VHDLWriter extends BaseWriter {
 			g.writeStringField(td.getVariable(), 
 					encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
 							ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList));
+							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 		}
 
 	}
 
 
 	private void writeDerivedVariables(JsonGenerator g, ComponentType ct, 
-			LemsCollection<DerivedVariable> derivedVariables, Component comp) throws ContentError, JsonGenerationException, IOException
+			LemsCollection<DerivedVariable> derivedVariables, Component comp
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
 		for (DerivedVariable dv: derivedVariables)
 		{
@@ -1704,7 +2102,7 @@ public class VHDLWriter extends BaseWriter {
 			if (val != null) {
 				g.writeStringField("value",encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList) );
+						ct.getRequirements(),sensitivityList,params,combinedParameterValues) );
 				
 			} else if (sel != null) {
 				String red = dv.getReduce();
@@ -1768,7 +2166,7 @@ public class VHDLWriter extends BaseWriter {
 					selval = StringUtil.join(items, op);
 					g.writeStringField("value",encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList));
+							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 					
 				}
 				else
@@ -1780,12 +2178,12 @@ public class VHDLWriter extends BaseWriter {
 					var = sel.substring(iwc + 1, sel.length());
 
 					Component c  =  comp.getChild(rt);
-					selval = "exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var;
-					sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + ",");
+					selval = "exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal";
+					sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal,");
 					
 					g.writeStringField("value",encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList));
+							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 					
 					
 				}
@@ -1801,8 +2199,49 @@ public class VHDLWriter extends BaseWriter {
 
 	}
 	
+
+	private void writeConditionalDerivedVariables(JsonGenerator g, ComponentType ct, 
+			LemsCollection<ConditionalDerivedVariable> conditionalDerivedVariables, Component comp
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
+	{
+		for (ConditionalDerivedVariable dv: conditionalDerivedVariables)
+		{
+			g.writeObjectFieldStart(dv.getName());
+			g.writeStringField("name",dv.getName());
+			g.writeStringField("exposure",dv.getExposure() != null ? dv.getExposure().getName() : "");
+
+	        StringBuilder sensitivityList = new StringBuilder();
+
+			g.writeObjectFieldStart(SOMKeywords.CASES.get());
+			Integer i = 0;
+			for (Case dv2: dv.cases)
+			{
+				g.writeObjectFieldStart(i.toString());
+				String val = dv2.getValueExpression();
+		
+				if (val != null) {
+					g.writeStringField("value",encodeVariablesStyle(dv2.getValueExpression(),
+							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
+							ct.getRequirements(),sensitivityList,params,combinedParameterValues) );
+					writeConditionList(g,ct,dv2.condition,sensitivityList,params,combinedParameterValues);
+				} 
+				i++;
+				g.writeEndObject();
+					
+			}
+			g.writeEndObject();
+
+			g.writeStringField("type",dv.getDimension().getName()+"");
+			g.writeStringField("sensitivityList",sensitivityList.length() == 0 ? "" : sensitivityList.substring(0,sensitivityList.length()-1));
+			writeBitLengths(g,dv.getDimension().getName());
+					
+			g.writeEndObject();
+		}
+
+	}
+	
 	private void writeDerivedParameters(JsonGenerator g, ComponentType ct, 
-			LemsCollection<DerivedParameter> derivedParameters) throws ContentError, JsonGenerationException, IOException
+			LemsCollection<DerivedParameter> derivedParameters, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
 		for (DerivedParameter dp: derivedParameters)
 		{
@@ -1813,7 +2252,7 @@ public class VHDLWriter extends BaseWriter {
 			g.writeStringField("type",dp.getDimension().getName()+"");
 			g.writeStringField("value",encodeVariablesStyle(dp.getValue(),
 					ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-					ct.getRequirements(),sensitivityList));
+					ct.getRequirements(),sensitivityList,params,combinedParameterValues));
 			writeBitLengths(g,dp.getDimension().getName());
 					
 			g.writeEndObject();

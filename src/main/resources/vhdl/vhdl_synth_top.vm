@@ -22,15 +22,166 @@ use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.fixed_float_types.ALL;
 use std.textio.all;
 use ieee.std_logic_textio.all; -- if you're saving this type of signal
-entity tb_simulation is
-end tb_simulation;
 
 ###################################################################
 ###################################################################
 
-architecture tb of tb_simulation is
 
-FILE test_out_data: TEXT open WRITE_MODE is "VHDLoutput.csv";
+
+
+
+
+
+
+
+
+ 
+entity top_synth is
+    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES
+           rst : in STD_LOGIC; --SYNCHRONOUS RESET
+           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS
+		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
+		   reset_model : in STD_LOGIC;
+		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
+		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
+		   SelectSpikesIn :  in STD_LOGIC_VECTOR(159 downto 0);
+		   
+#foreach ($neuron in $NeuronComponents)
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo = $neuron.name + "_" + "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+	
+	
+#if ($neuron.regimes.size() > 0)
+		#set( $foo = $neuron.name + "_current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);"  )
+		$foo
+		#set( $foo = $neuron.name + "_current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0); "  )
+		$foo
+			
+#end
+
+##Parameters
+	#foreach ($par in $neuron.parameters)
+		#set( $foo = $neuron.name + "_" + "param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $neuron.exposures)
+		#set( $foo = $neuron.name + "_" + "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+	
+	
+##THE CHILDREN
+#foreach ($child in $neuron.Children)
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = $neuron.name + "_" + "param_" + $par.type  +  "_" + $child.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child.exposures)
+		#set( $foo = $neuron.name + "_" + "exposure_" + $par.type +  "_" + $child.name +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+		
+			
+##THE CHILDREN
+#foreach ($child3 in $child.Children)
+
+
+##Parameters
+	#foreach ($par in $child3.parameters)
+		#set( $foo = $neuron.name + "_" + "param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child3.exposures)
+		#set( $foo = $neuron.name + "_" + "exposure_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $par.name + " : out  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+					
+					
+##THE CHILDREN
+#foreach ($child4 in $child3.Children)
+
+	
+##Parameters
+	#foreach ($par in $child4.parameters)
+		#set( $foo = $neuron.name + "_" + "param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child4.exposures)
+		#set( $foo = $neuron.name + "_" + "exposure_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " : out  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+								
+								
+								
+								
+								
+##THE CHILDREN
+#foreach ($child5 in $child4.Children)
+
+	
+##Parameters
+	#foreach ($par in $child5.parameters)
+		#set( $foo = $neuron.name + "_" + "param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##Exposures
+	#foreach ($par in $child5.exposures)
+		#set( $foo = $neuron.name + "_" + "exposure_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " : out  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+		
+		
+#end
+
+#end
+
+#end
+		
+		
+		
+#end
+#end
+##System Parameters
+           sysparam_time_timestep : in sfixed (-6 downto -22);
+           sysparam_time_simtime : in sfixed (6 downto -22)
+		   );
+end top_synth;
+
+---------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+architecture top of top_synth is
+
+signal step_once_complete_int : STD_LOGIC;
 
 ## Go through each component and gets it definition here
 
@@ -54,8 +205,10 @@ component $neuron.name
 	
 	
 #if ($neuron.regimes.size() > 0)
-			current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);
-			current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0); 
+		#set( $foo = "current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);"  )
+		$foo
+		#set( $foo = "current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0); "  )
+		$foo
 #end
 
 ##Parameters
@@ -217,40 +370,21 @@ component $neuron.name
 end component;
 #end
 
-##Internal TestbenchSignals - all events and exposures of all instantiated neurons
 
-	signal clk 			: std_logic := '0';
-	signal eog 			: std_logic := '0';
-	signal rst 			: std_logic := '1';
-	signal ce 			: std_logic := '1';
-	signal step_once_go 			: std_logic := '0';
-	signal reset_model 			: std_logic := '0';
-	
-	signal step_once_complete 			: std_logic := '0';
-	signal eventport_in_spike_aggregate : STD_LOGIC_VECTOR(31 downto 0);
-	signal SelectSpikesIn : STD_LOGIC_VECTOR(159 downto 0);
-	signal sysparam_time_simtime  : sfixed ( 6 downto -22) := to_sfixed (0.0,6 , -22);
-	signal Errors		: integer;
-	signal sysparam_time_timestep : sfixed (-6 downto -22) := to_sfixed( $dt ,-6,-22);
+	signal sysparam_time_simtime_int  : sfixed ( 6 downto -22) := to_sfixed (0.0,6 , -22);
+	signal sysparam_time_timestep_int : sfixed (-6 downto -22) := to_sfixed( $dt ,-6,-22);
 	
 	
 #foreach ($child in $NeuronComponents)
-##Exposure Signals
-#foreach ($par in $child.exposures)
-	#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-$foo
+
+
+#if ($child.regimes.size() > 0) 
+		#set( $foo = "signal " + $child.name + "_current_regime_in_stdlv_int :  STD_LOGIC_VECTOR(1 downto 0);"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_current_regime_out_stdlv_int :  STD_LOGIC_VECTOR(1 downto 0); "  )
+		$foo
 #end
 
-#if ($child.regimes.size() > 0)
-		signal current_regime_in_stdlv_int :  STD_LOGIC_VECTOR(1 downto 0);
-		signal current_regime_out_stdlv_int :  STD_LOGIC_VECTOR(1 downto 0); 
-#end
-
-##EventPorts
-#foreach ($par in $child.eventports)
-	#set( $foo = "signal " + $child.name + "_eventport_" + $par.direction + "_" + $par.name + "_internal : std_logic; ")
-$foo
-#end
 
 ##StateVariables
 	#foreach ($par in $child.state)
@@ -267,12 +401,6 @@ $foo
 ##THE CHILDREN
 #foreach ($child2 in $child.Children)
 
-##Exposures
-	#foreach ($par in $child2.exposures)
-		#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $par.name + " :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-		$foo
-	#end
-	
 	
 ##StateVariables
 	#foreach ($par in $child2.state)
@@ -288,12 +416,6 @@ $foo
 		
 ##THE CHILDREN
 #foreach ($child3 in $child2.Children)
-
-	##Exposures
-		#foreach ($par in $child3.exposures)
-			#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + " :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-			$foo
-		#end
 		
 	##StateVariables
 		#foreach ($par in $child3.state)
@@ -370,11 +492,7 @@ $foo
 
 ##Start and end times - stored in SIMLENGTH
 
-file stimulus: TEXT open read_mode is "stimulus.csv";
-
 begin
-SelectSpikesIn(79 downto 0) <= "01111011100110101100010110101001001010000011100110001010010000011000100000100000";
-SelectSpikesIn(159 downto 80) <= (others => '0');
 
 ##instantiate each neuron
 
@@ -386,24 +504,26 @@ $foo : $child.name
 				ce => ce,
 		   step_once_go  => step_once_go,
 		   reset_model => reset_model,
-		   step_once_complete  => step_once_complete,
+		   step_once_complete  => step_once_complete_int,
 		   eventport_in_spike_aggregate => eventport_in_spike_aggregate,
 		   SelectSpikesIn => SelectSpikesIn,
 		   
 ##Event Ports
     #foreach ($par in $child.eventports)
-		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => " + $child.name + "_eventport_" + $par.direction + "_" + $par.name + "_internal ,"  )
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => " + $child.name + "_" + "eventport_" + $par.direction + "_" + $par.name + ","  )
 		$foo
 	#end
 
 #if ($child.regimes.size() > 0)
-			current_regime_in_stdlv => current_regime_in_stdlv_int,
-			current_regime_out_stdlv => current_regime_out_stdlv_int, 
+		#set( $foo = "current_regime_in_stdlv => " + $child.name + "_current_regime_in_stdlv_int,"  )
+		$foo
+		#set( $foo = "current_regime_out_stdlv  => " + $child.name + "_current_regime_out_stdlv_int, "  )
+		$foo
 #end
 
 ##Parameters
 	#foreach ($par in $child.parameters)
-		#set( $foo = "param_" + $par.type +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " , " + $par.fraction + "),"  )
+		#set( $foo = "param_" + $par.type +  "_" + $par.name + " =>  " + $child.name + "_param_" + $par.type +  "_" + $par.name + ","  )
 		$foo
 	#end
 
@@ -431,7 +551,7 @@ $foo : $child.name
 
 ##Parameters
 #foreach ($par in $child2.parameters)
-	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " , " + $par.fraction + "),"  )
+	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $par.name + " => " + $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
@@ -458,7 +578,7 @@ $foo : $child.name
 #foreach ($child3 in $child2.Children)
 ##Parameters
 #foreach ($par in $child3.parameters)
-	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " , " + $par.fraction + "),"  )
+	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + " => " + $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
@@ -485,13 +605,13 @@ $foo : $child.name
 #foreach ($child4 in $child3.Children)
 ##Parameters
 #foreach ($par in $child4.parameters)
-	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " , " + $par.fraction + "),"  )
+	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $par.name + " => " + $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
 ##Exposures
 #foreach ($par in $child4.exposures)
-	#set( $foo = "exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + " => " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+   "_" + $child4.name + "_" + $par.name + ","  )
+	#set( $foo = "exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + " => " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
@@ -513,13 +633,13 @@ $foo : $child.name
 #foreach ($child5 in $child4.Children)
 ##Parameters
 #foreach ($par in $child5.parameters)
-	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + " => to_sfixed (" + $par.value + "," + $par.integer + " , " + $par.fraction + "),"  )
+	#set( $foo = "param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + " => " + $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
 ##Exposures
 #foreach ($par in $child5.exposures)
-	#set( $foo = "exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + " => " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+   "_" + $child4.name +  "_" + $child5.name + "_" + $par.name + ","  )
+	#set( $foo = "exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + " => " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + ","  )
 	$foo
 #end
 
@@ -547,108 +667,25 @@ $foo : $child.name
 
 #end
 
-receive_data: process 
-
-variable l: line;
-
-variable char : character; 
-#set ($SynapseCountM1 = $SynapseCount -  1)
-#if ($SynapseCount > 0 )
-variable s : STD_LOGIC_VECTOR($SynapseCountM1 downto 0); 
-#end
-   
-begin            
-   -- wait for Reset to complete
-   -- wait until rst='1';
-   wait until rst='0';
-
-   
-   while not endfile(stimulus) loop
-
-     -- read digital data from input file
-     readline(stimulus, l);
-#if ($SynapseCount > 0 )
-     read(l, s);
-	 
-     eventport_in_spike_aggregate($SynapseCountM1 downto 0) <= 
-	 #set($range = [0..$SynapseCountM1])
-#foreach($i in $range)
-   s($i)
-#if ($i <  $SynapseCountM1)
-  &
-#else
-  ;
-#end
-#end
-#end
-     
-     wait until step_once_go = '1';
-
-   end loop;
-    
-   
-   wait;
-
- end process receive_data;
 
 
-#foreach ($connection in $Connections)
-#foreach ($eventportS in $connection.Source.eventports)
-#if ($eventportS.direction == "out")
-#foreach ($eventportT in $connection.Target.eventports)
-#if ($eventportT.direction == "in")
-#set ( $foo =  $connection.Target.Name + "_eventport_in_" + $eventportT.name + "_internal <= " + $connection.Source.Name + "_eventport_out_" + $eventportS.name + "_internal;")
-$foo
-#end
-#end
-#end
-#end
-#end
+store_state: process (clk) is
+   begin
+      if rising_edge(clk) then  
+         if (rst='1') then   
+		
 
-	process
-	variable L1              : LINE;
-    begin
-	write(L1, "SimulationTime " );
-	#foreach ($child in $NeuronComponents)
-		#foreach ($par in $child.exposures)
-				#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $par.name  )
-				write(L1, "$foo" );
-				write(L1, " ");
-		#end
-		##THE CHILDREN
-		#foreach ($child2 in $child.Children)
-			##Exposures
-				#foreach ($par in $child2.exposures)
-					#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $par.name   )
-					write(L1, "$foo");  -- nth value in row
-					write(L1, " ");
-				#end
-		#end
-		## END THE CHILDREN
-	#end
-				writeline(test_out_data, L1); -- write row to output file
-		rst <= '1';
-		wait for 20 ns;
-		rst <= '0';
-        -- EDIT
-        Wait;
-    end process;
-	
-	clk <= not(clk) after 10 ns;
-	
-	
-
-
-step_once_go_proc: process 
 
 #foreach ($child in $NeuronComponents)
 ##StateVariables
 	#foreach ($par in $child.state)
-		#set( $foo = "variable " + $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_out_int_temp : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");"  )
 		$foo
 	#end
+	
 #if ($child.regimes.size() > 0)
-	variable current_regime_out_stdlv_int_temp : STD_LOGIC_VECTOR(1 downto 0);
+		#set( $foo = $child.name + "_current_regime_in_stdlv_int <= (others => '0');"  )
+		$foo
 #end
 
 ##THE CHILDREN
@@ -657,76 +694,7 @@ step_once_go_proc: process
 		
 	##StateVariables
 		#foreach ($par in $child2.state)
-			#set( $foo = "variable " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int_temp : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-			$foo
-		#end
-		
-		##THE CHILDREN
-			#foreach ($child3 in $child2.Children)
-
-				##StateVariables
-					#foreach ($par in $child3.state)
-						#set( $foo = "variable " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_out_int_temp : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-						$foo
-					#end
-					
-						##THE CHILDREN
-						#foreach ($child4 in $child3.Children)
-
-							##StateVariables
-								#foreach ($par in $child4.state)
-									#set( $foo = "variable " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+  "_" + $par.name + "_out_int_temp : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-									$foo
-								#end
-								
-								##THE CHILDREN
-								#foreach ($child5 in $child4.Children)
-
-									##StateVariables
-										#foreach ($par in $child5.state)
-											#set( $foo = "variable " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_out_int_temp : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-											$foo
-										#end
-										
-								#end
-					#end
-					
-			#end
-#end
-#end
-
-
-begin            
-   -- wait for Reset to complete
-   -- wait until rst='1';
-   wait until rst='0';
-   
-   wait for 180 ns;
-   while 1 = 1 loop
-		step_once_go <= '1';
-		wait for 20 ns;
-		step_once_go <= '0';
-		wait until step_once_complete = '1';
-		
-#foreach ($child in $NeuronComponents)
-##StateVariables
-	#foreach ($par in $child.state)
-		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_out_int_temp := " + $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_out_int;"  )
-		$foo
-	#end
-	
-#if ($child.regimes.size() > 0)
-	current_regime_out_stdlv_int_temp := current_regime_out_stdlv_int;
-#end
-
-
-##THE CHILDREN
-#foreach ($child2 in $child.Children)
-
-		
-	##StateVariables
-		#foreach ($par in $child2.state)
-			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int_temp := " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int;"  )
+			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
 			$foo
 		#end
 		##THE CHILDREN
@@ -734,61 +702,7 @@ begin
 
 				##StateVariables
 					#foreach ($par in $child3.state)
-						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_out_int_temp := " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_out_int;"  )
-						$foo
-					#end
-							
-					#foreach ($child4 in $child3.Children)
-
-						##StateVariables
-							#foreach ($par in $child4.state)
-								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+   "_" + $child4.name+  "_" + $par.name + "_out_int_temp := " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_out_int;"  )
-								$foo
-							#end
-							
-							#foreach ($child5 in $child4.Children)
-
-								##StateVariables
-									#foreach ($par in $child3.state)
-										#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+   "_" + $child4.name+  "_" + $child5.name+ "_" + $par.name + "_out_int_temp := " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name+ "_" + $par.name + "_out_int;"  )
-										$foo
-									#end
-									
-							#end
-					#end
-			#end
-#end
-#end
-
-
-
-#foreach ($child in $NeuronComponents)
-##StateVariables
-	#foreach ($par in $child.state)
-		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_out_int_temp;"  )
-		$foo
-	#end
-	
-#if ($child.regimes.size() > 0)
-	current_regime_in_stdlv_int <= current_regime_out_stdlv_int_temp;
-#end
-
-
-##THE CHILDREN
-#foreach ($child2 in $child.Children)
-
-		
-	##StateVariables
-		#foreach ($par in $child2.state)
-			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int_temp;"  )
-			$foo
-		#end
-		##THE CHILDREN
-			#foreach ($child3 in $child2.Children)
-
-				##StateVariables
-					#foreach ($par in $child3.state)
-						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_out_int_temp;"  )
+						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
 						$foo
 					#end
 					
@@ -796,7 +710,7 @@ begin
 
 						##StateVariables
 							#foreach ($par in $child4.state)
-								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+  "_" + $par.name + "_out_int_temp;"  )
+								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
 								$foo
 							#end
 							
@@ -804,7 +718,66 @@ begin
 
 											##StateVariables
 												#foreach ($par in $child5.state)
-													#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_out_int_temp;"  )
+													#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
+													$foo
+												#end
+												
+										#end
+
+					#end
+			#end
+#end
+#end
+
+
+		 
+         elsif (ce='1' and step_once_complete_int='1') then
+  
+
+#foreach ($child in $NeuronComponents)
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_out_int;"  )
+		$foo
+	#end
+	
+
+#if ($child.regimes.size() > 0)
+		#set( $foo = $child.name + "_current_regime_in_stdlv_int <= " + $child.name + "_current_regime_out_stdlv_int;"  )
+		$foo
+#end
+
+##THE CHILDREN
+#foreach ($child2 in $child.Children)
+
+		
+	##StateVariables
+		#foreach ($par in $child2.state)
+			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int;"  )
+			$foo
+		#end
+		##THE CHILDREN
+			#foreach ($child3 in $child2.Children)
+
+				##StateVariables
+					#foreach ($par in $child3.state)
+						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_out_int;"  )
+						$foo
+					#end
+					
+					#foreach ($child4 in $child3.Children)
+
+						##StateVariables
+							#foreach ($par in $child4.state)
+								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+  "_" + $par.name + "_out_int;"  )
+								$foo
+							#end
+							
+										#foreach ($child5 in $child4.Children)
+
+											##StateVariables
+												#foreach ($par in $child5.state)
+													#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_in_int <= " + $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_out_int;"  )
 													$foo
 												#end
 												
@@ -816,67 +789,16 @@ begin
 #end
 
 		
-		wait until step_once_complete = '0';
-   end loop;
+end if;
+end if;
     
 
- end process step_once_go_proc;
+ end process store_state;
  
  
- process
- begin
-   wait until rst='0';
- 
- 
-	reset_model <= '1';
-	
-   
-   wait for 500 ns;
-		reset_model <= '0';
- 
- end process ;
-  
- 
-	--
-	-- Print the results at each clock tick.
-	--
-	process(step_once_complete)
-	variable L1              : LINE;
-	begin
-		if (rst = '1') then
-		
-				sysparam_time_simtime <= to_sfixed (0.0,6, -22);
-		else
-			if (step_once_complete'event and step_once_complete = '1') then
-				sysparam_time_simtime <= resize(sysparam_time_simtime + sysparam_time_timestep,6, -22);
-				write(L1, real'image(to_real( sysparam_time_simtime )));  -- nth value in row
-						write(L1, " ");
-			#foreach ($child in $NeuronComponents)
-				#foreach ($par in $child.exposures)
-						#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $par.name  )
-						write(L1, real'image(to_real( $foo )));  -- nth value in row
-						write(L1, " ");
-				#end
-				##THE CHILDREN
-				#foreach ($child2 in $child.Children)
-					##Exposures
-						#foreach ($par in $child2.exposures)
-							#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $par.name   )
-							write(L1, real'image(to_real( $foo )));  -- nth value in row
-							write(L1, " ");
-						#end
-				#end
-				## END THE CHILDREN
-			#end
-			
+ step_once_complete <= step_once_complete_int;
 
-				
-				writeline(test_out_data, L1); -- write row to output file
-			end if;
-		end if;
-	end process;
-
-end tb;
+end top;
 
 ###################################################################
 ###################################################################

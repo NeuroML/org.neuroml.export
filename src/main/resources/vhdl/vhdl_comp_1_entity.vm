@@ -43,12 +43,18 @@ entity $name is
            ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS
 
 		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
+           reset_model : in STD_LOGIC; --signal to all components to go into their reset state
 		   
 #if ($name.contains("neuron_model"))
-			step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
+		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
 		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
-		   SelectSpikesIn			: Std_logic_vector((32*5)-1 downto 0) := (others => '0');
+		   SelectSpikesIn			: Std_logic_vector(159 downto 0) := (others => '0');
 #end   
+
+#if ($regimes.size() > 0)
+			current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);
+			current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0); 
+#end
 ##Event Ports
     #foreach ($par in $eventports)
 		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
@@ -73,7 +79,19 @@ entity $name is
 		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
-	
+
+
+##StateVariables
+	#foreach ($par in $state)
+		#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $state)
+		#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
 	
 	
 ##THE CHILDREN
@@ -89,6 +107,98 @@ entity $name is
 			#set( $foo = "exposure_" + $par.type +  "_" + $child.name +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 			$foo
 		#end
+		
+	##StateVariables
+		#foreach ($par in $child.state)
+			#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+		#end
+	##StateVariables
+		#foreach ($par in $child.state)
+			#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+		#end
+		
+			##THE CHILDREN
+			#foreach ($child2 in $child.Children)
+				##Parameters
+					#foreach ($par in $child2.parameters)
+						#set( $foo = "param_" + $par.type  +  "_" + $child.name +  "_" + $child2.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+					#end
+
+				##Exposures
+					#foreach ($par in $child2.exposures)
+						#set( $foo = "exposure_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+					#end
+					
+				##StateVariables
+					#foreach ($par in $child2.state)
+						#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+					#end
+				##StateVariables
+					#foreach ($par in $child2.state)
+						#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+					#end
+					
+					
+					##THE CHILDREN
+					#foreach ($child3 in $child2.Children)
+						##Parameters
+							#foreach ($par in $child3.parameters)
+								#set( $foo = "param_" + $par.type  +  "_" + $child.name +  "_" + $child2.name +"_" + $child3.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
+							#end
+
+						##Exposures
+							#foreach ($par in $child3.exposures)
+								#set( $foo = "exposure_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
+							#end
+							
+						##StateVariables
+							#foreach ($par in $child3.state)
+								#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
+							#end
+						##StateVariables
+							#foreach ($par in $child3.state)
+								#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
+							#end
+							
+							
+					
+							##THE CHILDREN
+							#foreach ($child4 in $child3.Children)
+								##Parameters
+									#foreach ($par in $child4.parameters)
+										#set( $foo = "param_" + $par.type  +  "_" + $child.name +  "_" + $child2.name +"_" + $child3.name +  "_" + $child4.name +"_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+									#end
+
+								##Exposures
+									#foreach ($par in $child4.exposures)
+										#set( $foo = "exposure_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $child4.name +"_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+									#end
+									
+								##StateVariables
+									#foreach ($par in $child4.state)
+										#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $child4.name +"_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+									#end
+								##StateVariables
+									#foreach ($par in $child4.state)
+										#set( $foo = "statevariable_" + $par.type +  "_" + $child.name +  "_" + $child2.name+  "_" + $child3.name +"_" + $child4.name +"_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+									#end
+							#end
+					#end
+			#end
 #end
 ## END THE CHILDREN
 		   

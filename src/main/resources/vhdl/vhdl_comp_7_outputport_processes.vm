@@ -119,7 +119,7 @@ begin
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
-if ( current_regime = $regime.name ) and eventport_in_$event.name = '1' then
+if ( current_regime_in_int = $regime.name ) and eventport_in_$event.name = '1' then
 	$foo
 else
 	$foo2
@@ -132,7 +132,7 @@ end if;
 #foreach ($event in $regime.conditions)
 #if ($event.effect.events.get($par.name))
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
-if ( current_regime = $regime.name ) and $event.condition  then
+if ( current_regime_in_int = $regime.name ) and $event.condition  then
 	$foo := '1';
 else
 	$foo := '0';
@@ -193,17 +193,35 @@ end process;
 ##Asign Exposures to State Variables
 #foreach ($par in $state)
 #if ($par.exposure.length() > 0)
-#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + ";"  )
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + "_next;"  )
 $foo 
 #end
 #end
 ---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+-- Assign state variables to output state variables
+---------------------------------------------------------------------
+##Asign Exposures to State Variables
+#foreach ($par in $state)
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_out <= statevariable_" + $par.type + "_" + $par.name + "_next;"  )
+$foo 
+#end
+---------------------------------------------------------------------
+
 
 ---------------------------------------------------------------------
 -- Assign derived variables to exposures
 ---------------------------------------------------------------------
 ##Asign Exposures to Derived Variables
 #foreach ($par in $derivedvariables)
+#if ($par.exposure.length() > 0)
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
+$foo 
+#end
+#end
+#foreach ($par in $conditionalderivedvariables)
 #if ($par.exposure.length() > 0)
 #set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 

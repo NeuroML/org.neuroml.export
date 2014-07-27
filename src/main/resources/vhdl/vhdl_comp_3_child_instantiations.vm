@@ -36,6 +36,7 @@ $foo
 				rst => rst,
 				ce => ce,
 				step_once_go => step_once_go,
+				reset_model => reset_model,
 ##Event Ports
     #foreach ($par in $child.eventports)
 		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => SpikeOut(" + $count + "),"  )
@@ -51,8 +52,13 @@ $foo
 
 ##Requirements
 	#foreach ($par in $child.requirements)
-		#set( $foo = "requirement_" + $par.type +  "_" + $par.name + " => statevariable_" + $par.type +  "_" + $par.name + ","  )
+		#if ($state.containsKey($par.name))
+		#set( $foo = "requirement_" + $par.type +  "_" + $par.name + " => statevariable_" + $par.type +  "_" + $par.name + "_in,"  )
 		$foo
+		#else
+		#set( $foo = "requirement_" + $par.type +  "_" + $par.name + " => requirement_" + $par.type +  "_" + $par.name + ","  )
+		$foo
+		#end
 	#end
 	
 ##Exposures
@@ -60,6 +66,109 @@ $foo
 		#set( $foo = "exposure_" + $par.type +  "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "_internal," )
 		$foo
 	#end
+	
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = "statevariable_" + $par.type  +  "_" + $par.name + "_out => statevariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out_int," ) 
+		$foo
+	#end
+	
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in_int," ) 
+		$foo
+	#end
+	
+	
+
+		#foreach ($child2 in $child.Children)
+		
+			
+			##Parameters
+				#foreach ($par in $child2.parameters)
+					#set( $foo = "param_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => param_"  + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $par.name + ","  )
+					$foo
+				#end
+				
+				
+			##Exposures
+				#foreach ($par in $child2.exposures)
+					#set( $foo = "exposure_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $par.name + "," )
+					$foo
+				#end
+				
+			##StateVariables
+				#foreach ($par in $child2.state)
+					#set( $foo = "statevariable_" + $par.type  +  "_" + $child2.name + "_" + $par.name + "_out => statevariable_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $par.name + "_out," ) 
+					$foo
+				#end
+				
+			##StateVariables
+				#foreach ($par in $child2.state)
+					#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $par.name + "_in," ) 
+					$foo
+				#end
+				
+				
+				#foreach ($child3 in $child2.Children)
+				
+					
+					##Parameters
+						#foreach ($par in $child3.parameters)
+							#set( $foo = "param_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $par.name + " => param_"  + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $par.name + ","  )
+							$foo
+						#end
+						
+						
+					##Exposures
+						#foreach ($par in $child3.exposures)
+							#set( $foo = "exposure_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $par.name + "," )
+							$foo
+						#end
+						
+					##StateVariables
+						#foreach ($par in $child3.state)
+							#set( $foo = "statevariable_" + $par.type  +  "_" + $child2.name + "_" + $child3.name + "_" + $par.name + "_out => statevariable_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $par.name + "_out," ) 
+							$foo
+						#end
+						
+					##StateVariables
+						#foreach ($par in $child3.state)
+							#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $par.name + "_in," ) 
+							$foo
+						#end
+						
+						
+						#foreach ($child4 in $child3.Children)
+						
+							
+							##Parameters
+								#foreach ($par in $child4.parameters)
+									#set( $foo = "param_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name + "_" + $par.name + " => param_"  + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + ","  )
+									$foo
+								#end
+								
+								
+							##Exposures
+								#foreach ($par in $child4.exposures)
+									#set( $foo = "exposure_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + " => exposure_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "," )
+									$foo
+								#end
+								
+							##StateVariables
+								#foreach ($par in $child4.state)
+									#set( $foo = "statevariable_" + $par.type  +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_out => statevariable_" + $par.type +  "_" + $child.name + "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_out," ) 
+									$foo
+								#end
+								
+							##StateVariables
+								#foreach ($par in $child4.state)
+									#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in," ) 
+									$foo
+								#end
+						#end
+				#end
+		#end
 		   
 ##System Parameters
            sysparam_time_timestep => sysparam_time_timestep,
@@ -73,6 +182,17 @@ $foo
 #set( $foo = "exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + " <= exposure_" + $par.type +  "_" + $child.name + "_" + $par.name + "_internal;" )
 $foo
 #end
+##StateVariable
+	#foreach ($par in $child.state)
+		#set( $foo = "statevariable_" + $par.type +  "_" + $child.name + "_"  + $par.name + "_out <= statevariable_" + $par.type +  "_"+ $child.name + "_"  + $par.name + "_out_int;"  )
+		$foo
+	#end
+	
+##StateVariable
+	#foreach ($par in $child.state)
+		#set( $foo = "statevariable_" + $par.type +  "_"+ $child.name + "_"  + $par.name + "_in_int <= statevariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in;"  )
+		$foo
+	#end
 
 
 

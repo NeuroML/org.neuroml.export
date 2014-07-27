@@ -14,7 +14,7 @@
 ---------------------------------------------------------------------
 -- State variable: $par.name Driver Process
 ---------------------------------------------------------------------
-#set( $sensitivityList = "sysparam_time_timestep"  )
+#set( $sensitivityList = "sysparam_time_timestep,reset_model"  )
 #foreach ($event in $events)
 #if ($event.effect.state.get($par.name))
 #set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
@@ -28,7 +28,7 @@
 #end
 
 #if ($regimes.size() > 0)
-#set( $sensitivityList = $sensitivityList + ",current_regime,next_regime"  )
+#set( $sensitivityList = $sensitivityList + ",current_regime_in_int,next_regime"  )
 
 #foreach ($regime in $regimes) 
 
@@ -144,13 +144,13 @@ begin
 ##first check for a timederivative
 #set( $temps = 1)
 #if ($dynamics.get($par.name))
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " + (" + $dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 #set( $temps = 2)
 #end
 
 ##then check for all events that drive this state
-#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name + "_in" )
 #set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
 
 #foreach ($event in $events)
@@ -158,10 +158,15 @@ $foo
 
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#set( $foo3 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_in;" )
 if eventport_in_$event.name = '1' then
 	$foo
 else
+#if ($temps > 1 )
 	$foo2
+#else
+	$foo3
+#end
 end if;
 #set( $temps = $temps + 1)
 #end
@@ -172,10 +177,15 @@ end if;
 #if ($event.effect.state.get($par.name))
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#set( $foo3 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_in;" )
 if $event.condition then
 	$foo
 else
+#if ($temps > 1 )
 	$foo2
+#else
+	$foo3
+#end
 end if;
 #set( $temps = $temps + 1)
 #end
@@ -189,14 +199,14 @@ end if;
 ##first check for a timederivative
 #if ($regime.dynamics.get($par.name))
 
-if ( current_regime = $regime.name ) then
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " + (" + $regime.dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+if ( current_regime_in_int = $regime.name ) then
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $regime.dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 end if;
 #set( $temps = $temps + 1)
 #else
-if ( current_regime = $regime.name ) then
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + " ," + $par.integer + "," + $par.fraction + ");"  )
+if ( current_regime_in_int = $regime.name ) then
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in ," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 end if;
 #end
@@ -205,14 +215,19 @@ end if;
 ##then check for all events that drive this state
 #foreach ($event in $regime.events)
 #if ($event.effect.state.get($par.name))
-#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name + "_in" )
 #set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
-if ( current_regime = $regime.name ) AND eventport_in_$event.name = '1' then
+#set( $foo3 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_in;" )
+if ( current_regime_in_int = $regime.name ) AND eventport_in_$event.name = '1' then
 	$foo
 else
+#if ($temps > 1 )
 	$foo2
+#else
+	$foo3
+#end
 end if;
 #set( $temps = $temps + 1)
 #end
@@ -224,12 +239,16 @@ end if;
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
 #if ($temps == 1)
-#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  ";" )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  "_in;" )
 #end
-if ( current_regime = $regime.name ) AND $event.condition then
+if ( current_regime_in_int = $regime.name ) AND $event.condition then
 	$foo
 else
+#if ($temps > 1 )
 	$foo2
+#else
+	$foo3
+#end
 end if;
 #set( $temps = $temps + 1)
 #end
@@ -245,17 +264,17 @@ end if;
 
 
 #foreach ($regime in $regimes) 
-if (not ( current_regime = next_regime )) and ( next_regime = $regime.name ) then
+if (not ( current_regime_in_int = next_regime )) and ( next_regime = $regime.name ) then
 
 ##then check for all onentry
 #foreach ($onentry in $regime.onentrys)
 #if ($onentry.effect.state.get($par.name))
-#set( $rep = "statevariable_" + $par.type +  "_" + $par.name )
+#set( $rep = "statevariable_" + $par.type +  "_" + $par.name + "_in" )
 #set( $repWith = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1))
 #set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $onentry.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
 #set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
 #if ($temps == 1)
-#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  ";" )
+#set( $foo2 = "statevariable_" + $par.type +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name +  "_in;" )
 #end
 $foo
 else
@@ -269,30 +288,39 @@ end if;
 
 #end
 
-#set( $foo = " statevariable_" + $par.type +  "_" + $par.name + "_next <= statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";")
-$foo
-
-end process;
-state_variable_process_syn_$i :process (clk,rst)
-begin
-
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + ""  )
-#set( $foo_new = " statevariable_" + $par.type +  "_" + $par.name + "_next")
-##get onstart details for this variable
-if rst = '1' then  
+#set( $foo = " statevariable_" + $par.type +  "_" + $par.name + "_next")
+if reset_model = '1' then  
 #if ($par.onstart == "0")
 	$foo <= (others => '0');
 #else
 	$foo <= resize( $par.onstart , $par.integer , $par.fraction ) ;
 #end
-elsif clk'event and clk = '1' then  
-    if ce = '1' and step_once_go = '1' then 
-            $foo <= $foo_new after 1 ns;
-    end if;
+else
+#set( $foo = " statevariable_" + $par.type +  "_" + $par.name + "_next <= statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";")
+$foo
 end if;
 
-
 end process;
+##state_variable_process_syn_$i :process (clk,rst)
+##begin
+
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + ""  )
+#set( $foo_new = " statevariable_" + $par.type +  "_" + $par.name + "_next")
+##get onstart details for this variable
+##if rst = '1' then  
+#if ($par.onstart == "0")
+##	$foo <= (others => '0');
+#else
+##	$foo <= resize( $par.onstart , $par.integer , $par.fraction ) ;
+#end
+##elsif clk'event and clk = '1' then  
+##    if ce = '1' and step_once_go = '1' then 
+##            $foo <= $foo_new after 1 ns;
+##    end if;
+##end if;
+
+
+##end process;
 #set( $i = $i + 1)
 ---------------------------------------------------------------------
 #end
