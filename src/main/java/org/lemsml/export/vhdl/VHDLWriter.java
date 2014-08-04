@@ -123,7 +123,8 @@ public class VHDLWriter extends BaseWriter {
 	public enum Method {
 		TESTBENCH("vhdl/vhdl_tb.vm"),
 		SYNTH_TOP("vhdl/vhdl_synth_top.vm"),
-		DEFAULTJSON("vhdl/json_default.vm"),
+		DEFAULTPARAMJSON("vhdl/json_default.vm"),
+		DEFAULTREADBACKJSON("vhdl/json_readback_default.vm"),
 		COMPONENT1("vhdl/vhdl_comp_1_entity.vm"),
 		COMPONENT2("vhdl/vhdl_comp_2_arch.vm"),
 		COMPONENT3("vhdl/vhdl_comp_3_child_instantiations.vm"),
@@ -335,177 +336,14 @@ public class VHDLWriter extends BaseWriter {
 		
 		return sb.toString();
 	}
-
+	
 	public String getMainScript() throws ContentError, ParseError {
-		
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("--" + this.FORMAT+" simulator compliant export for:--\n--\n");
-		
-		Velocity.init();
-		
-		VelocityContext context = new VelocityContext();
-
-		//context.put( "name", new String("VelocityOnOSB") );
-		try
-		{
-			DLemsWriter somw = new DLemsWriter(lems);
-			JsonFactory f = new JsonFactory();
-			StringWriter sw = new StringWriter();
-			JsonGenerator g = f.createJsonGenerator(sw);
-			//g.useDefaultPrettyPrinter();
-			g.writeStartObject();
-			Target target = lems.getTarget();
-			Component simCpt = target.getComponent();
-			g.writeStringField(SOMKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
-			g.writeStringField(SOMKeywords.SIMLENGTH.get(), simCpt.getParamValue("length").stringValue());
-			String lengthStr = simCpt.getParamValue("length").stringValue();
-			String stepStr = simCpt.getParamValue("step").stringValue();
-			Double numsteps = Double.parseDouble(lengthStr)
-					/ Double.parseDouble(stepStr);
-			numsteps = Math.ceil(numsteps);
-			g.writeStringField(SOMKeywords.STEPS.get(), numsteps.toString());
-			String targetId = simCpt.getStringValue("target");
-			
-			List<Component> simComponents = simCpt.getAllChildren();
-			writeDisplays(g, simComponents);
-			
-			Component networkComp = lems.getComponent(targetId);
-			List<Component> networkComponents = networkComp.getAllChildren();
-			//TODO: order networkComponents by type so all populations come through in one go
-			g.writeObjectFieldStart("NeuronComponents");
-			List<String> neuronTypes = new ArrayList<String>();
-
-			int count = 0;
-			for (int i = 0; i < networkComponents.size();i++)
-			{
-				Component comp = networkComponents.get(i);
-				ComponentType comT = comp.getComponentType();
-				if (comT.name.toLowerCase().matches("population"))
-				{
-						//add a new neuron component
-					Component neuron = lems.getComponent(comp.getStringValue("component"));
-					if (!neuronTypes.contains(neuron.getID()) && !neuron.getID().contains("spikeGen"))
-					{
-						writeNeuronComponent(g, neuron);
-						neuronTypes.add(neuron.getID());
-					}
-					else if (neuron.getID().contains("spikeGen"))
-					{
-						count++;
-					}
-				}
-			}
-			g.writeEndObject();
-			g.writeArrayFieldStart("NeuronInstances");
-			for (int i = 0; i < networkComponents.size();i++)
-			{
-				Component comp = networkComponents.get(i);
-				ComponentType comT = comp.getComponentType();
-				if (comT.name.toLowerCase().matches("population"))
-				{
-					for (int n = 1; n <= (int)(comp.getParamValue("size").value); n++)
-					{
-						//add a new neuron component
-						Component neuron = lems.getComponent(comp.getStringValue("component"));
-						writeNeuron(g, neuron, n);
-					}
-				}
-			}
-			g.writeEndArray();
-			
-			g.writeArrayFieldStart("Connections");
-			for (int i = 0; i < networkComponents.size();i++)
-			{
-				Component comp = networkComponents.get(i);
-				ComponentType comT = comp.getComponentType();
-				if (comT.name.matches("EventConnectivity"))
-				{
-					String sourceNeuronID = networkComp.components.getByID(comp.getStringValue("source")).getStringValue("component");
-					String targetNeuronID = networkComp.components.getByID(comp.getStringValue("target")).getStringValue("component");
-
-					Component sourceComp = lems.getComponent(sourceNeuronID);
-					Component targetComp = lems.getComponent(targetNeuronID);
-
-					g.writeStartObject();
-					
-						g.writeObjectFieldStart("Source");
-						g.writeStringField("Name",sourceNeuronID);
-						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
-						writeEventPorts(g, sourceComp.getComponentType());
-						g.writeEndObject();
-						g.writeEndObject();
-						
-						g.writeObjectFieldStart("Target");
-						g.writeStringField("Name",targetNeuronID);
-						g.writeObjectFieldStart(SOMKeywords.EVENTPORTS.get());
-						writeEventPorts(g, targetComp.getComponentType());
-						g.writeEndObject();
-						g.writeEndObject();
-					
-					g.writeEndObject();
-				}
-			}
-			g.writeEndArray();
-			g.writeNumberField("SynapseCount",count);
-			
-			
-
-			g.close();
-			
-			String som = sw.toString();
-			
-			DLemsWriter.putIntoVelocityContext(som, context);
-		
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(Method.TESTBENCH.getFilename());
-		   
-			sw = new StringWriter();
-
-			template.merge( context, sw );
-			
-			sb.append(sw);
-
-			System.out.println("TestBenchData");
-			System.out.println(sw.toString());
-			System.out.println(som);
-			
-			
-		//simCpt is the simulation tag which translates to the testbench and to the exporter top level
-		} 
-		catch (IOException e1) {
-			throw new ParseError("Problem converting LEMS to SOM",e1);
-		}
-		catch( ResourceNotFoundException e )
-		{
-			throw new ParseError("Problem finding template",e);
-		}
-		catch( ParseErrorException e )
-		{
-			throw new ParseError("Problem parsing",e);
-		}
-		catch( MethodInvocationException e )
-		{
-			throw new ParseError("Problem finding template",e);
-		}
-		catch( Exception e )
-		{
-			throw new ParseError("Problem using template",e);
-		}
-		
-
-		
-		return sb.toString();
+		return getMainScript(Method.TESTBENCH);
 	}
-	
-	
+
 	
 
-	public String getDefaultVariables() throws ContentError, ParseError {
+	public String getMainScript(Method method) throws ContentError, ParseError {
 		
 
 		StringBuilder sb = new StringBuilder();
@@ -631,7 +469,7 @@ public class VHDLWriter extends BaseWriter {
 			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
 			VelocityEngine ve = new VelocityEngine();
 			ve.init(props);
-			Template template = ve.getTemplate(Method.DEFAULTJSON.getFilename());
+			Template template = ve.getTemplate(method.getFilename());
 		   
 			sw = new StringWriter();
 
@@ -712,63 +550,7 @@ public class VHDLWriter extends BaseWriter {
 				
 			return sb.toString();
 		}
-		
-		//this file is required by Xilinx ISIM simulations for automation purposes
-		public String getDefaultTopLevelParameters() throws ContentError, ParseError {
-		StringBuilder sb = new StringBuilder();
-		
-		try {
-			JsonFactory f = new JsonFactory();
-			StringWriter sw = new StringWriter();
-			JsonGenerator g;
-			g = f.createJsonGenerator(sw);
-			g.writeStartObject();
-			g.writeObjectFieldStart(SOMKeywords.PARAMETERS.get());
-			
-			//find all the parameters of neuron_model and its children
-			Component comp = lems.getComponent("neuron_model");
 
-			g.writeObjectFieldStart(SOMKeywords.PARAMETERS.get());
-			writeParameters(g, comp, comp.getComponentType().getFinalParams(), comp.getParamValues());
-			g.writeEndObject();
-			g.writeEndObject();
-			
-			for (int i = 0; i < comp.getAllChildren().size();i++)
-			{
-				Component comp2 = comp.getAllChildren().get(i);
-
-			}
-			//Attachments synapses are children in this initial model of VHDL neurons
-			for(Attachments attach: comp.getComponentType().getAttachmentss())
-			{
-				int numberID = 0;
-				for(Component conn: lems.getComponent("net1").getAllChildren())
-				{
-					String attachName = attach.getName();
-					if (conn.getComponentType().getName().matches("synapticConnection") )
-					{
-						String destination = conn.getTextParam("destination");
-						String path = conn.getPathParameterPath("to");
-						if (destination.matches(attachName) && path.startsWith(comp.getID()))
-						{
-							Component comp2 = (conn.getRefComponents().get("synapse"));
-							//comp2.setID(attach.getName() + "_" +  numberID);
-							writeNeuronComponent(g, comp2);
-							numberID++;
-						}
-					}
-				}
-			}
-
-			g.writeEndObject();
-			g.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return sb.toString();
-		}
-	
 	
 	
 	//this file is required by Xilinx Fuse to compile a simulation of the vhdl testbench
@@ -776,6 +558,7 @@ public class VHDLWriter extends BaseWriter {
 	
 		StringBuilder sb = new StringBuilder();
 		sb.append("vhdl work \"testbench.vhdl\"\r\n");
+		sb.append("vhdl work \"top_synth.vhdl\"\r\n");
 		sb.append("vhdl work \"ParamMux.vhd\"\r\n");
 		
 

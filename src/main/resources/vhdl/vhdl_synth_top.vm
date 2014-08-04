@@ -53,14 +53,6 @@ entity top_synth is
 		$foo
 	#end
 	
-	
-#if ($neuron.regimes.size() > 0)
-		#set( $foo = $neuron.name + "_current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);"  )
-		$foo
-		#set( $foo = $neuron.name + "_current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0); "  )
-		$foo
-			
-#end
 
 ##Parameters
 	#foreach ($par in $neuron.parameters)
@@ -679,7 +671,7 @@ store_state: process (clk) is
 #foreach ($child in $NeuronComponents)
 ##StateVariables
 	#foreach ($par in $child.state)
-		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");"  )
+		#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 		$foo
 	#end
 	
@@ -694,7 +686,7 @@ store_state: process (clk) is
 		
 	##StateVariables
 		#foreach ($par in $child2.state)
-			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
+			#set( $foo = $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");" )
 			$foo
 		#end
 		##THE CHILDREN
@@ -702,7 +694,7 @@ store_state: process (clk) is
 
 				##StateVariables
 					#foreach ($par in $child3.state)
-						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
+						#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");" )
 						$foo
 					#end
 					
@@ -710,7 +702,7 @@ store_state: process (clk) is
 
 						##StateVariables
 							#foreach ($par in $child4.state)
-								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
+								#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");" )
 								$foo
 							#end
 							
@@ -718,7 +710,7 @@ store_state: process (clk) is
 
 											##StateVariables
 												#foreach ($par in $child5.state)
-													#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_in_int <= to_sfixed (0," + $par.integer + " , " + $par.fraction + ");" )
+													#set( $foo =  $child.name + "_statevariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");" )
 													$foo
 												#end
 												
