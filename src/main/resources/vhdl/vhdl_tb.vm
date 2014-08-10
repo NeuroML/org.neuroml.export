@@ -391,8 +391,11 @@ begin
      readline(stimulus, l);
 #if ($SynapseCount > 0 )
      read(l, s);
-	 
+	 #if ($SynapseCountM1 > 1)
      eventport_in_spike_aggregate($SynapseCountM1 downto 0) <= 
+	 #else
+     eventport_in_spike_aggregate(0) <= 
+	 #end
 	 #set($range = [0..$SynapseCountM1])
 #foreach($i in $range)
    s($i)

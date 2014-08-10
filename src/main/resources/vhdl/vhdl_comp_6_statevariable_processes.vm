@@ -41,14 +41,14 @@
 
 
 #if ($regime.dynamics.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $regime.dynamics.get($par.name).replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#set( $sensitivityList = $sensitivityList + "," + $regime.dynamics.get($par.name).SensitivityList  )
 #end
 
 #end
 #end
 
 #if ($dynamics.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $dynamics.get($par.name).replace("To_slv"," ").replace("resize"," ").replace("+",",").replace("-",",").replace("/",",").replace("*",",").replace("("," ").replace(")"," ")  )
+#set( $sensitivityList = $sensitivityList + "," + $dynamics.get($par.name).SensitivityList)
 #end
 
 #set( $sensitivityList = $sensitivityList.replace(" ","").replace(",,",","))
@@ -144,7 +144,7 @@ begin
 ##first check for a timederivative
 #set( $temps = 1)
 #if ($dynamics.get($par.name))
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 #set( $temps = 2)
 #end
@@ -200,7 +200,7 @@ end if;
 #if ($regime.dynamics.get($par.name))
 
 if ( current_regime_in_int = $regime.name ) then
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $regime.dynamics.get($par.name) + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $regime.dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 end if;
 #set( $temps = $temps + 1)

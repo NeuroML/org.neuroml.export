@@ -1270,9 +1270,11 @@ public class VHDLWriter extends BaseWriter {
 		hs.addAll(list);
 		list.clear();
 		list.addAll(hs);
-		java.util.Collections.sort(list, comparator );
-		returnString = " " + returnString.replaceAll("\\*"," \\* ").replaceAll("\\^"," \\** ").replaceAll("/"," / ").replaceAll("\\("," \\( ").replaceAll("\\)"," \\) ").replaceAll("-"," - ").replaceAll("\\+"," \\+ ") + " ";
+		java.util.Collections.sort(list, comparator );//  
+		returnString = " " + returnString.replaceAll("\\*"," \\* ").replaceAll("\\^"," \\** ").replaceAll("/"," / ").replaceAll("\\("," \\( ").replaceAll("\\)"," \\) ").replaceAll("-"," - ").replaceAll("\\+"," \\+ ").replaceAll("  "," ") + " ";
 
+		returnString = returnString.replaceAll("([a-zA-Z0-9_]+) \\*\\* 2", "$1 \\* $1");
+		
 		for (int i = list.size() -1; i >= 0 ; i --)
 		{
 			String toReplace = list.get(i);
@@ -1472,16 +1474,6 @@ public class VHDLWriter extends BaseWriter {
 			g.writeEndObject();
 		}
 		
-		//TODO: put this out of Parameters and into constants list
-		for(Constant c: ct.getConstants())
-		{
-			g.writeStringField(c.getName(), c.getValue()+"");
-			g.writeObjectFieldStart(SOMKeywords.CONSTANT.get());
-			g.writeStringField("name",c.getName());
-			g.writeStringField("type",c.getDimension()+"");
-			g.writeStringField("value",(float)c.getValue()+"");
-			g.writeEndObject();
-		}
 
 	}
 	
@@ -1584,7 +1576,7 @@ public class VHDLWriter extends BaseWriter {
 		int fract = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			 fract = 0;
+			 fract = -16;
 		} else if (dimension.equals("voltage"))
 		{
 			 fract = -24;
@@ -1613,7 +1605,7 @@ public class VHDLWriter extends BaseWriter {
 		int integer = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			integer = 15;
+			integer = 12;
 		} else if (dimension.equals("voltage"))
 		{
 			integer = 2;
@@ -1859,10 +1851,16 @@ public class VHDLWriter extends BaseWriter {
 		for (TimeDerivative td: timeDerivatives)
 		{
 			StringBuilder sensitivityList = new StringBuilder();
-			g.writeStringField(td.getVariable(), 
+			g.writeObjectFieldStart(td.getVariable());
+			g.writeStringField("Dynamics", 
 					encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
 							ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+			if  (sensitivityList.length() > 0)
+				g.writeStringField("SensitivityList",sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
+			else
+				g.writeStringField("SensitivityList"," ");
+			g.writeEndObject();
 		}
 
 	}
