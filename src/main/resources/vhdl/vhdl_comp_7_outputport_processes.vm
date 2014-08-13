@@ -231,25 +231,118 @@ $foo
 
 
 
+---------------------------------------------------------------------
+-- Subprocess ready process
+---------------------------------------------------------------------
+
+subprocess_all_ready_process: process(subprocess_der_int_ready,subprocess_der_int_pre_ready,subprocess_der_ready,subprocess_dyn_int_pre_ready,subprocess_dyn_int_ready,subprocess_dyn_ready,subprocess_model_ready)
+begin
+if subprocess_der_int_ready = '1'  and subprocess_der_int_pre_ready = '1'and subprocess_der_ready ='1' and subprocess_dyn_int_ready = '1' and subprocess_dyn_int_pre_ready = '1' and subprocess_dyn_ready = '1' and subprocess_model_ready = '1' then
+subprocess_all_ready <= '1';
+else
+subprocess_all_ready <= '0';
+end if;
+end process subprocess_all_ready_process;
+---------------------------------------------------------------------
 
 
+count_proc:process(clk)
+  	begin 
+  		if (clk'EVENT AND clk = '1') then
+			if step_once_go = '1' then
+  				COUNT <= "000";
+				component_done_int <= '0';
+  			elsif COUNT = "001" then
+				component_done_int <= '1';
+			elsif subprocess_all_ready = '1' then
+  				COUNT <= COUNT + 1;
+				component_done_int <= '0';
+			end if;
+  		end if;
+end process count_proc;
+
+
+#if ($Children.size() == 0) ## if I dont have children
+component_done <= component_done_int;
+#else
+
+#set( $foo = " ")
+#foreach ($child in $Children)
+#set( $foo = $foo  + $child.name + "_component_done,")
+#end
+#set( $foo2 = " ")
+#set ($count = 0)
+#foreach ($child in $Children)
+#set( $foo2 = $foo2 + $child.name + "_component_done = '1'")
+#set ($count = $count + 1)
+#if ($count < $Children.size())
+#set( $foo2 = $foo2 + " and ")
+#end
+#end
+   
+
+
+
+childrenCombined_component_done_process:process($foo CLK)
+begin
+if ($foo2) then
+	childrenCombined_component_done <= '1';
+else
+	childrenCombined_component_done <= '0';
+end if;
+end process childrenCombined_component_done_process;
+
+
+##childrenCombined_component_done_single_shot_process:process(CLK)
+##begin
+##if CLK'event and CLK ='1' then
+##	if childrenCombined_component_done = '1' and childrenCombined_component_done_single_shot_fired = '0' then
+##		childrenCombined_component_done_single_shot <= '1'
+##		childrenCombined_component_done_single_shot_fired <= '1'
+##	elsif childrenCombined_component_done = '0' then
+##		childrenCombined_component_done_single_shot_fired <= '0'
+##	else
+##		childrenCombined_component_done_single_shot <= '0'
+##	end if;
+##end if;
+##end process childrenCombined_component_done_single_shot_process;
+
+
+
+##count_proc:process(clk)
+##  	begin 
+##  		if (clk'EVENT AND clk = '1') then
+##			if childrenCombined_component_done_single_shot = '1' then
+##  				COUNT <= "000";
+##				component_done <= '0';
+##  			elsif COUNT = "011" then
+##				component_done <= '1';
+##			else
+##  				COUNT <= COUNT + 1;
+##			end if;
+##  		end if;
+##end process count_proc;
+
+component_done <= component_done_int and childrenCombined_component_done;
+
+
+
+#end
+		
+		
+		
 #if ($name.contains("neuron_model"))
 ---------------------------------------------------------------------
 -- Control the done signal
 ---------------------------------------------------------------------
-count_proc:process(CLK)
+
+step_once_complete_synch:process(clk)
   	begin 
-  		if (CLK'EVENT AND CLK = '1') then
-  			if step_once_go = '1' OR COUNT /= "000" then
-  				COUNT <= COUNT + 1;
-  			end if;
-  		end if;
-  	end process count_proc;
-count_comb:process(COUNT)
-begin
-	if COUNT = "111" then
-		step_once_complete <= '1';
+  		if (clk'EVENT AND clk = '1') then
 		
+		if component_done = '1' and step_once_complete_fired = '0'  then
+			step_once_complete <= '1';
+			step_once_complete_fired <= '1';
 ---------------------------------------------------------------------
 -- Assign event ports to exposures
 ---------------------------------------------------------------------
@@ -257,6 +350,21 @@ begin
 #foreach ($par in $eventports)
 #if ($par.direction == "out")
 #set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " <=  eventport_" + $par.direction + "_" + $par.name + "_internal ;"  )
+$foo 
+#end
+#end
+---------------------------------------------------------------------
+	elsif component_done = '0' then
+			step_once_complete <= '0';
+			step_once_complete_fired <= '0';
+		
+---------------------------------------------------------------------
+-- Assign event ports to exposures
+---------------------------------------------------------------------
+##Assign internal variables to EventPorts
+#foreach ($par in $eventports)
+#if ($par.direction == "out")
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " <=  '0';"  )
 $foo 
 #end
 #end
@@ -277,8 +385,9 @@ $foo
 #end
 ---------------------------------------------------------------------
 		
+		end if;
 	end if;
-  	end process count_comb;
+  	end process step_once_complete_synch;
 ---------------------------------------------------------------------
 #end
 

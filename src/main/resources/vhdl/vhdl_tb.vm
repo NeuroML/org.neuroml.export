@@ -382,7 +382,8 @@ variable s : STD_LOGIC_VECTOR($SynapseCountM1 downto 0);
 begin            
    -- wait for Reset to complete
    -- wait until rst='1';
-   wait until rst='0';
+   wait until reset_model='1';
+   wait until reset_model='0';
 
    
    while not endfile(stimulus) loop
@@ -391,7 +392,7 @@ begin
      readline(stimulus, l);
 #if ($SynapseCount > 0 )
      read(l, s);
-	 #if ($SynapseCountM1 > 1)
+	 #if ($SynapseCountM1 > 0	)
      eventport_in_spike_aggregate($SynapseCountM1 downto 0) <= 
 	 #else
      eventport_in_spike_aggregate(0) <= 
@@ -485,6 +486,7 @@ begin
  end process step_once_go_proc;
  
  
+ 
  process
  begin
    wait until rst='0';
@@ -493,7 +495,7 @@ begin
 	reset_model <= '1';
 	
    
-   wait for 500 ns;
+   wait for 5000 ns;
 		reset_model <= '0';
  
  end process ;

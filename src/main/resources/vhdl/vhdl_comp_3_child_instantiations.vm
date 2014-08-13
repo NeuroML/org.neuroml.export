@@ -37,6 +37,8 @@ $foo
 				ce => ce,
 				step_once_go => step_once_go,
 				reset_model => reset_model,
+#set( $foo = "component_done => " + $child.name + "_component_done," )
+				$foo
 ##Event Ports
     #foreach ($par in $child.eventports)
 		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => SpikeOut(" + $count + "),"  )

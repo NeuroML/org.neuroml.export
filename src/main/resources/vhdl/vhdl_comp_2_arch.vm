@@ -8,9 +8,109 @@
 -------------------------------------------------------------------------------------------
 
 architecture RTL of $name is
+signal COUNT : unsigned(2 downto 0) := "000";
+signal childrenCombined_component_done_single_shot_fired : STD_LOGIC := '0';
+signal childrenCombined_component_done_single_shot : STD_LOGIC := '0';
+signal childrenCombined_component_done : STD_LOGIC := '0';
+signal component_done_int : STD_LOGIC := '0';
+
+
+signal subprocess_der_int_pre_ready : STD_LOGIC := '0';
+signal subprocess_der_int_ready : STD_LOGIC := '0';
+signal subprocess_der_ready : STD_LOGIC := '0';
+signal subprocess_dyn_int_pre_ready : STD_LOGIC := '0';
+signal subprocess_dyn_int_ready : STD_LOGIC := '0';
+signal subprocess_dyn_ready : STD_LOGIC := '0';
+signal subprocess_model_ready : STD_LOGIC := '1';
+signal subprocess_all_ready : STD_LOGIC := '0';
+
+
+#foreach ($par in $derivedvariables)
+#foreach ($exp in $par.Exponentials)
+#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#end
+#foreach ($exp in $par.Powers)
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#end
+#end
+#foreach ($par in $conditionalderivedvariables)
+#foreach ($case in $par.cases)
+#foreach ($exp in $case.Exponentials)
+#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#end
+#foreach ($exp in $case.Powers)
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(11 downto -12);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(11 downto -12);"  )
+	$foo2
+	$foo3
+#end
+#end
+#end
+
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set( $foo = "signal statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1 : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+			#set( $foo = "signal statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1_next : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+			$foo
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set( $foo = "signal statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1 : sfixed (" + $par.integer + " downto " + $par.fraction + ");"   )
+		$foo
+		#set( $foo = "signal statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1_next : sfixed (" + $par.integer + " downto " + $par.fraction + ");"   )
+		$foo
+	#end
+#end
+
+
+
+#foreach ($par in $derivedvariables)
+#foreach ($exp in $par.Exponentials)
+#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+	$foo2	
+#end
+#foreach ($exp in $par.Powers)
+#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+	$foo2	
+#end
+#end
+#foreach ($par in $conditionalderivedvariables)
+#foreach ($case in $par.cases)
+#foreach ($exp in $case.Exponentials)
+#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+	$foo2	
+#end
+#foreach ($exp in $case.Powers)
+#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
+	$foo2	
+#end
+#end
+#end
 
 #if ($name.contains("neuron_model"))
-signal COUNT : unsigned(2 downto 0) := "000";
+
+signal step_once_complete_fired : STD_LOGIC := '0';
+signal component_done : STD_LOGIC := '0';
+
 
 constant cNSpikeSources : integer := 32;	-- The number of spike sources.
 constant cNOutputs		: integer := 32;	-- The number of Synapses in the neuron model.
@@ -30,6 +130,31 @@ signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);
 
 #end
 
+
+component ParamExp is
+	port(
+		clk		: In  Std_logic;
+		rst		: In  Std_logic;
+		Start	: In  Std_logic;
+		Done	: Out  Std_logic;
+		X		: In sfixed(11 downto -12);
+		Output	: Out sfixed(11 downto -12)
+		);
+end component;
+
+component ParamPow is
+	port(
+		clk		: In  Std_logic;
+		rst		: In  Std_logic;
+		Start	: In  Std_logic;
+		Done	: Out  Std_logic;
+		X		: In sfixed(11 downto -12);
+		A		: In sfixed(11 downto -12);
+		Output	: Out sfixed(11 downto -12)
+		);
+end component; 
+
+
 ---------------------------------------------------------------------
 -- Derived Variables and Parameters
 ---------------------------------------------------------------------
@@ -37,14 +162,20 @@ signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);
 #foreach ($par in $derivedvariables)
 #set( $foo = "signal derivedvariable_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 $foo
+#set( $foo = "signal derivedvariable_" + $par.type +  "_" + $par.name + "_next : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
 #end
 #foreach ($cdvar in $conditionalderivedvariables)
 #set( $foo = "signal derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + " : sfixed (" + $cdvar.integer + " downto " + $cdvar.fraction + ");"  )
+$foo
+#set( $foo = "signal derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + "_next : sfixed (" + $cdvar.integer + " downto " + $cdvar.fraction + ");"  )
 $foo
 #end
 ##DerivedParameters
 #foreach ($par in $derivedparameters)
 #set( $foo = "signal derivedparameter_" + $par.type +  "_" + $par.name + " : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+$foo
+#set( $foo = "signal derivedparameter_" + $par.type +  "_" + $par.name + "_next : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 $foo
 #end
 ---------------------------------------------------------------------
@@ -118,6 +249,7 @@ component $child.name
            ce : in STD_LOGIC;
 		   step_once_go : in STD_LOGIC;
 		   reset_model : in STD_LOGIC;
+		   component_done : out STD_LOGIC;
 ##Event Ports
     #foreach ($par in $child.eventports)
 		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
@@ -242,6 +374,8 @@ component $child.name
 		   );
 end component;
 
+#set( $foo = "signal " + $child.name + "_component_done : STD_LOGIC ; " )
+$foo
 
 ##Exposure Signals
 #foreach ($par in $child.exposures)

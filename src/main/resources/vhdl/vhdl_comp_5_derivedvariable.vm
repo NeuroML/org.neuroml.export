@@ -28,19 +28,205 @@
 
 
 
+derived_variable_pre_process_comb :process ( $sensitivityList )
+begin 
+#foreach ($par in $derivedvariables)
+#foreach ($exp in $par.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
+		$foo3 <= resize( $exp.value ,11,-12);
+#end
+#foreach ($exp in $par.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
+#set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
+		$foo3A <= resize( $exp.valueA ,11,-12);
+		$foo3X <= resize( $exp.valueX ,11,-12);
+#end
+#end
+#foreach ($par in $conditionalderivedvariables)
+#foreach ($case in $par.cases)
+#foreach ($exp in $case.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
+		$foo3 <= resize( $exp.value ,11,-12);
+#end
+#foreach ($exp in $case.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
+#set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
+		$foo3A <= resize( $exp.valueA ,11,-12);
+		$foo3X <= resize( $exp.valueX ,11,-12);
+#end
+#end
+#end
+subprocess_der_int_pre_ready <= '1';
+end process derived_variable_pre_process_comb;
 
-derived_variable_process :process ( $sensitivityList )
+derived_variable_pre_process_syn :process ( clk, rst )
+begin 
+#foreach ($par in $derivedvariables)
+#foreach ($exp in $par.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
+	$foo2 <= to_sfixed(0,11,-12);
+	if rst  = '1' then
+		$foo2 <= to_sfixed(0,11,-12);
+	elsif (clk'EVENT AND clk = '1') then	
+		if subprocess_all_ready = '1' then
+			$foo2 <= $foo3 ;
+		end if;
+	end if;
+#end
+#foreach ($exp in $par.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo2A = "pre_pow_" + $par.name + "_" + $exp.name + "_A"  )
+#set( $foo2X = "pre_pow_" + $par.name + "_" + $exp.name + "_X"  )
+#set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
+#set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
+	$foo2A <= to_sfixed(0,11,-12);
+	$foo2X <= to_sfixed(0,11,-12);
+	if rst  = '1' then
+		$foo2A <= to_sfixed(0,11,-12);
+		$foo2X <= to_sfixed(0,11,-12);
+	elsif (clk'EVENT AND clk = '1') then	
+		if subprocess_all_ready = '1' then
+			$foo2A <= $foo3A ;
+			$foo2X <= $foo3X ;
+		end if;
+	end if;
+#end
+#end
+
+#foreach ($par in $conditionalderivedvariables)
+#foreach ($case in $par.cases)
+#foreach ($exp in $case.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
+	$foo2 <= to_sfixed(0,11,-12);
+	if rst  = '1' then
+		$foo2 <= to_sfixed(0,11,-12);
+	elsif (clk'EVENT AND clk = '1') then	
+		if subprocess_all_ready = '1' then
+			$foo2 <= $foo3 ;
+		end if;
+	end if;
+#end
+#foreach ($exp in $case.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo2A = "pre_pow_" + $par.name + "_" + $exp.name + "_A"  )
+#set( $foo2X = "pre_pow_" + $par.name + "_" + $exp.name + "_X"  )
+#set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
+#set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
+	$foo2A <= to_sfixed(0,11,-12);
+	$foo2X <= to_sfixed(0,11,-12);
+	if rst  = '1' then
+		$foo2A <= to_sfixed(0,11,-12);
+		$foo2X <= to_sfixed(0,11,-12);
+	elsif (clk'EVENT AND clk = '1') then	
+		if subprocess_all_ready = '1' then
+			$foo2A <= $foo3A ;
+			$foo2X <= $foo3X ;
+		end if;
+	end if;
+#end
+#end
+#end
+subprocess_der_int_pre_ready <= '1';
+end process derived_variable_pre_process_syn;
+
+
+#set( $count_der_int = 0  )
+#foreach ($par in $derivedvariables)
+#foreach ($exp in $par.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "exp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name  )
+	
+	$foo : ParamExp 
+    port map (	clk => clk,
+				rst => rst,
+				Start => step_once_go,
+				Done => subprocess_der_int_ready,
+				X => $foo3 ,
+				Output => $foo2
+				);
+#set( $count_der_int = $count_der_int + 1  )
+		
+#end
+#foreach ($exp in $par.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "pow_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_pow_" + $par.name + "_" + $exp.name + "_X" )
+#set( $foo4 = "pre_pow_" + $par.name + "_" + $exp.name + "_A" )
+	$foo : ParamPow 
+    port map (	clk => clk,
+				rst => rst,
+				Start => step_once_go,
+				Done => subprocess_der_int_ready,
+				X => $foo3 ,
+				A => $foo4 ,
+				Output => $foo2
+				);
+#set( $count_der_int = $count_der_int + 1  )
+		
+#end
+#end
+#foreach ($par in $conditionalderivedvariables)
+#foreach ($case in $par.cases)
+#foreach ($exp in $case.Exponentials)
+#set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "exp_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name  )
+	$foo : ParamExp 
+    port map (	clk => clk,
+				rst => rst,
+				Start => step_once_go,
+				Done => subprocess_der_int_ready,
+				X => $foo3 ,
+				Output => $foo2
+				);
+#set( $count_der_int = $count_der_int + 1  )
+		
+#end
+#foreach ($exp in $case.Powers)
+#set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
+#set( $foo2 = "pow_" + $par.name + "_" + $exp.name  )
+#set( $foo3 = "pre_pow_" + $par.name + "_" + $exp.name + "_X" )
+#set( $foo4 = "pre_pow_" + $par.name + "_" + $exp.name + "_A" )
+	$foo : ParamPow 
+    port map (	clk => clk,
+				rst => rst,
+				Start => step_once_go,
+				Done => subprocess_der_int_ready,
+				X => $foo3 ,
+				A => $foo4 ,
+				Output => $foo2
+				);
+#set( $count_der_int = $count_der_int + 1  )
+		
+#end
+#end
+#end
+
+#if ($count_der_int == 0)
+subprocess_der_int_ready <= '1';
+#end
+
+derived_variable_process_comb :process ( $sensitivityList )
 begin 
 
 ##DerivedVariables
 #foreach ($par in $derivedvariables)
-#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + " <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_next <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 #end
 ##ConditionalDerivedVariables
 #foreach ($cdvar in $conditionalderivedvariables)
 #foreach ($case in $cdvar.cases)
-#set( $foo = "derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + " <= resize((" + $case.value + ")," + $cdvar.integer + "," + $cdvar.fraction + ");"  )
+#set( $foo = "derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + "_next <= resize((" + $case.value + ")," + $cdvar.integer + "," + $cdvar.fraction + ");"  )
 if $case.condition then
 	$foo
 end if;
@@ -48,10 +234,35 @@ end if;
 #end
 ##DerivedParameters
 #foreach ($par in $derivedparameters)
-#set( $foo = "derivedparameter_" + $par.type +  "_" + $par.name + " <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "derivedparameter_" + $par.type +  "_" + $par.name + "_next <= resize((" + $par.value + ")," + $par.integer + "," + $par.fraction + ");"  )
 $foo
 #end
+subprocess_der_ready <= '1';
+end process derived_variable_process_comb;
 
 
-end process;
+derived_variable_process_syn :process ( clk )
+begin 
+
+if clk'event and clk = '1' then  
+if subprocess_all_ready = '1' then  
+##DerivedVariables
+#foreach ($par in $derivedvariables)
+#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + " <= derivedvariable_" + $par.type +  "_" + $par.name + "_next;"  )
+$foo
+#end
+##ConditionalDerivedVariables
+#foreach ($cdvar in $conditionalderivedvariables)
+#set( $foo = "derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + " <= derivedvariable_" + $cdvar.type +  "_" + $cdvar.name + "_next;"  )
+	$foo
+#end
+##DerivedParameters
+#foreach ($par in $derivedparameters)
+#set( $foo = "derivedparameter_" + $par.type +  "_" + $par.name + " <= derivedparameter_" + $par.type +  "_" + $par.name + "_next;"  )
+$foo
+#end
+end if;
+end if;
+
+end process derived_variable_process_syn;
 ---------------------------------------------------------------------

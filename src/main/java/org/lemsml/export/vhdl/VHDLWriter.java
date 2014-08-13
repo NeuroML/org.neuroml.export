@@ -16,6 +16,8 @@ import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
@@ -132,7 +134,9 @@ public class VHDLWriter extends BaseWriter {
 		COMPONENT5("vhdl/vhdl_comp_5_derivedvariable.vm"),
 		COMPONENT6("vhdl/vhdl_comp_6_statevariable_processes.vm"),
 		COMPONENT7("vhdl/vhdl_comp_7_outputport_processes.vm"),
-		MUX("vhdl/ParamMux.vhd");
+		MUX("vhdl/ParamMux.vhd"),
+		EXP("vhdl/ParamExp.vhd"),
+		POW("vhdl/ParamPow.vhd");
 		
 		
 	 private String filename;
@@ -527,29 +531,75 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 	
-	
-		//this file is required by Xilinx ISIM simulations for automation purposes
-		public String getMuxScript() throws ContentError, ParseError {
-			StringBuilder sb = new StringBuilder();
-			
-			Velocity.init();
-			
-			VelocityContext context = new VelocityContext();
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
+	//this file is required by Xilinx ISIM simulations for automation purposes
+	public String getMuxScript() throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+
+		Properties props = new Properties();
+		props.put("resource.loader", "class");
+		props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		VelocityEngine ve = new VelocityEngine();
+		ve.init(props);
+		
+		
+		Template template = ve.getTemplate(Method.MUX.getFilename());
+		StringWriter sw = new StringWriter();
+		template.merge( context, sw );
+			sb.append(sw);
 			
+		return sb.toString();
+	}
+	
+
+	//this file is required by Xilinx ISIM simulations for automation purposes
+	public String getExpScript() throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+
+		Properties props = new Properties();
+		props.put("resource.loader", "class");
+		props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		VelocityEngine ve = new VelocityEngine();
+		ve.init(props);
+		
+		
+		Template template = ve.getTemplate(Method.EXP.getFilename());
+		StringWriter sw = new StringWriter();
+		template.merge( context, sw );
+			sb.append(sw);
 			
-			Template template = ve.getTemplate(Method.MUX.getFilename());
-			StringWriter sw = new StringWriter();
-			template.merge( context, sw );
-				sb.append(sw);
-				
-			return sb.toString();
-		}
+		return sb.toString();
+	}
+	
+	public String getPowScript() throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+
+		Properties props = new Properties();
+		props.put("resource.loader", "class");
+		props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		VelocityEngine ve = new VelocityEngine();
+		ve.init(props);
+		
+		
+		Template template = ve.getTemplate(Method.POW.getFilename());
+		StringWriter sw = new StringWriter();
+		template.merge( context, sw );
+			sb.append(sw);
+			
+		return sb.toString();
+	}
 
 	
 	
@@ -560,6 +610,8 @@ public class VHDLWriter extends BaseWriter {
 		sb.append("vhdl work \"testbench.vhdl\"\r\n");
 		sb.append("vhdl work \"top_synth.vhdl\"\r\n");
 		sb.append("vhdl work \"ParamMux.vhd\"\r\n");
+		sb.append("vhdl work \"ParamExp.vhd\"\r\n");
+		sb.append("vhdl work \"ParamPow.vhd\"\r\n");
 		
 
 		//context.put( "name", new String("VelocityOnOSB") );
@@ -1250,6 +1302,84 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 	
+	private String writeInternalExpLnLogEvaluators(String toEncode, JsonGenerator g, String variableName) throws JsonGenerationException, IOException
+	{
+		String returnValue = toEncode.replace("(", " ( ").replace(")", " ) ");
+		Pattern MY_PATTERN = Pattern.compile("exp +\\(([a-zA-Z0-9_ \\,\\*\\\\\\/\\+\\-\\(\\)]+)\\) ");
+		Matcher m = MY_PATTERN.matcher(returnValue);
+		int i = 1;
+		g.writeArrayFieldStart("Exponentials");
+		while (m.find()) {
+			g.writeStartObject();
+		    String s = m.group(1);
+		    m.start();
+		    int openingCount = m.group().split("\\(").length -1;
+		    int closingCount = m.group().split("\\)").length -1;
+		    String groupToReplace =  m.group();
+		    while (closingCount > openingCount )
+		    {
+		    	int lastIndex = groupToReplace.lastIndexOf(")");
+		    	int secondlastIndex = 0;
+		    	for (int j= lastIndex; j>1;j--)
+		    	{
+		    		secondlastIndex = groupToReplace.indexOf(")",j);
+			    	if (secondlastIndex != lastIndex)
+			    		break;
+		    	}
+		    	groupToReplace = groupToReplace.substring(0,secondlastIndex+1);
+		    	closingCount--;
+		    }
+		    returnValue = returnValue.replace(groupToReplace,"exp_" + variableName + "_exponential_result" + i);
+			g.writeStringField("name","exponential_result" + i); 
+			g.writeStringField("value", groupToReplace.substring(3) ); 
+		    i++;
+			g.writeEndObject();
+		    // s now contains "BAR"
+		}
+		g.writeEndArray();
+
+
+		
+		
+		
+		
+		
+		MY_PATTERN = Pattern.compile("([a-zA-Z0-9_ ]+) +\\*\\* +([a-zA-Z0-9_ ]+) ");
+		m = MY_PATTERN.matcher(returnValue);
+		i = 1;
+		g.writeArrayFieldStart("Powers");
+		while (m.find()) {
+			g.writeStartObject();
+		    String s = m.group(1);
+		    m.start();
+		    int openingCount = m.group().split("\\(").length -1;
+		    int closingCount = m.group().split("\\)").length -1;
+		    String groupToReplace =  m.group();
+		    while (closingCount > openingCount )
+		    {
+		    	int lastIndex = groupToReplace.lastIndexOf(")");
+		    	int secondlastIndex = 0;
+		    	for (int j= lastIndex; j>1;j--)
+		    	{
+		    		secondlastIndex = groupToReplace.indexOf(")",j);
+			    	if (secondlastIndex != lastIndex)
+			    		break;
+		    	}
+		    	groupToReplace = groupToReplace.substring(0,secondlastIndex+1);
+		    	closingCount--;
+		    }
+		    returnValue = returnValue.replace(groupToReplace,"pow_" + variableName + "_power_result" + i);
+			g.writeStringField("name","power_result" + i); 
+			g.writeStringField("valueA", m.group(1) ); 
+			g.writeStringField("valueX", m.group(2) ); 
+		    i++;
+			g.writeEndObject();
+		    // s now contains "BAR"
+		}
+		g.writeEndArray();
+		return returnValue;
+	}
+	
 	private String encodeVariablesStyle(String toEncode, LemsCollection<FinalParam> paramsOrig, 
 			LemsCollection<StateVariable> stateVariables,LemsCollection<DerivedVariable> derivedVariables,
 			LemsCollection<Requirement> requirements, StringBuilder sensitivityList 
@@ -1339,6 +1469,9 @@ public class VHDLWriter extends BaseWriter {
 			
 		}
 		returnString.replace("  ", " ");
+		
+		
+		//replace all param_ / param_ with one precalculated parameter
 		for (FinalParam param1 : paramsOrig)
 		{
 			for (FinalParam param2 : paramsOrig)
@@ -1357,7 +1490,8 @@ public class VHDLWriter extends BaseWriter {
 				}
 			}
 		}
-		
+
+		//replace all / param_ with one precalculated inverse parameter
 		for (FinalParam param1 : paramsOrig)
 		{
 				String param1_s = " param_" + param1.r_dimension.getName() + "_" + param1.name;
@@ -1373,14 +1507,15 @@ public class VHDLWriter extends BaseWriter {
 				}
 		}
 
-		
-		//replace all param_ / param_ with one precalculated parameter
-		
-		
-		
 		//replace all param_ * param_ with one precalculated parameter
+		
+		
+		
+		
+		
+		
+		
 
-		//replace all / param_ with one precalculated inverse parameter
 		
 		
 		
@@ -1543,7 +1678,7 @@ public class VHDLWriter extends BaseWriter {
 	
 	private void writeBitLengths(JsonGenerator g, String dimension) throws JsonGenerationException, IOException
 	{
-		String[] splitDims = dimension.split("_");
+		String[] splitDims = dimension.replace("per_time","pertime").split("_");
 		if (splitDims.length == 1)
 		{
 			g.writeStringField("integer",getBitLengthInteger(dimension).toString());
@@ -1586,7 +1721,7 @@ public class VHDLWriter extends BaseWriter {
 		} else if (dimension.equals("time"))
 		{
 			 fract = -24;
-		} else if (dimension.equals("capacitance"))
+		} 	else if (dimension.equals("capacitance"))
 		{
 			 fract = -47;
 		} else if (dimension.equals("conductance"))
@@ -1852,10 +1987,11 @@ public class VHDLWriter extends BaseWriter {
 		{
 			StringBuilder sensitivityList = new StringBuilder();
 			g.writeObjectFieldStart(td.getVariable());
-			g.writeStringField("Dynamics", 
-					encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
-							ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+			String value = encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
+					ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
+					ct.getRequirements(),sensitivityList,params,combinedParameterValues);
+			value = writeInternalExpLnLogEvaluators(value,g,td.getVariable());
+			g.writeStringField("Dynamics", value);
 			if  (sensitivityList.length() > 0)
 				g.writeStringField("SensitivityList",sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
 			else
@@ -1881,9 +2017,11 @@ public class VHDLWriter extends BaseWriter {
 
 	        StringBuilder sensitivityList = new StringBuilder();
 			if (val != null) {
-				g.writeStringField("value",encodeVariablesStyle(dv.getValueExpression(),
+				String value = encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList,params,combinedParameterValues) );
+						ct.getRequirements(),sensitivityList,params,combinedParameterValues) ;
+				value = writeInternalExpLnLogEvaluators(value,g,dv.getName());
+				g.writeStringField("value",value);
 				
 			} else if (sel != null) {
 				String red = dv.getReduce();
@@ -1988,9 +2126,9 @@ public class VHDLWriter extends BaseWriter {
 		for (ConditionalDerivedVariable dv: conditionalDerivedVariables)
 		{
 			g.writeObjectFieldStart(dv.getName());
-			g.writeStringField("name",dv.getName());
+			g.writeStringField("name",dv.getName()); 
 			g.writeStringField("exposure",dv.getExposure() != null ? dv.getExposure().getName() : "");
-
+ 
 	        StringBuilder sensitivityList = new StringBuilder();
 
 			g.writeObjectFieldStart(SOMKeywords.CASES.get());
@@ -2001,9 +2139,12 @@ public class VHDLWriter extends BaseWriter {
 				String val = dv2.getValueExpression();
 		
 				if (val != null) {
-					g.writeStringField("value",encodeVariablesStyle(dv2.getValueExpression(),
+					String value = encodeVariablesStyle(dv2.getValueExpression(),
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList,params,combinedParameterValues) );
+							ct.getRequirements(),sensitivityList,params,combinedParameterValues);
+
+					value = writeInternalExpLnLogEvaluators(value,g,dv.getName());
+					g.writeStringField("value", value );
 					writeConditionList(g,ct,dv2.condition,sensitivityList,params,combinedParameterValues);
 				} 
 				i++;
@@ -2031,9 +2172,13 @@ public class VHDLWriter extends BaseWriter {
 			g.writeStringField("name",dp.getName());
 			g.writeStringField("select",dp.getSelect() == null ? "" : dp.getSelect());
 			g.writeStringField("type",dp.getDimension().getName()+"");
-			g.writeStringField("value",encodeVariablesStyle(dp.getValue(),
+			String value = encodeVariablesStyle(dp.getValue(),
 					ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-					ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+					ct.getRequirements(),sensitivityList,params,combinedParameterValues);
+			g.writeStringField("value",	value);
+			
+
+			value = writeInternalExpLnLogEvaluators(value,g,dp.getName());
 			writeBitLengths(g,dp.getDimension().getName());
 					
 			g.writeEndObject();

@@ -49,6 +49,8 @@ entity $name is
 		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
 		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(31 downto 0);
 		   SelectSpikesIn			: Std_logic_vector(159 downto 0) := (others => '0');
+#else
+		   component_done : out STD_LOGIC;
 #end   
 
 #if ($regimes.size() > 0)

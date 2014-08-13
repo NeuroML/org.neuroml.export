@@ -22,6 +22,7 @@ use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.fixed_float_types.ALL;
 use std.textio.all;
 use ieee.std_logic_textio.all; -- if you're saving this type of signal
+use IEEE.numeric_std.all;
 
 ###################################################################
 ###################################################################
@@ -174,6 +175,10 @@ end top_synth;
 architecture top of top_synth is
 
 signal step_once_complete_int : STD_LOGIC;
+signal seven_steps_done : STD_LOGIC;
+signal step_once_go_int : STD_LOGIC;
+signal COUNT : unsigned(2 downto 0) := "000";
+
 
 ## Go through each component and gets it definition here
 
@@ -426,11 +431,6 @@ end component;
 ##THE CHILDREN
 #foreach ($child4 in $child3.Children)
 
-##Exposures
-	#foreach ($par in $child4.exposures)
-		#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-		$foo
-	#end
 	
 ##StateVariables
 	#foreach ($par in $child4.state)
@@ -447,12 +447,6 @@ end component;
 				
 ##THE CHILDREN
 #foreach ($child5 in $child4.Children)
-
-##Exposures
-	#foreach ($par in $child5.exposures)
-		#set( $foo = "signal " + $child.name + "_exposure_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name+ "_" + $par.name + " :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
-		$foo
-	#end
 	
 ##StateVariables
 	#foreach ($par in $child5.state)
@@ -494,7 +488,7 @@ $foo : $child.name
     port map (	clk => clk,
 				rst => rst,
 				ce => ce,
-		   step_once_go  => step_once_go,
+		   step_once_go  => step_once_go_int,
 		   reset_model => reset_model,
 		   step_once_complete  => step_once_complete_int,
 		   eventport_in_spike_aggregate => eventport_in_spike_aggregate,
@@ -661,7 +655,36 @@ $foo : $child.name
 
 
 
-store_state: process (clk) is
+count_proc:process(clk)
+  	begin 
+      if rising_edge(clk) then  
+			if (rst='1') then 
+				COUNT <= "000";
+				seven_steps_done <= '0';
+			else
+				if step_once_complete_int = '1' or 
+				(step_once_complete_int = '0' and 	seven_steps_done = '1')	then
+					if (COUNT /= "111") then
+						COUNT <= COUNT + 1;
+						if COUNT = "110" then
+							seven_steps_done <= '1';
+						else
+							seven_steps_done <= '0';
+						end if;
+					else
+						seven_steps_done <= '0';
+					end if;
+				elsif step_once_go = '1' then
+					seven_steps_done <= '0';
+					COUNT <= "000";
+				end if;
+			end if;
+		end if;
+end process count_proc;
+
+
+
+store_state: process (clk)
    begin
       if rising_edge(clk) then  
          if (rst='1') then   
@@ -723,8 +746,8 @@ store_state: process (clk) is
 
 
 		 
-         elsif (ce='1' and step_once_complete_int='1') then
-  
+         elsif (ce='1' and seven_steps_done='1') then
+
 
 #foreach ($child in $NeuronComponents)
 ##StateVariables
@@ -788,7 +811,8 @@ end if;
  end process store_state;
  
  
- step_once_complete <= step_once_complete_int;
+ step_once_complete <= seven_steps_done;
+ step_once_go_int <= step_once_complete_int or step_once_go;
 
 end top;
 

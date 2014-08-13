@@ -4,6 +4,64 @@
 ######################################################
 
 
+-------------------------------------------------------------------------------------------------------
+-- Dynamics processes
+-------------------------------------------------------------------------------------------------------
+
+#set( $sensitivityList = "sysparam_time_timestep " )
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set( $sensitivityList = $sensitivityList + "," + $regime.dynamics.get($par.name).SensitivityList)
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set( $sensitivityList = $sensitivityList + "," + $dynamics.get($par.name).SensitivityList)
+	#end
+#end
+
+state_variable_process_dynamics_comb :process ($sensitivityList)
+begin
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set( $foo = "statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1_next <= resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $regime.dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+			$foo
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set( $foo = "statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1_next <= resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+		$foo
+	#end
+#end
+subprocess_dyn_int_pre_ready <= '1';
+subprocess_dyn_int_ready <= '1';
+subprocess_dyn_ready <= '1';
+end process state_variable_process_dynamics_comb;
+
+state_variable_process_dynamics_syn :process (CLK)
+begin
+if clk'event and clk = '1' then  
+if subprocess_all_ready = '1' then  
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set( $foo = "statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1 <= statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1_next;"  )
+			$foo
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set( $foo = "statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1 <= statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1_next;" )
+		$foo
+	#end
+#end
+end if;
+end if;
+end process state_variable_process_dynamics_syn;
+
+
+
+
 ------------------------------------------------------------------------------------------------------
 -- State Variable Drivers
 ------------------------------------------------------------------------------------------------------
@@ -41,14 +99,14 @@
 
 
 #if ($regime.dynamics.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $regime.dynamics.get($par.name).SensitivityList  )
+#set( $sensitivityList = $sensitivityList + " ,statevariable_" + $par.type +  "_" + $regime.name + "_" + $par.name + "_temp_1, " + $regime.dynamics.get($par.name).SensitivityList  )
 #end
 
 #end
 #end
 
 #if ($dynamics.get($par.name))
-#set( $sensitivityList = $sensitivityList + "," + $dynamics.get($par.name).SensitivityList)
+#set( $sensitivityList = $sensitivityList + ", statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1," + $dynamics.get($par.name).SensitivityList )
 #end
 
 #set( $sensitivityList = $sensitivityList.replace(" ","").replace(",,",","))
@@ -144,7 +202,7 @@ begin
 ##first check for a timederivative
 #set( $temps = 1)
 #if ($dynamics.get($par.name))
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := statevariable_" + $par.type +  "_noregime_" + $par.name + "_temp_1;"  )
 $foo
 #set( $temps = 2)
 #end
@@ -200,7 +258,7 @@ end if;
 #if ($regime.dynamics.get($par.name))
 
 if ( current_regime_in_int = $regime.name ) then
-#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := resize(statevariable_" + $par.type +  "_" + $par.name + "_in + (" + $regime.dynamics.get($par.name).Dynamics + ") * sysparam_time_timestep," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_temp_1 := statevariable_" + $par.type +  "_" + $regime.name +  "_" + $par.name + "_temp_1;"  )
 $foo
 end if;
 #set( $temps = $temps + 1)
