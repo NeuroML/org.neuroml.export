@@ -164,7 +164,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                     || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
-                    String varInst = getNrnSectionName(cell.getMorphology().getSegment().get(0));
+                    String varInst = getNrnSectionName(cell, cell.getMorphology().getSegment().get(0));
                     String varRef = getPopulationArray() + "[" + num + "]." + varInst + "." + convertToNeuronVariable();
                     return varRef;
                 } else {

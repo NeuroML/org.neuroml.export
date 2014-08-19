@@ -6,16 +6,15 @@ package org.neuroml.export.base;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
-
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
-import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.export.neuron.NRNConst;
+import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
@@ -33,6 +32,7 @@ import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpecificCapacitance;
+import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -58,49 +58,148 @@ public class JSONCellSerializer {
             }
 
             g.writeArrayFieldStart("sections");
+            
             Morphology morph = cell.getMorphology();
-            HashMap<Integer, Segment> idsVsSegments = new HashMap<Integer, Segment>();
+            
+            HashMap<Integer, Segment> idsVsSegments = CellUtils.getIdsVsSegments(cell);
             HashMap<Integer, String> idsVsNames = new HashMap<Integer, String>();
+            HashMap<SegmentGroup, ArrayList<Integer>> sgVsSegId = CellUtils.getSegmentGroupsVsSegIds(cell);
+            HashMap<String, SegmentGroup> namesVsSegmentGroups = CellUtils.getNamesVsSegmentGroups(cell);
+            
+            boolean foundNeuroLexFlags = true;
+            
+            for (SegmentGroup grp: sgVsSegId.keySet()) {
+                if (CellUtils.isUnbranchedNonOverlapping(grp)) {
+                    foundNeuroLexFlags = true;
+                    
+                    ArrayList<Integer> segsHere = sgVsSegId.get(grp);
+                    System.out.println("Section: "+grp.getId()+", NeuroLexId: "+grp.getNeuroLexId()+", segs: "+segsHere);
+                    
+                    g.writeStartObject();
+                    g.writeStringField("name",grp.getId());
+                    g.writeStringField("id",grp.getId());
+                    
+                    g.writeArrayFieldStart("points3d");
+                    String comments = null;
+                    
+                    int lastSegId = -1;
+                    for (int segId: segsHere) {
+                        
+                        Segment seg = idsVsSegments.get(segId);
+                        Segment parentSegment = null;
+                        if (seg.getParent()!=null && seg.getParent().getSegment()!=null)
+                        {
+                            parentSegment = idsVsSegments.get(seg.getParent().getSegment());
+                            
+                        }
+                        System.out.println("  Next segment: "+seg.getId()+", parent: "+ (parentSegment!=null?parentSegment.getId():"<none>")+", lastSegId: "+lastSegId);
+                        
+                        Point3DWithDiam prox = null;
+                        
+                        if (parentSegment==null || !segsHere.contains(parentSegment.getId())) {
+                            prox = seg.getProximal();
+                            g.writeString(getPt3dString(prox));
+                        } else {
+                            if (parentSegment.getId()!=lastSegId) {
+                                throw new NeuroMLException("Error in (ordering of?) set of segment ids for segmentGroup: "+grp+"\n"
+                                        + "segsHere: "+segsHere+"\n"
+                                        + "expecting parent: "+lastSegId+"\n"
+                                        + "for segment: "+seg);
+                            }
+                        }
+                        Point3DWithDiam dist = seg.getDistal();
 
-            for (Segment seg: morph.getSegment()) {
-                System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
-                g.writeStartObject();
-                String name = NeuronWriter.getNrnSectionName(seg);
-                idsVsSegments.put(seg.getId(), seg);
-                idsVsNames.put(seg.getId(), name);
-                //g.writeObjectFieldStart(name);
-                g.writeStringField("name",name);
-                g.writeStringField("id",seg.getId()+"");
-                Segment parentSegment = null;
-                if (seg.getParent()!=null && seg.getParent().getSegment()!=null)
-                {
-                    parentSegment = idsVsSegments.get(seg.getParent().getSegment());
-                    String parent = idsVsNames.get(seg.getParent().getSegment());
-                    g.writeStringField("parent",parent);
-                    g.writeNumberField("fractionAlong", seg.getParent().getFractionAlong());
+                        if (prox != null &&
+                            dist.getX() == prox.getX() &&
+                            dist.getY() == prox.getY() &&
+                            dist.getZ() == prox.getZ() &&
+                            dist.getDiameter() == prox.getDiameter())
+                        {
+                            comments = "Section in NeuroML is spherical, so using cylindrical section along Y axis for NEURON";
+                            dist.setY(dist.getY() + dist.getDiameter());
+                        }
+                    
+                        g.writeString(getPt3dString(dist));
+                        lastSegId = seg.getId();
+                    }
+                    g.writeEndArray(); // points3d
+                    
+                    Segment firstSeg = idsVsSegments.get(segsHere.get(0));
+                    if (firstSeg.getParent()!=null) {
+                        double fract = firstSeg.getParent().getFractionAlong();
+                        g.writeNumberField("fractionAlong", fract);
+                        if (fract!=0 && fract!=1) {
+                            throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1, it's "+fract+"...");
+                        }
+                        String parentSection = null;
+                        
+                        for (SegmentGroup sgPar: sgVsSegId.keySet()) {
+                            ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
+                            if (CellUtils.isUnbranchedNonOverlapping(sgPar)) {
+                                if (fract==1) {
+                                    if (segsPar.get(segsPar.size()-1) == (int)firstSeg.getParent().getSegment())
+                                        parentSection = sgPar.getId();
+                                }
+                                else if (fract==0) {
+                                    if (segsPar.get(0) == (int)firstSeg.getParent().getSegment())
+                                        parentSection = sgPar.getId();
+                                }
+                            }
+                        }
+                        g.writeStringField("parent",parentSection);
+                    }
+                    
+                    
+                    if (comments!=null)
+                        g.writeStringField("comments",comments);
+                    
+                    g.writeEndObject();
+                    
+                    
                 }
-                String comments = null;
-                g.writeArrayFieldStart("points3d");
-                Point3DWithDiam p0 = seg.getDistal();
-                g.writeString(String.format("%g, %g, %g, %g", p0.getX(), p0.getY(), p0.getZ(), p0.getDiameter()));
-                Point3DWithDiam p1 = seg.getProximal();
-                if (p1==null)
-                    p1 = parentSegment.getDistal();
-                if (p0.getX() == p1.getX() &&
+            }
+            
+            if (!foundNeuroLexFlags) {
+
+                for (Segment seg: morph.getSegment()) {
+                    System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
+                    g.writeStartObject();
+                    String name = NeuronWriter.getNrnSectionName(cell, seg);
+                    idsVsNames.put(seg.getId(), name);
+                    //g.writeObjectFieldStart(name);
+                    g.writeStringField("name",name);
+                    g.writeStringField("id",seg.getId()+"");
+                    Segment parentSegment = null;
+                    if (seg.getParent()!=null && seg.getParent().getSegment()!=null)
+                    {
+                        parentSegment = idsVsSegments.get(seg.getParent().getSegment());
+                        String parent = idsVsNames.get(seg.getParent().getSegment());
+                        g.writeStringField("parent",parent);
+                        g.writeNumberField("fractionAlong", seg.getParent().getFractionAlong());
+                    }
+                    String comments = null;
+                    g.writeArrayFieldStart("points3d");
+                    Point3DWithDiam p0 = seg.getDistal();
+                    g.writeString(getPt3dString(p0));
+                    Point3DWithDiam p1 = seg.getProximal();
+                    if (p1==null)
+                        p1 = parentSegment.getDistal();
+                    if (p0.getX() == p1.getX() &&
                         p0.getY() == p1.getY() &&
                         p0.getZ() == p1.getZ() &&
                         p0.getDiameter() == p1.getDiameter())
-                {
-                    comments = "Section in NeuroML is spherical, so using cylindrical section along Y axis in NEURON";
-                    p1.setY(p0.getDiameter());
-                }
-                g.writeString(String.format("%g, %g, %g, %g", p1.getX(), p1.getY(), p1.getZ(), p1.getDiameter()));
-                g.writeEndArray();
-                if (comments!=null)
-                    g.writeStringField("comments",comments);
+                    {
+                        comments = "Section in NeuroML is spherical, so using cylindrical section along Y axis in NEURON";
+                        p1.setY(p1.getY() + p0.getDiameter());
+                    }
+                    g.writeString(getPt3dString(p1));
+                    g.writeEndArray();
+                    if (comments!=null)
+                        g.writeStringField("comments",comments);
 
-                //g.writeEndObject();
-                g.writeEndObject();
+                    //g.writeEndObject();
+                    g.writeEndObject();
+                }
             }
 
             g.writeEndArray();
@@ -108,31 +207,43 @@ public class JSONCellSerializer {
             g.writeArrayFieldStart("groups");
             boolean foundAll = false;
             for (SegmentGroup grp: morph.getSegmentGroup()) {
-                g.writeStartObject();
-                g.writeStringField("name", grp.getId());
-                foundAll = grp.getId().equals("all");
-                if (!grp.getMember().isEmpty()) {
-                    g.writeArrayFieldStart("sections");
-                    for (Member m: grp.getMember()) {
-                        g.writeString(idsVsNames.get(m.getSegment()));
+                if (!(foundNeuroLexFlags && 
+                      CellUtils.isUnbranchedNonOverlapping(grp))) {
+                    g.writeStartObject();
+                    g.writeStringField("name", grp.getId());
+                    foundAll = foundAll || grp.getId().equals("all");
+                    if (!grp.getMember().isEmpty()) {
+                        g.writeArrayFieldStart("segments");
+                        for (Member m: grp.getMember()) {
+                            g.writeString(idsVsNames.get(m.getSegment()));
+                        }
+                        g.writeEndArray();
                     }
-                    g.writeEndArray();
-                }
-                if (!grp.getInclude().isEmpty()) {
-                    g.writeArrayFieldStart("groups");
-                    for (org.neuroml.model.Include inc: grp.getInclude()) {
-                        g.writeString(inc.getSegmentGroup());
+                    if (!grp.getInclude().isEmpty()) {
+                        g.writeArrayFieldStart("groups");
+                        for (org.neuroml.model.Include inc: grp.getInclude()) {
+                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                            if (!isSection)
+                                g.writeString(inc.getSegmentGroup());
+                        }
+                        g.writeEndArray();
+                        g.writeArrayFieldStart("sections");
+                        for (org.neuroml.model.Include inc: grp.getInclude()) {
+                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                            if (isSection)
+                                g.writeString(inc.getSegmentGroup());
+                        }
+                        g.writeEndArray();
                     }
-                    g.writeEndArray();
+                    g.writeEndObject();
                 }
-                g.writeEndObject();
             }
             if (!foundAll) {
                 g.writeStartObject();
                 g.writeStringField("name", "all");
                 g.writeArrayFieldStart("sections");
                 for (Segment seg: morph.getSegment()) {
-                    String name = NeuronWriter.getNrnSectionName(seg);
+                    String name = NeuronWriter.getNrnSectionName(cell, seg);
                     g.writeString(name);
                 }
                 g.writeEndArray();
@@ -278,25 +389,39 @@ public class JSONCellSerializer {
             throw new NeuroMLException("Problem converting Cell to JSON format", ex);
         }
         
-		System.out.println(sw.toString());
+		//System.out.println(sw.toString());
 	
 		return sw.toString();
 	
 	}
     
+    private static String getPt3dString(Point3DWithDiam p0) {
+        return String.format("%g, %g, %g, %g", p0.getX(), p0.getY(), p0.getZ(), p0.getDiameter());
+    }
+    
     
 	public static void main(String[] args) throws Exception {
         NeuroMLConverter conv = new NeuroMLConverter();
         //String test = "/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml";
-        String test = "/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml";
-        NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));
+        //String test = "/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml";
+        ArrayList<String> tests = new ArrayList<String>();
+        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
+        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
+        tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
         
-        
-        Cell cell = nml2.getCell().get(0);
-        System.out.println("cell: "+cell.getId());
-        
-        String json = cellToJson(cell, NeuronWriter.SupportedUnits.NEURON);
-        System.out.println(json);
+        for (String test: tests) {
+            NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));
+
+            Cell cell = nml2.getCell().get(0);
+            System.out.println("cell: "+cell.getId());
+
+            String json = cellToJson(cell, NeuronWriter.SupportedUnits.NEURON);
+            //System.out.println(json);
+            String ref = test.substring(test.lastIndexOf("/")).split("\\.")[0];
+            File f = new File("../temp/"+ref+".json");
+            FileUtil.writeStringToFile(json, f);
+            System.out.println("Written to: "+f.getCanonicalPath());
+        }
     }
 
 }
