@@ -92,7 +92,7 @@ public class JSONCellSerializer {
                             parentSegment = idsVsSegments.get(seg.getParent().getSegment());
                             
                         }
-                        System.out.println("  Next segment: "+seg.getId()+", parent: "+ (parentSegment!=null?parentSegment.getId():"<none>")+", lastSegId: "+lastSegId);
+                        //System.out.println("  Next segment: "+seg.getId()+", parent: "+ (parentSegment!=null?parentSegment.getId():"<none>")+", lastSegId: "+lastSegId);
                         
                         Point3DWithDiam prox = null;
                         
@@ -125,28 +125,47 @@ public class JSONCellSerializer {
                     g.writeEndArray(); // points3d
                     
                     Segment firstSeg = idsVsSegments.get(segsHere.get(0));
+                    
                     if (firstSeg.getParent()!=null) {
                         double fract = firstSeg.getParent().getFractionAlong();
-                        g.writeNumberField("fractionAlong", fract);
+                        
+                        if (Math.abs(fract-1)<1e-4) 
+                            fract = 1;
+                        
                         if (fract!=0 && fract!=1) {
-                            throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1, it's "+fract+"...");
+                            throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1, it's "+fract+" in seg "+firstSeg+"...");
                         }
                         String parentSection = null;
+                        int parentId = (int)firstSeg.getParent().getSegment();
                         
+                        //System.out.println("\n\nfirstSeg: "+firstSeg+ "segsHere: "+segsHere);
+                        //System.out.println("parentId: "+parentId);
                         for (SegmentGroup sgPar: sgVsSegId.keySet()) {
-                            ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
-                            if (CellUtils.isUnbranchedNonOverlapping(sgPar)) {
-                                if (fract==1) {
-                                    if (segsPar.get(segsPar.size()-1) == (int)firstSeg.getParent().getSegment())
+                            if (parentSection==null) {
+                                //System.out.println("parent? SG "+sgPar.getId()+" ("+sgPar.getNeuroLexId()+", "+CellUtils.isUnbranchedNonOverlapping(sgPar)+"): "+sgVsSegId.get(sgPar));
+                                ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
+                                if (CellUtils.isUnbranchedNonOverlapping(sgPar) && segsPar.contains(parentId)) {
+                                    //System.out.println("a");
+                                    if (fract==1 && segsPar.get(segsPar.size()-1) == parentId) {
+                                        //System.out.println("b");
                                         parentSection = sgPar.getId();
-                                }
-                                else if (fract==0) {
-                                    if (segsPar.get(0) == (int)firstSeg.getParent().getSegment())
+                                    } else if (fract==0 && segsPar.get(0) == parentId) {
+                                        //System.out.println("c");
                                         parentSection = sgPar.getId();
+                                    } else {
+                                        ///System.out.println("d");
+                                        parentSection = sgPar.getId();
+                                        //TODO: fix this!!!
+                                        fract = 0.5555555555555555;
+                                        comments = "ERROR in fraction along!! Need to work out fraction along SECTION from info about connection to a SEGMENT which is not at start or finish!!";
+                                    }
                                 }
                             }
                         }
+                        //System.out.println("parentSection: "+parentSection);
                         g.writeStringField("parent",parentSection);
+                        
+                        g.writeNumberField("fractionAlong", fract);
                     }
                     
                     
@@ -405,9 +424,11 @@ public class JSONCellSerializer {
         //String test = "/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml";
         //String test = "/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml";
         ArrayList<String> tests = new ArrayList<String>();
+        /*
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
+        tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");*/
+        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/TestL5PC.cell.nml");
         
         for (String test: tests) {
             NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));
