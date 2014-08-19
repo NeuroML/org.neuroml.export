@@ -62,25 +62,43 @@ proc set_initial_ion_properties() {
 proc topol() {
     basic_shape()
 #foreach ($s in $sections)##
-    // Connections in $s.name
 #if ($s.parent)##
-    // Connect $s.name to $s.parent
     connect ${s.name}(0), ${s.parent}(${s.fractionAlong})
 #end##
 #end##
 
 }
 
+#set( $maxcount = 100 )
+#set( $count = 0 )
+#set( $proccount = 0 )
+
 proc basic_shape() {
 
 #foreach ($s in $sections)##
-// Section: $s.name, id: $s.id, parent: $s.parent
-$s.name {pt3dclear() #foreach ($p in $s.points3d) pt3dadd( $p ) #end##
+    // Section: $s.name, id: $s.id, parent: $s.parent (entry count $count/$maxcount)
+    $s.name { pt3dclear() }
+#foreach ($p in $s.points3d)##
+    $s.name { pt3dadd( $p ) }
+#set( $count = $count + 1 )
+#if ($count == $maxcount )##
+
+    // Procedure too big; splitting & calling another procedure...
+    basic_shape_$proccount()
 }
+
+proc basic_shape_$proccount() {
+#set( $proccount = $proccount + 1 )
+#set( $count = 0 )
+#end##
+#end## }
 #end##
 
 }
 
+
+#set( $count = 0 )
+#set( $proccount = 0 )
 proc subsets() { local i
 #foreach ($g in $groups)##
 
@@ -88,6 +106,17 @@ proc subsets() { local i
     $g.name = new SectionList()
 #foreach ($s in $g.sections)##
     $s ${g.name}.append()
+#set( $count = $count + 1 )
+#if ($count == $maxcount )##
+
+    // Procedure too big; splitting & calling another procedure...
+    subsets_$proccount()
+}
+
+proc subsets_$proccount() {
+#set( $proccount = $proccount + 1 )
+#set( $count = 0 )
+#end##
 #end##
 #foreach ($gg in $g.groups)##
     forsec $gg ${g.name}.append()
