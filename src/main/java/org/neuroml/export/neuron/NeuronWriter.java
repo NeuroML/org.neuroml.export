@@ -67,7 +67,7 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends BaseWriter {
 
-    private ArrayList<String> generatedModComponents = new ArrayList<String>();
+    private final ArrayList<String> generatedModComponents = new ArrayList<String>();
     private File dirForMods;
 
     ArrayList<File> allGeneratedFiles = new ArrayList<File>();
@@ -1056,7 +1056,7 @@ public class NeuronWriter extends BaseWriter {
 
 				}
 
-				if (species.indexOf("ca") >= 0) {
+				if (species.contains("ca")) {
 
 					blockNeuron.append("USEION " + species + " " + readRevPot + " WRITE i" + species + " VALENCE 2 ? Assuming valence = 2 (Ca ion); TODO check this!!\n");
 
@@ -1187,7 +1187,7 @@ public class NeuronWriter extends BaseWriter {
 			if (species == null || species.equals("non_specific")) {
 				blockAssigned.append("e (mV)\n");
 				blockAssigned.append("i (mA/cm2)\n");
-			} else if (species != null) {
+			} else {
 				blockAssigned.append("e" + species + " (mV)\n");
 				blockAssigned.append("i" + species + " (mA/cm2)\n");
 			}
@@ -1788,7 +1788,7 @@ public class NeuronWriter extends BaseWriter {
 						line = line + "\ncai = " + td.getStateVariable().getName();
 					}
 
-					if (blockDerivative.toString().indexOf(line) < 0)
+					if (!blockDerivative.toString().contains(line))
 						blockDerivative.append(line + " \n");
 
 				} else {
@@ -1843,7 +1843,7 @@ public class NeuronWriter extends BaseWriter {
 					if (!td.getStateVariable().getName().equals(NRNConst.NEURON_VOLTAGE)) {
 						String line = prefix + getStateVarName(td.getStateVariable().getName()) + "' = " + rateName;
 
-						if (blockDerivative.toString().indexOf(line) < 0)
+						if (!blockDerivative.toString().contains(line))
 							blockDerivative.append(line + " \n");
 
 					} else {
@@ -1855,7 +1855,7 @@ public class NeuronWriter extends BaseWriter {
 			for (String rateName : rateNameVsRateExpr.keySet()) {
 				String rateExpr = rateNameVsRateExpr.get(rateName);
 				// ratesMethod.insert(0,rateName + " = " + rateExpr + " \n");
-                if (rateName.equals("rate_concentration") && rateExpr.indexOf("Faraday")>=0) {
+                if (rateName.equals("rate_concentration") && rateExpr.contains("Faraday")) {
                     ratesMethod.append(rateName + " = (1e6) * " + rateExpr + " ? To correct units...\n");
                 } else {
                     ratesMethod.append(rateName + " = " + rateExpr + " \n");
@@ -1949,7 +1949,7 @@ public class NeuronWriter extends BaseWriter {
 
 				} else {
 					String firstChild = dv.getPath().substring(0, dv.getPath().indexOf("/"));
-					if (firstChild.indexOf("[") >= 0) {
+					if (firstChild.contains("[")) {
 						firstChild = firstChild.substring(0, firstChild.indexOf("["));
 					}
 
@@ -1970,7 +1970,7 @@ public class NeuronWriter extends BaseWriter {
 
 					block.append("? DerivedVariable is based on path: " + dv.getPath() + ", on: " + comp + ", from " + firstChild + "; " + child + "\n");
 
-					if (child == null && dv.getPath().indexOf("synapse") < 0) {
+					if (child == null && !dv.getPath().contains("synapse")) {
 						String alt = "???";
 						if (dv.getReduce().equals("multiply")) {
 							alt = "1";
@@ -1986,10 +1986,10 @@ public class NeuronWriter extends BaseWriter {
 						// String var0 = var;
 
 						String eqn = globalVar;
-						if (globalVar.indexOf("[*]") >= 0
-								&& globalVar.indexOf("syn") >= 0) {
+						if (globalVar.contains("[*]")
+								&& globalVar.contains("syn")) {
 							eqn = "0 ? Was: " + localVar + " but insertion of currents from external attachments not yet supported";
-						} else if (localVar.indexOf("[*]") >= 0) {
+						} else if (localVar.contains("[*]")) {
 							String children = localVar.substring(0, localVar.indexOf("[*]"));
 							String path = localVar.substring(localVar.indexOf("[*]_") + 4);
 							String reduce = dv.getReduce();
@@ -2189,11 +2189,18 @@ public class NeuronWriter extends BaseWriter {
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
+        lemsFiles.add(new File("../neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/LEMS_TestMorphs.xml"));
         
+        /*lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+        lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
@@ -2202,10 +2209,7 @@ public class NeuronWriter extends BaseWriter {
         //lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
 
-        lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));/**/
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));*/
 
         NeuronWriter nw = null;
         String testScript = "";
