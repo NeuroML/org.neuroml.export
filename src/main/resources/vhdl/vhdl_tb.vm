@@ -449,6 +449,31 @@ $foo
 					write(L1, "$foo");  -- nth value in row
 					write(L1, " ");
 				#end
+				
+			#foreach ($child3 in $child2.Children)
+				##Exposures
+					#foreach ($par in $child3.exposures)
+						#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name + "_" + $child3.name +  "_" + $par.name   )
+						write(L1, "$foo");  -- nth value in row
+						write(L1, " ");
+					#end
+					#foreach ($child4 in $child3.Children)
+						##Exposures
+							#foreach ($par in $child4.exposures)
+								#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +  "_" + $par.name   )
+								write(L1, "$foo");  -- nth value in row
+								write(L1, " ");
+							#end
+						#foreach ($child5 in $child4.Children)
+							##Exposures
+								#foreach ($par in $child5.exposures)
+									#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name + "_" + $child5.name +  "_" + $par.name   )
+									write(L1, "$foo");  -- nth value in row
+									write(L1, " ");
+								#end
+						#end
+					#end
+			#end
 		#end
 		## END THE CHILDREN
 	#end
@@ -495,7 +520,7 @@ begin
 	reset_model <= '1';
 	
    
-   wait for 5000 ns;
+   wait for 10000 ns;
 		reset_model <= '0';
  
  end process ;
@@ -511,7 +536,7 @@ begin
 		
 				sysparam_time_simtime <= to_sfixed (0.0,6, -22);
 		else
-			if (step_once_complete'event and step_once_complete = '1') then
+			if (step_once_complete'event and step_once_complete = '1' and reset_model = '0') then
 				sysparam_time_simtime <= resize(sysparam_time_simtime + sysparam_time_timestep,6, -22);
 				write(L1, real'image(to_real( sysparam_time_simtime )));  -- nth value in row
 						write(L1, " ");
@@ -529,6 +554,30 @@ begin
 							write(L1, real'image(to_real( $foo )));  -- nth value in row
 							write(L1, " ");
 						#end
+					#foreach ($child3 in $child2.Children)
+						##Exposures
+							#foreach ($par in $child3.exposures)
+								#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name +"_" + $child3.name +  "_" + $par.name   )
+								write(L1, real'image(to_real( $foo )));  -- nth value in row
+								write(L1, " ");
+							#end
+						#foreach ($child4 in $child3.Children)
+							##Exposures
+								#foreach ($par in $child4.exposures)
+									#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name +"_" + $child3.name +"_" + $child4.name +  "_" + $par.name   )
+									write(L1, real'image(to_real( $foo )));  -- nth value in row
+									write(L1, " ");
+								#end
+							#foreach ($child5 in $child4.Children)
+								##Exposures
+									#foreach ($par in $child5.exposures)
+										#set( $foo = $child.name + "_exposure_" + $par.type +  "_" + $child2.name +"_" + $child3.name +"_" + $child4.name + "_" + $child5.name +  "_" + $par.name   )
+										write(L1, real'image(to_real( $foo )));  -- nth value in row
+										write(L1, " ");
+									#end
+							#end
+						#end
+					#end
 				#end
 				## END THE CHILDREN
 			#end

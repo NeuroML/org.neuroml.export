@@ -82,13 +82,17 @@ signal subprocess_all_ready : STD_LOGIC := '0';
 #end
 
 
+#set( $exp = 0  )
+#set( $pow = 0  )
 
 #foreach ($par in $derivedvariables)
 #foreach ($exp in $par.Exponentials)
+#set( $exp = 1  )
 #set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
 	$foo2	
 #end
 #foreach ($exp in $par.Powers)
+#set( $pow = 1  )
 #set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
 	$foo2	
 #end
@@ -96,10 +100,12 @@ signal subprocess_all_ready : STD_LOGIC := '0';
 #foreach ($par in $conditionalderivedvariables)
 #foreach ($case in $par.cases)
 #foreach ($exp in $case.Exponentials)
+#set( $exp = 1  )
 #set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
 	$foo2	
 #end
 #foreach ($exp in $case.Powers)
+#set( $pow = 1  )
 #set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
 	$foo2	
 #end
@@ -130,7 +136,7 @@ signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);
 
 #end
 
-
+#if ( $exp == 1  )
 component ParamExp is
 	port(
 		clk		: In  Std_logic;
@@ -141,7 +147,9 @@ component ParamExp is
 		Output	: Out sfixed(11 downto -12)
 		);
 end component;
+#end
 
+#if ( $pow == 1  )
 component ParamPow is
 	port(
 		clk		: In  Std_logic;
@@ -153,7 +161,7 @@ component ParamPow is
 		Output	: Out sfixed(11 downto -12)
 		);
 end component; 
-
+#end
 
 ---------------------------------------------------------------------
 -- Derived Variables and Parameters

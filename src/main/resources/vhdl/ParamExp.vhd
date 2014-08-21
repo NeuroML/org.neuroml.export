@@ -27,32 +27,33 @@ entity ParamExp is
 end ParamExp;
 
 architecture RTL of ParamExp is
-type MEM is array (0 to 3) of sfixed(11 downto -12);
+type MEM is array (0 to 7) of sfixed(11 downto -12);
 signal output_internal : sfixed(11 downto -12);
 signal currentTerm : sfixed(11 downto -12);
-signal COUNT : unsigned(2 downto 0) := "101";
+signal COUNT : unsigned(3 downto 0) := "1001";
 begin
 	
 	process(clk)
-		variable MEM4Xsfixed : MEM := (to_sfixed (1,11, -12),to_sfixed (0.5,11, -12),to_sfixed (0.33333333,11, -12),to_sfixed (0.25,11, -12));
+		variable MEM8Xsfixed : MEM := (to_sfixed (1,11, -12),to_sfixed (0.5,11, -12),to_sfixed (0.33333333,11, -12),to_sfixed (0.25,11, -12),
+		to_sfixed (0.2,11, -12),to_sfixed (0.16666666667,11, -12),to_sfixed (0.142857142857,11, -12),to_sfixed (0.125,11, -12));
 		variable Sel : integer;
 		begin 
 			if rst = '1' then
-				COUNT <= "101";
+				COUNT <= "1001";
 				currentTerm <= to_sfixed (0,11, -12);
 				output_internal <= to_sfixed (0,11, -12);
 			elsif clk'event and clk = '1' then
 				if Start = '1' then
 					Done <= '0';
-					COUNT <= "000"; 	
+					COUNT <= "0000"; 	
 					currentTerm <= to_sfixed (1,11, -12);
 					output_internal <= to_sfixed (0,11, -12);
-				elsif COUNT /= "101" then
+				elsif COUNT /= "1001" then
 					Done <= '0';
 					output_internal <= resize(output_internal + currentTerm,11,-12);
-					currentTerm <= resize(currentTerm * resize(X * MEM4Xsfixed(to_integer(unsigned(COUNT(1 downto 0)))),11,-12),11,-12);
+					currentTerm <= resize(MEM8Xsfixed(to_integer(unsigned(COUNT(2 downto 0)))) * resize(X * currentTerm,11,-12),11,-12);
 					COUNT <= COUNT + 1;
-				elsif COUNT = "101" then 
+				elsif COUNT = "1001" then 
 					Done <= '1';
 				end if; 
 			end if;

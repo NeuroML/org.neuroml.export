@@ -35,6 +35,20 @@
 #end
 
 
+#foreach ($regime in $regimes) 
+	#foreach ($event in $regime.events)
+		#if ($event.effect.events.get($par.name))
+		#set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
+		#end
+	#end
+
+	#foreach ($event in $regime.conditions)
+		#if ($event.effect.events.get($par.name))
+		#set( $sensitivityList = $sensitivityList + "," + $event.SENSITIVITYLIST )
+		#end
+	#end
+#end
+
 eventport_driver$i :process ( $sensitivityList )
 
 

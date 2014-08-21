@@ -70,7 +70,6 @@ begin
 #set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
 #set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
-	$foo2 <= to_sfixed(0,11,-12);
 	if rst  = '1' then
 		$foo2 <= to_sfixed(0,11,-12);
 	elsif (clk'EVENT AND clk = '1') then	
@@ -85,8 +84,6 @@ begin
 #set( $foo2X = "pre_pow_" + $par.name + "_" + $exp.name + "_X"  )
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
-	$foo2A <= to_sfixed(0,11,-12);
-	$foo2X <= to_sfixed(0,11,-12);
 	if rst  = '1' then
 		$foo2A <= to_sfixed(0,11,-12);
 		$foo2X <= to_sfixed(0,11,-12);
@@ -105,7 +102,6 @@ begin
 #set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
 #set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
-	$foo2 <= to_sfixed(0,11,-12);
 	if rst  = '1' then
 		$foo2 <= to_sfixed(0,11,-12);
 	elsif (clk'EVENT AND clk = '1') then	
@@ -120,8 +116,6 @@ begin
 #set( $foo2X = "pre_pow_" + $par.name + "_" + $exp.name + "_X"  )
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
-	$foo2A <= to_sfixed(0,11,-12);
-	$foo2X <= to_sfixed(0,11,-12);
 	if rst  = '1' then
 		$foo2A <= to_sfixed(0,11,-12);
 		$foo2X <= to_sfixed(0,11,-12);

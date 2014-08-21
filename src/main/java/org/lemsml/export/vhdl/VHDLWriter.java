@@ -1302,7 +1302,8 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 	
-	private String writeInternalExpLnLogEvaluators(String toEncode, JsonGenerator g, String variableName) throws JsonGenerationException, IOException
+	private String writeInternalExpLnLogEvaluators(String toEncode, JsonGenerator g, 
+			String variableName, StringBuilder sensitivityList ) throws JsonGenerationException, IOException
 	{
 		String returnValue = toEncode.replace("(", " ( ").replace(")", " ) ");
 		Pattern MY_PATTERN = Pattern.compile("exp +\\(([a-zA-Z0-9_ \\,\\*\\\\\\/\\+\\-\\(\\)]+)\\) ");
@@ -1330,7 +1331,8 @@ public class VHDLWriter extends BaseWriter {
 		    	closingCount--;
 		    }
 		    returnValue = returnValue.replace(groupToReplace,"exp_" + variableName + "_exponential_result" + i);
-			g.writeStringField("name","exponential_result" + i); 
+		    sensitivityList.append("exp_" + variableName + "_exponential_result" + i + ",");
+		    g.writeStringField("name","exponential_result" + i); 
 			g.writeStringField("value", groupToReplace.substring(3) ); 
 		    i++;
 			g.writeEndObject();
@@ -1369,7 +1371,8 @@ public class VHDLWriter extends BaseWriter {
 		    	closingCount--;
 		    }
 		    returnValue = returnValue.replace(groupToReplace,"pow_" + variableName + "_power_result" + i);
-			g.writeStringField("name","power_result" + i); 
+			sensitivityList.append("pow_" + variableName + "_power_result" + i + ",");
+		    g.writeStringField("name","power_result" + i); 
 			g.writeStringField("valueA", m.group(1) ); 
 			g.writeStringField("valueX", m.group(2) ); 
 		    i++;
@@ -1476,11 +1479,11 @@ public class VHDLWriter extends BaseWriter {
 		{
 			for (FinalParam param2 : paramsOrig)
 			{
-				String param1_s = " param_" + param1.r_dimension.getName() + "_" + param1.name;
-				String param2_s = " param_" + param2.r_dimension.getName() + "_" + param2.name;
-				if (returnString.contains(param1_s + " / " + param2_s))
+				String param1_s = "param_" + param1.r_dimension.getName() + "_" + param1.name;
+				String param2_s = "param_" + param2.r_dimension.getName() + "_" + param2.name;
+				if (returnString.replace("  ", " ").contains(param1_s + " / " + param2_s))
 				{
-					returnString = returnString.replace(param1_s + " / " + param2_s," param_" + param1.r_dimension.getName() + "_" + param1.name + "_div_" + param2.name);
+					returnString = returnString.replace(param1_s + " / " + param2_s," param_" + param1.r_dimension.getName()  + "_div_"  +param2.r_dimension.getName()  + "_" + param1.name + "_div_" + param2.name);
 					FinalParam fp = new FinalParam(param1.name + "_div_" + param2.name, new Dimension(param1.r_dimension.getName() + "_div_" + param2.r_dimension.getName()));
 					if (!params.hasName(fp.name))
 					{
@@ -1494,8 +1497,8 @@ public class VHDLWriter extends BaseWriter {
 		//replace all / param_ with one precalculated inverse parameter
 		for (FinalParam param1 : paramsOrig)
 		{
-				String param1_s = " param_" + param1.r_dimension.getName() + "_" + param1.name;
-				if (returnString.contains(" / "+param1_s))
+				String param1_s = "param_" + param1.r_dimension.getName() + "_" + param1.name;
+				if (returnString.replace("  ", " ").contains(" / "+param1_s))
 				{
 					returnString = returnString.replace(" / " + param1_s," * param_" + param1.r_dimension.getName() + "_inv_" + param1.name + "_inv");
 					FinalParam fp = new FinalParam(param1.name + "_inv", new Dimension(param1.r_dimension.getName() + "_inv"));
@@ -1740,7 +1743,7 @@ public class VHDLWriter extends BaseWriter {
 		int integer = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			integer = 12;
+			integer = 18;
 		} else if (dimension.equals("voltage"))
 		{
 			integer = 2;
@@ -1755,7 +1758,7 @@ public class VHDLWriter extends BaseWriter {
 			integer = -33;
 		} else if (dimension.equals("conductance"))
 		{
-			integer = -29;
+			integer = -20;
 		} else if (dimension.equals("per_time"))
 		{
 			integer = 20;
@@ -1990,7 +1993,7 @@ public class VHDLWriter extends BaseWriter {
 			String value = encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
 					ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 					ct.getRequirements(),sensitivityList,params,combinedParameterValues);
-			value = writeInternalExpLnLogEvaluators(value,g,td.getVariable());
+			value = writeInternalExpLnLogEvaluators(value,g,td.getVariable(),sensitivityList);
 			g.writeStringField("Dynamics", value);
 			if  (sensitivityList.length() > 0)
 				g.writeStringField("SensitivityList",sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
@@ -2020,7 +2023,7 @@ public class VHDLWriter extends BaseWriter {
 				String value = encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 						ct.getRequirements(),sensitivityList,params,combinedParameterValues) ;
-				value = writeInternalExpLnLogEvaluators(value,g,dv.getName());
+				value = writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList);
 				g.writeStringField("value",value);
 				
 			} else if (sel != null) {
@@ -2143,7 +2146,7 @@ public class VHDLWriter extends BaseWriter {
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 							ct.getRequirements(),sensitivityList,params,combinedParameterValues);
 
-					value = writeInternalExpLnLogEvaluators(value,g,dv.getName());
+					value = writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList);
 					g.writeStringField("value", value );
 					writeConditionList(g,ct,dv2.condition,sensitivityList,params,combinedParameterValues);
 				} 
@@ -2178,7 +2181,7 @@ public class VHDLWriter extends BaseWriter {
 			g.writeStringField("value",	value);
 			
 
-			value = writeInternalExpLnLogEvaluators(value,g,dp.getName());
+			value = writeInternalExpLnLogEvaluators(value,g,dp.getName(),sensitivityList);
 			writeBitLengths(g,dp.getDimension().getName());
 					
 			g.writeEndObject();

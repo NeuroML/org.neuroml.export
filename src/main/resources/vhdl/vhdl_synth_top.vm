@@ -179,6 +179,13 @@ signal seven_steps_done : STD_LOGIC;
 signal step_once_go_int : STD_LOGIC;
 signal COUNT : unsigned(2 downto 0) := "000";
 
+#foreach ($neuron in $NeuronComponents)
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo = "signal " + $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + "_int : STD_LOGIC;"  )
+		$foo
+	#end
+#end
 
 ## Go through each component and gets it definition here
 
@@ -496,7 +503,7 @@ $foo : $child.name
 		   
 ##Event Ports
     #foreach ($par in $child.eventports)
-		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => " + $child.name + "_" + "eventport_" + $par.direction + "_" + $par.name + ","  )
+		#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + " => " + $child.name + "_" + "eventport_" + $par.direction + "_" + $par.name + "_int,"  )
 		$foo
 	#end
 
@@ -744,10 +751,24 @@ store_state: process (clk)
 #end
 #end
 
+#foreach ($neuron in $NeuronComponents)
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo =  $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + "<= '0';"  )
+		$foo
+	#end
+#end
 
 		 
          elsif (ce='1' and seven_steps_done='1') then
 
+#foreach ($neuron in $NeuronComponents)
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo =  $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + " <= " + $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + "_int;"  )
+		$foo
+	#end
+#end
 
 #foreach ($child in $NeuronComponents)
 ##StateVariables
@@ -801,6 +822,15 @@ store_state: process (clk)
 					#end
 			#end
 #end
+#end
+else
+
+#foreach ($neuron in $NeuronComponents)
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo =  $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + "<= '0';"  )
+		$foo
+	#end
 #end
 
 		
