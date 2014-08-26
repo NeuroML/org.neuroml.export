@@ -80,6 +80,14 @@ $foo
 		#set( $foo = "statevariable_" + $par.type +  "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in_int," ) 
 		$foo
 	#end
+##derivedvariables
+	#foreach ($par in $child.derivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type  +  "_" + $par.name + "_out => derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out," ) 
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type  +  "_" + $par.name + "_in => derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in," ) 
+		$foo
+	#end
+	
 	
 	
 
@@ -108,6 +116,13 @@ $foo
 			##StateVariables
 				#foreach ($par in $child2.state)
 					#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $par.name + "_in," ) 
+					$foo
+				#end
+			##derivedvariables
+				#foreach ($par in $child2.derivedvariables)
+					#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $par.name + "_out => derivedvariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $par.name + "_out," ) 
+					$foo
+					#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $par.name + "_in => derivedvariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $par.name + "_in," ) 
 					$foo
 				#end
 				
@@ -139,6 +154,13 @@ $foo
 							#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $par.name + "_in," ) 
 							$foo
 						#end
+					##derivedvariables
+						#foreach ($par in $child3.derivedvariables)
+							#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $child3.name +"_" + $par.name + "_out => derivedvariable_" + $par.type +  "_" + $child.name +"_"  + $child2.name + "_" + $child3.name + "_" + $par.name + "_out," ) 
+							$foo
+							#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $child3.name +"_" + $par.name + "_in => derivedvariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $par.name + "_in," ) 
+							$foo
+						#end
 						
 						
 						#foreach ($child4 in $child3.Children)
@@ -166,6 +188,13 @@ $foo
 							##StateVariables
 								#foreach ($par in $child4.state)
 									#set( $foo = "statevariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in => statevariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in," ) 
+									$foo
+								#end
+							##derivedvariables
+								#foreach ($par in $child4.derivedvariables)
+									#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_out => derivedvariable_" + $par.type +  "_" + $child.name +"_"  + $child2.name + "_" + $child3.name + "_" + $child4.name + "_" + $par.name + "_out," ) 
+									$foo
+									#set( $foo = "derivedvariable_" + $par.type  + "_" + $child2.name +  "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in => derivedvariable_" + $par.type +  "_" + $child.name + "_"  + $child2.name + "_" + $child3.name + "_" + $child4.name +"_" + $par.name + "_in," ) 
 									$foo
 								#end
 						#end

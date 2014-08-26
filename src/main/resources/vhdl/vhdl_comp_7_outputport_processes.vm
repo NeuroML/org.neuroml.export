@@ -207,7 +207,7 @@ end process;
 ##Asign Exposures to State Variables
 #foreach ($par in $state)
 #if ($par.exposure.length() > 0)
-#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + "_next;"  )
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= statevariable_" + $par.type + "_" + $par.name + "_in;"  )
 $foo 
 #end
 #end
@@ -231,13 +231,17 @@ $foo
 ##Asign Exposures to Derived Variables
 #foreach ($par in $derivedvariables)
 #if ($par.exposure.length() > 0)
-#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + "_in;"  )
+$foo 
+#set( $foo = "derivedvariable_" + $par.type + "_" + $par.name + "_out <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 
 #end
 #end
 #foreach ($par in $conditionalderivedvariables)
 #if ($par.exposure.length() > 0)
-#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
+#set( $foo = "exposure_" + $par.type +  "_" + $par.exposure + " <= derivedvariable_" + $par.type + "_" + $par.name + "_in;"  )
+$foo 
+#set( $foo = "derivedvariable_" + $par.type + "_" + $par.name + "_out <= derivedvariable_" + $par.type + "_" + $par.name + ";"  )
 $foo 
 #end
 #end

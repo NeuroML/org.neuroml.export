@@ -60,7 +60,6 @@ begin
 #end
 #end
 #end
-subprocess_der_int_pre_ready <= '1';
 end process derived_variable_pre_process_comb;
 
 derived_variable_pre_process_syn :process ( clk, rst )

@@ -294,6 +294,14 @@ component $child.name
 		$foo
 	#end
 	
+##derivedvariables
+	#foreach ($par in $child.derivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 		#foreach ($child2 in $child.Children)
 		
 			##Parameters
@@ -319,6 +327,13 @@ component $child.name
 				#set( $foo = "statevariable_" + $par.type +  "_"+ $child2.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 				$foo
 			#end
+			##derivedvariables
+				#foreach ($par in $child2.derivedvariables)
+					#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+					$foo
+					#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+					$foo
+				#end
 			
 				#foreach ($child3 in $child2.Children)
 				
@@ -345,6 +360,13 @@ component $child.name
 						#set( $foo = "statevariable_" + $par.type +  "_"+ $child2.name + "_"+ $child3.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 						$foo
 					#end
+					##derivedvariables
+						#foreach ($par in $child3.derivedvariables)
+							#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name + "_"+ $child3.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+							$foo
+							#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+							$foo
+						#end
 					
 						#foreach ($child4 in $child3.Children)
 						
@@ -371,6 +393,13 @@ component $child.name
 								#set( $foo = "statevariable_" + $par.type +  "_"+ $child2.name + "_"+ $child3.name + "_"+ $child4.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 								$foo
 							#end
+							##derivedvariables
+								#foreach ($par in $child4.derivedvariables)
+									#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name + "_"+ $child3.name +  "_"+ $child4.name +   "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+									$foo
+									#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +   "_"+ $child4.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+									$foo
+								#end
 						#end
 					
 				#end
