@@ -4,6 +4,7 @@
 ########################################################################
 
 
+load_file("subiter.hoc")
 
 begintemplate ${id}
 
@@ -31,9 +32,11 @@ objref synlist
 
 proc init() {
     topol()
-    subsets()
-    biophys()
     geom_nseg()
+    subsets()
+    subsets_inhomogeneous()
+    biophys()
+    biophys_inhomogeneous()
     synlist = new List()
     x = y = z = 0
     
@@ -125,6 +128,25 @@ proc subsets_$proccount() {
 
 }
 
+#foreach ($g in $groups)##
+#foreach ($ip in $g.inhomogeneousParameters)##
+objref $ip.id // inhomogeneous parameter over $g.name
+#end##
+#end##
+
+proc subsets_inhomogeneous() {
+#foreach ($g in $groups)##
+#foreach ($ip in $g.inhomogeneousParameters)##
+    metric = #if( $ip.metric == 'Path Length from root' )0#{else}???#end
+
+    proximal_style = #if( $ip.proximalTranslationStart ) #if( $ip.proximalTranslationStart == '0' || $ip.proximalTranslationStart == '0.0' )1#{else}???#end #{else}0#end
+
+    distal_style = #if( $ip.distalNormalizationEnd ) #if( $ip.distalNormalizationEnd == '1' || $ip.distalNormalizationEnd == '1.0' )1#{else}???#end #{else}0#end
+
+    $ip.id = new SubsetDomainIterator($g.name, metric, proximal_style, distal_style) 
+#end##
+#end##
+}
 
 proc biophys() {
 
@@ -146,7 +168,11 @@ proc biophys() {
         // current calculated through GHK flux equation 
         permeability_$cd.ionChannel = $cd.permeability  // units: cm / s 
 #else##
+#if( $cd.condDens )##
         gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
+#else##
+        // gmax_$cd.ionChannel will be set later...
+#end##
 #if( $cd.ion == 'non_specific' )##
         e_$cd.ionChannel = $cd.erev  // units: mV
 #else##
@@ -170,9 +196,28 @@ proc biophys() {
 
 }
 
+
+proc biophys_inhomogeneous() {
+#foreach ($cd in $channelDensity)
+#if( $cd.inhomogeneousValue )##
+
+    ${cd.inhomogeneousParameter}.update()
+    for ${cd.inhomogeneousParameter}.loop() {
+        x = ${cd.inhomogeneousParameter}.x
+        p = ${cd.inhomogeneousParameter}.p
+        gmax_${cd.ionChannel}(x) = $cd.inhomogeneousValue
+    }
+#end##
+#end##
+}
+
 proc geom_nseg() {
     // All sections not mentioned here have nseg = 1
-
+#foreach ($s in $sections)##
+#if ($s.numberInternalDivisions)##
+    ${s.name} nseg = $s.numberInternalDivisions
+#end##
+#end##
 }
 
 
