@@ -15,11 +15,14 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.neuron.NRNConst;
 import org.neuroml.export.neuron.NeuronWriter;
+import org.neuroml.model.Annotation;
 import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
+import org.neuroml.model.ChannelDensityNonUniform;
+import org.neuroml.model.InhomogeneousParameter;
 import org.neuroml.model.InitMembPotential;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.Member;
@@ -27,14 +30,17 @@ import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
+import org.neuroml.model.Property;
 import org.neuroml.model.Resistivity;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpecificCapacitance;
+import org.neuroml.model.VariableParameter;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.w3c.dom.Element;
 
 /**
  * @author boris
@@ -71,9 +77,7 @@ public class JSONCellSerializer {
             for (SegmentGroup grp: sgVsSegId.keySet()) {
                 if (CellUtils.isUnbranchedNonOverlapping(grp)) {
                     foundNeuroLexFlags = true;
-                    
                     ArrayList<Integer> segsHere = sgVsSegId.get(grp);
-                    System.out.println("Section: "+grp.getId()+", NeuroLexId: "+grp.getNeuroLexId()+", segs: "+segsHere);
                     
                     g.writeStartObject();
                     g.writeStringField("name",grp.getId());
@@ -168,6 +172,23 @@ public class JSONCellSerializer {
                         g.writeNumberField("fractionAlong", fract);
                     }
                     
+                    // TODO: make this a more generic function & use string fields
+                    if (grp.getAnnotation()!=null) {
+                        Annotation annot = grp.getAnnotation();
+                        //System.out.println("------ annot: "+annot);
+                        for (Element prop: annot.getAny()) {
+                            //System.out.println("------ Any: "+prop);
+                            if (prop!=null &&
+                                prop.getNodeName().equals("property") && 
+                                prop.hasAttribute("tag") && 
+                                prop.getAttribute("tag").equals("numberInternalDivisions") && 
+                                prop.hasAttribute("value")) {
+                                
+                                g.writeNumberField("numberInternalDivisions", Integer.parseInt(prop.getAttribute("value")));
+                            }
+                        }
+                    }
+                    
                     
                     if (comments!=null)
                         g.writeStringField("comments",comments);
@@ -254,6 +275,26 @@ public class JSONCellSerializer {
                         }
                         g.writeEndArray();
                     }
+                    //System.out.println("+++ " +grp.getInhomogeneousParameter());
+                    //System.out.println("--  " +ChannelDensity.class.getSimpleName());
+                    if (!grp.getInhomogeneousParameter().isEmpty()) {
+                        g.writeArrayFieldStart("inhomogeneousParameters");
+                        for (InhomogeneousParameter ih: grp.getInhomogeneousParameter()) {
+                            g.writeStartObject();
+                            g.writeStringField("id", ih.getId());
+                            g.writeStringField("variable", ih.getVariable());
+                            g.writeStringField("metric", ih.getMetric().value());
+                            if (ih.getProximal()!=null) {
+                                g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart()+"");
+                            }
+                            if (ih.getDistal()!=null) {
+                                g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd()+"");
+                            }
+                            g.writeEndObject();
+                        }
+                        g.writeEndArray();
+                    }
+                        
                     g.writeEndObject();
                 }
             }
@@ -270,7 +311,7 @@ public class JSONCellSerializer {
 
             }
             g.writeEndArray();
-
+            
 
             BiophysicalProperties bp = cell.getBiophysicalProperties();
             g.writeArrayFieldStart("specificCapacitance");
@@ -335,6 +376,35 @@ public class JSONCellSerializer {
 
                 float valueErev = Utils.getMagnitudeInSI(cd.getErev())*units.voltageFactor;
                 g.writeStringField("erev",NeuronWriter.formatDefault(valueErev));
+
+                g.writeEndObject();
+            }
+            for (ChannelDensityNonUniform cd: mp.getChannelDensityNonUniform()) {
+                g.writeStartObject();
+                g.writeStringField("id",cd.getId());
+
+                g.writeStringField("ionChannel",NRNConst.getSafeName(cd.getIonChannel()));
+                
+                for (VariableParameter vp: cd.getVariableParameter()){
+                    if (vp.getParameter().equals("condDensity")) {
+                        g.writeStringField("group",vp.getSegmentGroup());
+                        g.writeStringField("inhomogeneousParameter",vp.getInhomogeneousValue().getInhomogeneousParameter());
+                        
+                        String convFactor = units.condDensFactor +" * ";
+                        g.writeStringField("inhomogeneousValue",convFactor+vp.getInhomogeneousValue().getValue());
+                        g.writeStringField("comment","Conversion factor of:  ("+convFactor+") added");
+                    }
+                }
+
+                if (cd.getIon()!=null) {
+                    g.writeStringField("ion",cd.getIon());
+                } else {
+                    g.writeStringField("ion","non_specific");
+                }
+
+                float valueErev = Utils.getMagnitudeInSI(cd.getErev())*units.voltageFactor;
+                g.writeStringField("erev",NeuronWriter.formatDefault(valueErev));
+                
 
                 g.writeEndObject();
             }
@@ -428,6 +498,7 @@ public class JSONCellSerializer {
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
+        tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
         /*tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/TestL5PC.cell.nml");*/
         
         for (String test: tests) {

@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
-
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -57,6 +55,7 @@ import org.neuroml.model.Cell;
 import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
+import org.neuroml.model.ChannelDensityNonUniform;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
@@ -414,7 +413,13 @@ public class NeuronWriter extends BaseWriter {
 					String ionChannel = cd.getIonChannel();
 					ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
 					option.erev = convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
+					writeModFile(ionChannel, option);
+				}
 
+				for (ChannelDensityNonUniform cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNonUniform()) {
+					String ionChannel = cd.getIonChannel();
+					ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+					option.erev = convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
 					writeModFile(ionChannel, option);
 				}
 
