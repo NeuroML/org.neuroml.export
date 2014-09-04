@@ -106,7 +106,7 @@ public class SupportLevelInfo {
             }
         };
         if (!passed) {
-            report.append("Info on supported features:\n"+myInstance);
+            report.append("\nInfo on supported features:\n"+myInstance);
             throw new ModelFeatureSupportException(report.toString());
         }
         
