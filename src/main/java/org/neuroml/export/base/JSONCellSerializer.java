@@ -22,6 +22,7 @@ import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
+import org.neuroml.model.ChannelDensityNonUniformNernst;
 import org.neuroml.model.InhomogeneousParameter;
 import org.neuroml.model.InitMembPotential;
 import org.neuroml.model.IntracellularProperties;
@@ -412,9 +413,7 @@ public class JSONCellSerializer {
                 g.writeStartObject();
                 g.writeStringField("id",cdn.getId());
                 g.writeStringField("ionChannel",NRNConst.getSafeName(cdn.getIonChannel()));
-
                 g.writeStringField("ion",cdn.getIon());
-
 
                 String group = cdn.getSegmentGroup()==null ? "all" : cdn.getSegmentGroup();
                 g.writeStringField("group",group);
@@ -424,6 +423,28 @@ public class JSONCellSerializer {
 
                 g.writeStringField("erev","calculated_by_Nernst_equation");
 
+                g.writeEndObject();
+            }
+            
+            for (ChannelDensityNonUniformNernst cdnn: mp.getChannelDensityNonUniformNernst()) {
+                g.writeStartObject();
+                g.writeStringField("id",cdnn.getId());
+                g.writeStringField("ionChannel",NRNConst.getSafeName(cdnn.getIonChannel()));
+                g.writeStringField("ion",cdnn.getIon());
+                
+                for (VariableParameter vp: cdnn.getVariableParameter()){
+                    if (vp.getParameter().equals("condDensity")) {
+                        g.writeStringField("group",vp.getSegmentGroup());
+                        g.writeStringField("inhomogeneousParameter",vp.getInhomogeneousValue().getInhomogeneousParameter());
+                        
+                        String convFactor = units.condDensFactor +" * ";
+                        g.writeStringField("inhomogeneousValue",convFactor+vp.getInhomogeneousValue().getValue());
+                        g.writeStringField("comment","Conversion factor of:  ("+convFactor+") added");
+                    }
+                }
+
+                g.writeStringField("erev","calculated_by_Nernst_equation");
+                
                 g.writeEndObject();
             }
             for (ChannelDensityGHK cdg: mp.getChannelDensityGHK()) {
@@ -498,8 +519,8 @@ public class JSONCellSerializer {
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
-        /*tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/TestL5PC.cell.nml");*/
+        //tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
+        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/L5PC.cell.nml");
         
         for (String test: tests) {
             NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));
