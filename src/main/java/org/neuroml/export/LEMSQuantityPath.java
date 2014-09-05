@@ -145,7 +145,16 @@ public class LEMSQuantityPath {
                 
                 variableParts[i - 4] = parts[i];
             }
-        } else {
+        } else if (parts.length>5) {  // TODO: check option where multipart variable is on segment...
+            population = parts[0];
+            populationIndex = Integer.parseInt(parts[1]);
+            myType = Type.VAR_IN_CELL_IN_POP_LIST;
+            variableParts = new String[parts.length - 3];
+            for (int i = 3; i < parts.length; i++) {
+
+                variableParts[i - 3] = parts[i];
+            }
+        }else {
             myType = Type.UNKNOWN;
         }
 
