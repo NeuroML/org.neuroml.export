@@ -10,10 +10,12 @@ public class LEMSQuantityPath {
     private final String quantity;
     protected String population;
     protected String scale = "1";
-    protected int num = 0;
+    protected int populationIndex = 0;
+    protected int segmentId = 0;
     
-    protected enum Type { VAR_IN_SINGLE_COMP, VAR_IN_CELL_IN_POP, VAR_IN_CELL_IN_POP_LIST}
-    protected Type myType;
+    protected enum Type { UNKNOWN, VAR_IN_SINGLE_COMP, VAR_IN_CELL_IN_POP, VAR_IN_CELL_IN_POP_LIST, VAR_ON_SEG_IN_CELL_IN_POP_LIST}
+    
+    protected Type myType = Type.UNKNOWN;
     
     protected String[] variableParts;
     
@@ -90,23 +92,31 @@ public class LEMSQuantityPath {
         return scale;
     }
 
-    public int getNum() {
-        return num;
+    public int getPopulationIndex() {
+        return populationIndex;
+    }
+    
+    public int getSegmentId() {
+        return segmentId;
     }
 
     public boolean isVariableInPopulation() {
-        return quantity.indexOf("/") >= 0;
+        return quantity.contains("/");
     }
 
     private void parseQuantity() {
+        
         String[] parts = quantity.split("/");
+        
         if (parts.length == 1) {
             variableParts = new String[]{parts[0]};
             population = DUMMY_POPULATION_PREFIX;
+            
             myType = Type.VAR_IN_SINGLE_COMP;
+            
         } else if (quantity.indexOf('[') > 0) {
             population = quantity.split("\\[")[0];
-            num = Integer.parseInt(quantity.split("\\[")[1].split("\\]")[0]);
+            populationIndex = Integer.parseInt(quantity.split("\\[")[1].split("\\]")[0]);
             
             variableParts = new String[parts.length - 1];
             for (int i = 1; i < parts.length; i++) {
@@ -115,15 +125,28 @@ public class LEMSQuantityPath {
             }
             
             myType = Type.VAR_IN_CELL_IN_POP;
-        } else {
+            
+        } else if (parts.length==4) {
             population = parts[0];
-            num = Integer.parseInt(parts[1]);
+            populationIndex = Integer.parseInt(parts[1]);
             myType = Type.VAR_IN_CELL_IN_POP_LIST;
             variableParts = new String[parts.length - 3];
             for (int i = 3; i < parts.length; i++) {
                 
                 variableParts[i - 3] = parts[i];
             }
+        } else if (parts.length==5) {
+            population = parts[0];
+            populationIndex = Integer.parseInt(parts[1]);
+            segmentId = Integer.parseInt(parts[3]);
+            myType = Type.VAR_ON_SEG_IN_CELL_IN_POP_LIST;
+            variableParts = new String[parts.length - 4];
+            for (int i = 4; i < parts.length; i++) {
+                
+                variableParts[i - 4] = parts[i];
+            }
+        } else {
+            myType = Type.UNKNOWN;
         }
 
     }
@@ -135,7 +158,8 @@ public class LEMSQuantityPath {
              + "Variable parts: " + getVariableParts() + "\n"
              + "Variable:       " + getVariable() + "\n"
              + "Is population:  " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "") + "\n"
-             + "Num:            " + num;
+             + "Num:            " + populationIndex + "\n"
+             + "segmentId:      " + segmentId;
     }
 
     public static void main(String[] args) throws Exception {
@@ -144,6 +168,8 @@ public class LEMSQuantityPath {
         paths.add("hhpop[6]/bioPhys1/membraneProperties/naChans/naChan/m/q");
         paths.add("fnPop1[0]/V");
         paths.add("Gran/0/Granule_98/v");
+        paths.add("TestBasket/0/pvbasketcell/v");
+        paths.add("TestBasket/0/pvbasketcell/3/v");
 
         for (String path : paths) {
             LEMSQuantityPath l1 = new LEMSQuantityPath(path);

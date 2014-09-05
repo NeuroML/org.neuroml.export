@@ -38,6 +38,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         this.popsOrComponents = popsOrComponents;
         this.compIdsVsCells = compIdsVsCells;
         this.lems = lems;
+        
+        System.out.println(this);
 
         if (myType != Type.VAR_IN_SINGLE_COMP) {
             for (Component popsOrComponent : popsOrComponents) {
@@ -83,7 +85,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         if (!isVariableInPopulation()) {
             return getVariable();
         } else {
-            return getPopulationArray() + "[" + num + "]." + getVariable();
+            return getPopulationArray() + "[" + populationIndex + "]." + getVariable();
         }
     }
 
@@ -153,7 +155,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
 
         if (myType == Type.VAR_IN_SINGLE_COMP) {
             String hoc = getPopulation() + targetComp.getName() + "[i]";
-            String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + num + "]");
+            String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
             String varRef = mechRef + "." + getVariable();
             return varRef;
         } else {
@@ -164,11 +166,11 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                     || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
-                    String varInst = getNrnSectionName(cell, cell.getMorphology().getSegment().get(0));
-                    String varRef = getPopulationArray() + "[" + num + "]." + varInst + "." + convertToNeuronVariable();
+                    String varInst = getNrnSectionName(cell, cell.getMorphology().getSegment().get(segmentId));
+                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable();
                     return varRef;
                 } else {
-                    String varRef = getPopulation() + "[" + num + "]." + convertToNeuronVariable();
+                    String varRef = getPopulation() + "[" + populationIndex + "]." + convertToNeuronVariable();
                     return varRef;
                 }
 
@@ -176,7 +178,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 String hoc = population + "[i]";
                 //System.out.println(this);
                 //System.out.println(popComp);
-                String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + num + "]");
+                String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
                 String varRef = mechRef + "." + getVariable();
                 return varRef;
             }
