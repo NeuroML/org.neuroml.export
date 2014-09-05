@@ -196,6 +196,11 @@ proc biophys() {
 
 }
 
+func H() { // Heaviside function
+    if ($1>=0) return 1
+    if ($1==0) return 0.5
+    return 0
+}
 
 proc biophys_inhomogeneous() {
 #foreach ($cd in $channelDensity)
