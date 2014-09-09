@@ -4,14 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
-import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.LEMSQuantityPath;
 import static org.neuroml.export.neuron.NeuronWriter.getNrnSectionName;
 import org.neuroml.model.Cell;
+import org.neuroml.model.Segment;
+import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * @author Padraig Gleeson
@@ -38,8 +40,6 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         this.popsOrComponents = popsOrComponents;
         this.compIdsVsCells = compIdsVsCells;
         this.lems = lems;
-        
-        System.out.println(this);
 
         if (myType != Type.VAR_IN_SINGLE_COMP) {
             for (Component popsOrComponent : popsOrComponents) {
@@ -48,6 +48,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 }
             }
         }
+        
+        //System.out.println("----------------------\nCreated:"+this+"\n----------------------");
         
     }
     
@@ -151,22 +153,24 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
 
     }
 
-    public String getNeuronVariableReference() throws ContentError {
-
+    public String getNeuronVariableReference() throws ContentError, NeuroMLException {
+        //System.out.println("getNeuronVariableReference in "+getQuantity());
+        
         if (myType == Type.VAR_IN_SINGLE_COMP) {
             String hoc = getPopulation() + targetComp.getName() + "[i]";
             String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
             String varRef = mechRef + "." + getVariable();
             return varRef;
         } else {
-
             if (popComp != null
-                    && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)
-                    || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
-                    || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
+                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)
+                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
+                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
+                
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
-                    String varInst = getNrnSectionName(cell, cell.getMorphology().getSegment().get(segmentId));
+                    Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
+                    String varInst = getNrnSectionName(cell, segment);
                     String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable();
                     return varRef;
                 } else {
@@ -192,13 +196,15 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         try {
             ref = getNeuronVariableReference();
         } catch (Exception ex) {
-            ref = "Unable to determine reference!!";
+            //ex.printStackTrace();
+            ref = "=== Unable to determine reference: "+ex;
         }
         return super.toString()
                 + "\nNeuron ref:     " + ref
-                + "\ncompIdsVsCells: " + compIdsVsCells
+                /*+ "\ncompIdsVsCells: " + compIdsVsCells*/
                 + "\npopsOrComponents: " + popsOrComponents
-                + "\ntargetComp: " + targetComp;
+                + "\ntargetComp: " + targetComp
+                + "\npopComp: " + popComp;
     }
 
     public static void main(String[] args) throws Exception {
