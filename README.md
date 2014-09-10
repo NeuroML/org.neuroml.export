@@ -2,7 +2,8 @@ Export from NeuroML & LEMS
 ==========================
 
 Package to allow models in NeuroML 2 & LEMS format to be exported in various formats.
-Based on earlier code at https://sourceforge.net/apps/trac/neuroml/browser/NeuroML2/src/org/neuroml/exporters and template based codegen from https://github.com/borismarin/som-codegen
+Based on earlier code at https://sourceforge.net/apps/trac/neuroml/browser/NeuroML2/src/org/neuroml/exporters 
+and template based codegen from https://github.com/borismarin/som-codegen
 
 Current targets: NEURON, SBML, Brian, XPP, Matlab, SED-ML, C/Sundials, Modelica
 
