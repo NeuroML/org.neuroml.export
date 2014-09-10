@@ -8,7 +8,7 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.LEMSQuantityPath;
-import static org.neuroml.export.neuron.NeuronWriter.getNrnSectionName;
+import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Segment;
 import org.neuroml.model.util.CellUtils;
@@ -144,10 +144,6 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 var = topSubstitutions.get(key);
             }
         }
-        
-        if (var.equals(NRNConst.NEURON_VOLTAGE)) {
-            var += "(0.5)";
-        }
 
         return var;
 
@@ -170,11 +166,21 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
                     Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
-                    String varInst = getNrnSectionName(cell, segment);
-                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable();
+                    String varInst = NeuronWriter.getNrnSectionName(cell, segment);
+                    
+                    float fract;
+                    if (cell.getMorphology().getSegment().size()==1)
+                        fract = 0.5f;
+                    else
+                        fract = (float)CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
+                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable()+"("+fract+")";
                     return varRef;
                 } else {
-                    String varRef = getPopulation() + "[" + populationIndex + "]." + convertToNeuronVariable();
+                    String nrnVar = convertToNeuronVariable();
+                    String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
+                    if (nrnVar.equals(NRNConst.NEURON_VOLTAGE)) {
+                        varRef += "(0.5)";
+                    }
                     return varRef;
                 }
 

@@ -2195,8 +2195,9 @@ public class NeuronWriter extends BaseWriter {
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
-        
+        lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
         /*
+        
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
         //lemsFiles.add(new File("../neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/LEMS_TestMorphs.xml"));
         

@@ -31,7 +31,6 @@ import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
-import org.neuroml.model.Property;
 import org.neuroml.model.Resistivity;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
@@ -150,15 +149,11 @@ public class JSONCellSerializer {
                                 //System.out.println("parent? SG "+sgPar.getId()+" ("+sgPar.getNeuroLexId()+", "+CellUtils.isUnbranchedNonOverlapping(sgPar)+"): "+sgVsSegId.get(sgPar));
                                 ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
                                 if (CellUtils.isUnbranchedNonOverlapping(sgPar) && segsPar.contains(parentId)) {
-                                    //System.out.println("a");
                                     if (fract==1 && segsPar.get(segsPar.size()-1) == parentId) {
-                                        //System.out.println("b");
                                         parentSection = sgPar.getId();
                                     } else if (fract==0 && segsPar.get(0) == parentId) {
-                                        //System.out.println("c");
                                         parentSection = sgPar.getId();
                                     } else {
-                                        ///System.out.println("d");
                                         parentSection = sgPar.getId();
                                         //TODO: fix this!!!
                                         fract = 0.5555555555555555;
@@ -167,7 +162,6 @@ public class JSONCellSerializer {
                                 }
                             }
                         }
-                        //System.out.println("parentSection: "+parentSection);
                         g.writeStringField("parent",parentSection);
                         
                         g.writeNumberField("fractionAlong", fract);
@@ -176,9 +170,7 @@ public class JSONCellSerializer {
                     // TODO: make this a more generic function & use string fields
                     if (grp.getAnnotation()!=null) {
                         Annotation annot = grp.getAnnotation();
-                        //System.out.println("------ annot: "+annot);
                         for (Element prop: annot.getAny()) {
-                            //System.out.println("------ Any: "+prop);
                             if (prop!=null &&
                                 prop.getNodeName().equals("property") && 
                                 prop.hasAttribute("tag") && 
@@ -203,7 +195,7 @@ public class JSONCellSerializer {
             if (!foundNeuroLexFlags) {
 
                 for (Segment seg: morph.getSegment()) {
-                    System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
+                    //System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
                     g.writeStartObject();
                     String name = NeuronWriter.getNrnSectionName(cell, seg);
                     idsVsNames.put(seg.getId(), name);
