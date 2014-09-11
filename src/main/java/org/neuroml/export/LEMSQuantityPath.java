@@ -145,25 +145,46 @@ public class LEMSQuantityPath {
                 
                 variableParts[i - 4] = parts[i];
             }
-        } else if (parts.length>5) {  // TODO: check option where multipart variable is on segment...
+        } else if (parts.length>5) { 
             population = parts[0];
             populationIndex = Integer.parseInt(parts[1]);
-            myType = Type.VAR_IN_CELL_IN_POP_LIST;
-            variableParts = new String[parts.length - 3];
-            for (int i = 3; i < parts.length; i++) {
-
-                variableParts[i - 3] = parts[i];
+            
+            if (isInteger(parts[3])) {
+            
+                myType = Type.VAR_ON_SEG_IN_CELL_IN_POP_LIST;
+                segmentId = Integer.parseInt(parts[3]);
+                variableParts = new String[parts.length - 4];
+                for (int i = 4; i < parts.length; i++) {
+                    variableParts[i - 4] = parts[i];
+                }
+                
+            } else {
+                
+                myType = Type.VAR_IN_CELL_IN_POP_LIST;
+                variableParts = new String[parts.length - 3];
+                for (int i = 3; i < parts.length; i++) {
+                    variableParts[i - 3] = parts[i];
+                }
             }
-        }else {
+        } else {
             myType = Type.UNKNOWN;
         }
 
     }
 
+    public static boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+}
+
     @Override
     public String toString() {
         return "Original:       " + quantity + "\n"
-             + "Type: " + myType + "\n"
+             + "Type:           " + myType + "\n"
              + "Variable parts: " + getVariableParts() + "\n"
              + "Variable:       " + getVariable() + "\n"
              + "Is population:  " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "") + "\n"
@@ -179,6 +200,8 @@ public class LEMSQuantityPath {
         paths.add("Gran/0/Granule_98/v");
         paths.add("TestBasket/0/pvbasketcell/v");
         paths.add("TestBasket/0/pvbasketcell/3/v");
+        paths.add("One_ChannelML/0/OneComp_ChannelML/biophys/membraneProperties/Na_ChannelML_all/Na_ChannelML/m/q");
+        paths.add("One_ChannelML/0/OneComp_ChannelML/4/biophys/membraneProperties/Na_ChannelML_all/Na_ChannelML/m/q");
 
         for (String path : paths) {
             LEMSQuantityPath l1 = new LEMSQuantityPath(path);
