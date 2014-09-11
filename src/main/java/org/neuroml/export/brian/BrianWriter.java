@@ -40,7 +40,7 @@ public class BrianWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
     
-    boolean brian2 = true;
+    boolean brian2 = false;
 
 	public BrianWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
 		super(lems, "Brian");
