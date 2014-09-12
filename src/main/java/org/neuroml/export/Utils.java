@@ -193,17 +193,16 @@ public class Utils {
 
     public static String replaceInExpression(String expression, String oldVal, String newVal) {
     	expression = " "+expression+" ";
-    	String[] pres = new String[]{"\\(","\\+","-","\\*","/","\\^", " "};
-        String[] posts = new String[]{"\\)","\\+","-","\\*","/","\\^", " "};
+    	String[] pres = new String[]{"\\(","\\+","-","\\*","/","\\^", " ", "="};
+        String[] posts = new String[]{"\\)","\\+","-","\\*","/","\\^", " ", "="};
 
         for(String pre: pres){
             for(String post: posts){
                 String o = pre+oldVal+post;
                 String n = pre+" "+newVal+" "+post;
-	                //E.info("Replacing "+o+" with "+n+": "+formula);
-                //if (formula.indexOf(o)>=0) {
+                if (expression.contains(o))
+	                E.info("Replacing {"+o+"} with {"+n+"} in {"+expression+"}");
                 expression = expression.replaceAll(o, n);
-                //}
             }
         }
         return expression.trim();

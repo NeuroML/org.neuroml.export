@@ -2,6 +2,7 @@ package org.neuroml.export;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -103,6 +104,27 @@ public class UtilsTest extends TestCase {
 
     }
     
-	
+	public void testReplaceInExpression() {
+        String before = "before";
+        String after = "after";
+        
+        String[] simpleCatch = new String[]{"g + before","before + before", "before^2", "(before)+2", "before"};
+        String[] dontCatch = new String[]{"beforee", "hbefore + after", "5+_before"};
+        
+        for (String s: simpleCatch) {
+            System.out.println("From: "+s);
+            String n = Utils.replaceInExpression(s, before, after);
+            System.out.println("To:   "+n);
+            assertEquals(s.replaceAll(before, after).replaceAll("\\s+",""), n.replaceAll("\\s+",""));
+        }
+        for (String s: dontCatch) {
+            System.out.println("From: "+s);
+            String n = Utils.replaceInExpression(s, before, after);
+            System.out.println("To:   "+n);
+            assertEquals(s.replaceAll("\\s+",""), n.replaceAll("\\s+",""));
+        }
+    }
+    
+        
 
 }

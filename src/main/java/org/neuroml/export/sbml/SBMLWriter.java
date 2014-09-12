@@ -129,11 +129,7 @@ public class SBMLWriter extends XMLWriter {
                     throw new GenerationException("Problem using Velocity template", e);
                 } catch (LEMSException e) {
                     throw new GenerationException("Problem generating the files", e);
-                } catch (ModelFeatureSupportException e) {
-                    throw new GenerationException("Problem with the types of models currently supported in " + FORMAT, e);
-                } catch (NeuroMLException e) {
-                    throw new GenerationException("Problem generating the files", e);
-                }
+                } 
 
             } else {
 

@@ -94,13 +94,11 @@ public class MatlabWriter extends BaseWriter {
 		
 		VelocityContext context = new VelocityContext();
 
-		//context.put( "name", new String("VelocityOnOSB") );
-
-        DLemsWriter somw = new DLemsWriter(lems, new MatlabVisitors());
+        DLemsWriter writer = new DLemsWriter(lems, new MatlabVisitors());
 
 		try
 		{
-			String som = somw.getMainScript();
+			String som = writer.getMainScript();
 			
 			DLemsWriter.putIntoVelocityContext(som, context);
         

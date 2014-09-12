@@ -34,9 +34,7 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.export.Utils;
-import org.neuroml.model.util.NeuroMLException;
 
 public class DLemsWriter extends BaseWriter
 {
@@ -52,7 +50,7 @@ public class DLemsWriter extends BaseWriter
 		this.writer = writer;
 	}
 
-	public DLemsWriter(Lems lems) throws LEMSException, ModelFeatureSupportException, NeuroMLException
+	public DLemsWriter(Lems lems)
 	{
 		super(lems, "dLEMS");
 		this.writer = null;
