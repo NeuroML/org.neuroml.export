@@ -27,8 +27,12 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -36,11 +40,27 @@ public class BrianWriter extends BaseWriter {
 	
 	static String DEFAULT_POP = "OneComponentPop";
     
-    boolean brian2 = true;
+    boolean brian2 = false;
 
-	public BrianWriter(Lems lems) {
+	public BrianWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
 		super(lems, "Brian");
+        sli.checkAllFeaturesSupported(FORMAT, lems);
 	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
 
     public void setBrian2(boolean brian2) {
         this.brian2 = brian2;
@@ -67,7 +87,7 @@ public class BrianWriter extends BaseWriter {
             addComment(sb, "Brian simulator compliant Python export for:\n\n"
                     + lems.textSummary(false, false));
 
-            addComment(sb, Utils.getHeaderComment(format));
+            addComment(sb, Utils.getHeaderComment(FORMAT));
 
             if (!brian2)
                 sb.append("from brian import *\n\n");

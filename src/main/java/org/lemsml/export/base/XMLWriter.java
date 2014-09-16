@@ -1,12 +1,11 @@
 package org.lemsml.export.base;
 
 import org.lemsml.jlems.core.eval.DoubleEvaluator;
-import org.lemsml.jlems.core.expression.MathMLWriter;
-import org.lemsml.jlems.core.expression.ParseTree;
-import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.sim.ContentError;
 
-
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class XMLWriter extends BaseWriter {
 
 	int indentCount = 0;
@@ -135,11 +134,12 @@ public abstract class XMLWriter extends BaseWriter {
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, String a5, boolean endToo){
 
 		main.append(getIndent());
+        /*
 		String[] aa = a1.split("=");
 		String[] aaa = a2.split("=");
 		String[] aaaa = a3.split("=");
 		String[] aaaaa = a4.split("=");
-		String[] aaaaaa = a5.split("=");
+		String[] aaaaaa = a5.split("=");*/
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+" "+processAttr(a5)+end+">\n");
 		if (!endToo) indentCount++;
@@ -175,6 +175,7 @@ public abstract class XMLWriter extends BaseWriter {
 		main.append(getIndent()+"</"+name+">\n");
 	}
 
+    @Override
 	public abstract String getMainScript() throws ContentError;
 
 
@@ -200,13 +201,20 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 
 	public void processMathML(StringBuilder main, ParseTree pt) throws ContentError{
+        processMathML(main, pt, true);
+    }
+    
+	public void processMathML(StringBuilder main, ParseTree pt, boolean wrapInMathMLElement) throws ContentError{
 
-		startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
+		if (wrapInMathMLElement)
+            startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
 
 		//addComment(main,"Complete export to MathML not yet implemented!");
-		MathMLWriter mmlw = new MathMLWriter();
+		MathMLWriter mmlw = new MathMLWriter(INDENT, "        ");
 		main.append(mmlw.serialize(pt));
-		endElement(main,"math");
+        
+		if (wrapInMathMLElement)
+            endElement(main,"math");
 	}
 
 

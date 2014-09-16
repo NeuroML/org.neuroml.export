@@ -2,30 +2,26 @@ package org.neuroml.export.xineml;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
-import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.xineml.XineMLWriter.Variant;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.model.util.NeuroMLException;
 
 public class XineMLWriterTest extends TestCase {
 
-	public void testFN() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testFN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
     	generateMainScript(exampleFilename);
 	}
-	public void testIzh() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, GenerationException {
+	public void testIzh() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
     	String exampleFilename = "LEMS_NML2_Ex2_Izh.xml";
     	generateMainScript(exampleFilename);
@@ -38,7 +34,7 @@ public class XineMLWriterTest extends TestCase {
     	generateMainScript(exampleFilename);
 	}*/
 	
-	public void generateMainScript(String exampleFilename) throws XMLException, IOException, ConnectionError, RuntimeError, ContentError, ParseError, ParseException, BuildException, GenerationException {
+	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
 
     	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
@@ -46,35 +42,35 @@ public class XineMLWriterTest extends TestCase {
         System.out.println("Loaded: "+exampleFilename);
 
         XineMLWriter nw = new XineMLWriter(lems, Variant.NineML);
+            
+        File mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
 
-        String nr = nw.getMainScript();
+        ArrayList<File> nr = nw.generateAllFiles(mainFile);
         
         System.out.println("Generated: "+nr);
-
-        File nrFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".9ml"));
         
-        System.out.println("Writing to: "+nrFile.getAbsolutePath());
+        for (File f: nr) {
+            System.out.println("Checking file: "+f.getAbsolutePath());
+	        assertTrue(f.exists());
+        }
+        assertTrue(!nw.getFilesGenerated().isEmpty());
+
         
-        FileUtil.writeStringToFile(nr, nrFile);
-
-        assertTrue(nrFile.exists());
-
         // Refresh..
     	lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
         XineMLWriter sw = new XineMLWriter(lems, Variant.SpineML);
+        mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
 
-        String sr = sw.getMainScript();
+        ArrayList<File> sr = sw.generateAllFiles(mainFile);
         
         System.out.println("Generated: "+sr);
-
-        File srFile = new File(AppTest.getTempDir(),exampleFilename.replaceAll(".xml", ".spineml"));
         
-        System.out.println("Writing to: "+srFile.getAbsolutePath());
-        
-        FileUtil.writeStringToFile(sr, srFile);
-
-        assertTrue(srFile.exists());
+        for (File f: sw.getFilesGenerated()) {
+            System.out.println("Checking file: "+f.getAbsolutePath());
+	        assertTrue(f.exists());
+        }
+        assertTrue(!sw.getFilesGenerated().isEmpty());
 	}
 
 }

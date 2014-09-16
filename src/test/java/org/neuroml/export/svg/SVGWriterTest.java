@@ -3,30 +3,23 @@ package org.neuroml.export.svg;
 import java.io.File;
 import java.io.IOException;
 
-import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
 
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.type.BuildException;
-
-import org.lemsml.jlems.core.xml.XMLException;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.Main;
+import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
-import org.xml.sax.SAXException;
+import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriterTest extends TestCase {
 
-	public void testGetMainScript() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, JAXBException, GenerationException {
+	public void testGetMainScript() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException {
 
     	String exampleFilename = "NML2_FullCell.nml";    
 

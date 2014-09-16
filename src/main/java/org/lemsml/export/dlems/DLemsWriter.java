@@ -1,5 +1,6 @@
 package org.lemsml.export.dlems;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -9,8 +10,6 @@ import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.lemsml.export.base.BaseWriter;
@@ -19,6 +18,7 @@ import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
@@ -40,7 +40,9 @@ public class DLemsWriter extends BaseWriter
 {
 
 	static String DEFAULT_POP = "OneComponentPop";
+    
 	CommonLangWriter writer;
+    
 
 	public DLemsWriter(Lems lems, CommonLangWriter writer)
 	{
@@ -52,9 +54,10 @@ public class DLemsWriter extends BaseWriter
 	{
 		super(lems, "dLEMS");
 		this.writer = null;
+        
 	}
 
-	public static void putIntoVelocityContext(String dlems, VelocityContext context) throws JsonParseException, JsonMappingException, IOException 
+	public static void putIntoVelocityContext(String dlems, VelocityContext context) throws IOException 
 	{
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -84,7 +87,7 @@ public class DLemsWriter extends BaseWriter
 	}
 
 	@Override
-	public String getMainScript() throws ContentError, ParseError, IOException
+	public String getMainScript() throws LEMSException, IOException
 	{
 		JsonFactory f = new JsonFactory();
 		StringWriter sw = new StringWriter();
@@ -388,5 +391,35 @@ public class DLemsWriter extends BaseWriter
 		}
 		return comp;
 	}
+    
+    
+	public static void main(String[] args) throws Exception {
+
+		
+        
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex3_Net.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+
+        DLemsWriter dw = null;
+        String testScript = "";
+        
+        for (File lemsFile: lemsFiles) {
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
+
+            dw = new DLemsWriter(lems);
+            String ff = dw.getMainScript();
+            System.out.println("Output from "+lemsFile+": ------------\n"+ff);
+            
+            
+        }
+        
+        
+        
+	}
+
 
 }

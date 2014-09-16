@@ -2,6 +2,7 @@ package org.neuroml.export;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -73,9 +74,9 @@ public class UtilsTest extends TestCase {
     
     public void testFilesInJar() throws IOException, ContentError
     {
-        String ret = JUtil.getRelativeResource(this.getClass(), "/NeuroML2CoreTypes/LEMS_NML2_Ex0_IaF.xml");
+        String ret = JUtil.getRelativeResource(this.getClass(), "/LEMSexamples/LEMS_NML2_Ex0_IaF.xml");
         ret = JUtil.getRelativeResource(this.getClass(), "/examples/NML2_SingleCompHHCell.nml");
-        ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SingleCompHHCell.nml");
+        //ret = JUtil.getRelativeResource(this.getClass(), "/examples/../examples/NML2_SimpleIonChannel.nml");
     }
     
     public void testConvertNeuroMLToComponent() throws JAXBException, Exception {
@@ -91,6 +92,39 @@ public class UtilsTest extends TestCase {
         System.out.println("Now: "+comp.details("    "));
         
     }
-	
+    
+    public void testParseCellRefString() throws JAXBException, Exception {
+        
+        String r1 = "../Pop0[0]";
+        String r2 = "../Gran/0/Granule_98";
+        assertEquals("Pop0", Utils.parseCellRefStringForPopulation(r1));        
+        assertEquals("Gran", Utils.parseCellRefStringForPopulation(r2));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r1));
+        assertEquals(0, Utils.parseCellRefStringForCellNum(r2));
+
+    }
+    
+	public void testReplaceInExpression() {
+        String before = "before";
+        String after = "after";
+        
+        String[] simpleCatch = new String[]{"g + before","before + before", "before^2", "(before)+2", "before"};
+        String[] dontCatch = new String[]{"beforee", "hbefore + after", "5+_before"};
+        
+        for (String s: simpleCatch) {
+            System.out.println("From: "+s);
+            String n = Utils.replaceInExpression(s, before, after);
+            System.out.println("To:   "+n);
+            assertEquals(s.replaceAll(before, after).replaceAll("\\s+",""), n.replaceAll("\\s+",""));
+        }
+        for (String s: dontCatch) {
+            System.out.println("From: "+s);
+            String n = Utils.replaceInExpression(s, before, after);
+            System.out.println("To:   "+n);
+            assertEquals(s.replaceAll("\\s+",""), n.replaceAll("\\s+",""));
+        }
+    }
+    
+        
 
 }

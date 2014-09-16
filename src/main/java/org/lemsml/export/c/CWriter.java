@@ -8,18 +8,20 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
-import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
+import org.neuroml.export.ModelFeature;
+import org.neuroml.export.ModelFeatureSupportException;
+import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class CWriter extends BaseWriter {
 	
@@ -48,15 +50,33 @@ public class CWriter extends BaseWriter {
 	
 	private Solver solver = Solver.CVODE;
 
-	public CWriter(Lems lems) {
-		super(lems, "C");
-		MinimalMessageHandler.setVeryMinimal(true);
-		E.setDebug(false);
-	}
-
 	String comm = "// ";
 	String commPre = "/*";
 	String commPost = "*/";
+    
+    
+	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException {
+		super(lems, "C");
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
+        sli.checkAllFeaturesSupported(FORMAT, lems);
+	}
+    
+    
+    @Override
+    protected void setSupportedFeatures() {
+        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+    }
 	
 	@Override
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -76,7 +96,7 @@ public class CWriter extends BaseWriter {
         return solver;
     }
     
-	public String getMakefile() throws GenerationException {
+	public String getMakefile() throws GenerationException, ContentError {
         
         try {
             String makefile = getRelativeResource(this.getClass(), "/"+solver.getMakefile());
@@ -88,11 +108,11 @@ public class CWriter extends BaseWriter {
     
 
 	@Override
-	public String getMainScript() throws GenerationException {
+	public String getMainScript() throws LEMSException, GenerationException {
 
 		StringBuilder sb = new StringBuilder();
 
-		addComment(sb, this.format+" simulator compliant export for:\n\n"
+		addComment(sb, FORMAT+" simulator compliant export for:\n\n"
 		+ lems.textSummary(false, false));
 		
 		Velocity.init();
@@ -123,25 +143,13 @@ public class CWriter extends BaseWriter {
 		catch (IOException e1) {
 			throw new GenerationException("Problem converting LEMS to SOM",e1);
 		}
-		catch( ResourceNotFoundException e )
+		catch( VelocityException e )
 		{
-			throw new GenerationException("Problem finding template",e);
+			throw new GenerationException("Problem using template",e);
 		}
-		catch( ParseErrorException e )
+		catch( LEMSException e )
 		{
-			throw new GenerationException("Problem parsing",e);
-		}
-		catch( MethodInvocationException e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( ContentError e )
-		{
-			throw new GenerationException("Problem finding template",e);
-		}
-		catch( ParseError e )
-		{
-			throw new GenerationException("Problem finding template",e);
+			throw new GenerationException("Problem with LEMS",e);
 		}
 		
 		return sb.toString();	

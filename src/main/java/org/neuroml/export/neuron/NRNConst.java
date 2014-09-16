@@ -19,7 +19,6 @@ public class NRNConst {
 	final static String RATE_PREFIX = "rate_";
 	final static String REGIME_PREFIX = "regime_";
 	final static String V_COPY_PREFIX = "copy_";
-	final static String DUMMY_POPULATION_PREFIX = "population_";
 	
     final static String comm = "# ";
     final static String commPre = "'''";
@@ -70,16 +69,20 @@ public class NRNConst {
 	// TODO Add more keywords / builtin mechanisms
 	static final Set<String> NRNKeywords = new HashSet<String>() {{
 		add("IClamp");
+        add("pas");
+        add("hh");
+        add("extracellular");
+        add("fastpas");
 	}};
 	
 	
 	public static String getSafeName(String id) {
-		String prefix = "";
+		String suffix = "";
 
 		if (NRNKeywords.contains(id)) {
-			prefix = "my";
+			suffix = "_nml2";
 		}
 
-		return prefix + id;
+		return id+suffix;
 	}
 }

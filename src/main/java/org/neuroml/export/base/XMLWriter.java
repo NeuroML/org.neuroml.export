@@ -1,6 +1,9 @@
 package org.neuroml.export.base;
 
 import org.lemsml.export.base.GenerationException;
+
+import java.util.HashMap;
+
 import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
@@ -10,7 +13,10 @@ import org.neuroml.model.NeuroMLDocument;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class XMLWriter extends BaseWriter {
 
-	int indentCount = 0;
+	HashMap<Integer, Integer> indentCounts = new HashMap<Integer, Integer>();
+	
+	Integer DEFAULT_INDENT_FLAG = -1;
+	
 	public static final String INDENT = "    ";
 
 	String commPre = "<!--";
@@ -18,9 +24,42 @@ public abstract class XMLWriter extends BaseWriter {
 
 	public XMLWriter(Lems lems, String format) {
 		super(lems, format);
+		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
 	}
 	public XMLWriter(NeuroMLDocument nmlDocument, String format) {
 		super(nmlDocument, format);
+		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
+	}
+
+	protected String getIndent(Integer flag){
+		StringBuilder sb = new StringBuilder();
+		if (!indentCounts.containsKey(flag))
+		{
+			indentCounts.put(flag, 0);
+		}
+		int indentCount = indentCounts.get(flag);
+		for(int i=0;i<indentCount;i++)
+			sb.append(INDENT);
+		return sb.toString();
+	}
+	
+	protected void increaseIndent(Integer flag) {
+		if (!indentCounts.containsKey(flag))
+		{
+			indentCounts.put(flag, 0);
+		}
+		int indentCount = indentCounts.get(flag);
+		indentCounts.put(flag, indentCount+1);
+		
+	}
+	protected void decreaseIndent(Integer flag) {
+		
+		if (!indentCounts.containsKey(flag))
+		{
+			indentCounts.put(flag, 0);
+		}
+		int indentCount = indentCounts.get(flag);
+		indentCounts.put(flag, indentCount-1);
 	}
 
 	@Override
@@ -29,10 +68,14 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 
 	protected void addComment(StringBuilder sb, String comment, boolean extraReturns) {
+		addComment(sb, comment, extraReturns, DEFAULT_INDENT_FLAG);
+	}
+		
+	protected void addComment(StringBuilder sb, String comment, boolean extraReturns, Integer flag) {
 
 		if (extraReturns) sb.append("\n");
 		if (comment.indexOf("\n")<0)
-			sb.append(getIndent()+commPre+comment+commPost+"\n");
+			sb.append(getIndent(flag)+commPre+comment+commPost+"\n");
 		else
 			sb.append(commPre+"\n"+comment+"\n"+commPost+"\n");
 
@@ -41,57 +84,71 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 
 	protected void startElement(StringBuilder main, String name){
-		main.append(getIndent()+"<"+name+">\n");
-		indentCount++;
+		startElement(main, name, DEFAULT_INDENT_FLAG);
+	}
+	protected void startElement(StringBuilder main, String name, Integer flag){
+		main.append(getIndent(flag)+"<"+name+">\n");
+		increaseIndent(flag);
 	}
 	protected void startEndElement(StringBuilder main, String name){
-		main.append(getIndent()+"<"+name+"/>\n");
+		startEndElement(main, name, DEFAULT_INDENT_FLAG);
 	}
+	protected void startEndElement(StringBuilder main, String name, Integer flag){
+		main.append(getIndent(flag)+"<"+name+"/>\n");
+	}
+	
 	protected void startEndTextElement(StringBuilder main, String name, String contents){
-		main.append(getIndent()+"<"+name+">"+contents+"</"+name+">\n");
+		main.append(getIndent(DEFAULT_INDENT_FLAG)+"<"+name+">"+contents+"</"+name+">\n");
 	}
 
-	protected String getIndent(){
-		StringBuilder sb = new StringBuilder();
-		for(int i=0;i<indentCount;i++)
-			sb.append(INDENT);
-		return sb.toString();
+
+	protected void startElement(StringBuilder main, String name, String a1, Integer flag){
+		startElement(main, name, a1, false, flag);
 	}
 
 	protected void startElement(StringBuilder main, String name, String a1){
-		startElement(main, name, a1, false);
+		startElement(main, name, a1, false, DEFAULT_INDENT_FLAG);
 	}
 
+	protected void startEndElement(StringBuilder main, String name, String a1, Integer flag){
+		startElement(main, name, a1, true, flag);
+	}
+	
 	protected void startEndElement(StringBuilder main, String name, String a1){
-		startElement(main, name, a1, true);
+		startElement(main, name, a1, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String a1, boolean endToo){
+	
+	protected void startElement(StringBuilder main, String name, String a1, boolean endToo, Integer flag){
 
-		main.append(getIndent());
+		main.append(getIndent(flag));
 		String[] aa = a1.split("=");
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(flag);
 	}
 
 	protected void addTextElement(StringBuilder main, String name, String text){
 
-		main.append(getIndent());
+		main.append(getIndent(DEFAULT_INDENT_FLAG));
 		main.append("<"+name+">"+text+"</"+name+">\n");
 	}
 
+	protected void startElement(StringBuilder main, String name, String a1, String a2, Integer flag){
+		startElement(main, name, a1, a2, false, flag);
+	}
+    
 	protected void startElement(StringBuilder main, String name, String a1, String a2){
-		startElement(main, name, a1, a2, false);
+		startElement(main, name, a1, a2, false, DEFAULT_INDENT_FLAG);
 	}
 	protected void startEndElement(StringBuilder main, String name, String a1, String a2){
-		startElement(main, name, a1, a2, true);
+		startElement(main, name, a1, a2, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String a1, String a2, boolean endToo){
+	protected void startElement(StringBuilder main, String name, String a1, String a2, boolean endToo, Integer flag){
 
-		main.append(getIndent());
+		main.append(getIndent(flag));
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(flag);
 	}
 	
 	protected String processAttr(String attr) {
@@ -102,18 +159,22 @@ public abstract class XMLWriter extends BaseWriter {
 		
 	}
 
+	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, Integer flag){
+		startElement(main, name, a1, a2, a3, false, flag);
+	}
+
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3){
-		startElement(main, name, a1, a2, a3, false);
+		startElement(main, name, a1, a2, a3, false, DEFAULT_INDENT_FLAG);
 	}
 	protected void startEndElement(StringBuilder main, String name, String a1, String a2, String a3){
-		startElement(main, name, a1, a2, a3, true);
+		startElement(main, name, a1, a2, a3, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, boolean endToo){
+	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, boolean endToo, Integer flag){
 
-		main.append(getIndent());
+		main.append(getIndent(flag));
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(flag);
 	}
 
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4){
@@ -124,10 +185,10 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, boolean endToo){
 
-		main.append(getIndent());
+		main.append(getIndent(DEFAULT_INDENT_FLAG));
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(DEFAULT_INDENT_FLAG);
 	}
 
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, String a5){
@@ -138,28 +199,32 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 	protected void startElement(StringBuilder main, String name, String a1, String a2, String a3, String a4, String a5, boolean endToo){
 
-		main.append(getIndent());
-        /*
-		String[] aa = a1.split("=");
-		String[] aaa = a2.split("=");
-		String[] aaaa = a3.split("=");
-		String[] aaaaa = a4.split("=");
-		String[] aaaaaa = a5.split("=");*/
+
+		main.append(getIndent(DEFAULT_INDENT_FLAG));
+
 		String end = endToo?"/":"";
 		main.append("<"+name+" "+processAttr(a1)+" "+processAttr(a2)+" "+processAttr(a3)+" "+processAttr(a4)+" "+processAttr(a5)+end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(DEFAULT_INDENT_FLAG);
 	}
 
 
 	protected void startElement(StringBuilder main, String name, String[] attrs){
-		startElement(main, name, attrs, false);
+		startElement(main, name, attrs, false, DEFAULT_INDENT_FLAG);
 	}
+	protected void startElement(StringBuilder main, String name, String[] attrs, Integer flag){
+		startElement(main, name, attrs, false, flag);
+	}
+	
 	protected void startEndElement(StringBuilder main, String name, String[] attrs){
-		startElement(main, name, attrs, true);
+		startElement(main, name, attrs, true, DEFAULT_INDENT_FLAG);
 	}
-	protected void startElement(StringBuilder main, String name, String[] attrs, boolean endToo){
+	
+	protected void startEndElement(StringBuilder main, String name, String[] attrs, Integer flag){
+		startElement(main, name, attrs, true, flag);
+	}
+	protected void startElement(StringBuilder main, String name, String[] attrs, boolean endToo, Integer flag){
 
-		main.append(getIndent());
+		main.append(getIndent(flag));
 		main.append("<"+name);
 		for(String attr:attrs)
 		{
@@ -170,14 +235,18 @@ public abstract class XMLWriter extends BaseWriter {
 		}
 		String end = endToo?"/":"";
 		main.append(end+">\n");
-		if (!endToo) indentCount++;
+		if (!endToo) increaseIndent(flag);
 	}
 
 
 
 	protected void endElement(StringBuilder main, String name){
-		indentCount--;
-		main.append(getIndent()+"</"+name+">\n");
+		endElement(main, name, DEFAULT_INDENT_FLAG);
+	}
+
+	protected void endElement(StringBuilder main, String name, Integer flag){
+		decreaseIndent(flag);
+		main.append(getIndent(flag)+"</"+name+">\n");
 	}
 
     @Override
@@ -206,13 +275,20 @@ public abstract class XMLWriter extends BaseWriter {
 	}
 
 	public void processMathML(StringBuilder main, ParseTree pt) throws ContentError{
+        processMathML(main, pt, true);
+    }
+    
+	public void processMathML(StringBuilder main, ParseTree pt, boolean wrapInMathMLElement) throws ContentError{
 
-		startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
+		if (wrapInMathMLElement)
+            startElement(main,"math", "xmlns=http://www.w3.org/1998/Math/MathML");
 
 		//addComment(main,"Complete export to MathML not yet implemented!");
-		MathMLWriter mmlw = new MathMLWriter();
+		MathMLWriter mmlw = new MathMLWriter(INDENT, "        ");
 		main.append(mmlw.serialize(pt));
-		endElement(main,"math");
+        
+		if (wrapInMathMLElement)
+            endElement(main,"math");
 	}
 
 

@@ -9,6 +9,7 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
+import org.neuroml.export.LEMSQuantityPath;
 
 public class SEDMLWriter extends XMLWriter {
 
@@ -18,8 +19,8 @@ public class SEDMLWriter extends XMLWriter {
     public static final String GLOBAL_TIME_SBML = "t";
     public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
-    private String originalFilename; 
-    private ModelFormat modelFormat;
+    private final String originalFilename; 
+    private final ModelFormat modelFormat;
 
     public enum ModelFormat {NEUROML2, SBML, CELLML};
 
@@ -49,7 +50,7 @@ public class SEDMLWriter extends XMLWriter {
         startElement(main, "sedML", attrs);
         startElement(main, "notes");
         startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-        main.append("\nSBML export for:\n" + lems.textSummary(false, false) + "\n");
+        main.append("\n"+format+" export for:\n" + lems.textSummary(false, false) + "\n");
         endElement(main, "p");
         endElement(main, "notes");
 
@@ -160,17 +161,18 @@ public class SEDMLWriter extends XMLWriter {
         endElement(main, "dataGenerator");
 
         for (Component dispComp : simCpt.getAllChildren()) {
-            if (dispComp.getName().indexOf("Display") >= 0) {
+            if (dispComp.getName().contains("Display")) {
                 String dispId = dispComp.getID();
 
                 for (Component lineComp : dispComp.getAllChildren()) {
-                    if (lineComp.getName().indexOf("Line") >= 0) {
+                    if (lineComp.getName().contains("Line")) {
                         //trace=StateMonitor(hhpop,'v',record=[0])
                         
-                        String ref = lineComp.getStringValue("quantity");
-                        String pop = ref.split("/")[0].split("\\[")[0];
-                        String num = ref.split("\\[")[1].split("\\]")[0];
-                        String var = ref.split("/")[1];
+                        String quantity = lineComp.getStringValue("quantity");
+                        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
+                        String pop = lqp.getPopulation();
+                        String num = lqp.getPopulationIndex()+"";
+                        String var = lqp.getVariable();
                         
                         String genId = dispId+"_"+lineComp.getID();
                         String varFull = pop+"_"+num+"_"+var;
@@ -181,7 +183,7 @@ public class SEDMLWriter extends XMLWriter {
                                         "variable",
                                         "id="+varFull,
                                         "taskReference="+taskId,
-                                        "target="+ref);
+                                        "target="+quantity);
                         endElement(main, "listOfVariables");
 
                         startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
@@ -201,14 +203,14 @@ public class SEDMLWriter extends XMLWriter {
         startElement(main, "listOfOutputs");
 
         for (Component dispComp : simCpt.getAllChildren()) {
-            if (dispComp.getName().indexOf("Display") >= 0) {
+            if (dispComp.getName().contains("Display")) {
                 String dispId = dispComp.getID();
 
                 startElement(main, "plot2D", "id="+dispId);
                 startElement(main, "listOfCurves");
 
                 for (Component lineComp : dispComp.getAllChildren()) {
-                    if (lineComp.getName().indexOf("Line") >= 0) {
+                    if (lineComp.getName().contains("Line")) {
                         //trace=StateMonitor(hhpop,'v',record=[0])
                         ////String ref = lineComp.getStringValue("quantity");
                         ////String pop = ref.split("/")[0].split("\\[")[0];
@@ -242,8 +244,4 @@ public class SEDMLWriter extends XMLWriter {
         //System.out.println(main);
         return main.toString();
     }
-
-    /*private String getSuitableId(String str) {
-        return str.replace(" ", "_").replace(".", "").replace("(", "_").replace(")", "_").replace("*", "mult").replace("+", "plus").replace("/", "div");
-    }*/
 }
