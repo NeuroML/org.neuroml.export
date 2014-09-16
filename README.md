@@ -11,9 +11,7 @@ The simplest way to get access to this functionality is to install jNeuroML: htt
 and find the range of export formats currently supported with:
 
     jnml -help
-    
-    
+        
 [![Build Status](https://travis-ci.org/NeuroML/org.neuroml.export.png)](https://travis-ci.org/NeuroML/org.neuroml.export)
 
-
-
+This code is distributed under the terms of the GNU Lesser General Public License.
