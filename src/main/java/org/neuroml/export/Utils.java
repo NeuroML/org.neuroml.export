@@ -200,8 +200,8 @@ public class Utils {
             for(String post: posts){
                 String o = pre+oldVal+post;
                 String n = pre+" "+newVal+" "+post;
-                if (expression.contains(o))
-	                E.info("Replacing {"+o+"} with {"+n+"} in {"+expression+"}");
+                //if (expression.contains(o))
+	            //    E.info("Replacing {"+o+"} with {"+n+"} in {"+expression+"}");
                 expression = expression.replaceAll(o, n);
             }
         }
