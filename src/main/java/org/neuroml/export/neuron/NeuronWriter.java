@@ -2006,13 +2006,13 @@ public class NeuronWriter extends BaseWriter {
 								op = " + ";
 							}
 							eqn = "";
-
+                                
 							for (Component childComp : comp.getChildrenAL(children)) {
 								// var = var + childComp.getID()+" --";
 								if (eqn.length() > 0) {
 									eqn = eqn + op;
 								}
-								eqn = eqn + (childComp.getID()!=null?childComp.getID():childComp.getName()) + "_" + path;
+								eqn = eqn + prefix + (childComp.getID()!=null?childComp.getID():childComp.getName()) + "_" + path;
 							}
 							eqn = eqn + " ? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren() + ")";
 						}
@@ -2194,8 +2194,9 @@ public class NeuronWriter extends BaseWriter {
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
-        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
+        
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
+        /*lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
         
         
@@ -2222,7 +2223,7 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
-        /*
+        
         */
 
         NeuronWriter nw = null;
