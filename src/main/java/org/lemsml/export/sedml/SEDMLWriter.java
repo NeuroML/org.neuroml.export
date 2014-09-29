@@ -159,13 +159,15 @@ public class SEDMLWriter extends XMLWriter {
         addTextElement(main, "ci", " var_time_0 ");
         endElement(main, "math");
         endElement(main, "dataGenerator");
+        
+        System.out.println("--- <"+simCpt.getAllChildren()+">");
 
         for (Component dispComp : simCpt.getAllChildren()) {
-            if (dispComp.getName().contains("Display")) {
+            if (dispComp.getTypeName().equals("Display")) {
                 String dispId = dispComp.getID();
 
                 for (Component lineComp : dispComp.getAllChildren()) {
-                    if (lineComp.getName().contains("Line")) {
+                    if (lineComp.getTypeName().equals("Line")) {
                         //trace=StateMonitor(hhpop,'v',record=[0])
                         
                         String quantity = lineComp.getStringValue("quantity");
@@ -203,14 +205,14 @@ public class SEDMLWriter extends XMLWriter {
         startElement(main, "listOfOutputs");
 
         for (Component dispComp : simCpt.getAllChildren()) {
-            if (dispComp.getName().contains("Display")) {
+            if (dispComp.getTypeName().equals("Display")) {
                 String dispId = dispComp.getID();
 
                 startElement(main, "plot2D", "id="+dispId);
                 startElement(main, "listOfCurves");
 
                 for (Component lineComp : dispComp.getAllChildren()) {
-                    if (lineComp.getName().contains("Line")) {
+                    if (lineComp.getTypeName().equals("Line")) {
                         //trace=StateMonitor(hhpop,'v',record=[0])
                         ////String ref = lineComp.getStringValue("quantity");
                         ////String pop = ref.split("/")[0].split("\\[")[0];

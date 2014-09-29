@@ -161,7 +161,7 @@ public class BrianWriter extends BaseWriter {
             StringBuilder postRunSave = new StringBuilder();
             
             for (Component outComp : simCpt.getAllChildren()) {
-                if (outComp.getName().indexOf("OutputFile") >= 0) {
+                if (outComp.getTypeName().equals("OutputFile")) {
                     
                     String fileName = outComp.getTextParam("fileName");
                     String info = "\n# Saving to file: "+fileName+", ref " + outComp.id + "\n";
@@ -171,7 +171,7 @@ public class BrianWriter extends BaseWriter {
                     postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
                     
                     for (Component colComp : outComp.getAllChildren()) {
-                        if (colComp.getName().indexOf("OutputColumn") >= 0) {
+                        if (colComp.getTypeName().equals("OutputColumn")) {
                             
                             String monitor = "record_" + outComp.getID() + "[\"" + colComp.getID()+"\"]";
                             String ref = colComp.getStringValue("quantity");
@@ -224,12 +224,12 @@ public class BrianWriter extends BaseWriter {
             StringBuilder postRunPlot = new StringBuilder();
 
             for (Component dispComp : simCpt.getAllChildren()) {
-                if (dispComp.getName().indexOf("Display") >= 0) {
+                if (dispComp.getTypeName().equals("Display")) {
                     preRunPlot.append("\n# Display: " + dispComp + "\n");
                     postRunPlot.append("\n# Display: " + dispComp + "\nfigure(\""
                             + dispComp.getTextParam("title") + "\")\n");
                     for (Component lineComp : dispComp.getAllChildren()) {
-                        if (lineComp.getName().indexOf("Line") >= 0) {
+                        if (lineComp.getTypeName().equals("Line")) {
                             String trace = "trace_" + dispComp.getID() + "_"
                                     + lineComp.getID();
                             String ref = lineComp.getStringValue("quantity");

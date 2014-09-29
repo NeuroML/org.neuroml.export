@@ -675,7 +675,7 @@ public class NeuronWriter extends BaseWriter {
 
         if (!nogui) {
             for (Component dispComp : simCpt.getAllChildren()) {
-                if (dispComp.getName().contains("Display")) {
+                if (dispComp.getTypeName().equals("Display")) {
 
                     String dispId = dispComp.getID();
                     int plotColour = 1;
@@ -686,7 +686,7 @@ public class NeuronWriter extends BaseWriter {
                     }
 
                     for (Component lineComp : dispComp.getAllChildren()) {
-                        if (lineComp.getName().contains("Line")) {
+                        if (lineComp.getTypeName().equals("Line")) {
 
                             String quantity = lineComp.getStringValue("quantity");
                             String scale = lineComp.getStringValue("scale");
@@ -768,7 +768,7 @@ public class NeuronWriter extends BaseWriter {
 		columnsPost.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% (float(h.v_" + timeRef + ".get(i))/1000.0))  # Save in SI units...");
 
 		for (Component ofComp : simCpt.getAllChildren()) {
-			if (ofComp.getName().contains("OutputFile")) {
+			if (ofComp.getTypeName().equals("OutputFile")) {
 
 				String outfileId = ofComp.getID().replaceAll(" ", "_");
 				outfiles.put(outfileId, ofComp.getTextParam("fileName"));
@@ -783,7 +783,7 @@ public class NeuronWriter extends BaseWriter {
                         
 				for (Component colComp : ofComp.getAllChildren()) {
 
-					if (colComp.getName().contains("OutputColumn")) {
+					if (colComp.getTypeName().equals("OutputColumn")) {
 
 						String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
                         while (colIds.contains(colId)) {
