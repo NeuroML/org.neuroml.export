@@ -1502,14 +1502,6 @@ public class NeuronWriter extends BaseWriter {
 
 		writeModBlock(mod, "PROCEDURE rates()", ratesMethod.toString());
 
-		// for (String compK : paramMappings.keySet()) {
-		// E.info("  Maps for "+compK);
-		// //for (String orig : paramMappings.get(compK).keySet()) {
-		// E.info("      "+orig+" -> "+paramMappings.get(compK).get(orig));
-		// //}
-		// }
-		// System.out.println("----  paramMappings: "+paramMappings);
-
 		if (blockFunctions.length() > 0) {
 			mod.append(blockFunctions.toString());
 		}
@@ -1560,10 +1552,9 @@ public class NeuronWriter extends BaseWriter {
 			}
 		}
 		for (Component childComp : comp.getAllChildren()) {
-			String prefixNew = prefix + childComp.getID() + "_";
-			if (childComp.getID() == null) {
-				prefixNew = prefix + childComp.getName() + "_";
-			}
+			
+			String prefixNew = getPrefix(childComp, prefix);
+            
 			parseOnStart(childComp, prefixNew, blockInitial, blockInitial_v, paramMappings);
 		}
 
@@ -1663,20 +1654,11 @@ public class NeuronWriter extends BaseWriter {
 		}
 
 		for (Component childComp : comp.getAllChildren()) {
-			String prefixNew = prefix + childComp.getID() + "_";
-			if (childComp.getID() == null) {
-				prefixNew = prefix + childComp.getName() + "_";
-			}
+            
+			String prefixNew = getPrefix(childComp, prefix);
+            
 			parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars,
 					blockNeuron, blockParameter, paramMappings);
-
-
-			//                      HashMap<String, String> childMaps = paramMappings.get(childComp.getID());
-			//                      for (String mapped : childMaps.keySet()) {
-			//                              if (!paramMappingsComp.containsKey(mapped)) {
-			//                                      paramMappingsComp.put(mapped, childMaps.get(mapped));
-			//                              }
-			//                      }
 
 		}
 
@@ -1743,15 +1725,33 @@ public class NeuronWriter extends BaseWriter {
 		}
 
 		for (Component childComp : comp.getAllChildren()) {
-			String prefixNew = prefix + childComp.getID() + "_";
-			if (childComp.getID() == null) {
-				prefixNew = prefix + childComp.getName() + "_";
-			}
+			String prefixNew = getPrefix(childComp, prefix);
+            
 			parseStateVars(childComp, prefixNew, rangeVars, stateVars,
 					blockNeuron, blockParameter, blockAssigned, blockState,
 					paramMappings);
 		}
 	}
+    
+    private static String getPrefix(Component comp, String prefix) {
+        System.out.println("Getting prefix for " + comp);
+        System.out.println("comp " + comp.getID() + "; d " + comp.getDeclaredType() + "; e " + comp.getExtendsName());
+        String prefixNew = prefix + comp.getID() + "_";
+        if (comp.getID() == null) {
+            if (comp.getName() == null) {
+                if (comp.getDeclaredType() == null) {
+                    prefixNew = prefix + comp.getTypeName() + "_";
+                } else {
+                    prefixNew = prefix + comp.getDeclaredType() + "_";
+                }
+
+            } else {
+                prefixNew = prefix + comp.getName() + "_";
+            }
+        }
+        System.out.println("Prefix: "+prefixNew);
+        return prefixNew;
+    }
 
 	private static void parseTimeDerivs(Component comp,
 			String prefix,
@@ -1872,10 +1872,9 @@ public class NeuronWriter extends BaseWriter {
 		}
 
 		for (Component childComp : comp.getAllChildren()) {
-			String prefixNew = prefix + childComp.getID() + "_";
-			if (childComp.getID() == null) {
-				prefixNew = prefix + childComp.getName() + "_";
-			}
+			
+			String prefixNew = getPrefix(childComp, prefix);
+            
 			parseTimeDerivs(childComp, prefixNew, locals, blockDerivative,
 					blockBreakpoint, blockAssigned, ratesMethod, paramMappings);
 		}
@@ -1899,10 +1898,9 @@ public class NeuronWriter extends BaseWriter {
 		}
 
 		for (Component childComp : comp.getAllChildren()) {
-			String prefixNew = prefix + childComp.getID() + "_";
-			if (childComp.getID() == null) {
-				prefixNew = prefix + childComp.getName() + "_";
-			}
+			
+			String prefixNew = getPrefix(childComp, prefix);
+            
 			parseDerivedVars(childComp, prefixNew, rangeVars, ratesMethod,
 					blockNeuron, blockParameter, blockAssigned,
 					blockBreakpoint, paramMappings);
@@ -2012,7 +2010,7 @@ public class NeuronWriter extends BaseWriter {
 								if (eqn.length() > 0) {
 									eqn = eqn + op;
 								}
-								eqn = eqn + prefix + (childComp.getID()!=null?childComp.getID():childComp.getName()) + "_" + path;
+								eqn = eqn + getPrefix(childComp, prefix) + path;
 							}
 							eqn = eqn + " ? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren() + ")";
 						}
@@ -2195,8 +2193,10 @@ public class NeuronWriter extends BaseWriter {
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
         
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
+        /*
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
-        /*lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
         
         
