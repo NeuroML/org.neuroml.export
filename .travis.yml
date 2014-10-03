@@ -15,6 +15,7 @@ install:
     - cd ..
     - git clone https://github.com/LEMS/jLEMS.git
     - cd jLEMS
+    - git checkout $main_repo_branch
     - mvn install
     - cd ..
 
