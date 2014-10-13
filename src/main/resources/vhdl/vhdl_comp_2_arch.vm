@@ -4,8 +4,8 @@
 ######################################################
 
 -------------------------------------------------------------------------------------------
--- Architecture Begins
--------------------------------------------------------------------------------------------
+-- Architecture Begins TEST
+------------------------------------------------------------------------------------------- 
 
 architecture RTL of $name is
 signal COUNT : unsigned(2 downto 0) := "000";
@@ -25,41 +25,118 @@ signal subprocess_model_ready : STD_LOGIC := '1';
 signal subprocess_all_ready : STD_LOGIC := '0';
 
 
+#set( $expExists = 0  )
+#set( $powExists = 0  )
+
+
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set ($td = $regime.dynamics.get($par.name))
+			#foreach ($exp in $td.Exponentials)
+				#set( $foo2 = "signal pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+				#set( $foo3 = "signal pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_next : sfixed(20 downto -20);"  )
+					$foo2
+					$foo3
+				#set( $expExists = 1  )
+				#set( $foo2 = "signal exp_" + $regime.name + "_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+					$foo2
+			#end
+			#foreach ($exp in $td.Powers)
+				#set( $foo2 = "signal pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A : sfixed(20 downto -20);"  )
+				#set( $foo3 = "signal pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A_next : sfixed(20 downto -20);"  )
+					$foo2
+					$foo3
+				#set( $foo2 = "signal pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X : sfixed(20 downto -20);"  )
+				#set( $foo3 = "signal pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X_next : sfixed(20 downto -20);"  )
+					$foo2
+					$foo3
+				#set( $powExists = 1  )
+				#set( $foo2 = "signal pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+					$foo2	
+			#end
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set ($td = $dynamics.get($par.name))
+		#foreach ($exp in $td.Exponentials)
+			set( $foo2 = "signal pre_exp_noregime_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+			#set( $foo3 = "signal pre_exp_noregime_" + $par.name + "_" + $exp.name + "_next : sfixed(20 downto -20);"  )
+				$foo2
+				$foo3
+			#set( $expExists = 1  )
+			#set( $foo2 = "signal exp_noregime_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+				$foo2
+		#end
+		#foreach ($exp in $td.Powers)
+			#set( $foo2 = "signal pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A : sfixed(20 downto -20);"  )
+			#set( $foo3 = "signal pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A_next : sfixed(20 downto -20);"  )
+				$foo2
+				$foo3
+			#set( $foo2 = "signal pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X : sfixed(20 downto -20);"  )
+			#set( $foo3 = "signal pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X_next : sfixed(20 downto -20);"  )
+				$foo2
+				$foo3
+			#set( $powExists = 1  )
+			#set( $foo2 = "signal pow_noregime_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+				$foo2	
+		#end
+	#end
+#end
+
+
+
+
+
+
+
 #foreach ($par in $derivedvariables)
 #foreach ($exp in $par.Exponentials)
-#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
+#set( $expExists = 1  )
+#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+	$foo2
 #end
 #foreach ($exp in $par.Powers)
-#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
-#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
+#set( $powExists = 1  )
+#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+	$foo2	
 #end
 #end
 #foreach ($par in $conditionalderivedvariables)
 #foreach ($case in $par.cases)
 #foreach ($exp in $case.Exponentials)
-#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_exp_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_exp_" + $par.name + "_" + $exp.name + "_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
+#set( $expExists = 1  )
+#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+	$foo2	
 #end
 #foreach ($exp in $case.Powers)
-#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_A_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
-#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(11 downto -12);"  )
-#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(11 downto -12);"  )
+#set( $foo2 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X : sfixed(20 downto -20);"  )
+#set( $foo3 = "signal pre_pow_" + $par.name + "_" + $exp.name + "_X_next : sfixed(20 downto -20);"  )
 	$foo2
 	$foo3
+#set( $powExists = 1  )
+#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(20 downto -20);"  )
+	$foo2	
 #end
 #end
 #end
@@ -82,35 +159,6 @@ signal subprocess_all_ready : STD_LOGIC := '0';
 #end
 
 
-#set( $exp = 0  )
-#set( $pow = 0  )
-
-#foreach ($par in $derivedvariables)
-#foreach ($exp in $par.Exponentials)
-#set( $exp = 1  )
-#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-	$foo2	
-#end
-#foreach ($exp in $par.Powers)
-#set( $pow = 1  )
-#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-	$foo2	
-#end
-#end
-#foreach ($par in $conditionalderivedvariables)
-#foreach ($case in $par.cases)
-#foreach ($exp in $case.Exponentials)
-#set( $exp = 1  )
-#set( $foo2 = "signal exp_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-	$foo2	
-#end
-#foreach ($exp in $case.Powers)
-#set( $pow = 1  )
-#set( $foo2 = "signal pow_" + $par.name + "_" + $exp.name + " : sfixed(11 downto -12);"  )
-	$foo2	
-#end
-#end
-#end
 
 #if ($name.contains("neuron_model"))
 
@@ -136,29 +184,29 @@ signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);
 
 #end
 
-#if ( $exp == 1  )
+#if ( $expExists == 1  )
 component ParamExp is
 	port(
 		clk		: In  Std_logic;
 		rst		: In  Std_logic;
 		Start	: In  Std_logic;
 		Done	: Out  Std_logic;
-		X		: In sfixed(11 downto -12);
-		Output	: Out sfixed(11 downto -12)
+		X		: In sfixed(20 downto -20);
+		Output	: Out sfixed(20 downto -20)
 		);
 end component;
 #end
 
-#if ( $pow == 1  )
+#if ( $powExists == 1  )
 component ParamPow is
 	port(
 		clk		: In  Std_logic;
 		rst		: In  Std_logic;
 		Start	: In  Std_logic;
 		Done	: Out  Std_logic;
-		X		: In sfixed(11 downto -12);
-		A		: In sfixed(11 downto -12);
-		Output	: Out sfixed(11 downto -12)
+		X		: In sfixed(20 downto -20);
+		A		: In sfixed(20 downto -20);
+		Output	: Out sfixed(20 downto -20)
 		);
 end component; 
 #end
@@ -301,6 +349,12 @@ component $child.name
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
 	
 		#foreach ($child2 in $child.Children)
 		
@@ -334,6 +388,13 @@ component $child.name
 					#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 					$foo
 				#end
+				#foreach ($par in $child2.conditionalderivedvariables)
+					#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+					$foo
+					#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+					$foo
+				#end
+				
 			
 				#foreach ($child3 in $child2.Children)
 				
@@ -367,6 +428,13 @@ component $child.name
 							#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 							$foo
 						#end
+						#foreach ($par in $child3.conditionalderivedvariables)
+							#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name + "_"+ $child3.name +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+							$foo
+							#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+							$foo
+						#end
+						
 					
 						#foreach ($child4 in $child3.Children)
 						
@@ -400,6 +468,13 @@ component $child.name
 									#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +   "_"+ $child4.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 									$foo
 								#end
+								#foreach ($par in $child4.conditionalderivedvariables)
+									#set( $foo = "derivedvariable_" + $par.type + "_"+ $child2.name + "_"+ $child3.name +  "_"+ $child4.name +   "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+									$foo
+									#set( $foo = "derivedvariable_" + $par.type +  "_"+ $child2.name +"_"+ $child3.name +   "_"+ $child4.name +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+									$foo
+								#end
+								
 						#end
 					
 				#end

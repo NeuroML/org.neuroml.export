@@ -34,14 +34,14 @@ begin
 #foreach ($exp in $par.Exponentials)
 #set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
-		$foo3 <= resize( $exp.value ,11,-12);
+		$foo3 <= resize( $exp.value ,20, -20);
 #end
 #foreach ($exp in $par.Powers)
 #set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
-		$foo3A <= resize( $exp.valueA ,11,-12);
-		$foo3X <= resize( $exp.valueX ,11,-12);
+		$foo3A <= resize( $exp.valueA ,20, -20);
+		$foo3X <= resize( $exp.valueX ,20, -20);
 #end
 #end
 #foreach ($par in $conditionalderivedvariables)
@@ -49,14 +49,14 @@ begin
 #foreach ($exp in $case.Exponentials)
 #set( $foo = "ParamExp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
-		$foo3 <= resize( $exp.value ,11,-12);
+		$foo3 <= resize( $exp.value ,20, -20);
 #end
 #foreach ($exp in $case.Powers)
 #set( $foo = "ParamPow_" + $par.name + "_" + $exp.name  )
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
-		$foo3A <= resize( $exp.valueA ,11,-12);
-		$foo3X <= resize( $exp.valueX ,11,-12);
+		$foo3A <= resize( $exp.valueA ,20, -20);
+		$foo3X <= resize( $exp.valueX ,20, -20);
 #end
 #end
 #end
@@ -70,7 +70,7 @@ begin
 #set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
 	if rst  = '1' then
-		$foo2 <= to_sfixed(0,11,-12);
+		$foo2 <= to_sfixed(0,20, -20);
 	elsif (clk'EVENT AND clk = '1') then	
 		if subprocess_all_ready = '1' then
 			$foo2 <= $foo3 ;
@@ -84,8 +84,8 @@ begin
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
 	if rst  = '1' then
-		$foo2A <= to_sfixed(0,11,-12);
-		$foo2X <= to_sfixed(0,11,-12);
+		$foo2A <= to_sfixed(0,20, -20);
+		$foo2X <= to_sfixed(0,20, -20);
 	elsif (clk'EVENT AND clk = '1') then	
 		if subprocess_all_ready = '1' then
 			$foo2A <= $foo3A ;
@@ -102,7 +102,7 @@ begin
 #set( $foo2 = "pre_exp_" + $par.name + "_" + $exp.name  )
 #set( $foo3 = "pre_exp_" + $par.name + "_" + $exp.name + "_next"  )
 	if rst  = '1' then
-		$foo2 <= to_sfixed(0,11,-12);
+		$foo2 <= to_sfixed(0,20, -20);
 	elsif (clk'EVENT AND clk = '1') then	
 		if subprocess_all_ready = '1' then
 			$foo2 <= $foo3 ;
@@ -116,8 +116,8 @@ begin
 #set( $foo3A = "pre_pow_" + $par.name + "_" + $exp.name + "_A_next"  )
 #set( $foo3X = "pre_pow_" + $par.name + "_" + $exp.name + "_X_next"  )
 	if rst  = '1' then
-		$foo2A <= to_sfixed(0,11,-12);
-		$foo2X <= to_sfixed(0,11,-12);
+		$foo2A <= to_sfixed(0,20, -20);
+		$foo2X <= to_sfixed(0,20, -20);
 	elsif (clk'EVENT AND clk = '1') then	
 		if subprocess_all_ready = '1' then
 			$foo2A <= $foo3A ;

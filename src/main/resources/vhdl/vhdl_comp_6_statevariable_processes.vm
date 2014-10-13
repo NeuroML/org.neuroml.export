@@ -8,6 +8,255 @@
 -- Dynamics processes
 -------------------------------------------------------------------------------------------------------
 
+
+
+#set( $sensitivityList = "sysparam_time_timestep"  )
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set ($td = $regime.dynamics.get($par.name))
+			#if ( "$!td.SensitivityList" != "" )
+			#set( $sensitivityList = $sensitivityList + ", " + $td.SensitivityList  )
+			#end
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set ($td = $dynamics.get($par.name))
+		#if ( "$!td.SensitivityList" != "" )
+		#set( $sensitivityList = $sensitivityList + ", " + $td.SensitivityList  )
+		#end
+	#end
+#end
+
+
+dynamics_pre_process_comb :process ( $sensitivityList )
+begin 
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set ($td = $regime.dynamics.get($par.name))
+			#foreach ($exp in $td.Exponentials)
+				#set( $foo = "ParamExp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo3 = "pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_next"  )
+						$foo3 <= resize( $exp.value ,20, -20);
+			#end
+			#foreach ($exp in $td.Powers)
+				#set( $foo = "ParamPow_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo3A = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A_next"  )
+				#set( $foo3X = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X_next"  )
+						$foo3A <= resize( $exp.valueA ,20, -20);
+						$foo3X <= resize( $exp.valueX ,20, -20);
+			#end
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set ($td = $dynamics.get($par.name))
+		#foreach ($exp in $td.Exponentials)
+			#set( $foo = "ParamExp_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo3 = "pre_exp_noregime_" + $par.name + "_" + $exp.name + "_next"  )
+					$foo3 <= resize( $exp.value ,20, -20);
+		#end
+		#foreach ($exp in $td.Powers)
+			#set( $foo = "ParamPow_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo3A = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A_next"  )
+			#set( $foo3X = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X_next"  )
+					$foo3A <= resize( $exp.valueA ,20, -20);
+					$foo3X <= resize( $exp.valueX ,20, -20);
+		#end
+	#end
+#end
+
+end process dynamics_pre_process_comb;
+
+dynamics_pre_process_syn :process ( clk, rst )
+begin 
+
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set ($td = $regime.dynamics.get($par.name))
+			#foreach ($exp in $td.Exponentials)
+				#set( $foo = "ParamExp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo2 = "pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo3 = "pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_next"  )
+					if rst  = '1' then
+						$foo2 <= to_sfixed(0,20, -20);
+					elsif (clk'EVENT AND clk = '1') then	
+						if subprocess_all_ready = '1' then
+							$foo2 <= $foo3 ;
+						end if;
+					end if;
+			#end
+			#foreach ($exp in $td.Powers)
+				#set( $foo = "ParamPow_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo2A = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A"  )
+				#set( $foo2X = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X"  )
+				#set( $foo3A = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A_next"  )
+				#set( $foo3X = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X_next"  )
+					if rst  = '1' then
+						$foo2A <= to_sfixed(0,20, -20);
+						$foo2X <= to_sfixed(0,20, -20);
+					elsif (clk'EVENT AND clk = '1') then	
+						if subprocess_all_ready = '1' then
+							$foo2A <= $foo3A ;
+							$foo2X <= $foo3X ;
+						end if;
+					end if;
+			#end
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set ($td = $dynamics.get($par.name))
+		#foreach ($exp in $td.Exponentials)
+			#set( $foo = "ParamExp_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo2 = "pre_exp_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo3 = "pre_exp_noregime_" + $par.name + "_" + $exp.name + "_next"  )
+				if rst  = '1' then
+					$foo2 <= to_sfixed(0,20, -20);
+				elsif (clk'EVENT AND clk = '1') then	
+					if subprocess_all_ready = '1' then
+						$foo2 <= $foo3 ;
+					end if;
+				end if;
+		#end
+		#foreach ($exp in $td.Powers)
+			#set( $foo = "ParamPow_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo2A = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A"  )
+			#set( $foo2X = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X"  )
+			#set( $foo3A = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A_next"  )
+			#set( $foo3X = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X_next"  )
+				if rst  = '1' then
+					$foo2A <= to_sfixed(0,20, -20);
+					$foo2X <= to_sfixed(0,20, -20);
+				elsif (clk'EVENT AND clk = '1') then	
+					if subprocess_all_ready = '1' then
+						$foo2A <= $foo3A ;
+						$foo2X <= $foo3X ;
+					end if;
+				end if;
+		#end
+	#end
+#end
+
+subprocess_dyn_int_pre_ready <= '1';
+end process dynamics_pre_process_syn;
+
+
+#set( $count_der_int = 0  )
+
+#foreach ($par in $state)
+	#foreach ($regime in $regimes) 
+		#if ($regime.dynamics.get($par.name))
+			#set ($td = $regime.dynamics.get($par.name))
+			#foreach ($exp in $td.Exponentials)
+				#set( $foo = "ParamExp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo2 = "exp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo3 = "pre_exp_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+					
+					$foo : ParamExp 
+					port map (	clk => clk,
+								rst => rst,
+								Start => step_once_go,
+								Done => subprocess_dyn_int_ready,
+								X => $foo3 ,
+								Output => $foo2
+								);
+				#set( $count_der_int = $count_der_int + 1  )
+						
+			#end
+			#foreach ($exp in $td.Powers)
+				#set( $foo = "ParamPow_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo2 = "pow_" + $regime.name + "_" + $par.name + "_" + $exp.name  )
+				#set( $foo3 = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_X" )
+				#set( $foo4 = "pre_pow_" + $regime.name + "_" + $par.name + "_" + $exp.name + "_A" )
+					$foo : ParamPow 
+					port map (	clk => clk,
+								rst => rst,
+								Start => step_once_go,
+								Done => subprocess_dyn_int_ready,
+								X => $foo3 ,
+								A => $foo4 ,
+								Output => $foo2
+								);
+				#set( $count_der_int = $count_der_int + 1  )
+						
+			#end
+		#end
+	#end
+	#if ($dynamics.get($par.name))
+		#set ($td = $dynamics.get($par.name))
+		#foreach ($exp in $td.Exponentials)
+			#set( $foo = "ParamExp_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo2 = "exp_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo3 = "pre_exp_noregime_" + $par.name + "_" + $exp.name  )
+				
+				$foo : ParamExp 
+				port map (	clk => clk,
+							rst => rst,
+							Start => step_once_go,
+							Done => subprocess_dyn_int_ready,
+							X => $foo3 ,
+							Output => $foo2
+							);
+			#set( $count_der_int = $count_der_int + 1  )
+					
+		#end
+		#foreach ($exp in $td.Powers)
+			#set( $foo = "ParamPow_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo2 = "pow_noregime_" + $par.name + "_" + $exp.name  )
+			#set( $foo3 = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_X" )
+			#set( $foo4 = "pre_pow_noregime_" + $par.name + "_" + $exp.name + "_A" )
+				$foo : ParamPow 
+				port map (	clk => clk,
+							rst => rst,
+							Start => step_once_go,
+							Done => subprocess_dyn_int_ready,
+							X => $foo3 ,
+							A => $foo4 ,
+							Output => $foo2
+							);
+			#set( $count_der_int = $count_der_int + 1  )
+					
+		#end
+	#end
+#end
+
+
+
+
+
+
+
+
+#if ($count_der_int == 0)
+subprocess_dyn_int_ready <= '1';
+#end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #set( $sensitivityList = "sysparam_time_timestep " )
 #foreach ($par in $state)
 	#foreach ($regime in $regimes) 
@@ -34,8 +283,6 @@ begin
 		$foo
 	#end
 #end
-subprocess_dyn_int_pre_ready <= '1';
-subprocess_dyn_int_ready <= '1';
 subprocess_dyn_ready <= '1';
 end process state_variable_process_dynamics_comb;
 

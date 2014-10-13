@@ -22,6 +22,7 @@
 #set( $sensitivityList = "sysparam_time_timestep"  )
 #set( $finalEventPort = "eventport_" + $par.direction + "_" + $par.name + "_internal <= "  )
 
+
 #foreach ($event in $events)
 #if ($event.effect.events.get($par.name))
 #set( $sensitivityList = $sensitivityList + ", eventport_in_" + $event.name  )
@@ -120,7 +121,7 @@ $foo
 
 
 begin
-#set( $temps = 1)
+#set( $temps2 = 1)
 
 
 ##check for regimes
@@ -131,27 +132,27 @@ begin
 ##then check for all events that drive this state
 #foreach ($event in $regime.events)
 #if ($event.effect.events.get($par.name))
-#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
-#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2 + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2 + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps2 - 1) + ";" )
 if ( current_regime_in_int = $regime.name ) and eventport_in_$event.name = '1' then
 	$foo
 else
 	$foo2
 end if;
-#set( $temps = $temps + 1)
+#set( $temps2 = $temps2 + 1)
 #end
 #end
 
 ##then check for all conditional events that drive this state
 #foreach ($event in $regime.conditions)
 #if ($event.effect.events.get($par.name))
-#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2  )
 if ( current_regime_in_int = $regime.name ) and $event.condition  then
 	$foo := '1';
 else
 	$foo := '0';
 end if;
-#set( $temps = $temps + 1)
+#set( $temps2 = $temps2 + 1)
 #end
 #end
 
@@ -161,14 +162,14 @@ end if;
 ##then check for all events that drive this state
 #foreach ($event in $events)
 #if ($event.effect.events.get($par.name))
-#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
-#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps - 1) + ";" )
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2 + " := resize(" + $event.effect.state.get($par.name).replace($rep,$repWith) + "," + $par.integer + "," + $par.fraction + ");"  )
+#set( $foo2 = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2 + " := statevariable_" + $par.type +  "_" + $par.name + "_temp_" + ($temps2 - 1) + ";" )
 if eventport_in_$event.name = '1' then
 	$foo
 else
 	$foo2
 end if;
-#set( $temps = $temps + 1)
+#set( $temps2 = $temps2 + 1)
 #end
 #end
 
@@ -176,14 +177,17 @@ end if;
 ##then check for all conditional events that drive this state
 #foreach ($event in $conditions)
 #if ($event.effect.events.get($par.name))
-#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps  )
+#set( $foo = "eventport_" + $par.direction +  "_" + $par.name + "_temp_" + $temps2  )
 if $event.condition then
 	$foo := '1';
 else
 	$foo := '0';
 end if;
-#set( $temps = $temps + 1)
+#set( $temps2 = $temps2 + 1)
 #end
+#end
+#if ($temps == 0 && $temps2 == 0)
+#set( $finalEventPort =  $finalEventPort + " '0' ")
 #end
 
 $finalEventPort ; 

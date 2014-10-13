@@ -60,11 +60,12 @@ public class VHDLParameters {
 			g.writeStringField("type",dp.getDimension().getName()+"");
 			String value = VHDLEquations.encodeVariablesStyle(dp.getValue(),
 					ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-					ct.getRequirements(),sensitivityList,params,combinedParameterValues);
-			g.writeStringField("value",	value);
+					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 			
 
-			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dp.getName(),sensitivityList);
+			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dp.getName(),sensitivityList,"");
+			value = value.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+	    	g.writeStringField("value",	value);
 			VHDLFixedPointDimensions.writeBitLengths(g,dp.getDimension().getName());
 					
 			g.writeEndObject();

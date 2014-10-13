@@ -58,6 +58,7 @@ import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.Link;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
+import org.lemsml.jlems.core.type.Property;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.Case;
@@ -75,6 +76,7 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.core.util.StringUtil;
+import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.Utils;
 
 
@@ -172,7 +174,7 @@ public class VHDLWriter extends BaseWriter {
 	
 
 
-	public Map<String,String> getNeuronModelScripts(String neuronModel) throws ContentError, ParseError {
+	public Map<String,String> getNeuronModelScripts(String neuronModel, boolean useFlattenedModels) throws ContentError, ParseError, ConnectionError {
 
 		Map<String,String> componentScripts = new HashMap<String,String>();
 		StringBuilder sb = new StringBuilder();
@@ -195,16 +197,82 @@ public class VHDLWriter extends BaseWriter {
 		//Component tgtComp = lems.getComponent(targetId);
 		ArrayList<Component> temppops = new ArrayList<Component>();
 		ArrayList<Component> pops = new ArrayList<Component>();
-		temppops.add(lems.getComponent(neuronModel));
+		
+
+        if (useFlattenedModels)
+        {
+		//try to flatten
+        	ComponentFlattener cf = new ComponentFlattener(lems, lems.getComponent(neuronModel));
+
+	        ComponentType ctFlat;
+	        Component cpFlat; 
+	    	ctFlat = cf.getFlatType();
+			cpFlat = cf.getFlatComponent();
+	
+			lems.addComponentType(ctFlat);
+			lems.addComponent(cpFlat);
+	
+			lems.resolve(ctFlat);
+			lems.resolve(cpFlat);
+	
+	        String typeOut = XMLSerializer.serialize(ctFlat);
+	        String cptOut = XMLSerializer.serialize(cpFlat);
+	      
+	        E.info("Flat type: \n" + typeOut);
+	        E.info("Flat cpt: \n" + cptOut);
+		
+		
+        	temppops.add(cpFlat);
+		}
+        else
+        	temppops.add(lems.getComponent(neuronModel));
+		
 		String targetId = simCpt.getStringValue("target");
 		Component networkComp = lems.getComponent(targetId);
 		List<Component> networkComponents = networkComp.getAllChildren();
 		for (Component comp : networkComponents)
 		{
-			if (comp.getTypeName().matches("synapticConnection"))
+			if (comp.getTypeName().matches("synapticConnection") || comp.getTypeName().matches("synapticConnectionWD"))
 			{
 				String synapseName = comp.getStringValue("synapse");
-				temppops.add(lems.getComponent(synapseName));
+
+		        if (useFlattenedModels)
+		        {
+				  ComponentFlattener cf2 = new ComponentFlattener(lems, lems.getComponent(synapseName));
+
+			        ComponentType ct2Flat;
+			        Component cp2Flat;
+			    	ct2Flat = cf2.getFlatType();
+					cp2Flat = cf2.getFlatComponent();
+					ComponentType typeFlat = null;
+					try{
+					 typeFlat = lems.getComponentTypeByName(ct2Flat.name);
+					}
+					catch (Exception e)
+					{
+						
+					}
+					if (typeFlat == null)
+						lems.addComponentType(ct2Flat);
+
+					lems.addComponent(cp2Flat);
+					
+
+					if (typeFlat == null)
+						lems.resolve(ct2Flat);
+					lems.resolve(cp2Flat);
+					
+
+			        String type2Out = XMLSerializer.serialize(ct2Flat);
+			        String cpt2Out = XMLSerializer.serialize(cp2Flat);
+			      
+			        E.info("Flat type: \n" + type2Out);
+			        E.info("Flat cpt: \n" + cpt2Out);
+
+		        	temppops.add(cp2Flat);
+		        }
+			        else
+	        	temppops.add(lems.getComponent(synapseName));
 			}
 		}
 
@@ -221,6 +289,7 @@ public class VHDLWriter extends BaseWriter {
 				temppops.clear();
 				for	(Component pop : pops)
 				{
+					if (!useFlattenedModels)
 					temppops.addAll(pop.getAllChildren());
 					
 						StringWriter sw = new StringWriter();
@@ -252,7 +321,7 @@ public class VHDLWriter extends BaseWriter {
 						VelocityEngine ve = new VelocityEngine();
 						ve.init(props);
 						
-						
+						int i = 0;
 						Template template = ve.getTemplate(Method.COMPONENT1.getFilename());
 						sw = new StringWriter();
 						template.merge( context, sw );
@@ -262,7 +331,7 @@ public class VHDLWriter extends BaseWriter {
 						sw = new StringWriter();
 						template.merge( context, sw );
 						sb.append(sw);
-						sw = new StringWriter();
+						sw = new StringWriter(); 
 						template = ve.getTemplate(Method.COMPONENT3.getFilename());
 						sw = new StringWriter();
 						template.merge( context, sw );
@@ -293,7 +362,10 @@ public class VHDLWriter extends BaseWriter {
 						if (sb.toString().contains(": ParamPow"))
 							powUsed = true;
 						
-						
+						if (compRef.contains("_flat"))
+						{
+							compRef = compRef.replace("_flat", "");
+						}
 						componentScripts.put(compRef,sb.toString().replaceAll("(?m)^[ \t]*\r?\n", "").replace("\r\n\r\n", "\r\n").replace("\r\n\r\n", "\r\n").replace("\n\n", "\n").replace("\n\n", "\n"));
 						sb = new StringBuilder();
 						//System.out.println(compRef);
@@ -699,11 +771,11 @@ public class VHDLWriter extends BaseWriter {
 	
 	
 	//this file is required by Xilinx ISIM simulations for automation purposes
-	public String getTCLScript() throws ContentError, ParseError {
+	public String getTCLScript(double simTime, double simTimeStep) throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
 	
 		//todo: this file should reflect some simulation settings
-		sb.append("onerror {resume}\r\nwave add /\r\nrun 10000 us;\r\nexit\r\n");
+		sb.append("onerror {resume}\r\nwave add /\r\nrun " + ( 100 + (simTime/simTimeStep) ) + " us;\r\nexit\r\n");
 		return sb.toString();
 	}
 	
@@ -835,7 +907,7 @@ public class VHDLWriter extends BaseWriter {
 			for(Component conn: lems.getComponent("net1").getAllChildren())
 			{
 				String attachName = attach.getName();
-				if (conn.getComponentType().getName().matches("synapticConnection") )
+				if (conn.getComponentType().getName().matches("synapticConnection")|| conn.getComponentType().getName().matches("synapticConnectionWD") )
 				{
 					String destination = conn.getTextParam("destination");
 					String path = conn.getPathParameterPath("to");
@@ -862,7 +934,13 @@ public class VHDLWriter extends BaseWriter {
 	private void writeNeuronComponent(JsonGenerator g, Component neuron) throws JsonGenerationException, IOException, ContentError
 	{	
 			//g.writeObjectFieldStart(neuron.getTypeName());
-			g.writeObjectFieldStart(neuron.getID());
+
+			String compRef =  neuron.getID();
+			if (compRef.contains("_flat"))
+			{
+				compRef = compRef.replace("_flat", "");
+			}
+			g.writeObjectFieldStart(compRef);
 			//g.writeStringField("name",neuron.getTypeName());
 			writeSOMForComponent(g,neuron,true);
 			g.writeEndObject();
@@ -919,10 +997,17 @@ public class VHDLWriter extends BaseWriter {
 		parameters.addAll(comp.getComponentType().getFinalParams());
 		LemsCollection<ParamValue> parameterValues = new LemsCollection<ParamValue>();
 		parameterValues.addAll(comp.getParamValues());
+
+		for (Property prop: ct.getPropertys())
+		{
+			FinalParam fp = new FinalParam(prop.name,prop.getDimension());
+			parameters.add(fp);
+			parameterValues.add(new ParamValue(fp,1));
+		}
 		
 		g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
 		if (dyn != null)
-			VHDLDynamics.writeTimeDerivatives(g, ct, dyn.getTimeDerivatives(),parameters,parameterValues);
+			VHDLDynamics.writeTimeDerivatives(g, ct, dyn.getTimeDerivatives(),parameters,parameterValues,"noregime_");
 		g.writeEndObject();
 
 		g.writeObjectFieldStart(SOMKeywords.DERIVEDPARAMETERS.get());
@@ -949,7 +1034,12 @@ public class VHDLWriter extends BaseWriter {
 			VHDLDynamics.writeEvents(g, ct, dyn.getOnEvents(),parameters,parameterValues);
 		g.writeEndArray();
 
-		g.writeStringField(SOMKeywords.NAME.get(), comp.getID());
+		String compRef =  comp.getID();
+		if (compRef.contains("_flat"))
+		{
+			compRef = compRef.replace("_flat", "");
+		}
+		g.writeStringField(SOMKeywords.NAME.get(),compRef);
 		
 		g.writeObjectFieldStart(SOMKeywords.REQUIREMENTS.get());
 		writeRequirements(g, comp.getComponentType().getRequirements());
@@ -987,11 +1077,11 @@ public class VHDLWriter extends BaseWriter {
 				for(Component conn: lems.getComponent("net1").getAllChildren())
 				{
 					String attachName = attach.getName();
-					if (conn.getComponentType().getName().matches("synapticConnection") )
+					if (conn.getComponentType().getName().matches("synapticConnection")  || conn.getComponentType().getName().matches("synapticConnectionWD")  )
 					{
 						String destination = conn.getTextParam("destination");
 						String path = conn.getPathParameterPath("to");
-						if (destination.matches(attachName) && path.startsWith(comp.getID()))
+						if ((destination == null || destination.matches(attachName)) && path.startsWith(comp.getID()))
 						{
 							Component comp2 = (conn.getRefComponents().get("synapse"));
 							//comp2.setID(attach.getName() + "_" +  numberID);
@@ -1119,9 +1209,9 @@ public class VHDLWriter extends BaseWriter {
 				if (val != null) {
 					String value = VHDLEquations.encodeVariablesStyle(dv2.getValueExpression(),
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList,params,combinedParameterValues);
+							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 
-					value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList);
+					value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList,"");
 					g.writeStringField("value", value );
 					VHDLDynamics.writeConditionList(g,ct,dv2.condition,sensitivityList,params,combinedParameterValues);
 				} 

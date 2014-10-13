@@ -102,6 +102,12 @@ entity $name is
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
 	
 	
 ##THE CHILDREN
@@ -135,6 +141,13 @@ entity $name is
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 		
 			##THE CHILDREN
 			#foreach ($child2 in $child.Children)
@@ -163,6 +176,12 @@ entity $name is
 					
 				##derivedVariables
 					#foreach ($par in $child2.derivedvariables)
+						#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+						#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+						$foo
+					#end			
+					#foreach ($par in $child2.conditionalderivedvariables)
 						#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 						$foo
 						#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
@@ -201,6 +220,12 @@ entity $name is
 								$foo
 								#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 								$foo
+							#end	
+							#foreach ($par in $child3.conditionalderivedvariables)
+								#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+ "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
+								#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+								$foo
 							#end			
 							
 					
@@ -235,6 +260,13 @@ entity $name is
 										#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 										$foo
 									#end		
+									#foreach ($par in $child4.conditionalderivedvariables)
+										#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+ "_" + $child4.name+   "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+										#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child2.name+ "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+										$foo
+									#end		
+									
 							#end
 					#end
 			#end

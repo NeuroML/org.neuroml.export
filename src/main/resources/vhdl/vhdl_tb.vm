@@ -520,7 +520,7 @@ begin
 	reset_model <= '1';
 	
    
-   wait for 10000 ns;
+   wait for 100000 ns;
 		reset_model <= '0';
  
  end process ;

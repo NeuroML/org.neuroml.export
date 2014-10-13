@@ -15,6 +15,7 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Property;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
@@ -52,10 +53,10 @@ public class VHDLEquations {
 	
 
 	public static String writeInternalExpLnLogEvaluators(String toEncode, JsonGenerator g, 
-			String variableName, StringBuilder sensitivityList ) throws JsonGenerationException, IOException
+			String variableName, StringBuilder sensitivityList, String regimeAddition ) throws JsonGenerationException, IOException
 	{
 		String returnValue = toEncode.replace("(", " ( ").replace(")", " ) ");
-		Pattern MY_PATTERN = Pattern.compile("exp +\\(([a-zA-Z0-9_ \\,\\*\\\\\\/\\+\\-\\(\\)]+)\\) ");
+		Pattern MY_PATTERN = Pattern.compile("exp +\\(([a-zA-Z0-9_ \\#\\$\\,\\*\\\\\\/\\+\\-\\(\\)]+)\\) ");
 		Matcher m = MY_PATTERN.matcher(returnValue);
 		int i = 1;
 		g.writeArrayFieldStart("Exponentials");
@@ -79,10 +80,10 @@ public class VHDLEquations {
 		    	groupToReplace = groupToReplace.substring(0,secondlastIndex+1);
 		    	closingCount--;
 		    }
-		    returnValue = returnValue.replace(groupToReplace,"exp_" + variableName + "_exponential_result" + i);
-		    sensitivityList.append("exp_" + variableName + "_exponential_result" + i + ",");
+		    returnValue = returnValue.replace(groupToReplace,"exp_" + regimeAddition + variableName + "_exponential_result" + i);
+		    sensitivityList.append("exp_" + regimeAddition + variableName + "_exponential_result" + i + ",");
 		    g.writeStringField("name","exponential_result" + i); 
-			g.writeStringField("value", groupToReplace.substring(3) ); 
+			g.writeStringField("value", groupToReplace.substring(3).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
 		    i++;
 			g.writeEndObject();
 		    // s now contains "BAR"
@@ -95,7 +96,7 @@ public class VHDLEquations {
 		
 		
 		
-		MY_PATTERN = Pattern.compile("([a-zA-Z0-9_ ]+) +\\*\\* +([a-zA-Z0-9_ ]+) ");
+		MY_PATTERN = Pattern.compile("([a-zA-Z0-9_ \\#\\$\\,\\-]+) +\\*\\* +([a-zA-Z0-9_ \\#\\$\\,\\-]+) ");
 		m = MY_PATTERN.matcher(returnValue);
 		i = 1;
 		g.writeArrayFieldStart("Powers");
@@ -119,22 +120,24 @@ public class VHDLEquations {
 		    	groupToReplace = groupToReplace.substring(0,secondlastIndex+1);
 		    	closingCount--;
 		    }
-		    returnValue = returnValue.replace(groupToReplace,"pow_" + variableName + "_power_result" + i);
-			sensitivityList.append("pow_" + variableName + "_power_result" + i + ",");
+		    returnValue = returnValue.replace(groupToReplace,"pow_" + regimeAddition + variableName + "_power_result" + i);
+			sensitivityList.append("pow_" + regimeAddition+ variableName + "_power_result" + i + ",");
 		    g.writeStringField("name","power_result" + i); 
-			g.writeStringField("valueA", m.group(1) ); 
-			g.writeStringField("valueX", m.group(2) ); 
+			g.writeStringField("valueA", m.group(1).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
+			g.writeStringField("valueX", m.group(2).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
 		    i++;
 			g.writeEndObject();
 		    // s now contains "BAR"
 		}
 		g.writeEndArray();
+		
+		returnValue = returnValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 		return returnValue;
 	}
 	
 	public static String encodeVariablesStyle(String toEncode, LemsCollection<FinalParam> paramsOrig, 
 			LemsCollection<StateVariable> stateVariables,LemsCollection<DerivedVariable> derivedVariables,
-			LemsCollection<Requirement> requirements, StringBuilder sensitivityList 
+			LemsCollection<Requirement> requirements,LemsCollection<Property> properties, StringBuilder sensitivityList 
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError
 	{
 		char[] arrOperators = { '(',' ', ')', '*', '/', '\\', '+', '-', '^' };
@@ -171,6 +174,12 @@ public class VHDLEquations {
 				{
 					sensitivityList.append(" requirement_" + requirements.getByName(toReplace).dimension + "_" + toReplace + " ,");
 					returnString = returnString.replaceAll(" " + toReplace + " "," requirement_" + requirements.getByName(toReplace).dimension + "_" + toReplace + " ");
+				}
+				else
+				if (properties.hasName(toReplace))
+				{
+					sensitivityList.append(" param_" + properties.getByName(toReplace).dimension + "_" + toReplace + " ,");
+					returnString = returnString.replaceAll(" " + toReplace + " "," param_" + properties.getByName(toReplace).dimension + "_" + toReplace + " ");
 				}
 				else
 				if (stateVariables.hasName(toReplace))
@@ -211,7 +220,7 @@ public class VHDLEquations {
 								break;
 							}
 						}
-						returnString = returnString.replaceAll(" " + toReplace + " "," to_sfixed ( " + toReplace + " ," + top + " , -" + bottom + ")");
+						returnString = returnString.replaceAll(" " + toReplace + " "," to_sfixed \\$\\# " + toReplace + " ," + top + " , -" + bottom + " \\#\\$ ");
 						
 					}
 			} catch (ContentError e) {

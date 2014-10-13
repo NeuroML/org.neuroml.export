@@ -44,9 +44,12 @@ public class VHDLDynamics {
 			
 			for (StateAssignment sa: oe.getStateAssignments())
 			{
-				g.writeStringField(sa.getVariable(), VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
+				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+				completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+		    	
+				g.writeStringField(sa.getVariable(),completeExpr );
 			}
 
 			g.writeEndObject();
@@ -84,7 +87,7 @@ public class VHDLDynamics {
 
 
 	public static void writeTimeDerivatives(JsonGenerator g, ComponentType ct, LemsCollection<TimeDerivative> timeDerivatives
-			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues, String regimeAddition)  throws ContentError, JsonGenerationException, IOException
 	{
 		for (TimeDerivative td: timeDerivatives)
 		{
@@ -92,8 +95,8 @@ public class VHDLDynamics {
 			g.writeObjectFieldStart(td.getVariable());
 			String value = VHDLEquations.encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
 					ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-					ct.getRequirements(),sensitivityList,params,combinedParameterValues);
-			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,td.getVariable(),sensitivityList);
+					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,td.getVariable(),sensitivityList,regimeAddition);
 			g.writeStringField("Dynamics", value);
 			if  (sensitivityList.length() > 0)
 				g.writeStringField("SensitivityList",sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
@@ -114,7 +117,9 @@ public class VHDLDynamics {
 	    {
 	    	completeExpr = completeExpr + VHDLEquations.encodeVariablesStyle(VHDLEquations.inequalityToCondition(conditions[i]),ct.getFinalParams(),
 	    			ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-	    			ct.getRequirements(),sensitivityList,params,combinedParameterValues)+ " " + VHDLEquations.cond2sign(conditions[i]);
+	    			ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues)+ " " + VHDLEquations.cond2sign(conditions[i]);
+
+	    	completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 	    	if ( i < conditions.length - 1 )
 	    	{
 	    		String testForAndOR = ineq.substring(ineq.indexOf(conditions[i]) + conditions[i].length(), ineq.indexOf(conditions[i]) + conditions[i].length()+6).toLowerCase();
@@ -148,7 +153,7 @@ public class VHDLDynamics {
 					g.writeStringField("default","default");
 					
 					g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
-					writeTimeDerivatives(g, ct, reg.getTimeDerivatives(),params,combinedParameterValues);
+					writeTimeDerivatives(g, ct, reg.getTimeDerivatives(),params,combinedParameterValues,reg.getName()+"_");
 					g.writeEndObject();
 
 					g.writeObjectFieldStart(SOMKeywords.DERIVEDPARAMETERS.get());
@@ -207,9 +212,12 @@ public class VHDLDynamics {
 				{
 					if (sa.getVariable().equals(sv.getName()))
 					{
+						
 						init = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 								ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-								ct.getRequirements(), sensitivityList,params,combinedParameterValues);
+								ct.getRequirements(),ct.getPropertys(), sensitivityList,params,combinedParameterValues);
+						init = init.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+				    	
 					}
 				}
 			}
@@ -242,9 +250,12 @@ public class VHDLDynamics {
 			
 			for (StateAssignment sa: oc.getStateAssignments())
 			{
-				g.writeStringField(sa.getVariable(), VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),
+				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+				completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+		    	
+				g.writeStringField(sa.getVariable(),completeExpr );
 			}
 
 			g.writeEndObject();
@@ -296,9 +307,10 @@ public class VHDLDynamics {
 			if (val != null) {
 				String value = VHDLEquations.encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList,params,combinedParameterValues) ;
-				value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList);
-				g.writeStringField("value",value);
+						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues) ;
+				value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList,"");
+				value = value.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+		    	g.writeStringField("value",value);
 				
 			} else if (sel != null) {
 				String red = dv.getReduce();
@@ -342,11 +354,11 @@ public class VHDLDynamics {
 						for(Component conn: lems.getComponent("net1").getAllChildren())
 						{
 							String attachName = attach.getName();
-							if (conn.getComponentType().getName().matches("synapticConnection") )
+							if (conn.getComponentType().getName().matches("synapticConnection") || conn.getComponentType().getName().matches("synapticConnectionWD") )
 							{
 								String destination = conn.getTextParam("destination");
 								String path = conn.getPathParameterPath("to");
-								if (destination.matches(attachName) && path.startsWith(comp.getID()))
+								if ((destination == null || destination.matches(attachName)) && path.startsWith(comp.getID()))
 								{
 									Component c = (conn.getRefComponents().get("synapse"));
 									items.add("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var+ "_internal");
@@ -360,9 +372,11 @@ public class VHDLDynamics {
 					
 					
 					selval = StringUtil.join(items, op);
-					g.writeStringField("value",VHDLEquations.encodeVariablesStyle(selval,
+					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+			    	g.writeStringField("value",encodedValue);
 					
 				}
 				else
@@ -376,10 +390,12 @@ public class VHDLDynamics {
 					Component c  =  comp.getChild(rt);
 					selval = "exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal";
 					sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal,");
-					
-					g.writeStringField("value",VHDLEquations.encodeVariablesStyle(selval,
+					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+			    	
+					g.writeStringField("value",encodedValue);
 					
 					
 				}
@@ -415,9 +431,12 @@ public class VHDLDynamics {
 			
 			for (StateAssignment sa: oc.getStateAssignments())
 			{
-				g.writeStringField(sa.getVariable(), VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
+				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),sensitivityList,params,combinedParameterValues));
+						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+		    	completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
+		    	
+				g.writeStringField(sa.getVariable(), completeExpr);
 			}
 
 			g.writeEndObject();

@@ -249,6 +249,13 @@ component $neuron.name
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $neuron.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 	
 ##THE CHILDREN
 #foreach ($child in $neuron.Children)
@@ -284,6 +291,13 @@ component $neuron.name
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 			
 ##THE CHILDREN
 #foreach ($child3 in $child.Children)
@@ -319,6 +333,13 @@ component $neuron.name
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end				
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end				
+	
 					
 ##THE CHILDREN
 #foreach ($child4 in $child3.Children)
@@ -353,7 +374,14 @@ component $neuron.name
 		$foo
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
-	#end								
+	#end						
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end						
+	
 								
 								
 								
@@ -390,7 +418,15 @@ component $neuron.name
 		$foo
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
-	#end			
+	#end	
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+   "_" + $par.name + "_in : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + "_out : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+
+	
 		
 		
 		
@@ -446,6 +482,13 @@ end component;
 		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 
 ##THE CHILDREN
 #foreach ($child2 in $child.Children)
@@ -469,6 +512,13 @@ end component;
 		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child2.conditionalderivedvariables)
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
 		
 ##THE CHILDREN
 #foreach ($child3 in $child2.Children)
@@ -491,6 +541,13 @@ end component;
 		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end			
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + "_in_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end			
+	
 					
 					
 		
@@ -515,7 +572,14 @@ end component;
 		$foo
 		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
+	#end		
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_in_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
 	#end			
+	
 								
 							
 				
@@ -540,6 +604,13 @@ end component;
 		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
 		$foo
 	#end			
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_in_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = "signal " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + "_out_int :  sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end			
+	
 										
 
 #end
@@ -621,6 +692,13 @@ $foo : $child.name
 		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int,"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_in =>  " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int,"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int,"  )
+		$foo
+	#end
+	
 	
 ##THE CHILDREN
 #foreach ($child2 in $child.Children)
@@ -656,6 +734,13 @@ $foo : $child.name
 		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name +  "_" + $par.name + "_out_int,"  )
 		$foo
 	#end	
+	#foreach ($par in $child2.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $par.name + "_in =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name +  "_" + $par.name + "_in_int,"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name +  "_" + $par.name + "_out_int,"  )
+		$foo
+	#end	
+	
 		
 ##THE CHILDREN
 #foreach ($child3 in $child2.Children)
@@ -688,7 +773,14 @@ $foo : $child.name
 		$foo
 		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_out_int,"  )
 		$foo
-	#end				
+	#end		
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + "_in =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_in_int,"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_out_int,"  )
+		$foo
+	#end		
+	
 							
 							
 ##THE CHILDREN
@@ -722,7 +814,14 @@ $foo : $child.name
 		$foo
 		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name +   "_" + $par.name + "_out_int,"  )
 		$foo
-	#end							
+	#end		
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name +   "_" + $par.name + "_in =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $par.name + "_in_int,"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name +   "_" + $par.name + "_out_int,"  )
+		$foo
+	#end		
+	
 							
 							
 									
@@ -756,7 +855,14 @@ $foo : $child.name
 		$foo
 		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $child5.name +   "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name +  "_" + $child5.name +   "_" + $par.name + "_out_int,"  )
 		$foo
-	#end							
+	#end		
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set( $foo = "derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name +  "_" + $child5.name +    "_" + $par.name + "_in =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $child5.name +   "_" + $par.name + "_in_int,"  )
+		$foo
+		#set( $foo = "derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+   "_" + $child4.name +  "_" + $child5.name +   "_" + $par.name + "_out =>  " + $child.name + "_derivedvariable_" + $par.type + "_" + $child2.name + "_" + $child3.name+  "_" + $child4.name +  "_" + $child5.name +   "_" + $par.name + "_out_int,"  )
+		$foo
+	#end		
+	
 							
 							
 			
@@ -847,6 +953,10 @@ store_state: process (clk)
 		#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
+		$foo
+	#end
 	
 	
 	
@@ -870,6 +980,11 @@ store_state: process (clk)
 			#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 			$foo
 		#end
+		#foreach ($par in $child2.conditionalderivedvariables)
+			#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
+			$foo
+		#end
+		
 		##THE CHILDREN
 			#foreach ($child3 in $child2.Children)
 
@@ -883,6 +998,11 @@ store_state: process (clk)
 						#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 						$foo
 					#end
+					#foreach ($par in $child3.conditionalderivedvariables)
+						#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+  "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
+						$foo
+					#end
+					
 					
 					#foreach ($child4 in $child3.Children)
 
@@ -896,6 +1016,11 @@ store_state: process (clk)
 								#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+"_" + $child4.name+   "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 								$foo
 							#end
+							#foreach ($par in $child4.conditionalderivedvariables)
+								#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+"_" + $child4.name+   "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
+								$foo
+							#end
+							
 							
 										#foreach ($child5 in $child4.Children)
 
@@ -909,6 +1034,11 @@ store_state: process (clk)
 													#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+ "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
 													$foo
 												#end
+												#foreach ($par in $child5.conditionalderivedvariables)
+													#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name + "_" + $child3.name+"_" + $child4.name+  "_" + $child5.name+ "_" + $par.name + "_in_int <= resize(to_sfixed (0,2,-2)," + $par.integer + " , " + $par.fraction + ");"  )
+													$foo
+												#end
+												
 												
 												
 										#end
@@ -948,6 +1078,11 @@ store_state: process (clk)
 		#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int;"  )
 		$foo
 	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $par.name + "_out_int;"  )
+		$foo
+	#end
+	
 	
 
 #if ($child.regimes.size() > 0)
@@ -969,6 +1104,11 @@ store_state: process (clk)
 			#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int;"  )
 			$foo
 		#end
+		#foreach ($par in $child2.conditionalderivedvariables)
+			#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_out_int;"  )
+			$foo
+		#end
+		
 		##THE CHILDREN
 			#foreach ($child3 in $child2.Children)
 
@@ -982,6 +1122,11 @@ store_state: process (clk)
 						#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $par.name + "_out_int;"  )
 						$foo
 					#end
+					#foreach ($par in $child3.conditionalderivedvariables)
+						#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+ "_" + $par.name + "_out_int;"  )
+						$foo
+					#end
+					
 					
 					#foreach ($child4 in $child3.Children)
 
@@ -995,6 +1140,11 @@ store_state: process (clk)
 								#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $par.name + "_out_int;"  )
 								$foo
 							#end
+							#foreach ($par in $child4.conditionalderivedvariables)
+								#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $par.name + "_out_int;"  )
+								$foo
+							#end
+							
 							
 							
 										#foreach ($child5 in $child4.Children)
@@ -1009,6 +1159,11 @@ store_state: process (clk)
 													#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $child5.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $child5.name+ "_" + $par.name + "_out_int;"  )
 													$foo
 												#end
+												#foreach ($par in $child5.conditionalderivedvariables)
+													#set( $foo =  $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $child5.name+ "_" + $par.name + "_in_int <= " + $child.name + "_derivedvariable_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+"_" + $child4.name+ "_" + $child5.name+ "_" + $par.name + "_out_int;"  )
+													$foo
+												#end
+												
 												
 										#end
 
