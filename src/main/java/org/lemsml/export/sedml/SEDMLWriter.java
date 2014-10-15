@@ -1,8 +1,5 @@
 package org.lemsml.export.sedml;
 
-
-
-
 import org.lemsml.export.base.XMLWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -29,10 +26,6 @@ public class SEDMLWriter extends XMLWriter {
         this.originalFilename = originalFilename;
         this.modelFormat = modelFormat;
     }
-
-    /*private String getPopPrefix(Component pop) {
-        return pop.getID() + "_";
-    }*/
 
 	@Override
     public String getMainScript() throws ContentError {
