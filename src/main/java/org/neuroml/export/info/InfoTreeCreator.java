@@ -141,13 +141,13 @@ public class InfoTreeCreator
             IonChannel chan = (IonChannel)element;
 
             InfoNode chanProps = new InfoNode();
-            ChannelInfoExtractor cinfo = new ChannelInfoExtractor(chan);
 
             chanProps.put("ID", chan.getId());
 
-            chanProps.put("Gates", cinfo.getGates());
-
             if(chan.getNotes() != null && chan.getNotes().length() > 0) chanProps.put("Description", formatNotes(chan.getNotes()));
+
+            ChannelInfoExtractor cinfo = new ChannelInfoExtractor(chan);
+            chanProps.put("Gates", cinfo.getGates());
 
             properties.put("Ion Channel " + chan.getId(), chanProps);
         }
