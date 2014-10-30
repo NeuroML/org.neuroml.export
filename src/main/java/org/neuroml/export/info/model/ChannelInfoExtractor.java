@@ -66,8 +66,8 @@ public class ChannelInfoExtractor {
 			ChannelMLHHExpression inf = tii.getSteadyStateActivation();
 			ChannelMLHHExpression tau = tii.getTimeCourse();
 
-			gate.put("steady state activation", inf.toString());
-			gate.put("time constant", tau.toString());
+			gate.put("steady state activation", new ExpressionNode(inf.toString()));
+			gate.put("time constant", new ExpressionNode(tau.toString()));
 			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005));
 			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005));
 
@@ -83,8 +83,8 @@ public class ChannelInfoExtractor {
 		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
 		ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
-		gate.put("forward rate", fwd.toString());
-		gate.put("reverse rate", rev.toString());
+		gate.put("forward rate",  new ExpressionNode(fwd.toString()));
+		gate.put("reverse rate",  new ExpressionNode(rev.toString()));
 		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
 		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
 
