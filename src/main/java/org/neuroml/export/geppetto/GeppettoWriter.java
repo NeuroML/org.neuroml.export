@@ -79,6 +79,8 @@ public class GeppettoWriter extends XMLWriter {
 
         ArrayList<String> watchVars = new ArrayList<String>();
         
+        gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
+        
         int dispIndex = 1;
         for (Component dispComp : simCpt.getAllChildren()) {
             if (dispComp.getTypeName().equals("Display")) {
@@ -102,7 +104,6 @@ public class GeppettoWriter extends XMLWriter {
                     }
             }
         }
-        gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
         
         for (int ii = 0; ii<watchVars.size(); ii++) {
             if (ii>0) gScript.append(", ");
