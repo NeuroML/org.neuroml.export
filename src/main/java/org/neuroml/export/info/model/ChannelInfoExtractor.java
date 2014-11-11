@@ -28,9 +28,11 @@ public class ChannelInfoExtractor {
 		for (GateHHUndetermined g : chan.getGate()){
 
 			HHRateProcessor rateinfo = new HHRateProcessor(g);	
-			InfoNode gate = GenerateRatePlots(rateinfo);
-
+            InfoNode gate = new InfoNode();
+            
 			gate.put("instances", g.getInstances());
+			generateRatePlots(gate, rateinfo);
+
 			gates.put("gate " + g.getId(), gate);
 		}
 
@@ -38,10 +40,13 @@ public class ChannelInfoExtractor {
 		for (GateHHRates g : chan.getGateHHrates()){
 
 			HHRateProcessor rateinfo = new HHRateProcessor(g);	
-			InfoNode gateinfo = GenerateRatePlots(rateinfo);
+            
+            InfoNode gate = new InfoNode();
+            
+			gate.put("instances", g.getInstances());
+			generateRatePlots(gate, rateinfo);
 
-			gateinfo.put("instances", g.getInstances());
-			gates.put("gate " + g.getId(), gateinfo);
+			gates.put("gate " + g.getId(), gate);
 
 		}
 
@@ -76,9 +81,7 @@ public class ChannelInfoExtractor {
 		}
 	}
 
-	private InfoNode GenerateRatePlots(HHRateProcessor rateinfo) {
-
-		InfoNode gate = new InfoNode();
+	private void generateRatePlots(InfoNode gate, HHRateProcessor rateinfo) {
 
 		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
 		ChannelMLHHExpression rev = rateinfo.getReverseRate();
@@ -87,9 +90,6 @@ public class ChannelInfoExtractor {
 		gate.put("reverse rate",  new ExpressionNode(rev.toString(), rev.getExpression().getId(), "V", "ms-1"));
 		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
-
-		return gate;
-
 
 	}
 

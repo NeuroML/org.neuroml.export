@@ -122,17 +122,13 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    ID: na\n"
             + "    Gates:\n"
             + "        gate m:\n"
-            + "            forward rate: FunctionNode [Expression=1000 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))]\n"
-            + "            reverse rate: FunctionNode [Expression=4000 * exp((v - (-0.06))/-0.02)]\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpLinearRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
             + "            instances: 3\n"
+            + "            forward rate: 1000 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))\n"
+            + "            reverse rate: 4000 * exp((v - (-0.06))/-0.02)\n"
             + "        gate h:\n"
-            + "            forward rate: FunctionNode [Expression=70 * exp((v - (-0.06))/-0.02)]\n"
-            + "            reverse rate: FunctionNode [Expression=1000 /(1 + exp((v - (-0.04))/0.01))]\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHSigmoidRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            instances: 1";
+            + "            instances: 1\n"
+            + "            forward rate: 70 * exp((v - (-0.06))/-0.02)\n"
+            + "            reverse rate: 1000 /(1 + exp((v - (-0.04))/0.01))";
 
         compare(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
     }

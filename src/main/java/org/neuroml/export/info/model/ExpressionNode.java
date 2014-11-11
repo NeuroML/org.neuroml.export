@@ -43,12 +43,15 @@ public class ExpressionNode
 	@Override
 	public String toString()
 	{
-		String toString = "FunctionNode [Expression=" + expression;
+        return expression;
+		/*
+        String toString = "FunctionNode [Expression=" + expression;
 		if (this.plotMetadataNode != null){
 			toString += ", " + this.plotMetadataNode.toString();
 		}
 		toString += "]";
 		return toString;
+        */
 	}
 	
 }

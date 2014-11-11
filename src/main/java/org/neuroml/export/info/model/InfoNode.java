@@ -73,7 +73,8 @@ public class InfoNode
 			}
             else if(obj instanceof PlotNode)
 			{
-				main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
+                // No need to give string for this...
+				//main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
 			}
 			else
 			{
