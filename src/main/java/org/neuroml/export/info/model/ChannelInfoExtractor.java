@@ -66,10 +66,10 @@ public class ChannelInfoExtractor {
 			ChannelMLHHExpression inf = tii.getSteadyStateActivation();
 			ChannelMLHHExpression tau = tii.getTimeCourse();
 
-			gate.put("steady state activation", new ExpressionNode(inf.toString()));
-			gate.put("time constant", new ExpressionNode(tau.toString()));
-			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005));
-			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005));
+			gate.put("steady state activation", new ExpressionNode(inf.toString(), inf.getExpression().getId(), "V", "ms-1"));
+			gate.put("time constant", new ExpressionNode(tau.toString(), tau.getExpression().getId(), "V", "ms-1"));
+			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
+			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 
 			gate.put("instances", g.getInstances());
 			gates.put("gate " + g.getId(), gate);
@@ -83,10 +83,10 @@ public class ChannelInfoExtractor {
 		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
 		ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
-		gate.put("forward rate",  new ExpressionNode(fwd.toString()));
-		gate.put("reverse rate",  new ExpressionNode(rev.toString()));
-		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005));
-		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005));
+		gate.put("forward rate",  new ExpressionNode(fwd.toString(), fwd.getExpression().getId(), "V", "ms-1"));
+		gate.put("reverse rate",  new ExpressionNode(rev.toString(), rev.getExpression().getId(), "V", "ms-1"));
+		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
+		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 
 		return gate;
 
