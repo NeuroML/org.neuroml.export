@@ -18,11 +18,16 @@ public class PlotNode extends PlotMetadataNode
 //	private String _yAxisLabel;
 	private List<Data> _data=null;
 
+	public PlotNode(String plotTitle, String xAxisLabel, String yAxisLabel, Double initialValue, Double finalValue, Double stepValue)
+	{
+		super(plotTitle, xAxisLabel, yAxisLabel, initialValue, finalValue, stepValue);
+	}
+
 	public PlotNode(String plotTitle, String xAxisLabel, String yAxisLabel)
 	{
 		super(plotTitle, xAxisLabel, yAxisLabel);
 	}
-
+	
 	/**
 	 * @return
 	 */

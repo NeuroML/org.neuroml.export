@@ -31,7 +31,7 @@ public class ChannelInfoExtractor {
             InfoNode gate = new InfoNode();
             
 			gate.put("instances", g.getInstances());
-			generateRatePlots(gate, rateinfo);
+			generateRatePlots(chan, gate, rateinfo);
 
 			gates.put("gate " + g.getId(), gate);
 		}
@@ -44,7 +44,7 @@ public class ChannelInfoExtractor {
             InfoNode gate = new InfoNode();
             
 			gate.put("instances", g.getInstances());
-			generateRatePlots(gate, rateinfo);
+			generateRatePlots(chan, gate, rateinfo);
 
 			gates.put("gate " + g.getId(), gate);
 
@@ -71,8 +71,18 @@ public class ChannelInfoExtractor {
 			ChannelMLHHExpression inf = tii.getSteadyStateActivation();
 			ChannelMLHHExpression tau = tii.getTimeCourse();
 
-			gate.put("steady state activation", new ExpressionNode(inf.toString(), inf.getExpression().getId(), "V", "ms-1"));
-			gate.put("time constant", new ExpressionNode(tau.toString(), tau.getExpression().getId(), "V", "ms-1"));
+			if (inf.toString().contains("ChannelMLGenericHHExpression")){
+				gate.put("steady state activation", new ExpressionNode(inf.toString()));
+			}
+			else{
+				gate.put("steady state activation", new ExpressionNode(inf.toString(), "Ion Channel " + chan.getId() + " - Steady State Activation - " + inf.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+			}	
+			if (tau.toString().contains("ChannelMLGenericHHExpression")){
+				gate.put("time constant", new ExpressionNode(tau.toString()));
+			}
+			else{
+				gate.put("time constant", new ExpressionNode(tau.toString(), "Ion Channel " + chan.getId() + " - Time Co - " + tau.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+			}
 			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 
@@ -81,13 +91,23 @@ public class ChannelInfoExtractor {
 		}
 	}
 
-	private void generateRatePlots(InfoNode gate, HHRateProcessor rateinfo) {
+	private void generateRatePlots(IonChannel chan, InfoNode gate, HHRateProcessor rateinfo) {
 
 		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
 		ChannelMLHHExpression rev = rateinfo.getReverseRate();
 
-		gate.put("forward rate",  new ExpressionNode(fwd.toString(), fwd.getExpression().getId(), "V", "ms-1"));
-		gate.put("reverse rate",  new ExpressionNode(rev.toString(), rev.getExpression().getId(), "V", "ms-1"));
+		if (fwd.toString().contains("ChannelMLGenericHHExpression")){
+			gate.put("forward rate",  new ExpressionNode(fwd.toString()));
+		}
+		else{
+			gate.put("forward rate",  new ExpressionNode(fwd.toString(), "Ion Channel " + chan.getId() + " - Forward Rate - " + fwd.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+		}
+		if (rev.toString().contains("ChannelMLGenericHHExpression")){
+			gate.put("reverse rate",  new ExpressionNode(rev.toString()));
+		}
+		else{
+			gate.put("reverse rate",  new ExpressionNode(rev.toString(), "Ion Channel " + chan.getId() + " - Reverse Rate - " + rev.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+		}
 		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 

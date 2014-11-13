@@ -10,7 +10,7 @@ public class PlotNodeGenerator {
 	 * @return
 	 */
 	public static PlotNode createPlotNode(IPlottableExpression expression, Double x0, Double x1, Double dx, String xAxisLabel, String yAxisLabel) {
-		PlotNode plot = new PlotNode(expression.getId(), xAxisLabel, yAxisLabel);
+		PlotNode plot = new PlotNode(expression.getId(), xAxisLabel, yAxisLabel, x0, x1, dx);
 		plot.getData().add(createDiscretizedData(expression, x0, x1, dx));
 		return plot;
 	}

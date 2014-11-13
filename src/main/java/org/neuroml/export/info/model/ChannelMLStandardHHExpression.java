@@ -66,7 +66,8 @@ class ChannelMLStandardHHExpression implements IPlottableExpression
 
 	@Override
 	public String getId() {
-		return "Standard ChannelML Expression:" + _Id;
+		//return "Standard ChannelML Expression:" + _Id;
+		return _Id;
 	}
 
 

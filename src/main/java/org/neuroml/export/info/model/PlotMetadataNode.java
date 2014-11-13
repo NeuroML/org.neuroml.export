@@ -14,7 +14,21 @@ public class PlotMetadataNode
 	private String _plotTitle;
 	private String _xAxisLabel;
 	private String _yAxisLabel;
+	private Double _initialValue;
+	private Double _finalValue;
+	private Double _stepValue;
 
+	public PlotMetadataNode(String plotTitle, String xAxisLabel, String yAxisLabel, Double initialValue, Double finalValue, Double stepValue)
+	{
+		super();
+		this._plotTitle = plotTitle;
+		this._xAxisLabel = xAxisLabel;
+		this._yAxisLabel = yAxisLabel;
+		this._initialValue = initialValue;
+		this._finalValue = finalValue;
+		this._stepValue = stepValue;
+	}
+	
 	public PlotMetadataNode(String plotTitle, String xAxisLabel, String yAxisLabel)
 	{
 		super();
@@ -47,6 +61,29 @@ public class PlotMetadataNode
 		return _yAxisLabel;
 	}
 
+	/**
+	 * @return the _initialValue
+	 */
+	public Double getInitialValue()
+	{
+		return _initialValue;
+	}
+
+	/**
+	 * @return the _finalValue
+	 */
+	public Double getFinalValue()
+	{
+		return _finalValue;
+	}
+
+	/**
+	 * @return the _stepValue
+	 */
+	public Double getStepValue()
+	{
+		return _stepValue;
+	}
 
 	@Override
 	public String toString()

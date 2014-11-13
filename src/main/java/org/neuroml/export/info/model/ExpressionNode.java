@@ -16,11 +16,11 @@ public class ExpressionNode
 		this.expression = expression;
 	}
 
-	public ExpressionNode(String expression, String plotTitle, String xAxisLabel, String yAxisLabel)
+	public ExpressionNode(String expression, String plotTitle, String xAxisLabel, String yAxisLabel, Double initialValue, Double finalValue, Double stepValue)
 	{
 		super();
 		this.expression = expression;
-		this.plotMetadataNode = new PlotMetadataNode(plotTitle, xAxisLabel, yAxisLabel);
+		this.plotMetadataNode = new PlotMetadataNode(plotTitle, xAxisLabel, yAxisLabel, initialValue, finalValue, stepValue);
 		
 	}
 
