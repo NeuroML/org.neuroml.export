@@ -74,7 +74,7 @@ public class BrianWriter extends BaseWriter {
 		String comm = "# ";
 		String commPre = "'''";
 		String commPost = "'''";
-		if (comment.indexOf("\n") < 0)
+		if (!comment.contains("\n"))
 			sb.append(comm).append(comment).append("\n");
 		else
 			sb.append(commPre).append("\n").append(comment).append("\n").append(commPost).append("\n");
@@ -94,7 +94,13 @@ public class BrianWriter extends BaseWriter {
             else
                 sb.append("from brian2 import *\n\n");
             
-            sb.append("from math import *\n\n");
+            sb.append("from math import *\n");
+            sb.append("import sys\n\n");
+            
+            
+            sb.append("\nif len(sys.argv) > 1 and sys.argv[1] == '-nogui':\n    show_gui = False\nelse:\n    show_gui = True\n\n");
+            
+            //lems.build(null, null)
 
             Target target = lems.getTarget();
 
@@ -161,17 +167,17 @@ public class BrianWriter extends BaseWriter {
             StringBuilder postRunSave = new StringBuilder();
             
             for (Component outComp : simCpt.getAllChildren()) {
-                if (outComp.getName().indexOf("OutputFile") >= 0) {
+                if (outComp.getName().contains("OutputFile")) {
                     
                     String fileName = outComp.getTextParam("fileName");
-                    String info = "\n# Saving to file: "+fileName+", ref " + outComp.id + "\n";
+                    String info = "\n# Saving to file: "+fileName+", reference: " + outComp.id + "\n";
                     preRunSave.append(info);
                     postRunSave.append(info);
                     preRunSave.append("record_" + outComp.getID() + " = {}\n");
                     postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
                     
                     for (Component colComp : outComp.getAllChildren()) {
-                        if (colComp.getName().indexOf("OutputColumn") >= 0) {
+                        if (colComp.getName().contains("OutputColumn")) {
                             
                             String monitor = "record_" + outComp.getID() + "[\"" + colComp.getID()+"\"]";
                             String ref = colComp.getStringValue("quantity");
@@ -224,12 +230,12 @@ public class BrianWriter extends BaseWriter {
             StringBuilder postRunPlot = new StringBuilder();
 
             for (Component dispComp : simCpt.getAllChildren()) {
-                if (dispComp.getName().indexOf("Display") >= 0) {
-                    preRunPlot.append("\n# Display: " + dispComp + "\n");
-                    postRunPlot.append("\n# Display: " + dispComp + "\nfigure(\""
-                            + dispComp.getTextParam("title") + "\")\n");
+                if (dispComp.getName().contains("Display")) {
+                    String dispId = "display_"+dispComp.getID();
+                    preRunPlot.append("\n    # Display: " + dispComp + "\n");
+                    postRunPlot.append("\n    # Display: " + dispComp + "\n    "+dispId+" = plt.figure(\""+ dispComp.getTextParam("title") + "\")\n");
                     for (Component lineComp : dispComp.getAllChildren()) {
-                        if (lineComp.getName().indexOf("Line") >= 0) {
+                        if (lineComp.getName().contains("Line")) {
                             String trace = "trace_" + dispComp.getID() + "_"
                                     + lineComp.getID();
                             String ref = lineComp.getStringValue("quantity");
@@ -251,11 +257,16 @@ public class BrianWriter extends BaseWriter {
                                 num = "0";
                                 var = ref;
                             }
-                            preRunPlot.append(trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
+                            preRunPlot.append("    "+trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
                             String times = brian2 ? "t " : "times";
-                            postRunPlot.append("plot(" + trace + "."+times+"/second,"
+                            
+                            String plotId = "plot_"+lineComp.getID();
+                    
+                            postRunPlot.append("    "+plotId+" = "+dispId+".add_subplot(111, autoscale_on=True)\n");
+                            postRunPlot.append("    "+plotId+".plot(" + trace + "."+times+"/second,"
                                     + trace + "[" + num + "], color=\""
-                                    + lineComp.getStringValue("color") + "\")\n");
+                                    + lineComp.getStringValue("color") + "\", label=\""+lineComp.getID()+"\")\n");
+                            postRunPlot.append("    "+plotId+".legend()\n");
                         }
                     }
                 }
@@ -263,8 +274,10 @@ public class BrianWriter extends BaseWriter {
             }
             
             
-            sb.append(preRunSave);
+            sb.append("\nif show_gui:\n");
             sb.append(preRunPlot);
+            
+            sb.append(preRunSave);
 
             String len = simCpt.getStringValue("length");
             String dt = simCpt.getStringValue("step");
@@ -278,11 +291,16 @@ public class BrianWriter extends BaseWriter {
 
             sb.append("\ndefaultclock.dt = " + dt + "\n");
             sb.append("run(" + len + ")\n");
+            
+            sb.append(postRunSave);
+            
+            sb.append("\nif show_gui:\n\n");
+            
+            sb.append("    import matplotlib.pyplot as plt\n");
 
             sb.append(postRunPlot);
-            sb.append(postRunSave);
 
-            sb.append("show()\n");
+            sb.append("    plt.show()\n");
 
             System.out.println(sb);
             
@@ -386,7 +404,7 @@ public class BrianWriter extends BaseWriter {
 		for (Parameter p : ps) {
 			ParamValue pv = cpFlat.getParamValue(p.getName());
 			String units = " * "+getBrianSIUnits(p.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
+			if (units.contains(Unit.NO_UNIT))
 				units = "";
 			String val = pv==null ? "???" : (float)pv.getDoubleValue()+"";
 			compInfo.params.append(prefix + p.getName() + " = " + val + units + " \n");
@@ -402,7 +420,7 @@ public class BrianWriter extends BaseWriter {
 			String localName = prefix + td.getStateVariable().name;
 			stateVars.add(localName);
 			String units = " "+getBrianSIUnits(td.getStateVariable().getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
+			if (units.contains(Unit.NO_UNIT))
 				units = " 1";
 			String expr = td.getValueExpression();
 			expr = expr.replace("^", "**");
@@ -413,7 +431,7 @@ public class BrianWriter extends BaseWriter {
 		for (StateVariable svar : dyn.getStateVariables()) {
 			String localName = prefix + svar.getName();
 			String units = " "+getBrianSIUnits(svar.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
+			if (units.contains(Unit.NO_UNIT))
 				units = " 1";
 			if (!stateVars.contains(localName)) // i.e. no TimeDerivative of
 												// StateVariable
@@ -429,7 +447,7 @@ public class BrianWriter extends BaseWriter {
 			// String expr = ((DVal)edv.getRateexp().getRoot()).toString(prefix,
 			// stateVars);
 			String units = " "+getBrianSIUnits(edv.getDimension());
-			if (units.indexOf(Unit.NO_UNIT) >= 0)
+			if (units.contains(Unit.NO_UNIT))
 				units = " 1";
 			
 			String expr = edv.getValueExpression();
@@ -479,7 +497,7 @@ public class BrianWriter extends BaseWriter {
 
     	
         File exampleFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
-        exampleFile = new File("../lemspaper/tidyExamples/Figure8_SBML_LEMS.xml");
+        exampleFile = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
