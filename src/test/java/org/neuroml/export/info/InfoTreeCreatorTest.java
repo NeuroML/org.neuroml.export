@@ -123,12 +123,12 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    Gates:\n"
             + "        gate m:\n"
             + "            instances: 3\n"
-            + "            forward rate: 1000 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))\n"
-            + "            reverse rate: 4000 * exp((v - (-0.06))/-0.02)\n"
+            + "            forward rate: 1E3 * (v - (-4E-2))/1E-2 / ( 1 - exp(-(v - (-4E-2)) / 1E-2))\n"
+            + "            reverse rate: 4E3 * exp((v - (-6.5E-2))/-1.8E-2)\n"
             + "        gate h:\n"
             + "            instances: 1\n"
-            + "            forward rate: 70 * exp((v - (-0.06))/-0.02)\n"
-            + "            reverse rate: 1000 /(1 + exp((v - (-0.04))/0.01))";
+            + "            forward rate: 7E1 * exp((v - (-6.5E-2))/-2E-2)\n"
+            + "            reverse rate: 1E3 /(1 + exp((v - (-3.5E-2))/1E-2))";
 
         compare(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
     }
