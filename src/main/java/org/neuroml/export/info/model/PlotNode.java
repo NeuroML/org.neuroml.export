@@ -10,47 +10,24 @@ import org.neuroml.export.info.model.pairs.Pair;
  * @author borismarin
  * 
  */
-public class PlotNode
+public class PlotNode extends PlotMetadataNode
 {
 
-	private String _plotTitle;
-	private String _xAxisLabel;
-	private String _yAxisLabel;
+//	private String _plotTitle;
+//	private String _xAxisLabel;
+//	private String _yAxisLabel;
 	private List<Data> _data=null;
+
+	public PlotNode(String plotTitle, String xAxisLabel, String yAxisLabel, Double initialValue, Double finalValue, Double stepValue)
+	{
+		super(plotTitle, xAxisLabel, yAxisLabel, initialValue, finalValue, stepValue);
+	}
 
 	public PlotNode(String plotTitle, String xAxisLabel, String yAxisLabel)
 	{
-		super();
-		this._plotTitle = plotTitle;
-		this._xAxisLabel = xAxisLabel;
-		this._yAxisLabel = yAxisLabel;
+		super(plotTitle, xAxisLabel, yAxisLabel);
 	}
-
-	/**
-	 * @return the _plotTitle
-	 */
-	public String getPlotTitle()
-	{
-		return _plotTitle;
-	}
-
-	/**
-	 * @return the _xAxisLabel
-	 */
-	public String getXAxisLabel()
-	{
-		return _xAxisLabel;
-	}
-
-	/**
-	 * @return the _yAxisLabel
-	 */
-	public String getYAxisLabel()
-	{
-		return _yAxisLabel;
-	}
-
-
+	
 	/**
 	 * @return
 	 */
@@ -66,12 +43,12 @@ public class PlotNode
 	@Override
 	public String toString()
 	{
-		return "PlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + ", Data=" + toTruncatedArray(_data) + "]";
+		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Data=" + toTruncatedArray(_data) + "]";
 	}
     
 	public String toShortString()
 	{
-		return "PlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + ", Num data points=" + _data.size() + "]";
+		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Num data points=" + _data.size() + "]";
 	}
 
 	private String toTruncatedArray(List<Data> _data) {

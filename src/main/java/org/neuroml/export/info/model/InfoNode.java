@@ -21,18 +21,24 @@ public class InfoNode
 	 * @param key
 	 * @param val
 	 */
-	public void put(String key, Object val)
-	{
+	public void put(String key, Object val){
 		_properties.put(key, val);
 	}
-
+	
 	/**
 	 * @param key
 	 * @return
 	 */
-	public Object get(String key)
-	{
+	public Object get(String key){
 		return _properties.get(key);
+	}
+	
+	/**
+	 * @param properties
+	 * @return
+	 */
+	public void putAll(Map<String, Object> properties){
+		_properties.putAll(properties);
 	}
 
 	/**
@@ -67,7 +73,8 @@ public class InfoNode
 			}
             else if(obj instanceof PlotNode)
 			{
-				main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
+                // No need to give string for this...
+				//main.append(indent + key + ": " + ((PlotNode)obj).toShortString() + "\n");
 			}
 			else
 			{
