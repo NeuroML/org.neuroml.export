@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-
 import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
@@ -16,6 +15,7 @@ import org.lemsml.export.base.BaseWriter;
 import org.lemsml.export.base.CommonLangWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
@@ -61,9 +61,7 @@ public class DLemsWriter extends BaseWriter
 	{
 		ObjectMapper mapper = new ObjectMapper();
 
-		LinkedHashMap<String,Object> map = new LinkedHashMap<String,Object>();
-
-		map = mapper.readValue(dlems, new TypeReference<LinkedHashMap<String,Object>>(){});
+		LinkedHashMap<String,Object> map = mapper.readValue(dlems, new TypeReference<LinkedHashMap<String,Object>>(){});
 
 		for (String key: map.keySet())
 		{
@@ -76,7 +74,7 @@ public class DLemsWriter extends BaseWriter
 
 
 	private String visitExpression(IVisitable expr) throws ContentError {
-		String visited = ""; 
+		String visited; 
 		if(writer == null) {
 			visited = expr.getValueExpression();
 		}
@@ -108,20 +106,14 @@ public class DLemsWriter extends BaseWriter
 		ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
 
 		if (pops.size()>0) {
-			///////////////////////////////////////for (Component pop : pops) {
 			Component pop = pops.get(0);
 			String compRef = pop.getStringValue("component");
 			Component popComp = lems.getComponent(compRef);
 
-			//ComponentType ctFlat = null;
-			Component cpFlat = null;
-
-			//ctFlat = createFlattenedCompType(popComp);
 		    createFlattenedCompType(popComp);
-			cpFlat = createFlattenedComp(popComp);
+			Component cpFlat = createFlattenedComp(popComp);
 
 			writeDLemsForComponent(g, cpFlat);
-			/////////////////////////////////////////}
 		}
 		else {
 
@@ -173,7 +165,7 @@ public class DLemsWriter extends BaseWriter
 
 
 		for (Component dispComp : simCpt.getAllChildren()) {
-			if (dispComp.getName().indexOf("OutputFile") >= 0) {
+			if (dispComp.getTypeName().equals("OutputFile")) {
 				g.writeStringField(DLemsKeywords.DUMP_TO_FILE.get(), dispComp.getStringValue("fileName"));
 			}
 		}
@@ -181,7 +173,7 @@ public class DLemsWriter extends BaseWriter
 		g.writeArrayFieldStart(DLemsKeywords.DISPLAY.get());
 
 		for (Component dispComp : simCpt.getAllChildren()) {
-			if (dispComp.getName().indexOf("Display") >= 0) {
+			if (dispComp.getTypeName().equals("Display")) {
 
 				g.writeStartObject();
 
@@ -198,7 +190,7 @@ public class DLemsWriter extends BaseWriter
 				g.writeArrayFieldStart(DLemsKeywords.CURVES.get());
 
 				for (Component lineComp : dispComp.getAllChildren()) {
-					if (lineComp.getName().indexOf("Line") >= 0) {
+					if (lineComp.getTypeName().equals("Line")) {
 
 						g.writeStartObject();
 						g.writeStringField(DLemsKeywords.ABSCISSA.get(), "t");
@@ -354,7 +346,7 @@ public class DLemsWriter extends BaseWriter
 	{
 
 		ComponentType ctFlat = new ComponentType();
-		ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
+		ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
 
 		try
 		{
@@ -403,23 +395,14 @@ public class DLemsWriter extends BaseWriter
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex3_Net.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
 
-        DLemsWriter dw = null;
-        String testScript = "";
         
         for (File lemsFile: lemsFiles) {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
-
-            dw = new DLemsWriter(lems);
+            DLemsWriter dw = new DLemsWriter(lems);
             String ff = dw.getMainScript();
             System.out.println("Output from "+lemsFile+": ------------\n"+ff);
             
-            
         }
-        
-        
-        
 	}
-
 
 }
