@@ -4,26 +4,27 @@ import java.io.IOException;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
+import org.lemsml.export.vhdl.edlems.EDSignal;
 
 public class VHDLFixedPointDimensions {
 
 	
 
-	public static void writeBitLengths(JsonGenerator g, String dimension) throws JsonGenerationException, IOException
+	public static void writeBitLengths(EDSignal edSignal, String dimension) throws JsonGenerationException, IOException
 	{
 		String[] splitDims = dimension.replace("per_time","pertime").split("_");
 		if (splitDims.length == 1)
 		{
-			g.writeStringField("integer",getBitLengthInteger(dimension).toString());
-			g.writeStringField("fraction",getBitLengthFraction(dimension).toString());
+			edSignal.integer = (getBitLengthInteger(dimension));
+			edSignal.fraction= (getBitLengthFraction(dimension));
 		}
 		else
 			if (splitDims.length == 2 && splitDims[1].matches("inv"))
 			{
 				Integer inte = 0-getBitLengthFraction(splitDims[0]);
 				Integer fract = 0-getBitLengthInteger(splitDims[0]);
-				g.writeStringField("integer",inte.toString());
-				g.writeStringField("fraction",fract.toString());
+				edSignal.integer = inte;
+				edSignal.fraction= fract;
 			} else
 				if (splitDims.length == 3 && splitDims[1].matches("div"))
 				{
@@ -33,8 +34,8 @@ public class VHDLFixedPointDimensions {
 					Integer fract2 = 0-getBitLengthInteger(splitDims[2]);
 					Integer inte = inte1 + inte2;
 					Integer fract = fract1 + fract2;
-					g.writeStringField("integer",inte.toString());
-					g.writeStringField("fraction",fract.toString());
+					edSignal.integer= inte;
+					edSignal.fraction= fract;
 				}
 			
 	}

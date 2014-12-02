@@ -31,11 +31,11 @@ public class VHDLWriterTest extends TestCase {
     	
     	String[] models = {"iafTau", "iafTauRef","iafRef","iaf" };
     	
-    	for (int i = 0; i < models.length; i ++)
-    	{
-    		generateMainScript(exampleFilename,models[i],exampleFilename.replaceAll(".xml", ".m") + "_" + models[i]);
-    		
-    	}
+//    	for (int i = 0; i < models.length; i ++)
+//    	{
+//    		generateMainScript(exampleFilename,models[i],exampleFilename.replaceAll(".xml", ".m") + "_" + models[i]);
+//    		
+//    	}
 
 	}
 	/*
@@ -55,11 +55,11 @@ public class VHDLWriterTest extends TestCase {
 		
 		Map<String,String> componentScripts = vw.getNeuronModelScripts(modelToConvert,false);
 		
-		String testbenchScript = vw.getMainScript();
+		String testbenchScript = vw.getSimulationScript(VHDLWriter.ScriptType.TESTBENCH);
 		String tclScript = vw.getTCLScript(1,0.0001);
 		String prjScript = vw.getPrjFile(componentScripts.keySet());
-		String defaultJSON = vw.getMainScript(Method.DEFAULTPARAMJSON);
-		String defaultReadbackJSON = vw.getMainScript(Method.DEFAULTREADBACKJSON);
+		//String defaultJSON = vw.getMainScript(Method.DEFAULTPARAMJSON);
+		//String defaultReadbackJSON = vw.getMainScript(Method.DEFAULTREADBACKJSON);
 
 		File theDir = new File(AppTest.getTempDir() + "/" + outputDir );
 		if (theDir.exists())
@@ -82,12 +82,12 @@ public class VHDLWriterTest extends TestCase {
         mFile = new File(AppTest.getTempDir(),outputDir + "/testbench.prj");
         FileUtil.writeStringToFile(prjScript, mFile);
         assertTrue(mFile.exists());	        
-        mFile = new File(AppTest.getTempDir(),outputDir + "/defaultJSON.json");
-        FileUtil.writeStringToFile(defaultJSON, mFile);
-        assertTrue(mFile.exists());	        
-        mFile = new File(AppTest.getTempDir(),outputDir + "/defaultReadbackJSON.json");
-        FileUtil.writeStringToFile(defaultReadbackJSON, mFile);
-        assertTrue(mFile.exists());	        
+        //mFile = new File(AppTest.getTempDir(),outputDir + "/defaultJSON.json");
+        //FileUtil.writeStringToFile(defaultJSON, mFile);
+        //assertTrue(mFile.exists());	        
+        //mFile = new File(AppTest.getTempDir(),outputDir + "/defaultReadbackJSON.json");
+        ///FileUtil.writeStringToFile(defaultReadbackJSON, mFile);
+        //assertTrue(mFile.exists());	        
 
         return componentScripts;
 	}

@@ -6,6 +6,19 @@ import java.util.ArrayList;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.export.vhdl.VHDLWriter.SOMKeywords;
+import org.lemsml.export.vhdl.edlems.EDCase;
+import org.lemsml.export.vhdl.edlems.EDComponent;
+import org.lemsml.export.vhdl.edlems.EDCondition;
+import org.lemsml.export.vhdl.edlems.EDDerivedVariable;
+import org.lemsml.export.vhdl.edlems.EDDynamic;
+import org.lemsml.export.vhdl.edlems.EDEvent;
+import org.lemsml.export.vhdl.edlems.EDEventOut;
+import org.lemsml.export.vhdl.edlems.EDOnEntry;
+import org.lemsml.export.vhdl.edlems.EDRegime;
+import org.lemsml.export.vhdl.edlems.EDState;
+import org.lemsml.export.vhdl.edlems.EDStateAssignment;
+import org.lemsml.export.vhdl.edlems.EDStateFunction;
+import org.lemsml.export.vhdl.edlems.EDTransition;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Attachments;
 import org.lemsml.jlems.core.type.Component;
@@ -30,85 +43,90 @@ import org.lemsml.jlems.core.util.StringUtil;
 
 public class VHDLDynamics {
 
-	public static void writeEntrys(JsonGenerator g, ComponentType ct, LemsCollection<OnEntry> onEntrys
+	public static ArrayList<EDOnEntry> writeEntrys(ComponentType ct, LemsCollection<OnEntry> onEntrys
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
+		ArrayList<EDOnEntry> onEDEntrys = new ArrayList<EDOnEntry>();
 		for (OnEntry oe: onEntrys)
 		{
-			g.writeStartObject();
+			EDOnEntry edOnEntry = new EDOnEntry(); 
 			StringBuilder sensitivityList = new StringBuilder();
+			
+			//g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
 
-			g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
-
-			g.writeObjectFieldStart(SOMKeywords.STATE.get());
+			edOnEntry.stateAssignment = new ArrayList<EDStateAssignment>();
 			
 			for (StateAssignment sa: oe.getStateAssignments())
 			{
+				EDStateAssignment edStateAssignment = new EDStateAssignment();
 				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 				completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
-		    	
-				g.writeStringField(sa.getVariable(),completeExpr );
+
+				edStateAssignment.name=(sa.getVariable());
+				edStateAssignment.expression=(completeExpr );
+				edOnEntry.stateAssignment.add(edStateAssignment);
 			}
 
-			g.writeEndObject();
-			
 
-			g.writeObjectFieldStart(SOMKeywords.EVENTS.get());
+			
+			edOnEntry.events = new ArrayList<EDEventOut>();
+
 			
 			for (EventOut eo: oe.getEventOuts())
 			{
-				g.writeStringField(eo.getPortName(),eo.getPortName());
+				EDEventOut edEventOut = new EDEventOut();
+				edEventOut.name=(eo.getPortName());
+				edOnEntry.events.add(edEventOut);
 			}
 
-			g.writeEndObject();
 
-			g.writeObjectFieldStart(SOMKeywords.TRANSITIONS.get());
+			edOnEntry.transitions = new ArrayList<EDTransition>();
 			
 			for (Transition tr: oe.getTransitions())
 			{
-				g.writeStringField(tr.getRegime(),tr.getRegime());
+				EDTransition edTransition = new EDTransition();
+				edTransition.name=(tr.getRegime());
+				edOnEntry.transitions.add(edTransition);
 			}
-
-			g.writeEndObject();
 			
-			
-			g.writeEndObject();
-			
-			g.writeEndObject();
+			onEDEntrys.add(edOnEntry);
 			
 		}
 		//g.writeEndArray();
+		return onEDEntrys;
 
 	}
 	
 
 
 
-	public static void writeTimeDerivatives(JsonGenerator g, ComponentType ct, LemsCollection<TimeDerivative> timeDerivatives
+	public static ArrayList<EDDynamic> writeTimeDerivatives( ComponentType ct, LemsCollection<TimeDerivative> timeDerivatives
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues, String regimeAddition)  throws ContentError, JsonGenerationException, IOException
 	{
+		ArrayList<EDDynamic> eddynamics = new ArrayList<EDDynamic>();
 		for (TimeDerivative td: timeDerivatives)
 		{
 			StringBuilder sensitivityList = new StringBuilder();
-			g.writeObjectFieldStart(td.getVariable());
+			EDDynamic edDynamic = new EDDynamic();
+			edDynamic.name = td.getVariable();
 			String value = VHDLEquations.encodeVariablesStyle(td.getValueExpression(),ct.getFinalParams(),
 					ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
-			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,td.getVariable(),sensitivityList,regimeAddition);
-			g.writeStringField("Dynamics", value);
+			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,edDynamic,td.getVariable(),sensitivityList,regimeAddition);
+			edDynamic.Dynamics =  value; 
 			if  (sensitivityList.length() > 0)
-				g.writeStringField("SensitivityList",sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
+				edDynamic.sensitivityList = (sensitivityList.replace(sensitivityList.length()-1, sensitivityList.length(), " ").toString());
 			else
-				g.writeStringField("SensitivityList"," ");
-			g.writeEndObject();
+				edDynamic.sensitivityList = (" ");
+			eddynamics.add(edDynamic);
 		}
-
+		return eddynamics;
 	}
 	
 	
-	public static void writeConditionList(JsonGenerator g, ComponentType ct, String ineq, StringBuilder sensitivityList, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
+	public static String writeConditionList( ComponentType ct, String ineq, StringBuilder sensitivityList, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 	    String[] conditions = ineq.split("(\\.)[andor]+(\\.)");
 	    String completeExpr ="";
@@ -131,77 +149,77 @@ public class VHDLDynamics {
 	    	}
 	    }
 
-    	g.writeStringField(SOMKeywords.CONDITION.get(), completeExpr);
+	    return completeExpr;
 
 	}
 	
-	public static void writeRegimes(JsonGenerator g, Component comp, boolean writeChildren
+	public static void writeRegimes(EDComponent edComponent, Component comp, boolean writeChildren
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues, Lems lems) throws JsonGenerationException, IOException, ContentError
 	{
 		ComponentType ct = comp.getComponentType();
 		ct.getAbout();
 		Dynamics dyn = ct.getDynamics();
+		edComponent.regimes = new ArrayList<EDRegime>();
 		if (dyn != null)
 		{
 			LemsCollection<Regime> regimes = dyn.getRegimes();
 			if (regimes != null)
 				for (Regime reg: regimes)
 				{
-					g.writeObjectFieldStart(reg.getName());
-					g.writeStringField("name",reg.getName());
+					EDRegime edRegime = new EDRegime();
+					edRegime.name=(reg.getName());
 					if (reg.isInitial())
-					g.writeStringField("default","default");
+						edRegime.isDefault=("default");
 					
-					g.writeObjectFieldStart(SOMKeywords.DYNAMICS.get());
-					writeTimeDerivatives(g, ct, reg.getTimeDerivatives(),params,combinedParameterValues,reg.getName()+"_");
-					g.writeEndObject();
+					edRegime.dynamics = writeTimeDerivatives( ct, reg.getTimeDerivatives(),params,combinedParameterValues,reg.getName()+"_");
+					
 
-					g.writeObjectFieldStart(SOMKeywords.DERIVEDPARAMETERS.get());
-					VHDLParameters.writeDerivedParameters(g, ct, ct.getDerivedParameters(),params,combinedParameterValues);
-					g.writeEndObject();
+					edRegime.derivedparameters = VHDLParameters.writeDerivedParameters(ct, ct.getDerivedParameters(),params,combinedParameterValues);
+					
 
-					g.writeArrayFieldStart(SOMKeywords.CONDITIONS.get());
-					writeConditions(g, ct,reg.getOnConditions(),params,combinedParameterValues);
-					g.writeEndArray();
+					edRegime.conditions = writeConditions( ct,reg.getOnConditions(),params,combinedParameterValues);
+					
 
-					g.writeArrayFieldStart(SOMKeywords.EVENTS.get());
-					writeEvents(g, ct, reg.getOnEvents(),params,combinedParameterValues);
-					g.writeEndArray();
+					edRegime.events = writeEvents( ct, reg.getOnEvents(),params,combinedParameterValues);
+					
 
-					g.writeArrayFieldStart(SOMKeywords.ONENTRYS.get());
-					writeEntrys(g, ct, reg.getOnEntrys(),params,combinedParameterValues);
-					g.writeEndArray();
+					edRegime.onEntrys = writeEntrys( ct, reg.getOnEntrys(),params,combinedParameterValues);
 					
 					
-					g.writeEndObject();
+					edComponent.regimes.add(edRegime);
 				}
 		}
 	}
 
-	public static void writeStateFunctions(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+	public static void writeStateFunctions(EDComponent edComponent, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
 		Dynamics dyn = ct.getDynamics();
+		edComponent.state_functions = new ArrayList<EDStateFunction>();
 		if (dyn != null)
 		for (DerivedVariable dv: dyn.getDerivedVariables())
 		{
+			EDStateFunction edStateFunction = new EDStateFunction();
+			edStateFunction.name=(dv.getName());
 			if (dv.value == null || dv.value.length()==0)
 			{
-				g.writeStringField(dv.getName(), "0");
+				edStateFunction.value = ( "0");
 			}
 			else
 			{
-				g.writeStringField(dv.getName(), dv.value);
+				edStateFunction.value=( dv.value);
 			}
+			edComponent.state_functions.add(edStateFunction);
 		}
 	}
 
-	public static void writeState(JsonGenerator g, Component comp
+	public static void writeState(EDComponent edComponent , Component comp
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
 		Dynamics dyn = ct.getDynamics();
 		StringBuilder sensitivityList = new StringBuilder();
+		edComponent.state = new ArrayList<EDState>();
 		if (dyn != null)
 		for (StateVariable sv: dyn.getStateVariables())
 		{
@@ -221,84 +239,85 @@ public class VHDLDynamics {
 					}
 				}
 			}
-			g.writeObjectFieldStart(sv.getName());
-			g.writeStringField("name",sv.getName());
-			g.writeStringField("type",sv.getDimension().getName()+"");
+			EDState edState = new EDState();
+			edState.name=(sv.getName());
+			edState.type=(sv.getDimension().getName()+"");
 			if (sv.hasExposure())
-				g.writeStringField("exposure",sv.getExposure().getName()+"");
+				edState.exposure=(sv.getExposure().getName()+"");
 
-			g.writeStringField("onstart",init+"");
-			VHDLFixedPointDimensions.writeBitLengths(g,sv.getDimension().getName());
-			
-			g.writeEndObject();
+			edState.onstart=(init+"");
+			VHDLFixedPointDimensions.writeBitLengths(edState,sv.getDimension().getName());
+
+			edComponent.state.add(edState);
 			
 		}
 	}
-	public static void writeEvents(JsonGenerator g, ComponentType ct, LemsCollection<OnEvent> onEvents
+	public static ArrayList<EDEvent> writeEvents(ComponentType ct, LemsCollection<OnEvent> onEvents
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
+		ArrayList<EDEvent> events = new ArrayList<EDEvent>();
 		for (OnEvent oc: onEvents)
 		{
-			g.writeStartObject();
+			EDEvent edEvent = new EDEvent();
 			StringBuilder sensitivityList = new StringBuilder();
 
-			g.writeStringField(SOMKeywords.NAME.get(), oc.port.replace(' ', '_').replace('.', '_'));
+			edEvent.name = ( oc.port.replace(' ', '_').replace('.', '_'));
 			
-			g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
+			//g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
 
-			g.writeObjectFieldStart(SOMKeywords.STATE.get());
+
+			edEvent.stateAssignments = new ArrayList<EDStateAssignment>();
 			
 			for (StateAssignment sa: oc.getStateAssignments())
 			{
+				EDStateAssignment edStateAssignment = new EDStateAssignment();
+				edStateAssignment.name=(sa.getVariable());
 				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 				completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 		    	
-				g.writeStringField(sa.getVariable(),completeExpr );
+				edStateAssignment.expression=(completeExpr );
+				edEvent.stateAssignments.add(edStateAssignment);
 			}
 
-			g.writeEndObject();
+
 			
 
-			g.writeObjectFieldStart(SOMKeywords.EVENTS.get());
+			edEvent.events = new ArrayList<EDEventOut>();
 			
 			for (EventOut eo: oc.getEventOuts())
 			{
-				g.writeStringField(eo.getPortName(),eo.getPortName());
+				EDEventOut edEventOut = new EDEventOut();
+				edEventOut.name=(eo.getPortName());
+				edEvent.events.add(edEventOut);
 			}
 
-			g.writeEndObject();
-
-			g.writeObjectFieldStart(SOMKeywords.TRANSITIONS.get());
+			edEvent.transitions = new ArrayList<EDTransition>();
 			
 			for (Transition tr: oc.getTransitions())
 			{
-				g.writeStringField(tr.getRegime(),tr.getRegime());
+				EDTransition edTransition = new EDTransition();
+				edTransition.name=(tr.getRegime());
+				edEvent.transitions.add(edTransition);
 			}
 
-			g.writeEndObject();
-			
-			
-			g.writeEndObject();
-			
-			g.writeEndObject();
-			
+			events.add(edEvent);
 		}
-		//g.writeEndArray();
-
+		return events;
 	}
 	
 
-	public static void writeDerivedVariables(JsonGenerator g, ComponentType ct, 
+	public static void writeDerivedVariables(EDComponent edComponent, ComponentType ct, 
 			LemsCollection<DerivedVariable> derivedVariables, Component comp
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues, Lems lems)  throws ContentError, JsonGenerationException, IOException
 	{
+		edComponent.derivedvariables = new ArrayList<EDDerivedVariable>();
 		for (DerivedVariable dv: derivedVariables)
 		{
-			g.writeObjectFieldStart(dv.getName());
-			g.writeStringField("name",dv.getName());
-			g.writeStringField("exposure",dv.getExposure() != null ? dv.getExposure().getName() : "");
+			EDDerivedVariable edDerivedVariable = new EDDerivedVariable();
+			edDerivedVariable.name = (dv.getName());
+			edDerivedVariable.exposure = (dv.getExposure() != null ? dv.getExposure().getName() : "");
 						
 			String val = dv.getValueExpression();
 			String sel = dv.getSelect();
@@ -308,9 +327,9 @@ public class VHDLDynamics {
 				String value = VHDLEquations.encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues) ;
-				value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dv.getName(),sensitivityList,"");
+				value = VHDLEquations.writeInternalExpLnLogEvaluators(value,edDerivedVariable,dv.getName(),sensitivityList,"");
 				value = value.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
-		    	g.writeStringField("value",value);
+				edDerivedVariable.value = (value);
 				
 			} else if (sel != null) {
 				String red = dv.getReduce();
@@ -371,12 +390,13 @@ public class VHDLDynamics {
 					
 					
 					
-					selval = StringUtil.join(items, op);
+					selval = iterativeReduction(items,op).get(0); //StringUtil.join(items, op);
+					
 					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
-			    	g.writeStringField("value",encodedValue);
+					edDerivedVariable.value=(encodedValue);
 					
 				}
 				else
@@ -395,81 +415,107 @@ public class VHDLDynamics {
 							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 			    	
-					g.writeStringField("value",encodedValue);
+					edDerivedVariable.value = (encodedValue);
 					
 					
 				}
 					
 			}
 
-			g.writeStringField("type",dv.getDimension().getName()+"");
-			g.writeStringField("sensitivityList",sensitivityList.length() == 0 ? "" : sensitivityList.substring(0,sensitivityList.length()-1));
-			VHDLFixedPointDimensions.writeBitLengths(g,dv.getDimension().getName());
-					
-			g.writeEndObject();
+			edDerivedVariable.type = (dv.getDimension().getName()+"");
+			edDerivedVariable.sensitivityList = (sensitivityList.length() == 0 ? "" : sensitivityList.substring(0,sensitivityList.length()-1));
+			VHDLFixedPointDimensions.writeBitLengths(edDerivedVariable,dv.getDimension().getName());
+
+			edComponent.derivedvariables.add(edDerivedVariable);
 		}
 
 	}
 	
-
-	public static void writeConditions(JsonGenerator g,ComponentType ct, LemsCollection<OnCondition> onConditions
+	
+	private static ArrayList<String> iterativeReduction(ArrayList<String> input, String reduction)
+	{
+		ArrayList<String> output = new ArrayList<String>();
+		String lastItem = input.get(0);
+		int i =1;
+		for (i = 1; i < input.size();i++)
+		{
+			if (i%2 == 1)
+			{
+				lastItem = "( " + lastItem + " " + reduction +  " " + input.get(i) + " )";
+				output.add(lastItem);
+			}
+			else
+				lastItem = input.get(i);
+		}
+		if (i%2 == 1)
+		{
+			output.add(lastItem);
+		}
+		
+		if (output.size() > 1)
+			output = iterativeReduction(output,reduction);
+		return output;		
+	}
+	
+	public static ArrayList<EDCondition> writeConditions(ComponentType ct, LemsCollection<OnCondition> onConditions
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
-		
+		ArrayList<EDCondition> conditions = new ArrayList<EDCondition>();
 		for (OnCondition oc: onConditions)
 		{
-			g.writeStartObject();
+			EDCondition edCondition = new EDCondition();
 			StringBuilder sensitivityList = new StringBuilder();
 
-			g.writeStringField(SOMKeywords.NAME.get(), oc.test.replace(' ', '_').replace('.', '_'));
+			edCondition.name =  (oc.test.replace(' ', '_').replace('.', '_'));
 			
-			writeConditionList(g, ct,oc.test,sensitivityList,params,combinedParameterValues);
+			edCondition.condition = writeConditionList(ct,oc.test,sensitivityList,params,combinedParameterValues);
 			
-			g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
+			//g.writeObjectFieldStart(SOMKeywords.EFFECT.get());
 
-			g.writeObjectFieldStart(SOMKeywords.STATE.get());
-			
+			edCondition.stateAssignment = new ArrayList<EDStateAssignment>();
 			for (StateAssignment sa: oc.getStateAssignments())
 			{
+				EDStateAssignment edStateAssignment = new EDStateAssignment();
 				String completeExpr = VHDLEquations.encodeVariablesStyle(sa.getValueExpression(),ct.getFinalParams(),
 						ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 		    	completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
-		    	
-				g.writeStringField(sa.getVariable(), completeExpr);
+
+		    	edStateAssignment.name = (sa.getVariable());
+		    	edStateAssignment.expression = ( completeExpr);
+		    	edCondition.stateAssignment.add(edStateAssignment);
 			}
-
-			g.writeEndObject();
-
-			g.writeObjectFieldStart(SOMKeywords.EVENTS.get());
+			
+			edCondition.events = new ArrayList<EDEventOut>();
 			
 			for (EventOut eo: oc.getEventOuts())
 			{
-				g.writeStringField(eo.getPortName(),eo.getPortName());
+				EDEventOut edEventOut = new EDEventOut();
+				edEventOut.name=(eo.getPortName());
+				edCondition.events.add(edEventOut);
 			}
 
-			g.writeEndObject();
 			
 
-			g.writeObjectFieldStart(SOMKeywords.TRANSITIONS.get());
+			edCondition.transitions = new ArrayList<EDTransition>();
 			
 			for (Transition tr: oc.getTransitions())
 			{
-				g.writeStringField(tr.getRegime(),tr.getRegime());
+				EDTransition edTransition = new EDTransition();
+				edTransition.name = tr.getRegime();
+				edCondition.transitions.add(edTransition);
 			}
 
-			g.writeEndObject();
 
 
 		
 			
-			g.writeEndObject();
-			g.writeStringField(SOMKeywords.SENSITIVITYLIST.toString(),sensitivityList.deleteCharAt(sensitivityList.length()-1).toString());
-				
-			g.writeEndObject();
+			//g.writeEndObject();
+			edCondition.sensitivityList = (sensitivityList.deleteCharAt(sensitivityList.length()-1).toString());
+			conditions.add(edCondition);
 			
 		}
-
+		return conditions;
 	}
 
 	
