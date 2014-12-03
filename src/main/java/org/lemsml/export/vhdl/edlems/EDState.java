@@ -5,4 +5,5 @@ public class EDState extends EDSignal{
 	public String exposure;
 	public String type;
 	public String onstart;
+	public String sensitivityList;
 }

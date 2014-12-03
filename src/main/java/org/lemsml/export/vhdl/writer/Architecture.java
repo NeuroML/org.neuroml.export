@@ -43,6 +43,7 @@ public class Architecture {
 		sb.append("---------------------------------------------------------------------\r\n" + 
 				"-- Child EDComponent Instantiations and corresponding internal variables\r\n" + 
 				"---------------------------------------------------------------------\r\n");
+		int count = 0;
 		for(Iterator<EDComponent> z = comp.Children.iterator(); z.hasNext(); ) {
 			EDComponent child = z.next(); 
 			sb.append(child.name + "_uut : " + child.name + " \r\n" + 
@@ -54,7 +55,6 @@ public class Architecture {
 			"				Component_done => " + child.name + "_Component_done,\r\n"
 			);
 
-			int count = 0;
 			for(Iterator<EDEventPort> i = child.eventports.iterator(); i.hasNext(); ) {
 			    EDEventPort item = i.next();
 			    sb.append("			eventport_" + item.direction +  "_" + item.name + " => SpikeOut(" + count +  "),\r\n"  );

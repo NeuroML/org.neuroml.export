@@ -248,7 +248,9 @@ public class VHDLEquations {
 					if (!params.hasName(fp.name))
 					{
 						params.add(fp);
-						combinedParameterValues.add(new ParamValue(fp, combinedParameterValues.getByName(param1.name).getDoubleValue() / combinedParameterValues.getByName(param2.name).getDoubleValue()));
+						combinedParameterValues.add(new ParamValue(fp, combinedParameterValues.getByName(param1.name).getDoubleValue() / 
+								combinedParameterValues.getByName(param2.name).getDoubleValue()));
+						sensitivityList.append("param_" + param1.r_dimension.getName()  + "_div_"  +param2.r_dimension.getName()  + "_" + param1.name + "_div_" + param2.name+ ",");
 					}
 				}
 			}
@@ -266,6 +268,7 @@ public class VHDLEquations {
 					{
 						params.add(fp);
 						combinedParameterValues.add(new ParamValue(fp, 1 / combinedParameterValues.getByName(param1.name).getDoubleValue()));
+						sensitivityList.append("param_" + param1.r_dimension.getName() + "_inv_" + param1.name + "_inv,");
 					}
 				}
 		}

@@ -20,6 +20,7 @@ public class MetadataWriter {
 
 		JsonFactory f = new JsonFactory();
 		StringWriter sw = new StringWriter();
+	
 		JsonGenerator g = f.createJsonGenerator(sw);
 		g.useDefaultPrettyPrinter();
 		g.writeStartObject();
@@ -27,6 +28,8 @@ public class MetadataWriter {
 		writeJSONParameters(g,neuron,"");
 		g.writeEndArray();
 		g.writeEndObject();
+		g.close();
+
 		sb.append(sw.toString());
 	}
 	
@@ -66,6 +69,8 @@ public class MetadataWriter {
 		writeJSONReadback(g,neuron,"");
 		g.writeEndArray();
 		g.writeEndObject();
+		g.close();
+
 		sb.append(sw.toString());
 	}
 	

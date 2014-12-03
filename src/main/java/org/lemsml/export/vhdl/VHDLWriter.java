@@ -319,14 +319,18 @@ public class VHDLWriter extends BaseWriter {
 						Entity.writeEDComponent(edComponent, newScript, compRef.matches("neuron_model"));
 						
 						componentScripts.put(compRef,newScript.toString());
+						if (newScript.toString().contains(": ParamExp"))
+							expUsed = true;
+						if (newScript.toString().contains(": ParamPow"))
+							powUsed = true;
 					} 
 				
 				}
-			if (expUsed || true )
+			if (expUsed )
 			{
 				componentScripts.put("ParamExp",getExpScript());
 			}
-			if (powUsed || true )
+			if (powUsed )
 			{
 				componentScripts.put("ParamPow",getPowScript());
 			}

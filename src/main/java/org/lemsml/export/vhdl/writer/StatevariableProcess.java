@@ -324,6 +324,10 @@ public class StatevariableProcess {
 
 		sensitivityList = new StringBuilder();
 		sensitivityList.append("sysparam_time_timestep,reset_model");
+		if (state.onstart != null && !state.onstart.matches("0") && sensitivityList != null && sensitivityList.length() > 0)
+		{
+			sensitivityList.append("," + state.sensitivityList);
+		}
 		int temporarySignalsRequired = 0;
 		for(Iterator<EDEvent> i = comp.events.iterator(); i.hasNext(); ) {
 			EDEvent event = i.next();
@@ -333,6 +337,7 @@ public class StatevariableProcess {
 				{
 					temporarySignalsRequired++;
 					sensitivityList.append(",eventport_in_" + event.name);
+					sensitivityList.append("," + state2.sensitivityList);
 				}					
 			}
 		}
@@ -361,6 +366,7 @@ public class StatevariableProcess {
 						{
 							temporarySignalsRequired++;
 							sensitivityList.append(",eventport_in_" + event.name);
+							sensitivityList.append("," + state2.sensitivityList);
 						}					
 					}
 				}

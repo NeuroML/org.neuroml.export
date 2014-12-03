@@ -244,10 +244,10 @@ public class VHDLDynamics {
 			edState.type=(sv.getDimension().getName()+"");
 			if (sv.hasExposure())
 				edState.exposure=(sv.getExposure().getName()+"");
-
+			edState.sensitivityList = sensitivityList.toString();
 			edState.onstart=(init+"");
 			VHDLFixedPointDimensions.writeBitLengths(edState,sv.getDimension().getName());
-
+			
 			edComponent.state.add(edState);
 			
 		}
@@ -278,6 +278,7 @@ public class VHDLDynamics {
 				completeExpr = completeExpr.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 		    	
 				edStateAssignment.expression=(completeExpr );
+				edStateAssignment.sensitivityList = sensitivityList.toString();
 				edEvent.stateAssignments.add(edStateAssignment);
 			}
 
