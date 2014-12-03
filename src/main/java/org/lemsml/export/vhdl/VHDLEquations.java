@@ -10,6 +10,10 @@ import java.util.regex.Pattern;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.export.vhdl.VHDLUtilComparator;
+import org.lemsml.export.vhdl.edlems.EDDynamic;
+import org.lemsml.export.vhdl.edlems.EDExponential;
+import org.lemsml.export.vhdl.edlems.EDPower;
+import org.lemsml.export.vhdl.edlems.EDSignalComplex;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.FinalParam;
@@ -52,16 +56,16 @@ public class VHDLEquations {
 	}
 	
 
-	public static String writeInternalExpLnLogEvaluators(String toEncode, JsonGenerator g, 
+	public static String writeInternalExpLnLogEvaluators(String toEncode, EDSignalComplex edSignalComplex, 
 			String variableName, StringBuilder sensitivityList, String regimeAddition ) throws JsonGenerationException, IOException
 	{
 		String returnValue = toEncode.replace("(", " ( ").replace(")", " ) ");
 		Pattern MY_PATTERN = Pattern.compile("exp +\\(([a-zA-Z0-9_ \\#\\$\\,\\*\\\\\\/\\+\\-\\(\\)]+)\\) ");
 		Matcher m = MY_PATTERN.matcher(returnValue);
 		int i = 1;
-		g.writeArrayFieldStart("Exponentials");
+		edSignalComplex.Exponentials = new ArrayList<EDExponential>();
 		while (m.find()) {
-			g.writeStartObject();
+			EDExponential edExponential = new EDExponential();
 		    String s = m.group(1);
 		    m.start();
 		    int openingCount = m.group().split("\\(").length -1;
@@ -82,13 +86,12 @@ public class VHDLEquations {
 		    }
 		    returnValue = returnValue.replace(groupToReplace,"exp_" + regimeAddition + variableName + "_exponential_result" + i);
 		    sensitivityList.append("exp_" + regimeAddition + variableName + "_exponential_result" + i + ",");
-		    g.writeStringField("name","exponential_result" + i); 
-			g.writeStringField("value", groupToReplace.substring(3).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
+		    edExponential.name = ("exponential_result" + i); 
+		    edExponential.value = ( groupToReplace.substring(3).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
 		    i++;
-			g.writeEndObject();
+		    edSignalComplex.Exponentials.add(edExponential);
 		    // s now contains "BAR"
 		}
-		g.writeEndArray();
 
 
 		
@@ -99,9 +102,9 @@ public class VHDLEquations {
 		MY_PATTERN = Pattern.compile("([a-zA-Z0-9_ \\#\\$\\,\\-]+) +\\*\\* +([a-zA-Z0-9_ \\#\\$\\,\\-]+) ");
 		m = MY_PATTERN.matcher(returnValue);
 		i = 1;
-		g.writeArrayFieldStart("Powers");
+		edSignalComplex.Powers = new ArrayList<EDPower>();
 		while (m.find()) {
-			g.writeStartObject();
+			EDPower edPower = new EDPower();
 		    String s = m.group(1);
 		    m.start();
 		    int openingCount = m.group().split("\\(").length -1;
@@ -122,14 +125,13 @@ public class VHDLEquations {
 		    }
 		    returnValue = returnValue.replace(groupToReplace,"pow_" + regimeAddition + variableName + "_power_result" + i);
 			sensitivityList.append("pow_" + regimeAddition+ variableName + "_power_result" + i + ",");
-		    g.writeStringField("name","power_result" + i); 
-			g.writeStringField("valueA", m.group(1).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
-			g.writeStringField("valueX", m.group(2).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
+			edPower.name = ("power_result" + i); 
+			edPower.valueA = (m.group(1).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
+			edPower.valueA = ( m.group(2).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
 		    i++;
-			g.writeEndObject();
+		    edSignalComplex.Powers.add(edPower);
 		    // s now contains "BAR"
 		}
-		g.writeEndArray();
 		
 		returnValue = returnValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 		return returnValue;
@@ -246,7 +248,9 @@ public class VHDLEquations {
 					if (!params.hasName(fp.name))
 					{
 						params.add(fp);
-						combinedParameterValues.add(new ParamValue(fp, combinedParameterValues.getByName(param1.name).getDoubleValue() / combinedParameterValues.getByName(param2.name).getDoubleValue()));
+						combinedParameterValues.add(new ParamValue(fp, combinedParameterValues.getByName(param1.name).getDoubleValue() / 
+								combinedParameterValues.getByName(param2.name).getDoubleValue()));
+						sensitivityList.append("param_" + param1.r_dimension.getName()  + "_div_"  +param2.r_dimension.getName()  + "_" + param1.name + "_div_" + param2.name+ ",");
 					}
 				}
 			}
@@ -264,6 +268,7 @@ public class VHDLEquations {
 					{
 						params.add(fp);
 						combinedParameterValues.add(new ParamValue(fp, 1 / combinedParameterValues.getByName(param1.name).getDoubleValue()));
+						sensitivityList.append("param_" + param1.r_dimension.getName() + "_inv_" + param1.name + "_inv,");
 					}
 				}
 		}

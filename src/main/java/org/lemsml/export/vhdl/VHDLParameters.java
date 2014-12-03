@@ -5,6 +5,9 @@ import java.util.ArrayList;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
+import org.lemsml.export.vhdl.edlems.EDComponent;
+import org.lemsml.export.vhdl.edlems.EDDerivedParameter;
+import org.lemsml.export.vhdl.edlems.EDParameter;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Attachments;
 import org.lemsml.jlems.core.type.Component;
@@ -18,58 +21,61 @@ import org.lemsml.jlems.core.util.StringUtil;
 
 public class VHDLParameters {
 
-	public static void writeParameters(JsonGenerator g, Component comp, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
+	public static ArrayList<EDParameter> writeParameters( Component comp, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
-
+		ArrayList<EDParameter> edParameters = new ArrayList<EDParameter>();
 		for(FinalParam p: params)
 		{
+			EDParameter edParameter = new EDParameter();
 			ParamValue pv = combinedParameterValues.getByName(p.getName());
-			g.writeObjectFieldStart(p.getName());
-			g.writeStringField("name",p.getName());
+
+			edParameter.name=(p.getName());
 			
 			if (pv != null)
 			{
-				g.writeStringField("type",pv.getDimensionName()+"");
-				g.writeStringField("value",(float)pv.getDoubleValue()+"");
-				VHDLFixedPointDimensions.writeBitLengths(g,pv.getDimensionName());
+				edParameter.type=(pv.getDimensionName()+"");
+				edParameter.value=((float)pv.getDoubleValue()+"");
+				VHDLFixedPointDimensions.writeBitLengths(edParameter,pv.getDimensionName());
 			}
 			else
 			{
 				pv = combinedParameterValues.getByName(p.getName());
-				g.writeStringField("type",pv.getDimensionName()+"");
-				g.writeStringField("value",(float)pv.getDoubleValue()+"");
-				VHDLFixedPointDimensions.writeBitLengths(g,pv.getDimensionName());
+				edParameter.type=(pv.getDimensionName()+"");
+				edParameter.value=((float)pv.getDoubleValue()+"");
+				VHDLFixedPointDimensions.writeBitLengths(edParameter,pv.getDimensionName());
 			}
-			g.writeEndObject();
+			edParameters.add(edParameter);
 		}
-		
+		return edParameters;
 
 	}
 	
 
-	public static void writeDerivedParameters(JsonGenerator g, ComponentType ct, 
+	public static ArrayList<EDDerivedParameter> writeDerivedParameters( ComponentType ct, 
 			LemsCollection<DerivedParameter> derivedParameters, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues)  throws ContentError, JsonGenerationException, IOException
 	{
+		ArrayList<EDDerivedParameter> derivedparameters = new ArrayList<EDDerivedParameter>();
 		for (DerivedParameter dp: derivedParameters)
 		{
+			EDDerivedParameter edDerivedParameter = new EDDerivedParameter();
 			StringBuilder sensitivityList = new StringBuilder();
-			g.writeObjectFieldStart(dp.getName());
-			g.writeStringField("name",dp.getName());
-			g.writeStringField("select",dp.getSelect() == null ? "" : dp.getSelect());
-			g.writeStringField("type",dp.getDimension().getName()+"");
+			edDerivedParameter.name = (dp.getName());
+			edDerivedParameter.select = (dp.getSelect() == null ? "" : dp.getSelect());
+			edDerivedParameter.type = (dp.getDimension().getName()+"");
 			String value = VHDLEquations.encodeVariablesStyle(dp.getValue(),
 					ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
 					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
 			
 
-			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,g,dp.getName(),sensitivityList,"");
+			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,edDerivedParameter,dp.getName(),sensitivityList,"");
 			value = value.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
-	    	g.writeStringField("value",	value);
-			VHDLFixedPointDimensions.writeBitLengths(g,dp.getDimension().getName());
+			edDerivedParameter.value=(value);
+			VHDLFixedPointDimensions.writeBitLengths(edDerivedParameter,dp.getDimension().getName());
 					
-			g.writeEndObject();
+			derivedparameters.add(edDerivedParameter);
 		}
+		return derivedparameters;
 	}
 	
 	
