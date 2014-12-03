@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -777,13 +775,6 @@ public class VHDLWriter extends BaseWriter {
 		//todo: this file should reflect some simulation settings
 		sb.append("onerror {resume}\r\nwave add /\r\nrun " + ( 100 + (simTime/simTimeStep) ) + " us;\r\nexit\r\n");
 		return sb.toString();
-	}
-	
-	private static String readFile(String path, Charset encoding) 
-	  throws IOException 
-	{
-	  byte[] encoded = Files.readAllBytes(Paths.get(path));
-	  return encoding.decode(ByteBuffer.wrap(encoded)).toString();
 	}
 	
 
