@@ -89,10 +89,14 @@ public class BrianWriter extends BaseWriter {
 
             addComment(sb, Utils.getHeaderComment(FORMAT));
 
-            if (!brian2)
+            String times = "times";
+            if (!brian2) {
                 sb.append("from brian import *\n\n");
-            else
+            }
+            else {
                 sb.append("from brian2 import *\n\n");
+                times = "t";
+            }
             
             sb.append("from math import *\n");
             sb.append("import sys\n\n");
@@ -173,14 +177,14 @@ public class BrianWriter extends BaseWriter {
                     String info = "\n# Saving to file: "+fileName+", reference: " + outComp.id + "\n";
                     preRunSave.append(info);
                     postRunSave.append(info);
-                    preRunSave.append("record_" + outComp.getID() + " = {}\n");
+                    //preRunSave.append("record_" + outComp.getID() + " = {}\n");
                     postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
                     
                     boolean timesAdded = false;
                     for (Component colComp : outComp.getAllChildren()) {
                         if (colComp.getTypeName().equals("OutputColumn")) {
                             
-                            String monitor = "record_" + outComp.getID() + "[\"" + colComp.getID()+"\"]";
+                            String monitor = "record_" + outComp.getID() + "__" + colComp.getID()+"";
                             String ref = colComp.getStringValue("quantity");
 
                             String pop, num, var;
@@ -203,17 +207,14 @@ public class BrianWriter extends BaseWriter {
                             preRunSave.append(monitor + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + colComp.summary() + "\n");
                             
                             if (!timesAdded) {
-                                postRunSave.append(monitor+".times, ");
+                                postRunSave.append(monitor+"."+times+", ");
                                 timesAdded = true;
                             }
                             
                             if (postRunSave.indexOf("[0]")>0)
                                 postRunSave.append(", ");
-                            postRunSave.append(monitor+"[0] ");
-                            /*
-                            postRunPlot.append("plot(" + trace + ".times/second,"
-                                    + trace + "[" + num + "], color=\""
-                                    + lineComp.getStringValue("color") + "\")\n");*/
+                            postRunSave.append(monitor+(brian2?"."+var:"")+"[0] ");
+                            
                         }
                     }
                     
@@ -242,8 +243,7 @@ public class BrianWriter extends BaseWriter {
                     postRunPlot.append("\n    # Display: " + dispComp + "\n    "+dispId+" = plt.figure(\""+ dispComp.getTextParam("title") + "\")\n");
                     for (Component lineComp : dispComp.getAllChildren()) {
                         if (lineComp.getTypeName().equals("Line")) {
-                            String trace = "trace_" + dispComp.getID() + "_"
-                                    + lineComp.getID();
+                            String trace = "trace_" + dispComp.getID() + "__" + lineComp.getID();
                             String ref = lineComp.getStringValue("quantity");
 
                             String pop, num, var;
@@ -264,13 +264,12 @@ public class BrianWriter extends BaseWriter {
                                 var = ref;
                             }
                             preRunPlot.append("    "+trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
-                            String times = brian2 ? "t " : "times";
-                            
+                                                        
                             String plotId = "plot_"+lineComp.getID();
                     
                             postRunPlot.append("    "+plotId+" = "+dispId+".add_subplot(111, autoscale_on=True)\n");
                             postRunPlot.append("    "+plotId+".plot(" + trace + "."+times+"/second,"
-                                    + trace + "[" + num + "], color=\""
+                                    + trace +(brian2?"."+var:"") + "[" + num + "], color=\""
                                     + lineComp.getStringValue("color") + "\", label=\""+lineComp.getID()+"\")\n");
                             postRunPlot.append("    "+plotId+".legend()\n");
                         }
@@ -509,11 +508,13 @@ public class BrianWriter extends BaseWriter {
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
 
         BrianWriter bw = new BrianWriter(lems);
+        
+        bw.setBrian2(true);
 
         String br = bw.getMainScript();
 
 
-        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian.py"));
+        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian"+(bw.brian2?"2":"")+".py"));
         System.out.println("Writing to: "+brFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(br, brFile);
