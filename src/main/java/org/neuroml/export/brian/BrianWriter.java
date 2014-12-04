@@ -365,7 +365,7 @@ public class BrianWriter extends BaseWriter {
 			ArrayList<String> stateVars, String prefix) throws ContentError,
 			ParseError {
 
-        ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
+        ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
 
         ComponentType ctFlat;
         Component cpFlat;
