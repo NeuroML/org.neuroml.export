@@ -1,0 +1,24 @@
+#######################################################################
+## Template for generating DNSim code from a dLEMS description       ##
+## This is work in progress, expect substantial changes              ##
+#######################################################################
+
+% Parameters
+#foreach ($p in $parameters.keySet())##
+$p = [$parameters.get($p)]
+#end
+
+% State functions
+#foreach ($sf in $state_functions.keySet())##
+$sf(?) = $state_functions.get($sf)
+#end
+
+% Time derivatives
+#foreach ($dyn in $dynamics.keySet())##
+$dyn' = $dynamics.get($dyn);
+#end##
+
+% Initial states
+#foreach ($s in $state.keySet())
+$s(0) = [$state.get($s)]
+#end

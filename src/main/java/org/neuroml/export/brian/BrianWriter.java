@@ -176,6 +176,7 @@ public class BrianWriter extends BaseWriter {
                     preRunSave.append("record_" + outComp.getID() + " = {}\n");
                     postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
                     
+                    boolean timesAdded = false;
                     for (Component colComp : outComp.getAllChildren()) {
                         if (colComp.getTypeName().equals("OutputColumn")) {
                             
@@ -201,6 +202,11 @@ public class BrianWriter extends BaseWriter {
                             }
                             preRunSave.append(monitor + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + colComp.summary() + "\n");
                             
+                            if (!timesAdded) {
+                                postRunSave.append(monitor+".times, ");
+                                timesAdded = true;
+                            }
+                            
                             if (postRunSave.indexOf("[0]")>0)
                                 postRunSave.append(", ");
                             postRunSave.append(monitor+"[0] ");
@@ -217,7 +223,7 @@ public class BrianWriter extends BaseWriter {
                     postRunSave.append("for l in all_"+outComp.id+":\n");
                     postRunSave.append("    line = ''\n");
                     postRunSave.append("    for c in l: \n");
-                    postRunSave.append("        line = line + (', %f'%c if len(line)>0 else '%f'%c)\n");
+                    postRunSave.append("        line = line + (' %f'%c if len(line)>0 else '%f'%c)\n");
                     postRunSave.append("    file_"+outComp.id+".write(line+'\\n')\n");
                     postRunSave.append("file_"+outComp.id+".close()\n");
                 }

@@ -109,14 +109,14 @@ public class NeuronWriter extends BaseWriter {
     
     
     
-    public static void exportToNeuron(File lemsFile, boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException {
+    public static ArrayList<File> export(File lemsFile, boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException {
         
         Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
         File nrnFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
         NeuronWriter nw = new NeuronWriter(lems);
         nw.nogui = nogui;
-        nw.generateMainScriptAndMods(nrnFile);
+        ArrayList<File> files = nw.generateMainScriptAndMods(nrnFile);
         
         if (run) {
             E.info("Trying to compile mods in: " + lemsFile.getParentFile());
@@ -150,7 +150,7 @@ public class NeuronWriter extends BaseWriter {
                 E.info("Problem executing Neuron " + e);
             }
         }
-        
+        return files;
     }
 
 	@Override
@@ -2230,15 +2230,9 @@ public class NeuronWriter extends BaseWriter {
         String testScript = "";
 
         for (File lemsFile : lemsFiles) {
-            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-            File mainFile = new File(lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
-
-            NeuronWriter.exportToNeuron(lemsFile, false, false);
-
-            nw = new NeuronWriter(lems);
 
             //nw.setNoGui(true);
-            ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
+            ArrayList<File> ff = NeuronWriter.export(lemsFile, false, false);
             for (File f : ff) {
                 System.out.println("Generated: " + f.getAbsolutePath());
             }
