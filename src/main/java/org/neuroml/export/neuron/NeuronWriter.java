@@ -582,6 +582,11 @@ public class NeuronWriter extends BaseWriter {
 
 		}
 
+		ArrayList<Component> synapticConnections = targetComp.getChildrenAL("synapticConnection");
+		synapticConnections.addAll(targetComp.getChildrenAL("synapticConnectionWD"));
+
+//		for (Component projection : projections) {
+
 		ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
 
 		for (Component inputList : inputLists) {
