@@ -56,13 +56,13 @@ public class StatevariableProcess {
 					{
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
-							sb.append("pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ,20, -20);" );
+							sb.append("pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 							
 						}
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
-							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ,20, -20);" );
-							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ,20, -20);" );
+							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 							
 						}
 					}
@@ -74,13 +74,13 @@ public class StatevariableProcess {
 				{
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
-						sb.append("pre_exp_noregime_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ,20, -20);" );
+						sb.append("pre_exp_noregime_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 						
 					}
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
-						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ,20, -20);" );
-						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ,20, -20);" );
+						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 						
 					}
 				}
@@ -109,7 +109,7 @@ public class StatevariableProcess {
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
 							sb.append("if rst  = '1' then\r\n" + 
-									"							pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= to_sfixed(0,20, -20);\r\n" + 
+									"							pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
 									"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 									"							if subprocess_all_ready = '1' then\r\n" + 
 									"								pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
@@ -120,8 +120,8 @@ public class StatevariableProcess {
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
 							sb.append("if rst  = '1' then\r\n" + 
-									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= to_sfixed(0,20, -20);\r\n" + 
-									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= to_sfixed(0,20, -20);\r\n" + 
+									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 									"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 									"							if subprocess_all_ready = '1' then\r\n" + 
 									"								pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
@@ -139,7 +139,7 @@ public class StatevariableProcess {
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
 						sb.append("if rst  = '1' then\r\n" + 
-								"							pre_exp_noregime_" + state.name + "_" + exponential.name + " <= to_sfixed(0,20, -20);\r\n" + 
+								"							pre_exp_noregime_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
 								"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 								"							if subprocess_all_ready = '1' then\r\n" + 
 								"								pre_exp_noregime_" + state.name + "_" + exponential.name + " <= pre_exp_noregime_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
@@ -149,8 +149,8 @@ public class StatevariableProcess {
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
 						sb.append("if rst  = '1' then\r\n" + 
-								"							pre_pow_noregime_" + state.name + "_" + power.name + "_A <= to_sfixed(0,20, -20);\r\n" + 
-								"							pre_pow_noregime_" + state.name + "_" + power.name + "_X <= to_sfixed(0,20, -20);\r\n" + 
+								"							pre_pow_noregime_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+								"							pre_pow_noregime_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 								"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 								"							if subprocess_all_ready = '1' then\r\n" + 
 								"								pre_pow_noregime_" + state.name + "_" + power.name + "_A <= pre_pow_noregime_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
@@ -181,7 +181,12 @@ public class StatevariableProcess {
 					{
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
-							sb.append("ParamExp_" + regime.name + "_" + state.name + "_" + exponential.name + " : ParamExp \r\n" + 
+							sb.append("ParamExp_" + regime.name + "_" + state.name + "_" + exponential.name + " : ParamExp \r\n"+ 
+									"	generic map( \r\n" + 
+									"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+									"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+									"		)\r\n" + 
+									" " +  
 									"						port map (	clk => clk,\r\n" + 
 									"									rst => rst,\r\n" + 
 									"									Start => step_once_go,\r\n" + 
@@ -194,6 +199,11 @@ public class StatevariableProcess {
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
 							sb.append("ParamPow_" + regime.name + "_" + state.name + "_" + power.name + " : ParamPow \r\n" + 
+									"	generic map( \r\n" + 
+									"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
+									"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+									"		)\r\n" + 
+									" " + 
 									"						port map (	clk => clk,\r\n" + 
 									"									rst => rst,\r\n" + 
 									"									Start => step_once_go,\r\n" + 
@@ -214,6 +224,11 @@ public class StatevariableProcess {
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
 						sb.append("ParamExp_noregime_" + state.name + "_" + exponential.name + " : ParamExp \r\n" + 
+								"	generic map( \r\n" + 
+								"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+								"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+								"		)\r\n" + 
+								" " + 
 								"						port map (	clk => clk,\r\n" + 
 								"									rst => rst,\r\n" + 
 								"									Start => step_once_go,\r\n" + 
@@ -226,6 +241,11 @@ public class StatevariableProcess {
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
 						sb.append("ParamPow_noregime_" + state.name + "_" + power.name + " : ParamPow \r\n" + 
+								"	generic map( \r\n" + 
+								"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
+								"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+								"		)\r\n" + 
+								" " + 
 								"						port map (	clk => clk,\r\n" + 
 								"									rst => rst,\r\n" + 
 								"									Start => step_once_go,\r\n" + 

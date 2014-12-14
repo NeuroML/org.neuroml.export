@@ -1,6 +1,6 @@
 package org.lemsml.export.vhdl.edlems;
 
-public class EDPower {
+public class EDPower extends EDSignal {
 
 	public String name;
 	public String valueA;

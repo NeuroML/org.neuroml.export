@@ -42,13 +42,13 @@ public class DerivedVariableProcess {
 			EDDerivedVariable derivedvariable = j.next(); 
 			for(Iterator<EDExponential> k = derivedvariable.Exponentials.iterator(); k.hasNext(); ) {
 				EDExponential exponential = k.next();
-				sb.append("pre_exp_" + derivedvariable.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ,20, -20);" );
+				sb.append("pre_exp_" + derivedvariable.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 				
 			}
 			for(Iterator<EDPower> k = derivedvariable.Powers.iterator(); k.hasNext(); ) {
 				EDPower power = k.next();
-				sb.append("pre_pow_" + derivedvariable.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ,20, -20);" );
-				sb.append("pre_pow_" + derivedvariable.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ,20, -20);" );
+				sb.append("pre_pow_" + derivedvariable.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+				sb.append("pre_pow_" + derivedvariable.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 				
 			}
 
@@ -59,13 +59,13 @@ public class DerivedVariableProcess {
 				EDCase thisEDCase = l.next(); 
 				for(Iterator<EDExponential> k = thisEDCase.Exponentials.iterator(); k.hasNext(); ) {
 					EDExponential exponential = k.next();
-					sb.append("pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ,20, -20);" );
+					sb.append("pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 					
 				}
 				for(Iterator<EDPower> k = thisEDCase.Powers.iterator(); k.hasNext(); ) {
 					EDPower power = k.next();
-					sb.append("pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ,20, -20);" );
-					sb.append("pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ,20, -20);" );
+					sb.append("pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+					sb.append("pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 					
 				}
 			}
@@ -84,7 +84,7 @@ public class DerivedVariableProcess {
 				EDExponential exponential = k.next();
 				sb.append("\r\n" + 
 						"	if rst  = '1' then\r\n" + 
-						"	pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= to_sfixed(0,20, -20);\r\n" + 
+						"	pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
 						"	elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 						"		if subprocess_all_ready = '1' then\r\n" + 
 						"			pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= pre_exp_" + derivedvariable.name + "_" + exponential.name + "_next;\r\n" + 
@@ -96,8 +96,8 @@ public class DerivedVariableProcess {
 			for(Iterator<EDPower> k = derivedvariable.Powers.iterator(); k.hasNext(); ) {
 				EDPower power = k.next();
 				sb.append("if rst  = '1' then\r\n" + 
-						"					pre_pow_" + derivedvariable.name + "_" + power.name + "_A <= to_sfixed(0,20, -20);\r\n" + 
-						"					pre_pow_" + derivedvariable.name + "_" + power.name + "_X <= to_sfixed(0,20, -20);\r\n" + 
+						"					pre_pow_" + derivedvariable.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+						"					pre_pow_" + derivedvariable.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 						"				elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 						"					if subprocess_all_ready = '1' then\r\n" + 
 						"						pre_pow_" + derivedvariable.name + "_" + power.name + "_A <= pre_pow_" + derivedvariable.name + "_" + power.name + "_A_next ;\r\n" + 
@@ -115,7 +115,7 @@ public class DerivedVariableProcess {
 					EDExponential exponential = k.next();
 					sb.append("\r\n" + 
 							"	if rst  = '1' then\r\n" + 
-							"	pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " <= to_sfixed(0,20, -20);\r\n" + 
+							"	pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
 							"	elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 							"		if subprocess_all_ready = '1' then\r\n" + 
 							"			pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " <= pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + "_next;\r\n" + 
@@ -126,8 +126,8 @@ public class DerivedVariableProcess {
 				for(Iterator<EDPower> k = thisEDCase.Powers.iterator(); k.hasNext(); ) {
 					EDPower power = k.next();
 					sb.append("if rst  = '1' then\r\n" + 
-							"					pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A  <= to_sfixed(0,20, -20);\r\n" + 
-							"					pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X <= to_sfixed(0,20, -20);\r\n" + 
+							"					pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A  <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+							"					pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 							"				elsif (clk'EVENT AND clk = '1') then	\r\n" + 
 							"					if subprocess_all_ready = '1' then\r\n" + 
 							"						pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A <= pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A_next ;\r\n" + 
@@ -148,6 +148,11 @@ public class DerivedVariableProcess {
 				EDExponential exponential = k.next();
 				sb.append("\r\n" + 
 						"	ParamExp_" + derivedvariable.name + "_" + exponential.name + " : ParamExp \r\n" + 
+								"	generic map( \r\n" + 
+								"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+								"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+								"		)\r\n" + 
+								" " + 
 						"    port map (	clk => clk,\r\n" + 
 						"				rst => rst,\r\n" + 
 						"				Start => step_once_go,\r\n" + 
@@ -161,12 +166,17 @@ public class DerivedVariableProcess {
 			for(Iterator<EDPower> k = derivedvariable.Powers.iterator(); k.hasNext(); ) {
 				EDPower power = k.next();
 				sb.append("	ParamPow_" + derivedvariable.name + "_" + power.name + " : ParamPow \r\n" + 
+						"	generic map( \r\n" + 
+						"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
+						"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+						"		)\r\n" + 
+						" " +
 						"    port map (	clk => clk,\r\n" + 
 						"				rst => rst,\r\n" + 
 						"				Start => step_once_go,\r\n" + 
 						"				Done => subprocess_der_int_ready,\r\n" + 
 						"				X => pre_pow_" + derivedvariable.name + "_" + power.name + "_X ,\r\n" + 
-						"				A => pre_pow_" + derivedvariable.name + "_" + power.name + "_X ,\r\n" + 
+						"				A => pre_pow_" + derivedvariable.name + "_" + power.name + "_A ,\r\n" + 
 						"				Output => pow_" + derivedvariable.name + "_" + power.name + "\r\n" + 
 						"				);\r\n" );
 				count_der_int ++;
@@ -181,6 +191,11 @@ public class DerivedVariableProcess {
 					EDExponential exponential = k.next();
 					sb.append("\r\n" + 
 							"	ParamExp_" + thisEDCase.name + "_" + exponential.name + " : ParamExp \r\n" + 
+							"	generic map( \r\n" + 
+							"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+							"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+							"		)\r\n" + 
+							" " + 
 							"    port map (	clk => clk,\r\n" + 
 							"				rst => rst,\r\n" + 
 							"				Start => step_once_go,\r\n" + 
@@ -194,12 +209,17 @@ public class DerivedVariableProcess {
 				for(Iterator<EDPower> k = thisEDCase.Powers.iterator(); k.hasNext(); ) {
 					EDPower power = k.next();
 					sb.append("	ParamPow_" + thisEDCase.name + "_" + power.name + " : ParamPow \r\n" + 
+							"	generic map( \r\n" + 
+							"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
+							"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+							"		)\r\n" + 
+							" " + 
 							"    port map (	clk => clk,\r\n" + 
 							"				rst => rst,\r\n" + 
 							"				Start => step_once_go,\r\n" + 
 							"				Done => subprocess_der_int_ready,\r\n" + 
 							"				X => pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X ,\r\n" + 
-							"				A => pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X ,\r\n" + 
+							"				A => pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A ,\r\n" + 
 							"				Output => pow_" + conditionalderivedvariable.name + "_" + power.name + "\r\n" + 
 							"				);\r\n" );
 					count_der_int ++;
@@ -223,7 +243,7 @@ public class DerivedVariableProcess {
 			for(Iterator<EDCase> l = conditionalderivedvariable.cases.iterator(); l.hasNext(); ) {
 				EDCase thisEDCase = l.next(); 
 				sb.append("\r\n\r\nif " + thisEDCase.condition + " then\r\n" + 
-					"derivedvariable_" + conditionalderivedvariable.type +  "_" + conditionalderivedvariable.name + "_next <= resize((" + thisEDCase.value.replaceAll("(derivedvariable_[a-zA-Z0-9_]+)", "derivedvariable_$1_next") + ")," + conditionalderivedvariable.integer + "," + conditionalderivedvariable.fraction + ");\r\n" + 
+					"derivedvariable_" + conditionalderivedvariable.type +  "_" + conditionalderivedvariable.name + "_next <= resize((" + thisEDCase.value.replaceAll("(derivedvariable_[a-zA-Z0-9_]+)", "$1_next") + ")," + conditionalderivedvariable.integer + "," + conditionalderivedvariable.fraction + ");\r\n" + 
 				"end if;\r\n");
 			}
 		}

@@ -27,7 +27,7 @@ public class Architecture {
 				"---------------------------------------------------------------------\r\n" + 
 				"\r\n" + 
 				"begin\r\n");
-		if (comp.name.contains("neuron_model"))
+		if (false && comp.name.contains("neuron_model"))
 		{
 			sb.append("dut : ParamMux\r\n" + 
 					"	generic map (\r\n" + 
@@ -56,8 +56,8 @@ public class Architecture {
 			);
 
 			for(Iterator<EDEventPort> i = child.eventports.iterator(); i.hasNext(); ) {
-			    EDEventPort item = i.next();
-			    sb.append("			eventport_" + item.direction +  "_" + item.name + " => SpikeOut(" + count +  "),\r\n"  );
+			    EDEventPort item = i.next(); //TODO change EventPort_in_spike_aggregate back to SpikeOut
+			    sb.append("			eventport_" + item.direction +  "_" + item.name + " => EventPort_in_spike_aggregate(" + count +  "),\r\n"  );
 			    count++;
 			}
 			writeEDComponentMap(child,sb,"",child,comp.state);
@@ -69,15 +69,26 @@ public class Architecture {
 				EDExposure EDExposure = i.next(); 
 				sb.append("Exposure_" + EDExposure.type +  "_" + child.name + "_" + EDExposure.name + " <= Exposure_" + EDExposure.type +  "_" + child.name + "_" + EDExposure.name + "_internal;\r\n");
 			}
-			for(Iterator<EDState> i = child.state.iterator(); i.hasNext(); ) {
-				EDState state = i.next(); 
-				sb.append("statevariable_" + state.type +  "_" + child.name + "_"  + state.name + "_out <= statevariable_" + state.type +  "_"+ child.name + "_"  + state.name + "_out_int;"  );
-				sb.append("statevariable_" + state.type +  "_"+ child.name + "_"  + state.name + "_in_int <= statevariable_" + state.type +  "_" + child.name + "_" + state.name + "_in;");
-			}	 
+			writeStateVariableOutputs(child,sb,child.name + "_");
 			
 		}
 	}
 	
+	private static void writeStateVariableOutputs(EDComponent child, StringBuilder sb, String prependName)
+	{
+		for(Iterator<EDState> i = child.state.iterator(); i.hasNext(); ) {
+			EDState state = i.next(); 
+			sb.append("statevariable_" + state.type +  "_" + prependName  + state.name + "_out <= statevariable_" + state.type +  "_"+ prependName + state.name + "_out_int;"  );
+			sb.append("statevariable_" + state.type +  "_"+ prependName  + state.name + "_in_int <= statevariable_" + state.type +  "_" + prependName + state.name + "_in;");
+		}
+
+		for(Iterator<EDComponent> i = child.Children.iterator(); i.hasNext(); ) {
+			EDComponent item = i.next(); 
+			String newName = prependName  + item.name + "_";
+			writeStateVariableOutputs(item, sb, newName);
+		}
+		
+	}
 
 	private static void writeEDComponentMap(EDComponent comp, StringBuilder sb, String name,EDComponent parent, List<EDState> states)
 	{
@@ -206,7 +217,7 @@ public class Architecture {
 					"constant cNOutputs		: integer := 512;	-- The number of Synapses in the neuron model.\r\n" + 
 					"constant cNSelectBits	: integer := 9;		-- Log2(NOutputs), rounded up.\r\n" + 
 					"\r\n" + 
-					"component ParamMux\r\n" + 
+					/*"component ParamMux\r\n" + 
 					"	generic( \r\n" + 
 					"		NSpikeSources 	: integer := 512;	-- The number of spike sources.\r\n" + 
 					"		NOutputs		: integer := 512;	-- The number of Synapses in the neuron model.\r\n" + 
@@ -216,7 +227,7 @@ public class Architecture {
 					"		SelectIn		: In  Std_logic_vector((NOutputs*NSelectBits)-1 downto 0);\r\n" + 
 					"		SpikeOut		: Out Std_logic_vector((NOutputs-1) downto 0));\r\n" + 
 					"end component;\r\n" + 
-					"signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);\r\n" + 
+					*/"signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);\r\n" + 
 					"\r\n");
 		
 		boolean expExists = false;
@@ -325,26 +336,32 @@ public class Architecture {
 		
 		if (expExists)
 			sb.append("Component ParamExp is\r\n" + 
+					"	generic( \r\n" + 
+					"		BIT_TOP 	: integer := 20;	\r\n" + 
+					"		BIT_BOTTOM	: integer := -20);	\r\n" + 
 					"	port(\r\n" + 
 					"		clk		: In  Std_logic;\r\n" + 
 					"		rst		: In  Std_logic;\r\n" + 
 					"		Start	: In  Std_logic;\r\n" + 
 					"		Done	: Out  Std_logic;\r\n" + 
-					"		X		: In sfixed(20 downto -20);\r\n" + 
-					"		Output	: Out sfixed(20 downto -20)\r\n" + 
+					"		X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"		Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
 					"		);\r\n" + 
 					"end Component;\r\n");
 		
 		if (powExists)
 			sb.append("Component ParamPow is\r\n" + 
+					" generic( \r\n" + 
+					"		BIT_TOP 	: integer := 11;	\r\n" + 
+					"		BIT_BOTTOM	: integer := -12);\r\n	" +
 					"	port(\r\n" + 
 					"		clk		: In  Std_logic;\r\n" + 
 					"		rst		: In  Std_logic;\r\n" + 
 					"		Start	: In  Std_logic;\r\n" + 
 					"		Done	: Out  Std_logic;\r\n" + 
-					"		X		: In sfixed(20 downto -20);\r\n" + 
-					"		A		: In sfixed(20 downto -20);\r\n" + 
-					"		Output	: Out sfixed(20 downto -20)\r\n" + 
+					"		X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"		A		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"		Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
 					"		);\r\n" + 
 					"end Component; \r\n");
 		
@@ -486,18 +503,18 @@ public class Architecture {
 	
 	private static void writeEDPowerSignals(StringBuilder sb, String name, EDPower EDPower)
 	{
-		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_A : sfixed(20 downto -20);\r\n");
-		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_A_next : sfixed(20 downto -20);\r\n");
-		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_X : sfixed(20 downto -20);\r\n");
-		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_X_next : sfixed(20 downto -20);\r\n");
-		sb.append("signal pow_" + name + "_" + EDPower.name + " : sfixed(20 downto -20);\r\n");
+		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_A : sfixed(" + EDPower.integer+" downto " + EDPower.fraction +");\r\n");
+		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_A_next : sfixed(" + EDPower.integer+" downto " + EDPower.fraction +");\r\n");
+		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_X : sfixed(" + EDPower.integer+" downto " + EDPower.fraction +");\r\n");
+		sb.append("signal pre_pow_" + name + "_" + EDPower.name + "_X_next : sfixed(" + EDPower.integer+" downto " + EDPower.fraction +");\r\n");
+		sb.append("signal pow_" + name + "_" + EDPower.name + " : sfixed(" + EDPower.integer+" downto " + EDPower.fraction +");\r\n");
 	}
 	
 	private static void writeEDExponentialSignals(StringBuilder sb, String name, EDExponential EDExponential )
 	{
-		sb.append("signal pre_exp_" + name + "_" + EDExponential.name + " : sfixed(20 downto -20);\r\n"  );
-		sb.append("signal pre_exp_" + name + "_" + EDExponential.name + "_next : sfixed(20 downto -20);\r\n"  );
-		sb.append("signal exp_" + name + "_" +  EDExponential.name + " : sfixed(20 downto -20);\r\n");						
+		sb.append("signal pre_exp_" + name + "_" + EDExponential.name + " : sfixed(" + EDExponential.integer+" downto " + EDExponential.fraction +");\r\n");
+		sb.append("signal pre_exp_" + name + "_" + EDExponential.name + "_next : sfixed(" + EDExponential.integer+" downto " + EDExponential.fraction +");\r\n");
+		sb.append("signal exp_" + name + "_" +  EDExponential.name + " : sfixed(" + EDExponential.integer+" downto " + EDExponential.fraction +");\r\n");				
 	
 	}
 }

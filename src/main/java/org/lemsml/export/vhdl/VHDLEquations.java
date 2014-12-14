@@ -88,7 +88,9 @@ public class VHDLEquations {
 		    sensitivityList.append("exp_" + regimeAddition + variableName + "_exponential_result" + i + ",");
 		    edExponential.name = ("exponential_result" + i); 
 		    edExponential.value = ( groupToReplace.substring(3).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
-		    i++;
+		    edExponential.integer = VHDLFixedPointDimensions.getBitLengthInteger("none");
+		    edExponential.fraction = VHDLFixedPointDimensions.getBitLengthFraction("none");
+			i++;
 		    edSignalComplex.Exponentials.add(edExponential);
 		    // s now contains "BAR"
 		}
@@ -127,8 +129,10 @@ public class VHDLEquations {
 			sensitivityList.append("pow_" + regimeAddition+ variableName + "_power_result" + i + ",");
 			edPower.name = ("power_result" + i); 
 			edPower.valueA = (m.group(1).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
-			edPower.valueA = ( m.group(2).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
-		    i++;
+			edPower.valueX = ( m.group(2).replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ") ); 
+		    edPower.integer = VHDLFixedPointDimensions.getBitLengthInteger("none");
+		    edPower.fraction = VHDLFixedPointDimensions.getBitLengthFraction("none");
+			i++;
 		    edSignalComplex.Powers.add(edPower);
 		    // s now contains "BAR"
 		}

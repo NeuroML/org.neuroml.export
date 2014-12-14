@@ -12,14 +12,17 @@ end parampow_tb;
 architecture tb of parampow_tb is
 
 component ParamPow is
+	generic( 
+		BIT_TOP 	: integer := 11;	
+		BIT_BOTTOM	: integer := -12);	
 	port(
 		clk		: In  Std_logic;
 		rst		: In  Std_logic;
 		Start	: In  Std_logic;
 		Done	: Out  Std_logic;
-		X		: In sfixed(11 downto -12);
-		A		: In sfixed(11 downto -12);
-		Output	: Out sfixed(11 downto -12)
+		A		: In sfixed(BIT_TOP downto BIT_BOTTOM);
+		X		: In sfixed(BIT_TOP downto BIT_BOTTOM);
+		Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)
 		);
 end component; 
 signal clk 			: std_logic := '0';
@@ -34,6 +37,10 @@ begin
 
 	
 	ParamPow_uut : ParamPow
+	generic map( 
+		BIT_TOP 	=>  11,
+		BIT_BOTTOM	=> -12
+		)
     port map (	clk => clk,
 				rst => rst,
 				Start => Start,
@@ -55,7 +62,7 @@ begin
 	process (Done) 
 	begin
 		if Done'event and Done = '1' then
-			report "The value of 'output' is " & to_string(Output);
+			report "The value of  " & real'image(to_real(A)) & "^" & real'image(to_real(X))& " = " & real'image(to_real(Output));
 		end if;
 	end process;
 		
@@ -96,3 +103,4 @@ begin
     end process;
 	
 end tb;
+

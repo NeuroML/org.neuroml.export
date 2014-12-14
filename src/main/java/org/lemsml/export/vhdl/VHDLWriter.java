@@ -332,7 +332,7 @@ public class VHDLWriter extends BaseWriter {
 			{
 				componentScripts.put("ParamPow",getPowScript());
 			}
-			componentScripts.put("ParamMux",getMuxScript());
+			//componentScripts.put("ParamMux",getMuxScript());
 			componentScripts.put("top_synth",getSimulationScript(ScriptType.SYNTH_TOP));
 			
 		}
