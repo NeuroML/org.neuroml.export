@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import org.apache.velocity.Template;
@@ -582,10 +583,85 @@ public class NeuronWriter extends BaseWriter {
 
 		}
 
-		ArrayList<Component> synapticConnections = targetComp.getChildrenAL("synapticConnection");
-		synapticConnections.addAll(targetComp.getChildrenAL("synapticConnectionWD"));
 
-//		for (Component projection : projections) {
+		/* <synapticConnection> and <synapticConnectionWD> elements */
+		ArrayList<Component> synapticConnections = targetComp.getChildrenAL("synapticConnections");
+		synapticConnections.addAll(targetComp.getChildrenAL("synapticConnectionWDs"));
+
+		/* First, group connections by synapse type */
+		HashMap<String, ArrayList<Component>> connectionsByType = new HashMap<String, ArrayList<Component>>();
+		for (Component connection : synapticConnections) {
+			String synType = connection.getStringValue("synapse");
+			if (connectionsByType.containsKey(synType) == false) {
+				connectionsByType.put(synType, new ArrayList<Component>());
+			}
+			connectionsByType.get(synType).add(connection);
+		}
+
+		for (Map.Entry<String, ArrayList<Component>> entry : connectionsByType.entrySet()) {
+			String synType = entry.getKey();
+			ArrayList<Component> connections = entry.getValue();
+
+			Component synapseComp = lems.getComponent(synType);
+
+			/* Generate a .mod file for the synapse type (if one doesn't already exist) */
+			String mod = generateModFile(synapseComp);
+			dumpModToFile(synapseComp, mod);
+
+			/* Array of synapses of this type */
+			String synArrayName = String.format("synapses_%s", synType);
+			main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synArrayName, connections.size()));
+
+			for (int i = 0; i < connections.size(); i++) {
+				Component connection = connections.get(i);
+
+				String fromRef = connection.getStringValue("from");
+				int fromCellId = Utils.parseCellRefStringForCellNum(fromRef);
+				String fromPop = Utils.parseCellRefStringForPopulation(fromRef);
+				Cell fromCell = compIdsVsCells.get(popIdsVsCellIds.get(fromPop));
+				String fromSecName;
+				if (fromCell!=null) {
+					fromSecName = String.format("a_%s[%s].%s", fromPop, fromCellId, getNrnSectionName(fromCell, fromCell.getMorphology().getSegment().get(0)));
+				} else {
+					fromSecName = fromPop+"["+fromCellId+"]";
+				}
+
+				String toRef = connection.getStringValue("to");
+				int toCellId = Utils.parseCellRefStringForCellNum(toRef);
+				String toPop = Utils.parseCellRefStringForPopulation(toRef);
+				Cell toCell = compIdsVsCells.get(popIdsVsCellIds.get(toPop));
+				String toSecName;
+				if (toCell!=null) {
+					toSecName = String.format("a_%s[%s].%s", toPop, toCellId, getNrnSectionName(toCell, toCell.getMorphology().getSegment().get(0)));
+				} else {
+					toSecName = toPop+"["+toCellId+"]";
+				}
+
+				main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n",
+										  toSecName, synArrayName,
+										  i, synType, 0.5));
+                    
+				float delay = connection.hasParam("delay") ? (float)connection.getParamValue("delay").getDoubleValue()*1000 : 0.0f;
+				float weight = connection.hasParam("weight") ? (float)connection.getParamValue("weight").getDoubleValue() : 1.0f;
+
+				if (toCell!=null) {
+					main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, %f, %f))\")\n\n",
+											  fromSecName, toPop, toCellId, 0.5, synArrayName, i, delay, weight));
+				} else {
+					Component fromComp = popIdsVsComps.get(fromPop);
+					float threshold = 0;
+					if (fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+						fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) {
+						threshold = convertToNeuronUnits(fromComp.getStringValue("thresh"));
+					}
+					main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synArrayName, i));
+					main.append(String.format("h(\"%s nc_%s_%d = new NetCon(&v(%f), %s[%d], %f, %f, %f)\")  \n\n",
+											  fromSecName, synArrayName, i, 0.5, synArrayName,
+											  i, threshold, delay, weight));
+				}
+
+			}
+		}
 
 		ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
 
