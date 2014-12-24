@@ -243,7 +243,7 @@ public class DerivedVariableProcess {
 			for(Iterator<EDCase> l = conditionalderivedvariable.cases.iterator(); l.hasNext(); ) {
 				EDCase thisEDCase = l.next(); 
 				sb.append("\r\n\r\nif " + thisEDCase.condition + " then\r\n" + 
-					"derivedvariable_" + conditionalderivedvariable.type +  "_" + conditionalderivedvariable.name + "_next <= resize((" + thisEDCase.value.replaceAll("(derivedvariable_[a-zA-Z0-9_]+)", "$1_next") + ")," + conditionalderivedvariable.integer + "," + conditionalderivedvariable.fraction + ");\r\n" + 
+					"derivedvariable_" + conditionalderivedvariable.type +  "_" + conditionalderivedvariable.name + "_next <= resize((" + thisEDCase.value + ")," + conditionalderivedvariable.integer + "," + conditionalderivedvariable.fraction + ");\r\n" + 
 				"end if;\r\n");
 			}
 		}

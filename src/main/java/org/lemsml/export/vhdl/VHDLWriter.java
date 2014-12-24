@@ -38,16 +38,24 @@ import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.export.vhdl.edlems.EDCase;
 import org.lemsml.export.vhdl.edlems.EDComponent;
+import org.lemsml.export.vhdl.edlems.EDCondition;
 import org.lemsml.export.vhdl.edlems.EDConditionalDerivedVariable;
+import org.lemsml.export.vhdl.edlems.EDDerivedVariable;
 import org.lemsml.export.vhdl.edlems.EDDisplay;
+import org.lemsml.export.vhdl.edlems.EDDynamic;
+import org.lemsml.export.vhdl.edlems.EDEvent;
 import org.lemsml.export.vhdl.edlems.EDEventConnection;
 import org.lemsml.export.vhdl.edlems.EDEventConnectionItem;
 import org.lemsml.export.vhdl.edlems.EDEventPort;
-import org.lemsml.export.vhdl.edlems.EDExposure;
+import org.lemsml.export.vhdl.edlems.EDExponential;
+//import org.lemsml.export.vhdl.edlems.EDExposure;
 import org.lemsml.export.vhdl.edlems.EDLine;
 import org.lemsml.export.vhdl.edlems.EDLink;
+import org.lemsml.export.vhdl.edlems.EDPower;
+import org.lemsml.export.vhdl.edlems.EDRegime;
 import org.lemsml.export.vhdl.edlems.EDRequirement;
 import org.lemsml.export.vhdl.edlems.EDSimulation;
+import org.lemsml.export.vhdl.edlems.EDStateAssignment;
 import org.lemsml.export.vhdl.metadata.MetadataWriter;
 import org.lemsml.export.vhdl.writer.Entity;
 import org.lemsml.export.vhdl.writer.SiElegansTop;
@@ -208,122 +216,51 @@ public class VHDLWriter extends BaseWriter {
 		
 		Target target = lems.getTarget();
 		Component simCpt = target.getComponent();
-		//String targetId = simCpt.getStringValue("target");
-		//Component tgtComp = lems.getComponent(targetId);
-		ArrayList<Component> temppops = new ArrayList<Component>();
-		ArrayList<Component> pops = new ArrayList<Component>();
+		EDComponent edComponent = new EDComponent();
 		
-
-        if (useFlattenedModels)
-        {
-		//try to flatten
-        	ComponentFlattener cf = new ComponentFlattener(lems, lems.getComponent(neuronModel));
-
-	        ComponentType ctFlat;
-	        Component cpFlat; 
-	    	ctFlat = cf.getFlatType();
-			cpFlat = cf.getFlatComponent();
-	
-			lems.addComponentType(ctFlat);
-			lems.addComponent(cpFlat);
-	
-			lems.resolve(ctFlat);
-			lems.resolve(cpFlat);
-	
-	        String typeOut = XMLSerializer.serialize(ctFlat);
-	        String cptOut = XMLSerializer.serialize(cpFlat);
-	      
-	        E.info("Flat type: \n" + typeOut);
-	        E.info("Flat cpt: \n" + cptOut);
-		
-		
-        	temppops.add(cpFlat);
-		}
-        else
-        	temppops.add(lems.getComponent(neuronModel));
-		
-		String targetId = simCpt.getStringValue("target");
-		Component networkComp = lems.getComponent(targetId);
-		List<Component> networkComponents = networkComp.getAllChildren();
-		for (Component comp : networkComponents)
-		{
-			if (comp.getTypeName().matches("synapticConnection") || comp.getTypeName().matches("synapticConnectionWD"))
-			{
-				String synapseName = comp.getStringValue("synapse");
-
-		        if (useFlattenedModels)
-		        {
-				  ComponentFlattener cf2 = new ComponentFlattener(lems, lems.getComponent(synapseName));
-
-			        ComponentType ct2Flat;
-			        Component cp2Flat;
-			    	ct2Flat = cf2.getFlatType();
-					cp2Flat = cf2.getFlatComponent();
-					ComponentType typeFlat = null;
-					try{
-					 typeFlat = lems.getComponentTypeByName(ct2Flat.name);
-					}
-					catch (Exception e)
-					{
-						
-					}
-					if (typeFlat == null)
-						lems.addComponentType(ct2Flat);
-
-					lems.addComponent(cp2Flat);
-					
-
-					if (typeFlat == null)
-						lems.resolve(ct2Flat);
-					lems.resolve(cp2Flat);
-					
-
-			        String type2Out = XMLSerializer.serialize(ct2Flat);
-			        String cpt2Out = XMLSerializer.serialize(cp2Flat);
-			      
-			        E.info("Flat type: \n" + type2Out);
-			        E.info("Flat cpt: \n" + cpt2Out);
-
-		        	temppops.add(cp2Flat);
-		        }
-			        else
-	        	temppops.add(lems.getComponent(synapseName));
-			}
-		}
-
-		boolean expUsed = false;
-		boolean powUsed = false;
-		//temppops.addAll(lems.getComponents().getContents());//temppops.add(tgtComp);
 		try
 		{
+		    if (useFlattenedModels)
+		    {
+			//try to flatten
+		    	ComponentFlattener cf = new ComponentFlattener(lems, lems.getComponent(neuronModel));
+		
+		        ComponentType ctFlat;
+		        Component cpFlat; 
+		    	ctFlat = cf.getFlatType();
+				cpFlat = cf.getFlatComponent();
+		
+				lems.addComponentType(ctFlat);
+				lems.addComponent(cpFlat);
+		
+				lems.resolve(ctFlat);
+				lems.resolve(cpFlat);
+		
+		        String typeOut = XMLSerializer.serialize(ctFlat);
+		        String cptOut = XMLSerializer.serialize(cpFlat);
+		      
+		        E.info("Flat type: \n" + typeOut);
+		        E.info("Flat cpt: \n" + cptOut);
 			
-			while (temppops.size() > 0)
+			
+				writeSOMForComponent(edComponent, cpFlat,true);
+			}
+		    else
+				writeSOMForComponent(edComponent, lems.getComponent(neuronModel),true);
+			
+		
+			Boolean expUsed = false;
+			Boolean powUsed = false;
+			
+			
+			loopOverEDComponent(edComponent,componentScripts,expUsed,powUsed);
+			for (String script : componentScripts.values())
 			{
-				pops.clear();
-				pops.addAll(temppops);
-				temppops.clear();
-				for	(Component pop : pops)
-				{
-					if (!useFlattenedModels)
-					temppops.addAll(pop.getAllChildren());
-					
-						pop.getComponentType().getLinks();
-						String compRef = pop.getID();// pop.getStringValue("component");
-						Component popComp = pop;//pop.getComponentType();//lems.getComponent(compRef);
-						EDComponent edComponent = new EDComponent();
-						writeSOMForComponent(edComponent, popComp,true);
-						StringBuilder newScript = new StringBuilder();
-						
-						Entity.writeEDComponent(edComponent, newScript, compRef.matches("neuron_model"));
-						
-						componentScripts.put(compRef,newScript.toString());
-						if (newScript.toString().contains(": ParamExp"))
-							expUsed = true;
-						if (newScript.toString().contains(": ParamPow"))
-							powUsed = true;
-					} 
-				
-				}
+				if (script.toString().contains(": ParamExp"))
+					expUsed = true;
+				if (script.toString().contains(": ParamPow"))
+					powUsed = true;
+			}
 			if (expUsed )
 			{
 				componentScripts.put("ParamExp",getExpScript());
@@ -361,11 +298,22 @@ public class VHDLWriter extends BaseWriter {
 		return componentScripts;
 
 	}
-
 	
-	
-
-	
+	private void loopOverEDComponent(EDComponent edComponent,
+			Map<String,String> componentScripts, Boolean expUsed, Boolean powUsed)
+	{
+		StringBuilder newScript = new StringBuilder();
+		Entity.writeEDComponent(edComponent, newScript, edComponent.name.matches("neuron_model"));
+		componentScripts.put(edComponent.name,newScript.toString());
+		if (newScript.toString().contains(": ParamExp"))
+			expUsed = true;
+		if (newScript.toString().contains(": ParamPow"))
+			powUsed = true;
+		for (EDComponent child : edComponent.Children)
+		{
+			loopOverEDComponent(child, componentScripts, expUsed, powUsed);
+		}
+	}
 	
 
 	public String getSimulationScript(ScriptType scriptType) throws ContentError, ParseError {
@@ -773,7 +721,7 @@ public class VHDLWriter extends BaseWriter {
 			VHDLDynamics.writeDerivedVariables(edComponent, ct, dyn.getDerivedVariables(),comp,parameters,parameterValues,lems);
 		
 		if (dyn != null)
-		writeConditionalDerivedVariables(edComponent, ct, dyn.getConditionalDerivedVariables(),comp,parameters,parameterValues);
+			writeConditionalDerivedVariables(edComponent, ct, dyn.getConditionalDerivedVariables(),comp,parameters,parameterValues);
 		
 		
 		if (dyn != null)
@@ -794,7 +742,7 @@ public class VHDLWriter extends BaseWriter {
 
 		writeRequirements(edComponent, comp.getComponentType().getRequirements());
 
-		edComponent.exposures = writeExposures(comp.getComponentType());
+		//edComponent.exposures = writeExposures(comp.getComponentType());
 		
 		edComponent.eventports = writeEventPorts( comp.getComponentType());
 		
@@ -845,12 +793,250 @@ public class VHDLWriter extends BaseWriter {
 		
 
 		edComponent.parameters = VHDLParameters.writeParameters(comp, parameters, parameterValues );
+
+		for (EDComponent child : edComponent.Children)
+		{
+			checkExposuresNeeded(child,edComponent);
+		}
+	}
+	
+	private void checkExposuresNeeded(EDComponent edComponentCurrent, EDComponent edComponentParent) throws ContentError, JsonGenerationException, IOException
+	{
+		//check every derivedVariable and conditionalDerivedVariable to see if they have exposures
+
+		for (EDDerivedVariable dv: edComponentCurrent.derivedvariables)
+		{
+			if (dv.exposure != null && dv.exposure.length() > 0)
+			{
+				//check if this derivedvariable is used anywhere
+				dv.ExposureIsUsed = (checkExposureUsed("exposure_" + dv.type+ "_" + 
+						edComponentCurrent.name + "_" + dv.name + "_internal",
+				edComponentParent));
+				dv.IsUsedForOtherDerivedVariables = (checkDerivedVariableUsedInDerivedVariable("exposure_" + dv.type+ "_" + 
+						edComponentCurrent.name + "_" + dv.name + "_internal",
+						edComponentParent));
+			}	
+			else
+			{
+				dv.ExposureIsUsed = false;
+				dv.IsUsedForOtherDerivedVariables = false;
+			}
+		}
+		for (EDConditionalDerivedVariable dv: edComponentCurrent.conditionalderivedvariables)
+		{
+			if (dv.exposure != null && dv.exposure.length() > 0)
+			{
+				//check if this derivedvariable is used anywhere
+				dv.ExposureIsUsed = (checkExposureUsed("exposure_" + dv.type+ "_" + 
+						edComponentCurrent.name + "_" + dv.name + "_internal",
+				edComponentParent));
+				dv.IsUsedForOtherDerivedVariables = (checkDerivedVariableUsedInDerivedVariable("exposure_" + dv.type+ "_" + 
+						edComponentCurrent.name + "_" + dv.name + "_internal",
+						edComponentParent));
+			}	
+		}
+		for (EDComponent child : edComponentCurrent.Children)
+		{
+			checkExposuresNeeded(child,edComponentCurrent);
+		}
 		
 	}
 	
 
+	private boolean checkDerivedVariableUsedInDerivedVariable(String exposure, EDComponent edComponentParent)
+	{
+		for (EDDerivedVariable dv: edComponentParent.derivedvariables)
+		{
+			if (dv.value.contains(exposure))
+				return true;			
 
+			for (EDExponential de: dv.Exponentials)
+			{
+				if (de.value.contains(exposure))
+					return true;		
+			}
+
+			for (EDPower dp: dv.Powers)
+			{
+				if (dp.valueA.contains(exposure))
+					return true;	
+				if (dp.valueX.contains(exposure))
+					return true;		
+			}
+		}
+
+		for (EDConditionalDerivedVariable cdv: edComponentParent.conditionalderivedvariables)
+		{
+			for (EDCase cde : cdv.cases)
+			{
+				if (cde.value.contains(exposure))
+					return true;			
 	
+				for (EDExponential de: cde.Exponentials)
+				{
+					if (de.value.contains(exposure))
+						return true;		
+				}
+	
+				for (EDPower dp: cde.Powers)
+				{
+					if (dp.valueA.contains(exposure))
+						return true;	
+					if (dp.valueX.contains(exposure))
+						return true;		
+				}
+			}
+		}		
+		return false;
+	}
+	
+	private boolean checkExposureUsed(String exposure, EDComponent edComponentParent)
+	{
+		for (EDDerivedVariable dv: edComponentParent.derivedvariables)
+		{
+			if (dv.value.contains(exposure))
+				return true;			
+
+			for (EDExponential de: dv.Exponentials)
+			{
+				if (de.value.contains(exposure))
+					return true;		
+			}
+
+			for (EDPower dp: dv.Powers)
+			{
+				if (dp.valueA.contains(exposure))
+					return true;	
+				if (dp.valueX.contains(exposure))
+					return true;		
+			}
+		}
+
+		for (EDConditionalDerivedVariable cdv: edComponentParent.conditionalderivedvariables)
+		{
+			for (EDCase cde : cdv.cases)
+			{
+				if (cde.value.contains(exposure))
+					return true;			
+	
+				for (EDExponential de: cde.Exponentials)
+				{
+					if (de.value.contains(exposure))
+						return true;		
+				}
+	
+				for (EDPower dp: cde.Powers)
+				{
+					if (dp.valueA.contains(exposure))
+						return true;	
+					if (dp.valueX.contains(exposure))
+						return true;		
+				}
+			}
+		}
+
+		for (EDCondition con : edComponentParent.conditions)
+		{
+			if (con.condition.contains(exposure))
+				return true;	
+			for (EDStateAssignment conSA : con.stateAssignment)
+			{
+				if (conSA.expression.contains(exposure))
+					return true;	
+			}
+		}
+		for (EDEvent event : edComponentParent.events)
+		{
+			for (EDStateAssignment conSA : event.stateAssignments)
+			{
+				if (conSA.expression.contains(exposure))
+					return true;	
+			}
+		}
+		for (EDDynamic dynamic : edComponentParent.dynamics)
+		{
+			if (dynamic.Dynamics.contains(exposure))
+				return true;	
+			for (EDExponential de: dynamic.Exponentials)
+			{
+				if (de.value.contains(exposure))
+					return true;		
+			}
+
+			for (EDPower dp: dynamic.Powers)
+			{
+				if (dp.valueA.contains(exposure))
+					return true;	
+				if (dp.valueX.contains(exposure))
+					return true;		
+			}
+		}
+		
+		for (EDRegime regime : edComponentParent.regimes)
+		{
+			for (EDConditionalDerivedVariable cdv: regime.conditionalderivedvariables)
+			{
+				for (EDCase cde : cdv.cases)
+				{
+					if (cde.value.contains(exposure))
+						return true;			
+		
+					for (EDExponential de: cde.Exponentials)
+					{
+						if (de.value.contains(exposure))
+							return true;		
+					}
+		
+					for (EDPower dp: cde.Powers)
+					{
+						if (dp.valueA.contains(exposure))
+							return true;	
+						if (dp.valueX.contains(exposure))
+							return true;		
+					}
+				}
+			}
+
+			for (EDCondition con : regime.conditions)
+			{
+				if (con.condition.contains(exposure))
+					return true;	
+				for (EDStateAssignment conSA : con.stateAssignment)
+				{
+					if (conSA.expression.contains(exposure))
+						return true;	
+				}
+			}
+			for (EDEvent event : regime.events)
+			{
+				for (EDStateAssignment conSA : event.stateAssignments)
+				{
+					if (conSA.expression.contains(exposure))
+						return true;	
+				}
+			}
+			for (EDDynamic dynamic : regime.dynamics)
+			{
+				if (dynamic.Dynamics.contains(exposure))
+					return true;	
+				for (EDExponential de: dynamic.Exponentials)
+				{
+					if (de.value.contains(exposure))
+						return true;		
+				}
+
+				for (EDPower dp: dynamic.Powers)
+				{
+					if (dp.valueA.contains(exposure))
+						return true;	
+					if (dp.valueX.contains(exposure))
+						return true;		
+				}
+			}
+		}
+		
+		return false;
+	}
 
 	
 	
@@ -865,7 +1051,7 @@ public class VHDLWriter extends BaseWriter {
 			edLink.name=(link.getName());
 			ComponentType compType = lems.getComponentTypeByName(link.getTargetType());
 			
-			edLink.exposures = writeExposures( compType);
+			//edLink.exposures = writeExposures( compType);
 			
 			edLink.eventports = writeEventPorts( compType);
 
@@ -889,7 +1075,7 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 	
-	private ArrayList<EDExposure> writeExposures( ComponentType ct) throws ContentError, JsonGenerationException, IOException
+	/*private ArrayList<EDExposure> writeExposures( ComponentType ct) throws ContentError, JsonGenerationException, IOException
 	{
 		ArrayList<EDExposure> exposures = new ArrayList<EDExposure>();
 		for(FinalExposed e: ct.getFinalExposures())
@@ -901,7 +1087,7 @@ public class VHDLWriter extends BaseWriter {
 			exposures.add(edExposure);
 		}
 		return exposures;
-	}
+	}*/
 	
 
 	private ArrayList<EDEventPort> writeEventPorts( ComponentType ct) throws ContentError, JsonGenerationException, IOException

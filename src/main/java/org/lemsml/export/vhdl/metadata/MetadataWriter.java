@@ -8,9 +8,10 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.export.vhdl.edlems.EDComponent;
-import org.lemsml.export.vhdl.edlems.EDExposure;
+//import org.lemsml.export.vhdl.edlems.EDExposure;
 import org.lemsml.export.vhdl.edlems.EDParameter;
 import org.lemsml.export.vhdl.edlems.EDSimulation;
+import org.lemsml.export.vhdl.edlems.EDState;
 
 public class MetadataWriter {
 
@@ -77,8 +78,8 @@ public class MetadataWriter {
 	
 	private static void writeJSONReadback(JsonGenerator g, EDComponent neuron, String name) throws JsonGenerationException, IOException
 	{
-		for(Iterator<EDExposure> i = neuron.exposures.iterator(); i.hasNext(); ) {
-			EDExposure item = i.next(); 
+		for(Iterator<EDState> i = neuron.state.iterator(); i.hasNext(); ) {
+			EDState item = i.next(); 
 			g.writeStartObject();
 			g.writeObjectField("name","neuron_model_stateCURRENT_" + item.type + "_" + name + item.name);
 			g.writeObjectField("type", item.type);

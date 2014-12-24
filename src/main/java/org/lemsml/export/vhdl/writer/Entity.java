@@ -104,9 +104,31 @@ public class Entity {
 		}
 
 
-		for(Iterator<EDExposure> i = comp.exposures.iterator(); i.hasNext(); ) {
-			EDExposure item = i.next(); 
-			sb.append("			"+prepend+"exposure_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
+			EDDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
+			}
+		}
+		for(Iterator<EDConditionalDerivedVariable> j = comp.conditionalderivedvariables.iterator(); j.hasNext(); ) {
+			EDConditionalDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
+			}	
+		}
+		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
+			EDState dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0)
+			{
+				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
+			}	
 		}
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
@@ -116,13 +138,17 @@ public class Entity {
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
-			sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_out : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
-			sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_in : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			if ( item.ExposureIsUsed){
+				sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_out : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_in : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
-			sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_out : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
-			sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_in : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			if (item.ExposureIsUsed){
+				sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_out : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("			"+prepend+"derivedvariable_" + item.type +  "_" + name + item.name + "_in : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			}
 		}
 		
 		for(Iterator<EDComponent> i = comp.Children.iterator(); i.hasNext(); ) {

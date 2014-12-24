@@ -65,7 +65,8 @@ public class VHDLParameters {
 			edDerivedParameter.type = (dp.getDimension().getName()+"");
 			String value = VHDLEquations.encodeVariablesStyle(dp.getValue(),
 					ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+					ct.getRequirements(),ct.getPropertys(),sensitivityList,params,
+					combinedParameterValues,true);
 			
 
 			value = VHDLEquations.writeInternalExpLnLogEvaluators(value,edDerivedParameter,dp.getName(),sensitivityList,"");

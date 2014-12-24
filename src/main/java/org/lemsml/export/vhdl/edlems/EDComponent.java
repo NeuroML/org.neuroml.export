@@ -16,7 +16,7 @@ public class EDComponent {
 	public List<EDCondition> conditions = new ArrayList<EDCondition>();
 	public List<EDEvent> events = new ArrayList<EDEvent>();
 	public List<EDRequirement> requirements = new ArrayList<EDRequirement>();
-	public List<EDExposure> exposures = new ArrayList<EDExposure>();
+	//public List<EDExposure> exposures = new ArrayList<EDExposure>();
 	public List<EDEventPort> eventports = new ArrayList<EDEventPort>();
 	public List<EDState> state = new ArrayList<EDState>();
 	public List<EDStateFunction> state_functions = new ArrayList<EDStateFunction>();

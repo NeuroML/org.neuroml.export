@@ -925,18 +925,24 @@ public class StatevariableProcess {
 				"");
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
 			EDDerivedVariable derivedvariable = j.next(); 
-			if (derivedvariable.exposure != null && derivedvariable.exposure.length() > 0) { 
+			if (derivedvariable.ExposureIsUsed && derivedvariable.exposure != null && derivedvariable.exposure.length() > 0) { 
 			sb.append("exposure_" + derivedvariable.type +  "_" + derivedvariable.exposure + 
 					" <= derivedvariable_" + derivedvariable.type + "_" + derivedvariable.name + "_in;" );
-			sb.append("derivedvariable_" + derivedvariable.type + "_" + derivedvariable.name + 
-					"_out <= derivedvariable_" +derivedvariable.type + "_" + derivedvariable.name + ";" );
+			}
+			if (derivedvariable.IsUsedForOtherDerivedVariables)
+			{
+				sb.append("derivedvariable_" + derivedvariable.type + "_" + derivedvariable.name + 
+						"_out <= derivedvariable_" +derivedvariable.type + "_" + derivedvariable.name + ";" );
 			}
 		}
 		for(Iterator<EDConditionalDerivedVariable> j = comp.conditionalderivedvariables.iterator(); j.hasNext(); ) {
 			EDConditionalDerivedVariable conditionalderivedvariable = j.next(); 
-			if (conditionalderivedvariable.exposure != null && conditionalderivedvariable.exposure.length() > 0) { 
+			if (conditionalderivedvariable.ExposureIsUsed && conditionalderivedvariable.exposure != null && conditionalderivedvariable.exposure.length() > 0) { 
 			sb.append("exposure_" + conditionalderivedvariable.type +  "_" + conditionalderivedvariable.exposure + 
 					" <= derivedvariable_" + conditionalderivedvariable.type + "_" + conditionalderivedvariable.name + "_in;" );
+			}
+			if (conditionalderivedvariable.IsUsedForOtherDerivedVariables)
+			{
 			sb.append("derivedvariable_" + conditionalderivedvariable.type + "_" + conditionalderivedvariable.name + 
 					"_out <= derivedvariable_" +conditionalderivedvariable.type + "_" + conditionalderivedvariable.name + ";" );
 			}

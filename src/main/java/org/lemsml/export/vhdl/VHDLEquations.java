@@ -146,6 +146,14 @@ public class VHDLEquations {
 			LemsCollection<Requirement> requirements,LemsCollection<Property> properties, StringBuilder sensitivityList 
 			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues) throws ContentError
 	{
+		return encodeVariablesStyle(toEncode,paramsOrig,stateVariables,derivedVariables,requirements,properties,sensitivityList,params,combinedParameterValues,false);
+	}
+	
+	public static String encodeVariablesStyle(String toEncode, LemsCollection<FinalParam> paramsOrig, 
+			LemsCollection<StateVariable> stateVariables,LemsCollection<DerivedVariable> derivedVariables,
+			LemsCollection<Requirement> requirements,LemsCollection<Property> properties, StringBuilder sensitivityList 
+			, LemsCollection<FinalParam> params,LemsCollection<ParamValue> combinedParameterValues, boolean isDerivedVariable) throws ContentError
+	{
 		char[] arrOperators = { '(',' ', ')', '*', '/', '\\', '+', '-', '^' };
 	    String regex = "(" + new String(arrOperators).replaceAll("(.)", "\\\\$1|").replaceAll("\\|$", ")"); // escape every char with \ and turn into "OR"
 		String returnString = toEncode;
@@ -196,8 +204,16 @@ public class VHDLEquations {
 				else
 				if (derivedVariables.hasName(toReplace))
 				{
-					sensitivityList.append(" derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + " ,");
-					returnString = returnString.replaceAll(" " + toReplace + " "," derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + " ");
+					if (isDerivedVariable == true || true)
+					{
+						sensitivityList.append(" derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + "_next ,");
+						returnString = returnString.replaceAll(" " + toReplace + " "," derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + "_next ");
+					}
+					else
+					{
+						sensitivityList.append(" derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + " ,");
+						returnString = returnString.replaceAll(" " + toReplace + " "," derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + " ");	
+					}
 				}
 				else
 					if (toReplace.equals("t"))

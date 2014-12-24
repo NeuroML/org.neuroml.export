@@ -45,13 +45,13 @@ public class VHDLFixedPointDimensions {
 		int fract = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			 fract = -10;//-16
+			 fract = -16;//-16
 		} else if (dimension.equals("voltage"))
 		{
-			 fract = -18;//-24
+			 fract = -22;//-24
 		}  else if (dimension.equals("current")) //todo figure out what the ideal bitwidth for current is
 		{
-			 fract = -50;//-54
+			 fract = -53;//-54
 		} else if (dimension.equals("time"))
 		{
 			 fract = -18;//-24
@@ -60,9 +60,8 @@ public class VHDLFixedPointDimensions {
 			 fract = -47;//-47
 		} else if (dimension.equals("conductance"))
 		{
-			 fract =  -50;//-53
+			 fract =  -53;//-53
 		} else if (dimension.equals("per_time"))
-		{
 			 fract = -2;
 		} 
 		
@@ -74,13 +73,13 @@ public class VHDLFixedPointDimensions {
 		int integer = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			integer = 12;//18
+			integer = 18;//18
 		} else if (dimension.equals("voltage"))
 		{
 			integer = 2;
 		}  else if (dimension.equals("current")) //todo figure out what the ideal bitwidth for current is
 		{
-			integer = -34;//-28
+			integer = -28;//-28
 		} else if (dimension.equals("time"))
 		{
 			integer = 6;//6
@@ -89,7 +88,7 @@ public class VHDLFixedPointDimensions {
 			integer = -33;//-33
 		} else if (dimension.equals("conductance"))
 		{
-			integer = -24;//-20
+			integer = -20;//-20
 		} else if (dimension.equals("per_time"))
 		{
 			integer = 18;//20

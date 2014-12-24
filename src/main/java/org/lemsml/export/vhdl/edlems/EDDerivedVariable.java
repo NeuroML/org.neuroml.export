@@ -10,4 +10,6 @@ public class EDDerivedVariable extends EDSignalComplex {
 	public String value;
 	public String exposure;
 	public String sensitivityList;
+	public boolean ExposureIsUsed = false;
+	public boolean IsUsedForOtherDerivedVariables = false;
 }

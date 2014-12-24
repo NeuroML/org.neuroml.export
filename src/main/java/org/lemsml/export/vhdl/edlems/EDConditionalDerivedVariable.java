@@ -9,4 +9,7 @@ public class EDConditionalDerivedVariable extends EDSignal {
 	public String exposure;
 	public ArrayList<EDCase> cases;
 	public String sensitivityList;
+	public boolean ExposureIsUsed = false;
+	public boolean IsUsedForOtherDerivedVariables = false;
+	
 }

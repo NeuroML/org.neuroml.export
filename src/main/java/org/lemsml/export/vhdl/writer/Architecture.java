@@ -11,7 +11,6 @@ import org.lemsml.export.vhdl.edlems.EDDerivedVariable;
 import org.lemsml.export.vhdl.edlems.EDDynamic;
 import org.lemsml.export.vhdl.edlems.EDEventPort;
 import org.lemsml.export.vhdl.edlems.EDExponential;
-import org.lemsml.export.vhdl.edlems.EDExposure;
 import org.lemsml.export.vhdl.edlems.EDParameter;
 import org.lemsml.export.vhdl.edlems.EDPower;
 import org.lemsml.export.vhdl.edlems.EDRegime;
@@ -65,10 +64,38 @@ public class Architecture {
 					"           sysparam_time_simtime => sysparam_time_simtime\r\n" + 
 					"		   );\r\n");
 			
-			for(Iterator<EDExposure> i = child.exposures.iterator(); i.hasNext(); ) {
-				EDExposure EDExposure = i.next(); 
-				sb.append("Exposure_" + EDExposure.type +  "_" + child.name + "_" + EDExposure.name + " <= Exposure_" + EDExposure.type +  "_" + child.name + "_" + EDExposure.name + "_internal;\r\n");
+			for(Iterator<EDDerivedVariable> j = child.derivedvariables.iterator(); j.hasNext(); ) {
+				EDDerivedVariable dv = j.next(); 
+				if (dv.exposure!= null && dv.exposure.length() > 0 && 
+						(dv.ExposureIsUsed))
+				{
+
+					sb.append("Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + " <= Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + "_internal;\r\n");
+				}	
 			}
+			for(Iterator<EDConditionalDerivedVariable> j = child.conditionalderivedvariables.iterator(); j.hasNext(); ) {
+				EDConditionalDerivedVariable dv = j.next(); 
+				if (dv.exposure!= null && dv.exposure.length() > 0 && 
+						(dv.ExposureIsUsed))
+				{
+
+					sb.append("Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + " <= Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + "_internal;\r\n");
+				}	
+			}
+			for(Iterator<EDState> j = child.state.iterator(); j.hasNext(); ) {
+				EDState dv = j.next(); 
+				if (dv.exposure!= null && dv.exposure.length() > 0)
+				{
+					sb.append("Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + " <= Exposure_" + dv.type +  "_" + child.name + "_" + 
+							dv.name + "_internal;\r\n");
+				}	
+			}
+			
 			writeStateVariableOutputs(child,sb,child.name + "_");
 			
 		}
@@ -114,9 +141,34 @@ public class Architecture {
 			
 		}
 		
-		for(Iterator<EDExposure> i = comp.exposures.iterator(); i.hasNext(); ) {
-			EDExposure item = i.next(); 
-			sb.append("			Exposure_" + item.type +  "_" + name + item.name + " => Exposure_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_internal,\r\n"  );
+		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
+			EDDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
+		}
+		for(Iterator<EDConditionalDerivedVariable> j = comp.conditionalderivedvariables.iterator(); j.hasNext(); ) {
+			EDConditionalDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
+		}
+		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
+			EDState dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0)
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
 		}
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
@@ -126,13 +178,17 @@ public class Architecture {
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+			if (item.ExposureIsUsed){
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+			}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+			if ( item.ExposureIsUsed){
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+			}
 		}
 		
 		for(Iterator<EDComponent> i = comp.Children.iterator(); i.hasNext(); ) {
@@ -152,10 +208,36 @@ public class Architecture {
 			sb.append("			param_" + item.type +  "_" + name + item.name + " => param_"  + item.type +  "_" + parent.name + "_" + name + item.name + ",\r\n"  );
 		}
 
-		for(Iterator<EDExposure> i = comp.exposures.iterator(); i.hasNext(); ) {
-			EDExposure item = i.next(); 
-			sb.append("			Exposure_" + item.type +  "_" + name + item.name + " => Exposure_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_internal,\r\n"  );
+		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
+			EDDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
 		}
+		for(Iterator<EDConditionalDerivedVariable> j = comp.conditionalderivedvariables.iterator(); j.hasNext(); ) {
+			EDConditionalDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed))
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
+		}
+		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
+			EDState dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0)
+			{
+				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
+						dv.name + "_internal,\r\n"  );
+			}
+		}
+
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
 			EDState item = i.next(); 
@@ -164,13 +246,17 @@ public class Architecture {
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+			if (item.ExposureIsUsed){
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+				}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-			sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+			if (item.ExposureIsUsed){
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+			}
 		}
 		
 		for(Iterator<EDComponent> i = comp.Children.iterator(); i.hasNext(); ) {
@@ -486,12 +572,38 @@ public class Architecture {
 	
 	private static void writeChildSignals(EDComponent child,StringBuilder sb,String name)
 	{
-		for(Iterator<EDExposure> i = child.exposures.iterator(); i.hasNext(); ) {
-			EDExposure EDExposure = i.next(); 
-			sb.append("signal Exposure_" + EDExposure.type +  "_" + name + child.name + "_" + EDExposure.name + "_internal : sfixed (" + EDExposure.integer + " downto " + EDExposure.fraction + ");\r\n");
-			sb.append("signal statevariable_" + EDExposure.type +  "_" +name + child.name + "_" + EDExposure.name + "_out_int : sfixed (" + EDExposure.integer + " downto " + EDExposure.fraction + ");\r\n");
-			sb.append("signal statevariable_" + EDExposure.type +  "_" +name + child.name + "_" + EDExposure.name + "_in_int : sfixed (" + EDExposure.integer + " downto " + EDExposure.fraction + ");\r\n");
-			
+		
+		for(Iterator<EDDerivedVariable> j = child.derivedvariables.iterator(); j.hasNext(); ) {
+			EDDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
+			{
+				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				
+			}
+		}
+		for(Iterator<EDConditionalDerivedVariable> j = child.conditionalderivedvariables.iterator(); j.hasNext(); ) {
+			EDConditionalDerivedVariable dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0 && 
+					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
+			{
+				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				
+			}
+		}
+		for(Iterator<EDState> j = child.state.iterator(); j.hasNext(); ) {
+			EDState dv = j.next(); 
+			if (dv.exposure!= null && dv.exposure.length() > 0)
+			{
+				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				
+			}
 		}
 		for(Iterator<EDComponent> i = child.Children.iterator(); i.hasNext(); ) {
 			EDComponent child2 = i.next(); 
