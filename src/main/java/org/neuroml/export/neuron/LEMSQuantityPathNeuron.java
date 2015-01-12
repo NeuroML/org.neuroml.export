@@ -178,7 +178,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 } else {
                     String nrnVar = convertToNeuronVariable();
                     String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
-                    if (nrnVar.equals(NRNConst.NEURON_VOLTAGE)) {
+                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE)) {
                         varRef += "(0.5)";
                     }
                     return varRef;
