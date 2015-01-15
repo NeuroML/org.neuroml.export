@@ -1076,18 +1076,22 @@ public class NeuronWriter extends BaseWriter {
 
             for (Component child1 : comp.getAllChildren()) {
                 if (child1.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE)) {
-                    // blockNeuron.append("? Checking " + child1 + "\n");
+                    System.out.println("----> "+child1.getComponentType());
                     for (Component child2 : child1.getAllChildren()) {
-                        // blockNeuron.append("? Checking " + child2 + "\n");
                         if (child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE)
                                 || child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE)) {
                             hasCaDependency = true;
-
                         }
-
+                    }
+                    for (Requirement r: child1.getComponentType().getRequirements()) {
+                        if (r.getName().equals(NRNUtils.caConc)) {
+                            hasCaDependency = true;
+                        }
                     }
                 }
             }
+            
+            
             if (hasCaDependency) {
                 blockNeuron.append("USEION ca READ cai,cao VALENCE 2\n"); // TODO check valence
             }
@@ -1737,8 +1741,8 @@ public class NeuronWriter extends BaseWriter {
     }
 
     private static String getPrefix(Component comp, String prefix) {
-        System.out.println("Getting prefix for " + comp);
-        System.out.println("comp " + comp.getID() + "; d " + comp.getDeclaredType() + "; e " + comp.getExtendsName());
+        //System.out.println("Getting prefix for " + comp);
+        //System.out.println("comp " + comp.getID() + "; d " + comp.getDeclaredType() + "; e " + comp.getExtendsName());
         String prefixNew = prefix + comp.getID() + "_";
         if (comp.getID() == null) {
             if (comp.getName() == null) {
@@ -1752,7 +1756,6 @@ public class NeuronWriter extends BaseWriter {
                 prefixNew = prefix + comp.getName() + "_";
             }
         }
-        System.out.println("Prefix: " + prefixNew);
         return prefixNew;
     }
 
@@ -2097,7 +2100,7 @@ public class NeuronWriter extends BaseWriter {
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-
+/*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
 
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
@@ -2121,8 +2124,10 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
-        /*
+        
          */
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
 
         String testScript = "";
 

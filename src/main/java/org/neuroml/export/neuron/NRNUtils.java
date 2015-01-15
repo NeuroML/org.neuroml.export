@@ -21,6 +21,7 @@ import org.neuroml.export.Utils;
  */
 public class NRNUtils {
 
+    
     final static String NEURON_FORMAT = "NEURON";
     final static String NEURON_VOLTAGE = "v";
     final static String NEURON_TEMP = "celsius";
@@ -28,6 +29,11 @@ public class NRNUtils {
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
     final static String V_COPY_PREFIX = "copy_";
+    
+    
+    
+    
+    final static String caConc = "caConc";
 
     final static String comm = "# ";
     final static String commPre = "'''";
