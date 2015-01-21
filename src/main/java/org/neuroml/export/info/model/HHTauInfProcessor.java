@@ -11,7 +11,7 @@ public class HHTauInfProcessor {
 
 
 	public HHTauInfProcessor(GateHHTauInf g) {
-		setSteadyStateActivation(hhVarToExpr(g.getSteadyState()));
+		setSteadyState(hhVarToExpr(g.getSteadyState()));
 		setTimeCourse(hhTimeToExpr(g.getTimeCourse()));
 	}
 
@@ -47,14 +47,14 @@ public class HHTauInfProcessor {
 	/**
 	 * @return the _inf
 	 */
-	public ChannelMLHHExpression getSteadyStateActivation() {
+	public ChannelMLHHExpression getSteadyState() {
 		return _inf;
 	}
 
 	/**
 	 * @param inf the _inf to set
 	 */
-	private void setSteadyStateActivation(ChannelMLHHExpression inf) {
+	private void setSteadyState(ChannelMLHHExpression inf) {
 		_inf = inf;
 
 	}

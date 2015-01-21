@@ -68,14 +68,14 @@ public class ChannelInfoExtractor {
 			InfoNode gate = new InfoNode();
 
 			HHTauInfProcessor tii = new HHTauInfProcessor(g);	
-			ChannelMLHHExpression inf = tii.getSteadyStateActivation();
+			ChannelMLHHExpression inf = tii.getSteadyState();
 			ChannelMLHHExpression tau = tii.getTimeCourse();
 
 			if (inf.toString().contains("ChannelMLGenericHHExpression")){
-				gate.put("steady state activation", new ExpressionNode(inf.toString()));
+				gate.put("steady state", new ExpressionNode(inf.toString()));
 			}
 			else{
-				gate.put("steady state activation", new ExpressionNode(inf.toString(), "Ion Channel " + chan.getId() + " - Steady State Activation - " + inf.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+				gate.put("steady state ", new ExpressionNode(inf.toString(), "Ion Channel " + chan.getId() + " - Steady State Activation - " + inf.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
 			}	
 			if (tau.toString().contains("ChannelMLGenericHHExpression")){
 				gate.put("time constant", new ExpressionNode(tau.toString()));
@@ -83,7 +83,7 @@ public class ChannelInfoExtractor {
 			else{
 				gate.put("time constant", new ExpressionNode(tau.toString(), "Ion Channel " + chan.getId() + " - Time Co - " + tau.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
 			}
-			gate.put("steady state activation plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
+			gate.put("steady state plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 
 			gate.put("instances", g.getInstances());
