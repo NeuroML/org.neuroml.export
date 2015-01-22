@@ -8,7 +8,6 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.LEMSQuantityPath;
-import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Segment;
 import org.neuroml.model.util.CellUtils;
@@ -101,7 +100,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         if (variableParts.length == 1) {
             var = variableParts[0];
         } else {
-            if (variableParts[1].indexOf("membraneProperties") >= 0) {
+            if (variableParts[1].contains("membraneProperties")) {
 
                 if (variableParts.length == 4) {
 
@@ -157,11 +156,13 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
             String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
             String varRef = mechRef + "." + getVariable();
             return varRef;
+            
         } else {
+            
             if (popComp != null
                 && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)
-                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
-                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
+                || ( (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
+                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE)) )) {
                 
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
@@ -179,7 +180,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 } else {
                     String nrnVar = convertToNeuronVariable();
                     String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
-                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE)) {
+                    
+                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE)) {  // redundant..?
                         varRef += "(0.5)";
                     }
                     return varRef;
@@ -202,10 +204,13 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         String ref;
         try {
             ref = getNeuronVariableReference();
-        } catch (Exception ex) {
-            //ex.printStackTrace();
+        } catch (ContentError ex) {
+            ref = "=== Unable to determine reference: "+ex;
+        } catch (NeuroMLException ex) {
             ref = "=== Unable to determine reference: "+ex;
         }
+        
+        
         return super.toString()
                 + "\nNeuron ref:     " + ref
                 /*+ "\ncompIdsVsCells: " + compIdsVsCells*/

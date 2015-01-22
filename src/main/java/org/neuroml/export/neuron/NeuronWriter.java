@@ -52,10 +52,7 @@ import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
-import org.neuroml.model.Segment;
-import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
-import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -410,7 +407,8 @@ public class NeuronWriter extends BaseWriter {
 
                 LemsCollection<ParamValue> pvs = popComp.getParamValues();
                 for (ParamValue pv : pvs) {
-                    main.append("    " + "h." + hocMechName + "." + pv.getName() + " = " + NRNUtils.convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
+                    main.append("    " + "h." + hocMechName + "." + pv.getName() + " = " 
+                            + NRNUtils.convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
                 }
                 main.append("    h.pop_section()\n");
 
@@ -1368,7 +1366,7 @@ public class NeuronWriter extends BaseWriter {
                 if (!resetVoltage) {
                     blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
                     for (StateAssignment sa : oc.getStateAssignments()) {
-                        blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ??\n");
+                        blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ? standard OnCondition\n");
                     }
                     blockBreakpoint.append("}\n\n");
                 } else {
@@ -2088,7 +2086,7 @@ public class NeuronWriter extends BaseWriter {
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-/*      */
+/*     */
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
@@ -2117,6 +2115,12 @@ public class NeuronWriter extends BaseWriter {
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
  
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_Single.xml"));
+       
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Syns.xml"));
         
         String testScript = "set -e\n";
 
