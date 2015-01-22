@@ -14,6 +14,7 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.Utils;
 import org.neuroml.export.neuron.NRNUtils;
+import org.neuroml.export.neuron.NamingHelper;
 import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Annotation;
 import org.neuroml.model.BiophysicalProperties;
@@ -49,6 +50,8 @@ import org.w3c.dom.Element;
 public class JSONCellSerializer {
 
     public static String cellToJson(Cell cell, NeuronWriter.SupportedUnits units) throws LEMSException, NeuroMLException {
+        
+        NamingHelper nh = new NamingHelper(cell);
         JsonFactory f = new JsonFactory();
         StringWriter sw = new StringWriter();
         try {
@@ -70,7 +73,7 @@ public class JSONCellSerializer {
             HashMap<SegmentGroup, ArrayList<Integer>> sgVsSegId = CellUtils.getSegmentGroupsVsSegIds(cell);
             HashMap<String, SegmentGroup> namesVsSegmentGroups = CellUtils.getNamesVsSegmentGroups(cell);
 
-            boolean foundNeuroLexFlags = true;
+            boolean foundNeuroLexFlags = false;
 
             for (SegmentGroup grp : sgVsSegId.keySet()) {
                 if (CellUtils.isUnbranchedNonOverlapping(grp)) {
@@ -193,7 +196,7 @@ public class JSONCellSerializer {
                 for (Segment seg : morph.getSegment()) {
                     //System.out.println("Segment: "+seg.getId()+", parent: "+seg.getParent());
                     g.writeStartObject();
-                    String name = NeuronWriter.getNrnSectionName(cell, seg);
+                    String name = nh.getNrnSectionName(seg);
                     idsVsNames.put(seg.getId(), name);
                     //g.writeObjectFieldStart(name);
                     g.writeStringField("name", name);
@@ -294,7 +297,7 @@ public class JSONCellSerializer {
                 g.writeStringField("name", "all");
                 g.writeArrayFieldStart("sections");
                 for (Segment seg : morph.getSegment()) {
-                    String name = NeuronWriter.getNrnSectionName(cell, seg);
+                    String name = nh.getNrnSectionName(seg);
                     g.writeString(name);
                 }
                 g.writeEndArray();
@@ -479,7 +482,7 @@ public class JSONCellSerializer {
             throw new NeuroMLException("Problem converting Cell to JSON format", ex);
         }
 
-		//System.out.println(sw.toString());
+        //System.out.println(sw.toString());
         return sw.toString();
 
     }
@@ -493,12 +496,15 @@ public class JSONCellSerializer {
         //String test = "/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask.cell.nml";
         //String test = "/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml";
         ArrayList<String> tests = new ArrayList<String>();
-
-        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
-        //tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/L5PC.cell.nml");
+        
+         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
+         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
+         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
+         //tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
+         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/L5PC.cell.nml");
+         /**/
+        tests.add("/home/padraig/neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/SingleCompMuscle.cell.nml");
+        tests.add("/home/padraig/NeuroML2/examples/NML2_SingleCompHHCell.nml");
 
         for (String test : tests) {
             NeuroMLDocument nml2 = conv.loadNeuroML(new File(test));

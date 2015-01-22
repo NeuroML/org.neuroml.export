@@ -30,9 +30,6 @@ public class NRNUtils {
     final static String REGIME_PREFIX = "regime_";
     final static String V_COPY_PREFIX = "copy_";
     
-    
-    
-    
     final static String caConc = "caConc";
 
     final static String comm = "# ";

@@ -165,8 +165,9 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 
                 if (compIdsVsCells.containsKey(popComp.getID())) {
                     Cell cell = compIdsVsCells.get(popComp.getID());
+                    NamingHelper nh = new NamingHelper(cell);
                     Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
-                    String varInst = NeuronWriter.getNrnSectionName(cell, segment);
+                    String varInst = nh.getNrnSectionName(segment);
                     
                     float fract;
                     if (cell.getMorphology().getSegment().size()==1)
