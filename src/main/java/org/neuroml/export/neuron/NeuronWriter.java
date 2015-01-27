@@ -629,7 +629,7 @@ public class NeuronWriter extends BaseWriter {
             }
 
             String info0 = String.format("Adding projection: %s\nFrom %s to %s %d connection(s)", id, prePop, postPop, number);
-            System.out.println(info0);
+            //System.out.println(info0);
             addComment(main, info0);
 
             String synapse = ep.getChildrenAL("connections").get(0).getStringValue("synapse");

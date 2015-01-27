@@ -32,14 +32,14 @@ public class NamingHelper {
     public String getNrnSectionName(Segment seg) {
 
         String uniqueId = cell.getId() + ":" + seg.getId();
-        System.out.println("uniqueId: "+uniqueId);
-        System.out.println("cachedSectionNames: "+cachedSectionNames);
+        //System.out.println("uniqueId: "+uniqueId);
+        //System.out.println("cachedSectionNames: "+cachedSectionNames);
         
         if (cachedSectionNames.containsKey(uniqueId)) {
             return cachedSectionNames.get(uniqueId);
         }
 
-        System.out.println("cellIdVsSegGroupInfo: "+cellIdVsSegGroupInfo);
+        //System.out.println("cellIdVsSegGroupInfo: "+cellIdVsSegGroupInfo);
         if (!cellIdVsSegGroupInfo.containsKey(cell.getId())) {
             LinkedHashMap<SegmentGroup, ArrayList<Integer>> sgVsSegIds = CellUtils.getSegmentGroupsVsSegIds(cell);
             cellIdVsSegGroupInfo.put(cell.getId(), sgVsSegIds);
@@ -47,7 +47,7 @@ public class NamingHelper {
         
         LinkedHashMap<SegmentGroup, ArrayList<Integer>> sgVsSegIds = cellIdVsSegGroupInfo.get(cell.getId());
         
-        System.out.println("sgVsSegIds: "+sgVsSegIds);
+        //System.out.println("sgVsSegIds: "+sgVsSegIds);
         
         /*if (sgVsSegIds.isEmpty()) {
             String secName = (seg.getName()!=null && seg.getName().length()>0) ? seg.getName() : "section_"+seg.getId();
@@ -56,8 +56,8 @@ public class NamingHelper {
         }*/
         for (SegmentGroup grp : sgVsSegIds.keySet()) {
             if (sgVsSegIds.get(grp).contains(seg.getId())) {
-                System.out.println("ggg " + sgVsSegIds.get(grp));
-                System.out.println("ggg " + grp);
+                //System.out.println("ggg " + sgVsSegIds.get(grp));
+                //System.out.println("ggg " + grp);
                 if (CellUtils.isUnbranchedNonOverlapping(grp)) {
                     cachedSectionNames.put(uniqueId, grp.getId());
                     return grp.getId();
