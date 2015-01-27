@@ -56,13 +56,13 @@ public class StatevariableProcess {
 					{
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
-							sb.append("pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
+							sb.append("  pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 							
 						}
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
-							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
-							sb.append("pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
+							sb.append("  pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+							sb.append("  pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 							
 						}
 					}
@@ -74,13 +74,13 @@ public class StatevariableProcess {
 				{
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
-						sb.append("pre_exp_noregime_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
+						sb.append("  pre_exp_noregime_" + state.name + "_" + exponential.name + "_next <=  resize( " + exponential.value + " ," + exponential.integer+"," +exponential.fraction +");" );
 						
 					}
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
-						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
-						sb.append("pre_pow_noregime_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
+						sb.append("  pre_pow_noregime_" + state.name + "_" + power.name + "_A_next <=  resize( " + power.valueA + " ," + power.integer+"," +power.fraction +");" );
+						sb.append("  pre_pow_noregime_" + state.name + "_" + power.name + "_X_next <=  resize( " + power.valueX + " ," + power.integer+"," +power.fraction +");" );
 						
 					}
 				}
@@ -108,26 +108,26 @@ public class StatevariableProcess {
 					{
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
-							sb.append("if rst  = '1' then\r\n" + 
-									"							pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-									"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-									"							if subprocess_all_ready = '1' then\r\n" + 
-									"								pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
-									"							end if;\r\n" + 
-									"						end if;" );
+							sb.append("  if rst  = '1' then\r\n" + 
+									"    pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
+									"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
+									"    if subprocess_all_ready = '1' then\r\n" + 
+									"      pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
+									"    end if;\r\n" + 
+									"  end if;\r\n" );
 							
 						}
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
-							sb.append("if rst  = '1' then\r\n" + 
-									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-									"							pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-									"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-									"							if subprocess_all_ready = '1' then\r\n" + 
-									"								pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
-									"								pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
-									"							end if;\r\n" + 
-									"						end if;");
+							sb.append("  if rst  = '1' then\r\n" + 
+									"    pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+									"    pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+									"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
+									"    if subprocess_all_ready = '1' then\r\n" + 
+									"      pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
+									"      pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
+									"    end if;\r\n" + 
+									"  end if;\r\n");
 						}
 					}
 				}
@@ -138,32 +138,32 @@ public class StatevariableProcess {
 				{
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
-						sb.append("if rst  = '1' then\r\n" + 
-								"							pre_exp_noregime_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-								"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-								"							if subprocess_all_ready = '1' then\r\n" + 
-								"								pre_exp_noregime_" + state.name + "_" + exponential.name + " <= pre_exp_noregime_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
-								"							end if;\r\n" + 
-								"						end if;" );
+						sb.append("  if rst  = '1' then\r\n" + 
+								"    pre_exp_noregime_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
+								"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
+								"    if subprocess_all_ready = '1' then\r\n" + 
+								"      pre_exp_noregime_" + state.name + "_" + exponential.name + " <= pre_exp_noregime_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
+								"    end if;\r\n" + 
+								"  end if;\r\n" );
 					}
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
-						sb.append("if rst  = '1' then\r\n" + 
-								"							pre_pow_noregime_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-								"							pre_pow_noregime_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-								"						elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-								"							if subprocess_all_ready = '1' then\r\n" + 
-								"								pre_pow_noregime_" + state.name + "_" + power.name + "_A <= pre_pow_noregime_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
-								"								pre_pow_noregime_" + state.name + "_" + power.name + "_X <= pre_pow_noregime_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
-								"							end if;\r\n" + 
-								"						end if;");
+						sb.append("  if rst  = '1' then\r\n" + 
+								"    pre_pow_noregime_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+								"    pre_pow_noregime_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
+								"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
+								"    if subprocess_all_ready = '1' then\r\n" + 
+								"      pre_pow_noregime_" + state.name + "_" + power.name + "_A <= pre_pow_noregime_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
+								"      pre_pow_noregime_" + state.name + "_" + power.name + "_X <= pre_pow_noregime_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
+								"    end if;\r\n" + 
+								"  end if;");
 					}
 				}
 			}
 		}
 		sb.append("\r\n" + 
-				"subprocess_dyn_int_pre_ready <= '1';\r\n" + 
-				"end process dynamics_pre_process_syn;\r\n");
+				"  subprocess_dyn_int_pre_ready <= '1';\r\n" + 
+				"end process dynamics_pre_process_syn;\r\n\r\n");
 	}
 
 	static void writeDynamicsInstantiationsProc(StringBuilder sb, EDComponent comp)
@@ -182,36 +182,35 @@ public class StatevariableProcess {
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
 							sb.append("ParamExp_" + regime.name + "_" + state.name + "_" + exponential.name + " : ParamExp \r\n"+ 
-									"	generic map( \r\n" + 
-									"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
-									"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
-									"		)\r\n" + 
-									" " +  
-									"						port map (	clk => clk,\r\n" + 
-									"									rst => rst,\r\n" + 
-									"									Start => step_once_go,\r\n" + 
-									"									Done => subprocess_dyn_int_ready,\r\n" + 
-									"									X => pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + ",\r\n" + 
-									"									Output => exp_" + regime.name + "_" + state.name + "_" + exponential.name + "\r\n" + 
-									"									);\r\n" );
+									"generic map( \r\n" + 
+									"  BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+									"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+									")\r\n" + 
+									"port map (	clk => clk,\r\n" + 
+									"  rst => rst,\r\n" + 
+									"  Start => step_once_go,\r\n" + 
+									"  Done => subprocess_dyn_int_ready,\r\n" + 
+									"  X => pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + ",\r\n" + 
+									"  Output => exp_" + regime.name + "_" + state.name + "_" + exponential.name + "\r\n" + 
+									");\r\n" );
 							count_der_int++;
 						}
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
 							sb.append("ParamPow_" + regime.name + "_" + state.name + "_" + power.name + " : ParamPow \r\n" + 
-									"	generic map( \r\n" + 
-									"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
-									"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
-									"		)\r\n" + 
+									"generic map( \r\n" + 
+									"  BIT_TOP 	=>  " + power.integer +",\r\n" + 
+									"  BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+									")\r\n" + 
 									" " + 
-									"						port map (	clk => clk,\r\n" + 
-									"									rst => rst,\r\n" + 
-									"									Start => step_once_go,\r\n" + 
-									"									Done => subprocess_dyn_int_ready,\r\n" + 
-									"									X => pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X ,\r\n" + 
-									"									A => pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A ,\r\n" + 
-									"									Output => pow_" + regime.name + "_" + state.name + "_" + power.name + "\r\n" + 
-									"									);\r\n");
+									"port map (	clk => clk,\r\n" + 
+									"  rst => rst,\r\n" + 
+									"  Start => step_once_go,\r\n" + 
+									"  Done => subprocess_dyn_int_ready,\r\n" + 
+									"  X => pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X ,\r\n" + 
+									"  A => pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A ,\r\n" + 
+									"  Output => pow_" + regime.name + "_" + state.name + "_" + power.name + "\r\n" + 
+									");\r\n");
 							count_der_int++;
 						}
 					}
@@ -224,53 +223,47 @@ public class StatevariableProcess {
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
 						sb.append("ParamExp_noregime_" + state.name + "_" + exponential.name + " : ParamExp \r\n" + 
-								"	generic map( \r\n" + 
-								"		BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
-								"		BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
-								"		)\r\n" + 
-								" " + 
-								"						port map (	clk => clk,\r\n" + 
-								"									rst => rst,\r\n" + 
-								"									Start => step_once_go,\r\n" + 
-								"									Done => subprocess_dyn_int_ready,\r\n" + 
-								"									X => pre_exp_noregime_" + state.name + "_" + exponential.name + ",\r\n" + 
-								"									Output => exp_noregime_" + state.name + "_" + exponential.name + "\r\n" + 
-								"									);\r\n" );
+								"generic map( \r\n" + 
+								"  BIT_TOP 	=>  " + exponential.integer +",\r\n" + 
+								"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
+								")\r\n" + 
+								"port map (	clk => clk,\r\n" + 
+								"  rst => rst,\r\n" + 
+								"  Start => step_once_go,\r\n" + 
+								"  Done => subprocess_dyn_int_ready,\r\n" + 
+								"  X => pre_exp_noregime_" + state.name + "_" + exponential.name + ",\r\n" + 
+								"  Output => exp_noregime_" + state.name + "_" + exponential.name + "\r\n" + 
+								");\r\n" );
 						count_der_int++;
 					}
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
 						sb.append("ParamPow_noregime_" + state.name + "_" + power.name + " : ParamPow \r\n" + 
-								"	generic map( \r\n" + 
-								"		BIT_TOP 	=>  " + power.integer +",\r\n" + 
-								"		BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
-								"		)\r\n" + 
-								" " + 
-								"						port map (	clk => clk,\r\n" + 
-								"									rst => rst,\r\n" + 
-								"									Start => step_once_go,\r\n" + 
-								"									Done => subprocess_dyn_int_ready,\r\n" + 
-								"									X => pre_pow_noregime_" + state.name + "_" + power.name + "_X ,\r\n" + 
-								"									A => pre_pow_noregime_" + state.name + "_" + power.name + "_A ,\r\n" + 
-								"									Output => pow_noregime_" + state.name + "_" + power.name + "\r\n" + 
-								"									);\r\n");
+								"generic map( \r\n" + 
+								"  BIT_TOP 	=>  " + power.integer +",\r\n" + 
+								"  BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
+								")\r\n" + 
+								"port map (	clk => clk,\r\n" + 
+								"  rst => rst,\r\n" + 
+								"  Start => step_once_go,\r\n" + 
+								"  Done => subprocess_dyn_int_ready,\r\n" + 
+								"  X => pre_pow_noregime_" + state.name + "_" + power.name + "_X ,\r\n" + 
+								"  A => pre_pow_noregime_" + state.name + "_" + power.name + "_A ,\r\n" + 
+								"  Output => pow_noregime_" + state.name + "_" + power.name + "\r\n" + 
+								");\r\n");
 						count_der_int++;
 					}
 				}
 			}
 		}
 		if (count_der_int == 0)
-			sb.append("\r\n" + 
-					"subprocess_dyn_int_ready <= '1';\r\n");
+			sb.append("\r\n\r\n" + 
+					"--No dynamics with complex equations found\r\nsubprocess_dyn_int_ready <= '1';\r\n");
 		
 	}
 
 	static void writeDynamicsCombProcess(StringBuilder sb, EDComponent comp, StringBuilder sensitivityList)
 	{
-		sb.append("\r\n" + 
-				"state_variable_process_dynamics_comb :process (" + sensitivityList + ")\r\n" + 
-				"begin\r\n");
-		
 		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
 			EDState state = j.next(); 
 			for(Iterator<EDRegime> k = comp.regimes.iterator(); k.hasNext(); ) {
@@ -279,7 +272,8 @@ public class StatevariableProcess {
 					EDDynamic dynamic = l.next(); 
 					if (dynamic.name.matches(state.name))
 					{
-						sb.append("statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1_next <= resize(statevariable_" + state.type +  "_" + state.name + "_in + (" + dynamic.Dynamics + ") * sysparam_time_timestep," + state.integer + "," + state.fraction + ");\r\n");
+						sensitivityList.append(",statevariable_" + state.type +  "_" + state.name + "_in");
+						
 					}
 				}
 			}
@@ -287,25 +281,94 @@ public class StatevariableProcess {
 				EDDynamic dynamic = l.next(); 
 				if (dynamic.name.matches(state.name))
 				{
-					sb.append("statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1_next <= resize(statevariable_" + state.type +  "_" + state.name + "_in + (" + dynamic.Dynamics + ") * sysparam_time_timestep," + state.integer + "," + state.fraction + ");\r\n");
-				
+					sensitivityList.append(",statevariable_" + state.type +  "_" + state.name + "_in");
+					
 				}
 			}
 		}
 		sb.append("\r\n" + 
-				"subprocess_dyn_ready <= '1';\r\n" + 
-				"end process state_variable_process_dynamics_comb;\r\n");
-		
+				"state_variable_process_dynamics_comb :process (" + sensitivityList + ")\r\n" + 
+				"begin\r\n");
+		boolean containsDivider = false;
+		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
+			EDState state = j.next(); 
+			for(Iterator<EDRegime> k = comp.regimes.iterator(); k.hasNext(); ) {
+				EDRegime regime = k.next(); 
+				for(Iterator<EDDynamic> l = regime.dynamics.iterator(); l.hasNext(); ) {
+					EDDynamic dynamic = l.next(); 
+					if (dynamic.name.matches(state.name))
+					{
+						sb.append("  statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1_next <= resize(statevariable_" + state.type +  "_" + state.name + "_in + (" + dynamic.Dynamics + ") * sysparam_time_timestep," + state.integer + "," + state.fraction + ");\r\n");
+						if (dynamic.Dynamics.contains("/"))
+							containsDivider = true;
+					}
+				}
+			}
+			for(Iterator<EDDynamic> l = comp.dynamics.iterator(); l.hasNext(); ) {
+				EDDynamic dynamic = l.next(); 
+				if (dynamic.name.matches(state.name))
+				{
+					sb.append("  statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1_next <= resize(statevariable_" + state.type +  "_" + state.name + "_in + (" + dynamic.Dynamics + ") * sysparam_time_timestep," + state.integer + "," + state.fraction + ");\r\n");
+					if (dynamic.Dynamics.contains("/"))
+						containsDivider = true;
+				}
+			}
+		}
+
+		if (!containsDivider)
+			sb.append("\r\n" + 
+					"  subprocess_dyn_ready <= '1';\r\n");
+		sb.append("end process state_variable_process_dynamics_comb;\r\n");
+
+		if (containsDivider)
+		{
+			//add the count process
+			sb.append("uut_delayDone_statevariable_"+comp.name+" : delayDone GENERIC MAP(\n" + 
+					"  Steps => 10\n" + 
+					"  )\n" + 
+					"PORT MAP(\n" + 
+					"  clk => clk,\n" + 
+					"  rst => rst,\n" + 
+					"  Start => step_once_go,\n" + 
+					"  Done => subprocess_dyn_ready\n" + 
+					");");
+		}
 	}
 
 	static void writeDynamicsSynProcess(StringBuilder sb, EDComponent comp )
 	{
 
 		
-		sb.append("state_variable_process_dynamics_syn :process (CLK)\r\n" + 
-				"begin\r\n"
-				+ "if clk'event and clk = '1' then  \r\n" + 
-				"if subprocess_all_ready = '1' then  \r\n");
+		sb.append("state_variable_process_dynamics_syn :process (CLK,rst)\r\n" + 
+				"begin\r\n" +
+				"  if rst = '1' then \r\n");
+		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
+			EDState state = j.next(); 
+			for(Iterator<EDRegime> k = comp.regimes.iterator(); k.hasNext(); ) {
+				EDRegime regime = k.next(); 
+				for(Iterator<EDDynamic> l = regime.dynamics.iterator(); l.hasNext(); ) {
+					EDDynamic dynamic = l.next(); 
+					if (dynamic.name.matches(state.name))
+					{
+						sb.append("      statevariable_" + state.type +  "_" + regime.name + 
+								"_" + state.name + "_temp_1 <= to_sfixed(0.0 ," + 
+								state.integer +"," + state.fraction + ");\r\n");
+					}
+				}
+			}
+			for(Iterator<EDDynamic> l = comp.dynamics.iterator(); l.hasNext(); ) {
+				EDDynamic dynamic = l.next(); 
+				if (dynamic.name.matches(state.name))
+				{
+					sb.append("      statevariable_" + state.type +  "_noregime_" + 
+						state.name + "_temp_1 <= to_sfixed(0.0 ," +
+						state.integer +"," + state.fraction + ");\r\n");
+				}
+			}
+		}
+		
+		sb.append(" elsif clk'event and clk = '1' then  \r\n" + 
+				"    if subprocess_all_ready = '1' then  \r\n");
 
 		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
 			EDState state = j.next(); 
@@ -315,7 +378,7 @@ public class StatevariableProcess {
 					EDDynamic dynamic = l.next(); 
 					if (dynamic.name.matches(state.name))
 					{
-						sb.append("statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1 <= statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1_next;\r\n");
+						sb.append("      statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1 <= statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1_next;\r\n");
 					}
 				}
 			}
@@ -323,14 +386,14 @@ public class StatevariableProcess {
 				EDDynamic dynamic = l.next(); 
 				if (dynamic.name.matches(state.name))
 				{
-					sb.append("statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1 <= statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1_next;\r\n");
+					sb.append("      statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1 <= statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1_next;\r\n");
 				}
 			}
 		}
 		
 		sb.append("\r\n" + 
-				"end if;\r\n" + 
-				"end if;\r\n" + 
+				"    end if;\r\n" + 
+				"  end if;\r\n" + 
 				"end process state_variable_process_dynamics_syn;\r\n" + 
 				"");
 	}
@@ -454,33 +517,33 @@ public class StatevariableProcess {
 			EDDynamic dynamic = i.next();
 			if (dynamic.name.matches(state.name))
 			{
-				sb.append("statevariable_" + state.type +  "_" + state.name + 
+				sb.append("  statevariable_" + state.type +  "_" + state.name + 
 						"_temp_1 := statevariable_" + state.type +  "_noregime_" +
 						state.name + "_temp_1;");
 				currentTemporarySignalID++;
 			}	
 		}
 		//next events
-		String eventInput = "statevariable_" + state.type +  "_" + state.name + "_in" ;
-		String eventInputReplace = "statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) ;
+		String eventInput = "  statevariable_" + state.type +  "_" + state.name + "_in" ;
+		String eventInputReplace = "  statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) ;
 		for(Iterator<EDEvent> i = comp.events.iterator(); i.hasNext(); ) {
 			EDEvent event = i.next();
 			for(Iterator<EDStateAssignment> k = event.stateAssignments.iterator(); k.hasNext(); ) {
 				EDStateAssignment state2 = k.next(); 
 				if (state2.name.matches(state.name))
 				{
-					sb.append("if eventport_in_" + event.name + " = '1' then\r\n" + 
-							"			statevariable_" + state.type +  "_" + state.name + 
+					sb.append("  if eventport_in_" + event.name + " = '1' then\r\n" + 
+							"    statevariable_" + state.type +  "_" + state.name + 
 							"_temp_" + currentTemporarySignalID + " := resize(" + state2.expression.replace(eventInput,eventInputReplace) + "," + state.integer + "," + state.fraction + ");\r\n" + 
-							"		else\r\n");
+							"  else\r\n");
 					if (currentTemporarySignalID > 1) {
-						sb.append("			statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n" );
+						sb.append("    statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n" );
 					}
 					else
 					{
-						sb.append("			statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
+						sb.append("    statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
 					}
-					sb.append("		end if;\r\n");
+					sb.append("  end if;\r\n");
 					currentTemporarySignalID++;
 				}					
 			}
@@ -492,18 +555,18 @@ public class StatevariableProcess {
 				EDStateAssignment state2 = k.next(); 
 				if (state2.name.matches(state.name))
 				{
-					sb.append("if " + condition.condition + " then\r\n" + 
-							"			statevariable_" + state.type +  "_" + state.name + 
+					sb.append("  if " + condition.condition + " then\r\n" + 
+							"    statevariable_" + state.type +  "_" + state.name + 
 							"_temp_" + currentTemporarySignalID + " := resize(" + state2.expression.replace(eventInput,eventInputReplace) + "," + state.integer + "," + state.fraction + ");\r\n" + 
-							"		else\r\n");
+							"  else\r\n");
 					if (currentTemporarySignalID > 1) {
-						sb.append("			statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n" );
+						sb.append("    statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n" );
 					}
 					else
 					{
-						sb.append("			statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
+						sb.append("    statevariable_" + state.type +  "_" + state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
 					}
-					sb.append("		end if;\r\n");
+					sb.append("  end if;\r\n");
 					currentTemporarySignalID++;
 				}					
 			}
@@ -523,19 +586,19 @@ public class StatevariableProcess {
 			}
 			if (hasEDDynamics) {
 				sb.append("\r\n" + 
-						"if ( current_regime_in_int = " + regime.name + " ) then\r\n" + 
-						"statevariable_" + state.type +  "_" + state.name + 
+						"  if ( current_regime_in_int = " + regime.name + " ) then\r\n" + 
+						"    statevariable_" + state.type +  "_" + state.name + 
 						"_temp_1 := statevariable_" + state.type +  "_" + regime.name + 
 						"_" + state.name + "_temp_1;\r\n" + 
-						"end if;\r\n" + 
+						"  end if;\r\n" + 
 						"");
 				currentTemporarySignalID++;
 			}
 			else {
 				sb.append("\r\n" + 
-						"if ( current_regime_in_int = " + regime.name + " ) then\r\n" + 
-						"statevariable_" + state.type +  "_" + state.name + "_temp_1 := resize(statevariable_" + state.type +  "_" + state.name + "_in ," + state.integer + "," + state.fraction + ");\r\n" + 
-						"end if;\r\n" + 
+						"  if ( current_regime_in_int = " + regime.name + " ) then\r\n" + 
+						"    statevariable_" + state.type +  "_" + state.name + "_temp_1 := resize(statevariable_" + state.type +  "_" + state.name + "_in ," + state.integer + "," + state.fraction + ");\r\n" + 
+						"  end if;\r\n" + 
 						"");
 			}
 			
@@ -547,22 +610,22 @@ public class StatevariableProcess {
 					EDStateAssignment state2 = k.next(); 
 					if (state2.name.matches(state.name))
 					{
-						sb.append("if ( current_regime_in_int = " + regime.name + " ) AND eventport_in_" +
+						sb.append("  if ( current_regime_in_int = " + regime.name + " ) AND eventport_in_" +
 								event.name  + "= '1' then\r\n" + 
-								"				statevariable_" + state.type +  "_" + state.name + "_temp_" + 
+								"    statevariable_" + state.type +  "_" + state.name + "_temp_" + 
 								currentTemporarySignalID + " := resize(" + state2.expression.replace(eventInput,eventInputReplace) + "," + state.integer + "," + state.fraction + ");\r\n" + 
-								"			else\r\n" );
+								"  else\r\n" );
 						
 						if (currentTemporarySignalID > 1 ) {
-							sb.append("					statevariable_" + state.type +  "_"
+							sb.append("    statevariable_" + state.type +  "_"
 									+ state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type
 									+  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n");
 						}
 						else {
-							sb.append("					statevariable_" + state.type +  "_" 
+							sb.append("    statevariable_" + state.type +  "_" 
 									+ state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
 						}
-						sb.append("			end if;");
+						sb.append("  end if;\r\n");
 						
 						
 						currentTemporarySignalID++;
@@ -576,22 +639,22 @@ public class StatevariableProcess {
 					EDStateAssignment state2 = k.next(); 
 					if (state2.name.matches(state.name))
 					{
-						sb.append("if ( current_regime_in_int = " + regime.name + " ) AND " +
+						sb.append("  if ( current_regime_in_int = " + regime.name + " ) AND " +
 								condition.condition  +  " then\r\n" + 
-								"				statevariable_" + state.type +  "_" + state.name + "_temp_" + 
+								"    statevariable_" + state.type +  "_" + state.name + "_temp_" + 
 								currentTemporarySignalID + " := resize(" + state2.expression.replace(eventInput,eventInputReplace) + "," + state.integer + "," + state.fraction + ");\r\n" + 
-								"			else\r\n" );
+								"  else\r\n" );
 						
 						if (currentTemporarySignalID > 1 ) {
-							sb.append("					statevariable_" + state.type +  "_"
+							sb.append("    statevariable_" + state.type +  "_"
 									+ state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type
 									+  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n");
 						}
 						else {
-							sb.append("					statevariable_" + state.type +  "_" 
+							sb.append("    statevariable_" + state.type +  "_" 
 									+ state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type +  "_" + state.name + "_in;\r\n");
 						}
-						sb.append("			end if;");
+						sb.append("  end if;\r\n");
 						
 						
 						currentTemporarySignalID++;
@@ -603,7 +666,7 @@ public class StatevariableProcess {
 		for(Iterator<EDRegime> l = comp.regimes.iterator(); l.hasNext(); ) {
 			EDRegime regime = l.next();
 			sb.append("\r\n" + 
-					"if (not ( current_regime_in_int = next_regime )) and ( next_regime = " + regime.name + " ) then\r\n");
+					"  if (not ( current_regime_in_int = next_regime )) and ( next_regime = " + regime.name + " ) then\r\n");
 			
 
 			for(Iterator<EDOnEntry> i = regime.onEntrys.iterator(); i.hasNext(); ) {
@@ -612,19 +675,19 @@ public class StatevariableProcess {
 					EDStateAssignment state2 = k.next(); 
 					if (state2.name.matches(state.name))
 					{
-						eventInput = "statevariable_" + state.type +  "_" + state.name + "_in" ;
-						eventInputReplace = "statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) ;
-						sb.append("statevariable_" + state.type +  "_" + state.name + "_temp_"
+						eventInput = "    statevariable_" + state.type +  "_" + state.name + "_in" ;
+						eventInputReplace = "    statevariable_" + state.type +  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) ;
+						sb.append("    statevariable_" + state.type +  "_" + state.name + "_temp_"
 								+ currentTemporarySignalID + " := resize(" + state2.expression.replace(eventInput,eventInputReplace) + "," 
 								+ state.integer + "," + state.fraction + ");\r\n" + 
-								"			else\r\n");
+								"  else\r\n");
 						if (currentTemporarySignalID == 1) {
-							sb.append("			statevariable_" + state.type +  "_" + 
+							sb.append("    statevariable_" + state.type +  "_" + 
 							state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type 
 							+  "_" + state.name +  "_in;\r\n");
 						}
 						else {
-							sb.append("			statevariable_" + state.type +  "_" + 
+							sb.append("    statevariable_" + state.type +  "_" + 
 							state.name + "_temp_" + currentTemporarySignalID + " := statevariable_" + state.type
 							+  "_" + state.name + "_temp_" + (currentTemporarySignalID - 1) + ";\r\n");
 						}
@@ -633,40 +696,40 @@ public class StatevariableProcess {
 				}
 			}
 			sb.append("\r\n" + 
-					"end if;\r\n");
+					"  end if;\r\n");
 			
 		}
 		
 		
 		sb.append("\r\n" + 
-				"if reset_model = '1' then  \r\n" + 
+				"  if reset_model = '1' then  \r\n" + 
 				"");
 		if (state.onstart.matches("0")) {
-			sb.append(" statevariable_" + state.type +  "_" + state.name + "_next <= (others => '0');\r\n");
+			sb.append("    statevariable_" + state.type +  "_" + state.name + "_next <= (others => '0');\r\n");
 		}
 		else
 		{
-			sb.append(" statevariable_" + state.type +  "_" + state.name + "_next <= resize(" + state.onstart +","+ 
+			sb.append("    statevariable_" + state.type +  "_" + state.name + "_next <= resize(" + state.onstart +","+ 
 		state.integer + "," + state.fraction + ");\r\n");
 		}
 		sb.append("\r\n" + 
-				"else\r\n" + 
+				"  else\r\n" + 
 				"");
 		
 		if (currentTemporarySignalID == 1) {
-			sb.append(" statevariable_" + state.type +  "_" + state.name + 
+			sb.append("    statevariable_" + state.type +  "_" + state.name + 
 					"_next <= statevariable_" + state.type 
 			+  "_" + state.name +  "_in;\r\n");
 		}
 		else {
-			sb.append(" statevariable_" + state.type +  "_" + state.name + 
+			sb.append("    statevariable_" + state.type +  "_" + state.name + 
 					"_next <= statevariable_" + state.type +  "_" + state.name + "_temp_" + 
 					(currentTemporarySignalID - 1) + ";");
 		}
 		
 		
 		sb.append("\r\n" + 
-				"end if;\r\n" + 
+				"  end if;\r\n" + 
 				"");
 		sb.append("\r\n" + 
 				"end process;\r\n");
@@ -773,8 +836,8 @@ public class StatevariableProcess {
 		}
 		
 		sb.append("\r\n\r\n" + 
-				"		begin\r\n" + 
-				"		");
+				"begin\r\n" + 
+				"");
 		
 		int currentVariableID = 1;
 		for(Iterator<EDRegime> l = comp.regimes.iterator(); l.hasNext(); ) {
@@ -785,12 +848,12 @@ public class StatevariableProcess {
 					EDEventOut event2 = k.next(); 
 					if (event2.name.matches(port.name))
 					{
-						sb.append("if ( current_regime_in_int = " + regime.name + 
+						sb.append("  if ( current_regime_in_int = " + regime.name + 
 								") and eventport_in_" + event.name + " = '1' then\r\n" + 
-								"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
-								"							else\r\n" + 
-								"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
-								"							end if;");
+								"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
+								"  else\r\n" + 
+								"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
+								"  end if;");
 						currentVariableID++;
 					}					
 				}
@@ -801,12 +864,12 @@ public class StatevariableProcess {
 					EDEventOut event = k.next(); 
 					if (event.name.matches(port.name))
 					{
-						sb.append("if ( current_regime_in_int = " + regime.name + 
+						sb.append("  if ( current_regime_in_int = " + regime.name + 
 								") and " + condition.condition + " then\r\n" + 
-								"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
-								"							else\r\n" + 
-								"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
-								"							end if;");
+								"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
+								"  else\r\n" + 
+								"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
+								"  end if;");
 						currentVariableID++;
 					}					
 				}
@@ -818,11 +881,11 @@ public class StatevariableProcess {
 				EDEventOut event2 = k.next(); 
 				if (event2.name.matches(port.name))
 				{
-					sb.append("if eventport_in_" + event.name + " = '1' then\r\n" + 
-							"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
-							"							else\r\n" + 
-							"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
-							"							end if;");
+					sb.append("  if eventport_in_" + event.name + " = '1' then\r\n" + 
+							"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
+							"  else\r\n" + 
+							"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
+							"  end if;");
 					currentVariableID++;
 				}					
 			}
@@ -833,11 +896,11 @@ public class StatevariableProcess {
 				EDEventOut event = k.next(); 
 				if (event.name.matches(port.name))
 				{
-					sb.append("if  " + condition.condition + " then\r\n" + 
-							"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
-							"							else\r\n" + 
-							"								eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
-							"							end if;");
+					sb.append("  if  " + condition.condition + " then\r\n" + 
+							"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '1';\r\n" + 
+							"  else\r\n" + 
+							"    eventport_" + port.direction +  "_" + port.name + "_temp_" + currentVariableID + " := '0';\r\n" + 
+							"  end if;");
 					currentVariableID++;
 				}					
 			}
@@ -846,8 +909,8 @@ public class StatevariableProcess {
 			finalEDEventPort.append( " '0' ");
 		}
 		sb.append(finalEDEventPort.toString() + ";\r\n\r\n" + 
-				"	end process;\r\n" + 
-				"	---------------------------------------------------------------------\r\n" );
+				"end process;\r\n" + 
+				"---------------------------------------------------------------------\r\n" );
 		
 		 
 	}
@@ -958,33 +1021,33 @@ public class StatevariableProcess {
 				"\r\n" + 
 				"subprocess_all_ready_process: process(subprocess_der_int_ready,subprocess_der_int_pre_ready,subprocess_der_ready,subprocess_dyn_int_pre_ready,subprocess_dyn_int_ready,subprocess_dyn_ready,subprocess_model_ready)\r\n" + 
 				"begin\r\n" + 
-				"if subprocess_der_int_ready = '1'  and subprocess_der_int_pre_ready = '1'and subprocess_der_ready ='1' and subprocess_dyn_int_ready = '1' and subprocess_dyn_int_pre_ready = '1' and subprocess_dyn_ready = '1' and subprocess_model_ready = '1' then\r\n" + 
-				"subprocess_all_ready <= '1';\r\n" + 
-				"else\r\n" + 
-				"subprocess_all_ready <= '0';\r\n" + 
-				"end if;\r\n" + 
+				"  if subprocess_der_int_ready = '1'  and subprocess_der_int_pre_ready = '1'and subprocess_der_ready ='1' and subprocess_dyn_int_ready = '1' and subprocess_dyn_int_pre_ready = '1' and subprocess_dyn_ready = '1' and subprocess_model_ready = '1' then\r\n" + 
+				"    subprocess_all_ready <= '1';\r\n" + 
+				"  else\r\n" + 
+				"    subprocess_all_ready <= '0';\r\n" + 
+				"  end if;\r\n" + 
 				"end process subprocess_all_ready_process;\r\n" + 
 				"---------------------------------------------------------------------\r\n" + 
 				"\r\n" + 
 				"\r\n" + 
 				"\r\n" + 
 				"count_proc:process(clk)\r\n" + 
-				"  	begin \r\n" + 
-				"  		if (clk'EVENT AND clk = '1') then\r\n" + 
-				"			if step_once_go = '1' then\r\n" + 
-				"  				COUNT <= \"000\";\r\n" + 
-				"				component_done_int <= '0';\r\n" + 
-				"  			elsif COUNT = \"001\" then\r\n" + 
-				"				component_done_int <= '1';\r\n" + 
-				"			elsif subprocess_all_ready = '1' then\r\n" + 
-				"  				COUNT <= COUNT + 1;\r\n" + 
-				"				component_done_int <= '0';\r\n" + 
-				"			end if;\r\n" + 
-				"  		end if;\r\n" + 
+				"begin \r\n" + 
+				"  if (clk'EVENT AND clk = '1') then\r\n" + 
+				"    if step_once_go = '1' then\r\n" + 
+				"      COUNT <= \"000\";\r\n" + 
+				"      component_done_int <= '0';\r\n" + 
+				"    elsif COUNT = \"001\" then\r\n" + 
+				"      component_done_int <= '1';\r\n" + 
+				"    elsif subprocess_all_ready = '1' then\r\n" + 
+				"      COUNT <= COUNT + 1;\r\n" + 
+				"      component_done_int <= '0';\r\n" + 
+				"    end if;\r\n" + 
+				"  end if;\r\n" + 
 				"end process count_proc;");
 		if (comp.Children.size() == 0)
 		{
-			sb.append("\r\n" + 
+			sb.append("\r\n\r\n" + 
 					"component_done <= component_done_int;");
 		}
 		else
@@ -1005,12 +1068,12 @@ public class StatevariableProcess {
 			sb.append("\r\n" + 
 					"childrenCombined_component_done_process:process("+childCombiner.toString() +"CLK)\r\n" + 
 					"begin\r\n" + 
-					"if ("+childCombiner2.toString() +") then\r\n" + 
-					"	childrenCombined_component_done <= '1';\r\n" + 
-					"else\r\n" + 
-					"	childrenCombined_component_done <= '0';\r\n" + 
-					"end if;\r\n" + 
-					"end process childrenCombined_component_done_process;\r\n" + 
+					"  if ("+childCombiner2.toString() +") then\r\n" + 
+					"    childrenCombined_component_done <= '1';\r\n" + 
+					"  else\r\n" + 
+					"    childrenCombined_component_done <= '0';\r\n" + 
+					"  end if;\r\n" + 
+					"end process childrenCombined_component_done_process;\r\n\r\n" + 
 					"component_done <= component_done_int and childrenCombined_component_done;");
 		}
 		
@@ -1023,59 +1086,55 @@ public class StatevariableProcess {
 					"---------------------------------------------------------------------\r\n" + 
 					"\r\n" + 
 					"step_once_complete_synch:process(clk)\r\n" + 
-					"  	begin \r\n" + 
-					"  		if (clk'EVENT AND clk = '1') then\r\n" + 
-					"		\r\n" + 
-					"		if component_done = '1' and step_once_complete_fired = '0'  then\r\n" + 
-					"			step_once_complete <= '1';\r\n" + 
-					"			step_once_complete_fired <= '1';\r\n" + 
+					"begin \r\n" + 
+					"  if (clk'EVENT AND clk = '1') then\r\n" + 
+					"    if component_done = '1' and step_once_complete_fired = '0'  then\r\n" + 
+					"      step_once_complete <= '1';\r\n" + 
+					"      step_once_complete_fired <= '1';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("eventport_" + port.direction +  "_" + port.name + 
+				sb.append("      eventport_" + port.direction +  "_" + port.name + 
 						" <=  eventport_" + port.direction + "_" + port.name + "_internal ;\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
-					"	elsif component_done = '0' then\r\n" + 
-					"			step_once_complete <= '0';\r\n" + 
-					"			step_once_complete_fired <= '0';\r\n" + 
-					"		\r\n" + 
+					"    elsif component_done = '0' then\r\n" + 
+					"      step_once_complete <= '0';\r\n" + 
+					"      step_once_complete_fired <= '0';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("eventport_" + port.direction +  "_" + port.name + 
+				sb.append("      eventport_" + port.direction +  "_" + port.name + 
 						" <=  '0';\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
-					"		\r\n" + 
-					"	else\r\n" + 
-					"		step_once_complete <= '0';\r\n" + 
-					"		\r\n" + 
+				
+					"    else\r\n" + 
+					"      step_once_complete <= '0';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("eventport_" + port.direction +  "_" + port.name + 
+				sb.append("      eventport_" + port.direction +  "_" + port.name + 
 						" <=  '0';\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
-					"		\r\n" + 
-					"		end if;\r\n" + 
-					"	end if;\r\n" + 
-					"  	end process step_once_complete_synch;\r\n" + 
+					"    end if;\r\n" + 
+					"  end if;\r\n" + 
+					"end process step_once_complete_synch;\r\n" + 
 					"---------------------------------------------------------------------\r\n");
 		}
 		sb.append("\r\n" + 

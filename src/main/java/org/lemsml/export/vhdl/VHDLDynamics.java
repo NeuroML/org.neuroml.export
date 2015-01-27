@@ -308,6 +308,30 @@ public class VHDLDynamics {
 		return events;
 	}
 	
+	
+	public static void optimiseDerivedVariables(EDComponent edComponent, ComponentType ct)
+	{
+		for (EDDerivedVariable dv: edComponent.derivedvariables)
+		{
+			for (EDDerivedVariable dv2: edComponent.derivedvariables)
+			{
+				if (dv2.isEmpty && dv.value.contains(" derivedvariable_" + 
+						dv2.dimension + "_" + dv2.name + "_next"))
+				{
+					dv.value = dv.value.replace("  ", " ");
+					dv.value = dv.value.replace("* derivedvariable_" + 
+							dv2.dimension + "_" + dv2.name + "_next", "");
+					dv.value = dv.value.replace("+ derivedvariable_" + 
+							dv2.dimension + "_" + dv2.name + "_next", "");
+					dv.value = dv.value.replace("derivedvariable_" + 
+							dv2.dimension + "_" + dv2.name + "_next *", "");
+					dv.value = dv.value.replace("derivedvariable_" + 
+							dv2.dimension + "_" + dv2.name + "_next +", "");
+				}
+			}
+		}		
+	}
+	
 
 	public static void writeDerivedVariables(EDComponent edComponent, ComponentType ct, 
 			LemsCollection<DerivedVariable> derivedVariables, Component comp
@@ -319,7 +343,7 @@ public class VHDLDynamics {
 			EDDerivedVariable edDerivedVariable = new EDDerivedVariable();
 			edDerivedVariable.name = (dv.getName());
 			edDerivedVariable.exposure = (dv.getExposure() != null ? dv.getExposure().getName() : "");
-						
+			edDerivedVariable.dimension = dv.getDimension().name;
 			String val = dv.getValueExpression();
 			String sel = dv.getSelect();
 
@@ -327,12 +351,13 @@ public class VHDLDynamics {
 			if (val != null) {
 				String value = VHDLEquations.encodeVariablesStyle(dv.getValueExpression(),
 						ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues) ;
+						ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues,true) ;
 				value = VHDLEquations.writeInternalExpLnLogEvaluators(value,edDerivedVariable,dv.getName(),sensitivityList,"");
 				value = value.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 				edDerivedVariable.value = (value);
 				
 			} else if (sel != null) {
+				boolean empty = true;
 				String red = dv.getReduce();
 				String selval = sel;
 				if (red != null) {
@@ -390,15 +415,19 @@ public class VHDLDynamics {
 					}
 					
 					
-					
+					if (items.size() > 1)
+					{
+						empty = false;
+						items.remove(0);
+					}
 					selval = iterativeReduction(items,op).get(0); //StringUtil.join(items, op);
 					
 					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues,true);
 					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 					edDerivedVariable.value=(encodedValue);
-					
+					edDerivedVariable.isEmpty = empty;
 				}
 				else
 				{
@@ -413,7 +442,7 @@ public class VHDLDynamics {
 					sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal,");
 					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),
-							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues);
+							ct.getRequirements(),ct.getPropertys(),sensitivityList,params,combinedParameterValues,true);
 					encodedValue = encodedValue.replaceAll(" \\$\\# "," \\( ").replaceAll(" \\#\\$ "," \\) ");
 			    	
 					edDerivedVariable.value = (encodedValue);

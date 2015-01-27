@@ -29,14 +29,14 @@ public class Architecture {
 		if (false && comp.name.contains("neuron_model"))
 		{
 			sb.append("dut : ParamMux\r\n" + 
-					"	generic map (\r\n" + 
-					"		NSpikeSources	=> cNSpikeSources,\r\n" + 
-					"		NOutputs		=> cNOutputs,\r\n" + 
-					"		NSelectBits		=> cNSelectBits)\r\n" + 
-					"	port map(\r\n" + 
-					"		SpikeIn 	=> EventPort_in_spike_aggregate,\r\n" + 
-					"		SelectIn	=> SelectSpikesIn,\r\n" + 
-					"		SpikeOut	=> SpikeOut);\r\n" + 
+					"generic map (\r\n" + 
+					"  NSpikeSources	=> cNSpikeSources,\r\n" + 
+					"  NOutputs		=> cNOutputs,\r\n" + 
+					"  NSelectBits		=> cNSelectBits)\r\n" + 
+					"port map(\r\n" + 
+					"  SpikeIn 	=> EventPort_in_spike_aggregate,\r\n" + 
+					"  SelectIn	=> SelectSpikesIn,\r\n" + 
+					"  SpikeOut	=> SpikeOut);\r\n" + 
 					"");
 		}
 		sb.append("---------------------------------------------------------------------\r\n" + 
@@ -46,23 +46,24 @@ public class Architecture {
 		for(Iterator<EDComponent> z = comp.Children.iterator(); z.hasNext(); ) {
 			EDComponent child = z.next(); 
 			sb.append(child.name + "_uut : " + child.name + " \r\n" + 
-			" port map (	clk => clk,\r\n" + 
-			"				rst => rst,\r\n" + 
-			"				ce => ce,\r\n" + 
-			"				step_once_go => step_once_go,\r\n" + 
-			"				reset_model => reset_model,\r\n" + 
-			"				Component_done => " + child.name + "_Component_done,\r\n"
+			"port map (\r\n"
+			+ "  clk => clk,\r\n" + 
+			"  rst => rst,\r\n" + 
+			"  ce => ce,\r\n" + 
+			"  step_once_go => step_once_go,\r\n" + 
+			"  reset_model => reset_model,\r\n" + 
+			"  Component_done => " + child.name + "_Component_done,\r\n"
 			);
 
 			for(Iterator<EDEventPort> i = child.eventports.iterator(); i.hasNext(); ) {
 			    EDEventPort item = i.next(); //TODO change EventPort_in_spike_aggregate back to SpikeOut
-			    sb.append("			eventport_" + item.direction +  "_" + item.name + " => EventPort_in_spike_aggregate(" + count +  "),\r\n"  );
+			    sb.append("  eventport_" + item.direction +  "_" + item.name + " => EventPort_in_spike_aggregate(" + count +  "),\r\n"  );
 			    count++;
 			}
 			writeEDComponentMap(child,sb,"",child,comp.state);
-			sb.append("           sysparam_time_timestep => sysparam_time_timestep,\r\n" + 
-					"           sysparam_time_simtime => sysparam_time_simtime\r\n" + 
-					"		   );\r\n");
+			sb.append("  sysparam_time_timestep => sysparam_time_timestep,\r\n" + 
+					"  sysparam_time_simtime => sysparam_time_simtime\r\n" + 
+					");\r\n");
 			
 			for(Iterator<EDDerivedVariable> j = child.derivedvariables.iterator(); j.hasNext(); ) {
 				EDDerivedVariable dv = j.next(); 
@@ -96,7 +97,7 @@ public class Architecture {
 				}	
 			}
 			
-			writeStateVariableOutputs(child,sb,child.name + "_");
+			//writeStateVariableOutputs(child,sb,child.name + "_");
 			
 		}
 	}
@@ -105,8 +106,8 @@ public class Architecture {
 	{
 		for(Iterator<EDState> i = child.state.iterator(); i.hasNext(); ) {
 			EDState state = i.next(); 
-			sb.append("statevariable_" + state.type +  "_" + prependName  + state.name + "_out <= statevariable_" + state.type +  "_"+ prependName + state.name + "_out_int;"  );
-			sb.append("statevariable_" + state.type +  "_"+ prependName  + state.name + "_in_int <= statevariable_" + state.type +  "_" + prependName + state.name + "_in;");
+			sb.append("statevariable_" + state.type +  "_" + prependName  + state.name + "_out <= statevariable_" + state.type +  "_"+ prependName + state.name + "_out_int;\r\n"  );
+			sb.append("statevariable_" + state.type +  "_"+ prependName  + state.name + "_in_int <= statevariable_" + state.type +  "_" + prependName + state.name + "_in;\r\n");
 		}
 
 		for(Iterator<EDComponent> i = child.Children.iterator(); i.hasNext(); ) {
@@ -122,7 +123,7 @@ public class Architecture {
 
 		for(Iterator<EDParameter> i = comp.parameters.iterator(); i.hasNext(); ) {
 			EDParameter item = i.next(); 
-			sb.append("			param_" + item.type +  "_" + name + item.name + " => param_"  + item.type +  "_" + parent.name + "_" + name + item.name + ",\r\n"  );
+			sb.append("  param_" + item.type +  "_" + name + item.name + " => param_"  + item.type +  "_" + parent.name + "_" + name + item.name + ",\r\n"  );
 		}
 
 		for(Iterator<EDRequirement> i = comp.requirements.iterator(); i.hasNext(); ) {
@@ -135,9 +136,9 @@ public class Architecture {
 					stateexists = true;
 			}
 			if (stateexists )
-				sb.append("			requirement_" + item.type +  "_" + name + item.name + " => statevariable_" + item.type +  "_" +  name + item.name + "_in,\r\n"  );
+				sb.append("  requirement_" + item.type +  "_" + name + item.name + " => statevariable_" + item.type +  "_" +  name + item.name + "_in,\r\n"  );
 			else
-				sb.append("			requirement_" + item.type +  "_" + name + item.name + " => requirement_" + item.type +  "_"  +  item.name + ",\r\n"  );
+				sb.append("  requirement_" + item.type +  "_" + name + item.name + " => requirement_" + item.type +  "_"  +  item.name + ",\r\n"  );
 			
 		}
 		
@@ -146,7 +147,7 @@ public class Architecture {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed))
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -156,7 +157,7 @@ public class Architecture {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed))
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -165,7 +166,7 @@ public class Architecture {
 			EDState dv = j.next(); 
 			if (dv.exposure!= null && dv.exposure.length() > 0)
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -173,21 +174,21 @@ public class Architecture {
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
 			EDState item = i.next(); 
-			sb.append("			statevariable_" + item.type  +  "_" + name +item.name + "_out => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out_int,\r\n"  );
-			sb.append("			statevariable_" + item.type  +  "_" + name +item.name + "_in => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in_int,\r\n"  );
+			sb.append("  statevariable_" + item.type  +  "_" + name +item.name + "_out => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+			sb.append("  statevariable_" + item.type  +  "_" + name +item.name + "_in => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
 			if (item.ExposureIsUsed){
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
 			}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
 			if ( item.ExposureIsUsed){
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
 			}
 		}
 		
@@ -205,7 +206,7 @@ public class Architecture {
 
 		for(Iterator<EDParameter> i = comp.parameters.iterator(); i.hasNext(); ) {
 			EDParameter item = i.next(); 
-			sb.append("			param_" + item.type +  "_" + name + item.name + " => param_"  + item.type +  "_" + parent.name + "_" + name + item.name + ",\r\n"  );
+			sb.append("  param_" + item.type +  "_" + name + item.name + " => param_"  + item.type +  "_" + parent.name + "_" + name + item.name + ",\r\n"  );
 		}
 
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
@@ -213,7 +214,7 @@ public class Architecture {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed))
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -223,7 +224,7 @@ public class Architecture {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed))
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -232,7 +233,7 @@ public class Architecture {
 			EDState dv = j.next(); 
 			if (dv.exposure!= null && dv.exposure.length() > 0)
 			{
-				sb.append("			Exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  Exposure_" + dv.type +  "_" + name + dv.name + 
 						" => Exposure_" + dv.type +  "_" + parent.name + "_" +  name + 
 						dv.name + "_internal,\r\n"  );
 			}
@@ -241,21 +242,21 @@ public class Architecture {
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
 			EDState item = i.next(); 
-			sb.append("			statevariable_" + item.type  +  "_" + name +item.name + "_out => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out_int,\r\n"  );
-			sb.append("			statevariable_" + item.type  +  "_" + name +item.name + "_in => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in_int,\r\n"  );
+			sb.append("  statevariable_" + item.type  +  "_" + name +item.name + "_out => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+			sb.append("  statevariable_" + item.type  +  "_" + name +item.name + "_in => statevariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
 			if (item.ExposureIsUsed){
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" +  parent.name + "_" + name + item.name + "_in,\r\n"  );
 				}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
 			if (item.ExposureIsUsed){
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
-				sb.append("			derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_out => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_out,\r\n"  );
+				sb.append("  derivedvariable_" + item.type  +  "_" + name +item.name + "_in => derivedvariable_" + item.type +  "_" + parent.name + "_" +  name + item.name + "_in,\r\n"  );
 			}
 		}
 		
@@ -272,7 +273,7 @@ public class Architecture {
 	static void writeArchitecture(EDComponent comp, StringBuilder sb, String name)
 	{
 		sb.append("-------------------------------------------------------------------------------------------\r\n" + 
-				"-- Architecture Begins TEST\r\n" + 
+				"-- Architecture Begins\r\n" + 
 				"------------------------------------------------------------------------------------------- \r\n" + 
 				"\r\n" + 
 				"architecture RTL of " + name + " is\r\n" + 
@@ -318,6 +319,7 @@ public class Architecture {
 		
 		boolean expExists = false;
 		boolean powExists = false;
+		boolean dividerExists = false;
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
 			EDState state = i.next(); 
 			for(Iterator<EDRegime> j = comp.regimes.iterator(); j.hasNext(); ) {
@@ -338,6 +340,8 @@ public class Architecture {
 							writeEDPowerSignals(sb, regime.name + "_"  +state.name, EDPower);
 						}
 					}
+					if (EDDynamic.Dynamics.contains("/"))
+						dividerExists = true;
 				}
 			}
 			for(Iterator<EDDynamic> z = comp.dynamics.iterator(); z.hasNext(); ) {
@@ -357,16 +361,21 @@ public class Architecture {
 						powExists = true;
 						writeEDPowerSignals(sb, regime.name + "_"  +state.name, EDPower);
 					}
+					if (EDDynamic.Dynamics.contains("/"))
+						dividerExists = true;
 				}
 			
 			}
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable EDDerivedVariable = i.next();
+			if (EDDerivedVariable.value.contains("/"))
+				dividerExists = true;
 			for(Iterator<EDExponential> k = EDDerivedVariable.Exponentials.iterator(); k.hasNext(); ) {
 				EDExponential EDExponential = k.next();
 				expExists = true;
 				writeEDExponentialSignals(sb, EDDerivedVariable.name, EDExponential);
+
 			}
 
 			for(Iterator<EDPower> k = EDDerivedVariable.Powers.iterator(); k.hasNext(); ) {
@@ -380,6 +389,8 @@ public class Architecture {
 			EDConditionalDerivedVariable EDConditionalDerivedVariable = i.next();
 			for(Iterator<EDCase> k = EDConditionalDerivedVariable.cases.iterator(); k.hasNext(); ) {
 				EDCase thisCase = k.next();
+				if (thisCase.value.contains("/"))
+					dividerExists = true;
 				for(Iterator<EDExponential> j = thisCase.Exponentials.iterator(); j.hasNext(); ) {
 					EDExponential EDExponential = j.next();
 					expExists = true;
@@ -401,6 +412,8 @@ public class Architecture {
 				EDRegime regime = j.next(); 
 				for(Iterator<EDDynamic> z = regime.dynamics.iterator(); z.hasNext(); ) {
 					EDDynamic EDDynamic = z.next(); 
+					if (EDDynamic.Dynamics.contains("/"))
+						dividerExists = true;
 					if (EDDynamic.name.matches(state.name))
 					{
 						sb.append("signal statevariable_" + state.type +  "_" + regime.name +  "_" + state.name + "_temp_1 : sfixed (" + state.integer + " downto " + state.fraction + ");\r\n"  );
@@ -410,6 +423,8 @@ public class Architecture {
 			}
 			for(Iterator<EDDynamic> z = comp.dynamics.iterator(); z.hasNext(); ) {
 				EDDynamic EDDynamic = z.next(); 
+				if (EDDynamic.Dynamics.contains("/"))
+					dividerExists = true;
 				if (EDDynamic.name.matches(state.name))
 				{
 					sb.append("signal statevariable_" + state.type +  "_noregime_" + state.name + "_temp_1 : sfixed (" + state.integer + " downto " + state.fraction + ");\r\n"  );
@@ -422,33 +437,45 @@ public class Architecture {
 		
 		if (expExists)
 			sb.append("Component ParamExp is\r\n" + 
-					"	generic( \r\n" + 
-					"		BIT_TOP 	: integer := 20;	\r\n" + 
-					"		BIT_BOTTOM	: integer := -20);	\r\n" + 
-					"	port(\r\n" + 
-					"		clk		: In  Std_logic;\r\n" + 
-					"		rst		: In  Std_logic;\r\n" + 
-					"		Start	: In  Std_logic;\r\n" + 
-					"		Done	: Out  Std_logic;\r\n" + 
-					"		X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
-					"		Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
-					"		);\r\n" + 
+					"generic( \r\n" + 
+					"  BIT_TOP 	: integer := 20;	\r\n" + 
+					"  BIT_BOTTOM	: integer := -20);	\r\n" + 
+					"port(\r\n" + 
+					"  clk		: In  Std_logic;\r\n" + 
+					"  rst		: In  Std_logic;\r\n" + 
+					"  Start	: In  Std_logic;\r\n" + 
+					"  Done	: Out  Std_logic;\r\n" + 
+					"  X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"  Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
+					");\r\n" + 
 					"end Component;\r\n");
+		
+		if (dividerExists)
+			sb.append("component delayDone is\n" + 
+					"generic( \n" + 
+					"  Steps 	: integer := 10);	\n" + 
+					"port(\n" + 
+					"  clk		: In  Std_logic;\n" + 
+					"  rst		: In  Std_logic;\n" + 
+					"  Start		: In  Std_logic;\n" + 
+					"  Done		: Out  Std_logic\n" + 
+					");\n" + 
+					"end component;\r\n");
 		
 		if (powExists)
 			sb.append("Component ParamPow is\r\n" + 
-					" generic( \r\n" + 
-					"		BIT_TOP 	: integer := 11;	\r\n" + 
-					"		BIT_BOTTOM	: integer := -12);\r\n	" +
-					"	port(\r\n" + 
-					"		clk		: In  Std_logic;\r\n" + 
-					"		rst		: In  Std_logic;\r\n" + 
-					"		Start	: In  Std_logic;\r\n" + 
-					"		Done	: Out  Std_logic;\r\n" + 
-					"		X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
-					"		A		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
-					"		Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
-					"		);\r\n" + 
+					"generic( \r\n" + 
+					"  BIT_TOP 	: integer := 11;	\r\n" + 
+					"  BIT_BOTTOM	: integer := -12);\r\n	" +
+					"port(\r\n" + 
+					"  clk		: In  Std_logic;\r\n" + 
+					"  rst		: In  Std_logic;\r\n" + 
+					"  Start	: In  Std_logic;\r\n" + 
+					"  Done	: Out  Std_logic;\r\n" + 
+					"  X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"  A		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
+					"  Output	: Out sfixed(BIT_TOP downto BIT_BOTTOM)\r\n" + 
+					");\r\n" + 
 					"end Component; \r\n");
 		
 		sb.append("\r\n" + 
@@ -457,20 +484,20 @@ public class Architecture {
 				"---------------------------------------------------------------------\r\n");
 		for(Iterator<EDDerivedVariable> z = comp.derivedvariables.iterator(); z.hasNext(); ) {
 			EDDerivedVariable EDDerivedVariable = z.next(); 
-			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + " : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");");
-			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + "_next : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");");
+			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + " : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + "_next : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");\r\n");
 			
 		}
 		for(Iterator<EDConditionalDerivedVariable> z = comp.conditionalderivedvariables.iterator(); z.hasNext(); ) {
 			EDConditionalDerivedVariable EDConditionalDerivedVariable = z.next(); 
-			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + " : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");");
-			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + "_next : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");");
+			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + " : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + "_next : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");\r\n");
 			
 		}
 		for(Iterator<EDDerivedParameter> z = comp.derivedparameters.iterator(); z.hasNext(); ) {
 			EDDerivedParameter EDDerivedParameter = z.next(); 
-			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + " : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");");
-			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + "_next : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");");
+			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + " : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");\r\n");
+			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + "_next : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");\r\n");
 			
 		}
 		
@@ -483,7 +510,7 @@ public class Architecture {
 		
 		for(Iterator<EDState> z = comp.state.iterator(); z.hasNext(); ) {
 			EDState state = z.next(); 
-			sb.append("signal statevariable_" + state.type +  "_" + state.name + "_next : sfixed (" + state.integer + " downto " + state.fraction + ");");
+			sb.append("signal statevariable_" + state.type +  "_" + state.name + "_next : sfixed (" + state.integer + " downto " + state.fraction + ");\r\n");
 			
 		}
 		
@@ -535,30 +562,29 @@ public class Architecture {
 		for(Iterator<EDComponent> z = comp.Children.iterator(); z.hasNext(); ) {
 			EDComponent child = z.next(); 
 			sb.append("component " + child.name + " \r\n" + 
-			"    Port (\r\n" + 
-			"		   clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-			"          rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-			"          ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
-			"\r\n" + 
-			"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-			"          reset_model : in STD_LOGIC; --signal to all EDComponents to go into their reset state\r\n" + 
-			"		   ");
+			"Port (\r\n" + 
+			"  clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
+			"  rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
+			"  ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+			"  step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
+			"  reset_model : in STD_LOGIC; --signal to all EDComponents to go into their reset state\r\n" + 
+			"");
 	
-			sb.append("		   Component_done : out STD_LOGIC;\r\n");
+			sb.append("  Component_done : out STD_LOGIC;\r\n");
 	
 			String name = "";
 			for(Iterator<EDEventPort> i = child.eventports.iterator(); i.hasNext(); ) {
 			    EDEventPort item = i.next();
-			    sb.append("			eventport_" + item.direction +  "_" + item.name + " : " + item.direction + " STD_LOGIC;\r\n"  );
+			    sb.append("  eventport_" + item.direction +  "_" + item.name + " : " + item.direction + " STD_LOGIC;\r\n"  );
 			}
 			for(Iterator<EDRequirement> i = child.requirements.iterator(); i.hasNext(); ) {
 				EDRequirement item = i.next(); 
-				sb.append("			requirement_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("  requirement_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 			}
 			Entity.writeEntitySignals(child,sb,name);
-			sb.append("           sysparam_time_timestep : in sfixed (-6 downto -22);\r\n" + 
-				  "           sysparam_time_simtime : in sfixed (6 downto -22)\r\n" + 
-				  "	);\r\n" + 
+			sb.append("  sysparam_time_timestep : in sfixed (-6 downto -22);\r\n" + 
+				  "  sysparam_time_simtime : in sfixed (6 downto -22)\r\n" + 
+				  ");\r\n" + 
 				"end component;\r\n");
 			
 			sb.append("signal " + child.name + "_Component_done : STD_LOGIC ; ");
@@ -579,8 +605,8 @@ public class Architecture {
 					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
 			{
 				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
 				
 			}
 		}
@@ -590,8 +616,8 @@ public class Architecture {
 					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
 			{
 				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
 				
 			}
 		}
@@ -600,8 +626,8 @@ public class Architecture {
 			if (dv.exposure!= null && dv.exposure.length() > 0)
 			{
 				sb.append("signal Exposure_" + dv.type +  "_" + name + child.name + "_" + dv.name + "_internal : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
-				sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_out_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
+				//sb.append("signal statevariable_" + dv.type +  "_" +name + child.name + "_" + dv.name + "_in_int : sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n");
 				
 			}
 		}

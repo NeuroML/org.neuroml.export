@@ -33,17 +33,18 @@ signal output_internal : sfixed(BIT_TOP downto BIT_BOTTOM);
 signal count : sfixed(BIT_TOP downto BIT_BOTTOM);
 begin
 	 
-	process(clk)
+	process(clk,rst)
 		variable Sel : integer;
 		begin
 			if rst = '1' then
 				count <= to_sfixed(1,BIT_TOP, BIT_BOTTOM);
 				output_internal <= to_sfixed (0,BIT_TOP, BIT_BOTTOM);
+				Done <= '0';
 			elsif clk'event and clk = '1' then
 				if Start = '1' then
 					count <= to_sfixed(1,BIT_TOP, BIT_BOTTOM);
 					output_internal <= A;
-						Done <= '0';
+					Done <= '0';
 				else
 					if To_slv ( resize (count - X   ,BIT_TOP, BIT_BOTTOM))(BIT_TOP-BIT_BOTTOM) = '1' then
 						count <= resize (count + to_sfixed(1,1,0)   ,BIT_TOP, BIT_BOTTOM);

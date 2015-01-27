@@ -204,7 +204,7 @@ public class VHDLEquations {
 				else
 				if (derivedVariables.hasName(toReplace))
 				{
-					if (isDerivedVariable == true || true)
+					if (isDerivedVariable == true)
 					{
 						sensitivityList.append(" derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + "_next ,");
 						returnString = returnString.replaceAll(" " + toReplace + " "," derivedvariable_" + derivedVariables.getByName(toReplace).dimension + "_" + toReplace + "_next ");

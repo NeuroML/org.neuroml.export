@@ -57,6 +57,7 @@ import org.lemsml.export.vhdl.edlems.EDRequirement;
 import org.lemsml.export.vhdl.edlems.EDSimulation;
 import org.lemsml.export.vhdl.edlems.EDStateAssignment;
 import org.lemsml.export.vhdl.metadata.MetadataWriter;
+import org.lemsml.export.vhdl.writer.Constraints;
 import org.lemsml.export.vhdl.writer.Entity;
 import org.lemsml.export.vhdl.writer.SiElegansTop;
 import org.lemsml.export.vhdl.writer.Testbench;
@@ -156,7 +157,8 @@ public class VHDLWriter extends BaseWriter {
 		SYNTH_TOP,
 		SIELEGANS_TOP,
 		DEFAULTPARAMJSON,
-		DEFAULTREADBACKJSON
+		DEFAULTREADBACKJSON,
+		CONSTRAINTS
 	}
 	
 	public enum Method {
@@ -167,7 +169,8 @@ public class VHDLWriter extends BaseWriter {
 		DEFAULTREADBACKJSON("vhdl/json_readback_default.vm"),
 		MUX("vhdl/ParamMux.vhd"),
 		EXP("vhdl/ParamExp.vhd"),
-		POW("vhdl/ParamPow.vhd");
+		POW("vhdl/ParamPow.vhd"),
+		COUNTER("vhdl/delayDone.vhd");
 		
 		
 	 private String filename;
@@ -251,6 +254,7 @@ public class VHDLWriter extends BaseWriter {
 		
 			Boolean expUsed = false;
 			Boolean powUsed = false;
+			Boolean counterUsed = false;
 			
 			
 			loopOverEDComponent(edComponent,componentScripts,expUsed,powUsed);
@@ -260,6 +264,8 @@ public class VHDLWriter extends BaseWriter {
 					expUsed = true;
 				if (script.toString().contains(": ParamPow"))
 					powUsed = true;
+				if (script.toString().contains(": delayDone"))
+					counterUsed = true;
 			}
 			if (expUsed )
 			{
@@ -268,6 +274,10 @@ public class VHDLWriter extends BaseWriter {
 			if (powUsed )
 			{
 				componentScripts.put("ParamPow",getPowScript());
+			}
+			if (counterUsed )
+			{
+				componentScripts.put("delayDone",getCounterScript());
 			}
 			//componentScripts.put("ParamMux",getMuxScript());
 			componentScripts.put("top_synth",getSimulationScript(ScriptType.SYNTH_TOP));
@@ -428,7 +438,9 @@ public class VHDLWriter extends BaseWriter {
 				TopSynth.writeTop(edSimulation, output);
 			} else if (scriptType == ScriptType.TESTBENCH){
 				Testbench.writeTestBench(edSimulation, output);
-			} 
+			} else if (scriptType == ScriptType.CONSTRAINTS){
+				Constraints.writeConstraintsFile(edSimulation, output);
+			}
 			
 			
 			
@@ -538,6 +550,30 @@ public class VHDLWriter extends BaseWriter {
 			
 		return sb.toString();
 	}
+	
+
+	private String getCounterScript() throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+		
+		Velocity.init();
+		
+		VelocityContext context = new VelocityContext();
+
+		Properties props = new Properties();
+		props.put("resource.loader", "class");
+		props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		VelocityEngine ve = new VelocityEngine();
+		ve.init(props);
+		
+		
+		Template template = ve.getTemplate(Method.COUNTER.getFilename());
+		StringWriter sw = new StringWriter();
+		template.merge( context, sw );
+			sb.append(sw);
+			
+		return sb.toString();
+	}
+	
 	
 	private String getPowScript() throws ContentError, ParseError {
 		StringBuilder sb = new StringBuilder();
@@ -790,6 +826,9 @@ public class VHDLWriter extends BaseWriter {
 		writeLinks(edComponent, comp);
 
 		VHDLDynamics.writeRegimes(edComponent, comp,writeChildren, parameters, parameterValues,lems );
+		
+		if (dyn != null)
+			VHDLDynamics.optimiseDerivedVariables(edComponent, ct);
 		
 
 		edComponent.parameters = VHDLParameters.writeParameters(comp, parameters, parameterValues );

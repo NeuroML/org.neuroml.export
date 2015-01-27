@@ -55,13 +55,14 @@ public class VHDLFixedPointDimensions {
 		} else if (dimension.equals("time"))
 		{
 			 fract = -18;//-24
-		} 	else if (dimension.equals("capacitance"))
+		} else if (dimension.equals("capacitance"))
 		{
 			 fract = -47;//-47
 		} else if (dimension.equals("conductance"))
 		{
 			 fract =  -53;//-53
 		} else if (dimension.equals("per_time"))
+		{
 			 fract = -2;
 		} 
 		
