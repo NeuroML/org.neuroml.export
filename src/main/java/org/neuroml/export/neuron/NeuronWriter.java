@@ -54,6 +54,7 @@ import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
 import org.neuroml.model.Species;
+import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -652,22 +653,19 @@ public class NeuronWriter extends BaseWriter {
                     int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
                     int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
 
-                    int preSegmentId = ec.hasTextParam("preSegment") ? Integer.parseInt(ec.getStringValue("preSegment")) : 0;
-                    int postSegmentId = ec.hasTextParam("postSegment") ? Integer.parseInt(ec.getStringValue("postSegment")) : 0;
+                    int preSegmentId = ec.hasStringValue("preSegment") ? Integer.parseInt(ec.getStringValue("preSegment")) : 0;
+                    int postSegmentId = ec.hasStringValue("postSegment") ? Integer.parseInt(ec.getStringValue("postSegment")) : 0;
 
-                    float preFractionAlong = ec.hasTextParam("preFractionAlong") ? Float.parseFloat(ec.getStringValue("preFractionAlong")) : 0.5f;
-                    float postFractionAlong = ec.hasTextParam("postFractionAlong") ? Float.parseFloat(ec.getStringValue("postFractionAlong")) : 0.5f;
+                    float preFractionAlong = ec.hasStringValue("preFractionAlong") ? Float.parseFloat(ec.getStringValue("preFractionAlong")) : 0.5f;
+                    float postFractionAlong = ec.hasStringValue("postFractionAlong") ? Float.parseFloat(ec.getStringValue("postFractionAlong")) : 0.5f;
 
-                    if (preSegmentId != 0 || postSegmentId != 0) {
-                        throw new GenerationException(
-                                "Connections on locations other than segment id=0 not yet supported...");
-                    }
-
+                    //System.out.println("preCellId: "+preCellId+", preSegmentId: "+preSegmentId+", preFractionAlong: "+preFractionAlong);
+                    
                     String preSecName;
 
                     if (preCell != null) {
                         NamingHelper nhPre = new NamingHelper(preCell);
-                        preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(preCell.getMorphology().getSegment().get(0)));
+                        preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegmentId)));
                     } else {
                         preSecName = prePop + "[" + preCellId + "]";
                     }
@@ -675,7 +673,7 @@ public class NeuronWriter extends BaseWriter {
                     String postSecName;
                     if (postCell != null) {
                         NamingHelper nhPost = new NamingHelper(postCell);
-                        postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(postCell.getMorphology().getSegment().get(0)));
+                        postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegmentId)));
                     } else {
                         postSecName = postPop + "[" + postCellId + "]";
                     }
@@ -720,6 +718,8 @@ public class NeuronWriter extends BaseWriter {
 
             for (Component input : inputs) {
                 String targetString = input.getStringValue("target");
+                int segmentId = input.hasStringValue("segmentId") ? Integer.parseInt(input.getStringValue("segmentId")) : 0;
+                float fractionAlong = input.hasStringValue("fractionAlong") ? Float.parseFloat(input.getStringValue("fractionAlong")) : 0.5f;
 
                 int cellNum = Utils.parseCellRefStringForCellNum(targetString);
                 String popName = Utils.parseCellRefStringForPopulation(targetString);
@@ -731,7 +731,7 @@ public class NeuronWriter extends BaseWriter {
                 if (cell != null) {
                     NamingHelper nh0 = new NamingHelper(cell);
                     secName = String.format("a_%s[%s].%s", popName,
-                            cellNum, nh0.getNrnSectionName( cell.getMorphology().getSegment().get(0)));
+                            cellNum, nh0.getNrnSectionName( CellUtils.getSegmentWithId(cell, segmentId) ));
                 } else {
                     secName = popName + "[" + cellNum + "]";
                 }
@@ -741,8 +741,8 @@ public class NeuronWriter extends BaseWriter {
                 addComment(main, "Adding input: " + input);
 
                 main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-                main.append(String.format("h(\"%s { %s = new %s(0.5) } \")\n\n", secName, inputName,
-                        NRNUtils.getSafeName(inputComp.getID())));
+                main.append(String.format("h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName,
+                        NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
 
             }
 
@@ -2222,7 +2222,7 @@ public class NeuronWriter extends BaseWriter {
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-/*     */ 
+/*  
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_MainenEtAl_PyramidalCell.xml"));
@@ -2258,6 +2258,8 @@ public class NeuronWriter extends BaseWriter {
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Syns.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Social.xml"));
+           */ 
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/generatedNeuroML2/LEMS_CElegans.xml"));
         
         String testScript = "set -e\n";
 
