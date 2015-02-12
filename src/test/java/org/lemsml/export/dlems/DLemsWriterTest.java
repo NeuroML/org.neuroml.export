@@ -11,13 +11,13 @@ import junit.framework.TestCase;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.exception.GenerationException;
+import org.neuroml.export.exception.ModelFeatureSupportException;
 import org.neuroml.model.util.NeuroMLException;
 
 /**

@@ -35,221 +35,240 @@ import org.neuroml.model.util.NeuroMLException;
  */
 public class InfoTreeCreator
 {
-	
-	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument) throws NeuroMLException {
+
+	public static InfoNode createInfoTree(final NeuroMLDocument nmlDocument) throws NeuroMLException
+	{
 		InfoNode infoRoot = new InfoNode();
-        
-        LinkedHashMap<String,Standalone> standalones = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
-        
-        for (Standalone element: standalones.values())
-        {
-        	Map<String, Object> properties = createPropertiesFromStandaloneComponent(element);
-        	infoRoot.putAll(properties);
-        }
+
+		LinkedHashMap<String, Standalone> standalones = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
+
+		for(Standalone element : standalones.values())
+		{
+			Map<String, Object> properties = createPropertiesFromStandaloneComponent(element);
+			infoRoot.putAll(properties);
+		}
 
 		return infoRoot;
 	}
-    
-    public static Map<String, Object> createPropertiesFromStandaloneComponent(Standalone element) throws NeuroMLException {
-    	
-    	Map<String, Object> properties = new LinkedHashMap<String, Object>();
-    			
-    	if(element instanceof Cell)
-        {
-            Cell cell = (Cell)element;
-            InfoNode cellProps = new InfoNode();
 
-            cellProps.put("ID", cell.getId());
-            if(cell.getNotes() != null && cell.getNotes().length() > 0) cellProps.put("Description", formatNotes(cell.getNotes()));
-            Morphology morph = cell.getMorphology();
-            cellProps.put("Number of segments", morph.getSegment().size());
-            cellProps.put("Number of segment groups", morph.getSegmentGroup().size());
-            if (cell.getBiophysicalProperties()==null) 
-            {
-                cellProps.put("Biophysical properties", "none");
-            }
-            else
-            {
-                MembraneProperties mp = cell.getBiophysicalProperties().getMembraneProperties();
-                for (ChannelDensity cd: mp.getChannelDensity()) 
-                {
-                    
-                    InfoNode cProps = new InfoNode();
-                    cellProps.put("Channel density: "+cd.getId(), cProps);
-                    cProps.put("ID", cd.getId());
-                    cProps.put("IonChannel", cd.getIonChannel());
-                    cProps.put("Ion", cd.getIon());
-                    if (cd.getErev()!=null)
-                    {
-                        cProps.put("Reversal potential", formatDimensionalQuantity(cd.getErev()));
-                    }
-                    cProps.put("Conductance density", formatDimensionalQuantity(cd.getCondDensity()));
-                    if (cd.getSegmentGroup()!=null)
-                    {
-                        cProps.put("Segment group", cd.getSegmentGroup());
-                    } 
-                    else if (cd.getSegment()!=null)
-                    {
-                        cProps.put("Segment", cd.getSegment());
-                    }
-                    else
-                    {
-                        cProps.put("Segment group", "all");
-                    }
-                }
-                for (SpecificCapacitance sc: mp.getSpecificCapacitance()) 
-                {
-                    InfoNode scProps = new InfoNode();
-                    scProps.put("Value", formatDimensionalQuantity(sc.getValue()));
-                    
-                    if (sc.getSegmentGroup() !=null) {
-                        cellProps.put("Specific capacitance on group "+sc.getSegmentGroup(), scProps);
-                        scProps.put("Segment group", sc.getSegmentGroup());
-                    } else if (sc.getSegment() !=null) {
-                        cellProps.put("Specific capacitance on segment "+sc.getSegment(), scProps);
-                        scProps.put("Segment", sc.getSegment());
-                    } else {
-                        cellProps.put("Specific capacitance", scProps);
-                        scProps.put("Segment group", "all");
-                    } 
-                }
-                IntracellularProperties ip = cell.getBiophysicalProperties().getIntracellularProperties();
-                
-                for (Resistivity res: ip.getResistivity()) 
-                {
-                    InfoNode resProps = new InfoNode();
-                    resProps.put("Value", formatDimensionalQuantity(res.getValue()));
-                    
-                    if (res.getSegmentGroup() !=null) {
-                        cellProps.put("Resistivity on group "+res.getSegmentGroup(), resProps);
-                        resProps.put("Segment group", res.getSegmentGroup());
-                    } else if (res.getSegment() !=null) {
-                        cellProps.put("Resistivity on segment "+res.getSegment(), resProps);
-                        resProps.put("Segment", res.getSegment());
-                    } else {
-                        cellProps.put("Resistivity", resProps);
-                        resProps.put("Segment group", "all");
-                    } 
-                }
-                
-            }
+	public static Map<String, Object> createPropertiesFromStandaloneComponent(Standalone element) throws NeuroMLException
+	{
 
-            properties.put("Cell " + cell.getId(), cellProps);
-        }
-        else if(element instanceof IonChannel)
-        {
-            IonChannel chan = (IonChannel)element;
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
-            InfoNode chanProps = new InfoNode();
+		if(element instanceof Cell)
+		{
+			Cell cell = (Cell) element;
+			InfoNode cellProps = new InfoNode();
 
-            chanProps.put("ID", chan.getId());
+			cellProps.put("ID", cell.getId());
+			if(cell.getNotes() != null && cell.getNotes().length() > 0) cellProps.put("Description", formatNotes(cell.getNotes()));
+			Morphology morph = cell.getMorphology();
+			cellProps.put("Number of segments", morph.getSegment().size());
+			cellProps.put("Number of segment groups", morph.getSegmentGroup().size());
+			if(cell.getBiophysicalProperties() == null)
+			{
+				cellProps.put("Biophysical properties", "none");
+			}
+			else
+			{
+				MembraneProperties mp = cell.getBiophysicalProperties().getMembraneProperties();
+				for(ChannelDensity cd : mp.getChannelDensity())
+				{
 
-            if(chan.getNotes() != null && chan.getNotes().length() > 0) chanProps.put("Description", formatNotes(chan.getNotes()));
+					InfoNode cProps = new InfoNode();
+					cellProps.put("Channel density: " + cd.getId(), cProps);
+					cProps.put("ID", cd.getId());
+					cProps.put("IonChannel", cd.getIonChannel());
+					cProps.put("Ion", cd.getIon());
+					if(cd.getErev() != null)
+					{
+						cProps.put("Reversal potential", formatDimensionalQuantity(cd.getErev()));
+					}
+					cProps.put("Conductance density", formatDimensionalQuantity(cd.getCondDensity()));
+					if(cd.getSegmentGroup() != null)
+					{
+						cProps.put("Segment group", cd.getSegmentGroup());
+					}
+					else if(cd.getSegment() != null)
+					{
+						cProps.put("Segment", cd.getSegment());
+					}
+					else
+					{
+						cProps.put("Segment group", "all");
+					}
+				}
+				for(SpecificCapacitance sc : mp.getSpecificCapacitance())
+				{
+					InfoNode scProps = new InfoNode();
+					scProps.put("Value", formatDimensionalQuantity(sc.getValue()));
 
-            ChannelInfoExtractor cinfo = new ChannelInfoExtractor(chan);
-            chanProps.put("Gates", cinfo.getGates());
+					if(sc.getSegmentGroup() != null)
+					{
+						cellProps.put("Specific capacitance on group " + sc.getSegmentGroup(), scProps);
+						scProps.put("Segment group", sc.getSegmentGroup());
+					}
+					else if(sc.getSegment() != null)
+					{
+						cellProps.put("Specific capacitance on segment " + sc.getSegment(), scProps);
+						scProps.put("Segment", sc.getSegment());
+					}
+					else
+					{
+						cellProps.put("Specific capacitance", scProps);
+						scProps.put("Segment group", "all");
+					}
+				}
+				IntracellularProperties ip = cell.getBiophysicalProperties().getIntracellularProperties();
 
-            properties.put("Ion Channel " + chan.getId(), chanProps);
-        }
-        else if(element instanceof Network)
-        {
-            Network network = (Network)element;
+				for(Resistivity res : ip.getResistivity())
+				{
+					InfoNode resProps = new InfoNode();
+					resProps.put("Value", formatDimensionalQuantity(res.getValue()));
 
-            InfoNode elementProps = new InfoNode();
+					if(res.getSegmentGroup() != null)
+					{
+						cellProps.put("Resistivity on group " + res.getSegmentGroup(), resProps);
+						resProps.put("Segment group", res.getSegmentGroup());
+					}
+					else if(res.getSegment() != null)
+					{
+						cellProps.put("Resistivity on segment " + res.getSegment(), resProps);
+						resProps.put("Segment", res.getSegment());
+					}
+					else
+					{
+						cellProps.put("Resistivity", resProps);
+						resProps.put("Segment group", "all");
+					}
+				}
 
-            elementProps.put("ID", network.getId());
-            if(network.getNotes() != null && network.getNotes().length() > 0) elementProps.put("Description", formatNotes(element.getNotes()));
+			}
 
-            elementProps.put("Number of populations", network.getPopulation().size());
+			properties.put("Cell " + cell.getId(), cellProps);
+		}
+		else if(element instanceof IonChannel)
+		{
+			IonChannel chan = (IonChannel) element;
 
-            for(Population sub : network.getPopulation())
-            {
-                InfoNode subProps = new InfoNode();
+			InfoNode chanProps = new InfoNode();
 
-                subProps.put("ID", sub.getId());
-                subProps.put("Component", sub.getComponent());
-                if(sub.getNotes() != null && sub.getNotes().length() > 0) subProps.put("Description", formatNotes(sub.getNotes()));
+			chanProps.put("ID", chan.getId());
 
-                if(sub.getSize() != null) subProps.put("Size", sub.getSize());
-                else if(!sub.getInstance().isEmpty())
-                {
-                    subProps.put("Size (number of instances)", sub.getInstance().size());
-                }
+			if(chan.getNotes() != null && chan.getNotes().length() > 0) chanProps.put("Description", formatNotes(chan.getNotes()));
 
-                elementProps.put("Population " + sub.getId(), subProps);
-            }
+			ChannelInfoExtractor cinfo = new ChannelInfoExtractor(chan);
+			chanProps.put("Gates", cinfo.getGates());
 
-            elementProps.put("Number of projections", network.getProjection().size());
+			properties.put("Ion Channel " + chan.getId(), chanProps);
+		}
+		else if(element instanceof Network)
+		{
+			Network network = (Network) element;
 
-            for(Projection sub : network.getProjection())
-            {
-                InfoNode subProps = new InfoNode();
+			InfoNode elementProps = new InfoNode();
 
-                subProps.put("ID", sub.getId());
-                subProps.put("Presynaptic population", sub.getPresynapticPopulation());
-                subProps.put("Postsynaptic population", sub.getPostsynapticPopulation());
+			elementProps.put("ID", network.getId());
+			if(network.getNotes() != null && network.getNotes().length() > 0) elementProps.put("Description", formatNotes(element.getNotes()));
 
-                elementProps.put("Projection " + sub.getId(), subProps);
-            }
+			elementProps.put("Number of populations", network.getPopulation().size());
 
-            properties.put("Network " + network.getId(), elementProps);
-        }
+			for(Population sub : network.getPopulation())
+			{
+				InfoNode subProps = new InfoNode();
 
-        else {
-            InfoNode elementProps = new InfoNode();
-            elementProps.put("ID", element.getId());
-            if(element.getNotes() != null && element.getNotes().length() > 0) elementProps.put("Description", formatNotes(element.getNotes()));
+				subProps.put("ID", sub.getId());
+				subProps.put("Component", sub.getComponent());
+				if(sub.getNotes() != null && sub.getNotes().length() > 0) subProps.put("Description", formatNotes(sub.getNotes()));
 
-            properties.put("Element " + element.getId(), elementProps);
-            try {
-                Component comp = Utils.convertNeuroMLToComponent(element);
-                ComponentType ct = comp.getComponentType();
-                for (ParamValue pv: comp.getParamValues()) {
-                    if (comp.hasAttribute(pv.getName())) {
-                        String orig = comp.getStringValue(pv.getName());
-                        String formatted = formatDimensionalQuantity(orig);
-                        elementProps.put(pv.getName(), formatted);
-                    }
-                }
-            } catch (LEMSException ce) {
-                throw new NeuroMLException("Problem extracting info from NeuroML component",ce);
-            }
+				if(sub.getSize() != null) subProps.put("Size", sub.getSize());
+				else if(!sub.getInstance().isEmpty())
+				{
+					subProps.put("Size (number of instances)", sub.getInstance().size());
+				}
 
-        }
+				elementProps.put("Population " + sub.getId(), subProps);
+			}
+
+			elementProps.put("Number of projections", network.getProjection().size());
+
+			for(Projection sub : network.getProjection())
+			{
+				InfoNode subProps = new InfoNode();
+
+				subProps.put("ID", sub.getId());
+				subProps.put("Presynaptic population", sub.getPresynapticPopulation());
+				subProps.put("Postsynaptic population", sub.getPostsynapticPopulation());
+
+				elementProps.put("Projection " + sub.getId(), subProps);
+			}
+
+			properties.put("Network " + network.getId(), elementProps);
+		}
+
+		else
+		{
+			InfoNode elementProps = new InfoNode();
+			elementProps.put("ID", element.getId());
+			if(element.getNotes() != null && element.getNotes().length() > 0) elementProps.put("Description", formatNotes(element.getNotes()));
+
+			properties.put("Element " + element.getId(), elementProps);
+			try
+			{
+				Component comp = Utils.convertNeuroMLToComponent(element);
+				ComponentType ct = comp.getComponentType();
+				for(ParamValue pv : comp.getParamValues())
+				{
+					if(comp.hasAttribute(pv.getName()))
+					{
+						String orig = comp.getStringValue(pv.getName());
+						String formatted = formatDimensionalQuantity(orig);
+						elementProps.put(pv.getName(), formatted);
+					}
+				}
+			}
+			catch(LEMSException ce)
+			{
+				throw new NeuroMLException("Problem extracting info from NeuroML component", ce);
+			}
+
+		}
 		return properties;
 	}
 
-	private static String formatDimensionalQuantity(String value) throws NeuroMLException 
-    {
-        if (value==null)
-            return "Null quantity!!";
-        String returnVal = value;
-        try
-        {
-            float v = Float.parseFloat(value);
-            return v+"";
-        }
-        catch (NumberFormatException e) 
-        {
-            // continue...
-        }
-        String siSymbol = Utils.getSIUnitInNeuroML(Utils.getDimension(value)).getSymbol();
-        
-        String[] magUnit = QuantityReader.splitToMagnitudeAndUnit(value);
+	private static String formatDimensionalQuantity(String value) throws NeuroMLException
+	{
+		if(value == null) return "Null quantity!!";
+		String returnVal = value;
+		try
+		{
+			float v = Float.parseFloat(value);
+			return v + "";
+		}
+		catch(NumberFormatException e)
+		{
+			// continue...
+		}
+		String siSymbol = Utils.getSIUnitInNeuroML(Utils.getDimension(value)).getSymbol();
 
-        //TODO: replace with DecimalFormat
-        String val = Utils.getMagnitudeInSI(value)+"";
-        if (val.endsWith("0") && val.indexOf("E") < 0 && !val.endsWith(".0") && val.indexOf(".") > 0) {
-            val = val.substring(0, val.length() - 1);
-        }
+		String[] magUnit = QuantityReader.splitToMagnitudeAndUnit(value);
 
-        String si = val + (siSymbol.equals(Unit.NO_UNIT) ? "" : " " + siSymbol);
-        if (!value.equals(si)) {
-            returnVal = returnVal + " (" + si + ")";
-        }
-        return returnVal;
-    }
-	
+		// TODO: replace with DecimalFormat
+		String val = Utils.getMagnitudeInSI(value) + "";
+		if(val.endsWith("0") && val.indexOf("E") < 0 && !val.endsWith(".0") && val.indexOf(".") > 0)
+		{
+			val = val.substring(0, val.length() - 1);
+		}
+
+		String si = val + (siSymbol.equals(Unit.NO_UNIT) ? "" : " " + siSymbol);
+		if(!value.equals(si))
+		{
+			returnVal = returnVal + " (" + si + ")";
+		}
+		return returnVal;
+	}
+
 	/**
 	 * @param notes
 	 * @return

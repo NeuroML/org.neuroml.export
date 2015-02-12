@@ -4,13 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import junit.framework.TestCase;
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
 import org.neuroml.export.dnsim.DNSimWriter;
-import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.exception.GenerationException;
+import org.neuroml.export.exception.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
 
