@@ -28,18 +28,14 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.utils.LEMSQuantityPath;
-import org.neuroml.utils.ModelFeature;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.SupportLevelInfo;
-import org.neuroml.utils.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.export.utils.LEMSQuantityPath;
+import org.neuroml.export.utils.ModelFeature;
+import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.utils.SupportLevelInfo;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.ModelFeature;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.SupportLevelInfo;
-import org.neuroml.utils.Utils;
 
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

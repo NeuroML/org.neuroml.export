@@ -14,6 +14,7 @@ import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 
@@ -21,7 +22,6 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.type.Component;
 import org.neuroml.model.IafTauCell;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.Utils;
 
 public class UtilsTest extends TestCase {
 /*

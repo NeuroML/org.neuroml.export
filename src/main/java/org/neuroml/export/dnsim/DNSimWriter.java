@@ -20,11 +20,11 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.utils.ModelFeature;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.SupportLevelInfo;
-import org.neuroml.utils.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.export.utils.ModelFeature;
+import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.utils.SupportLevelInfo;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

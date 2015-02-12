@@ -17,10 +17,10 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.Utils;
 
 public class NeuronWriterTest extends TestCase {
 

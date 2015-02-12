@@ -12,11 +12,11 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.IzhikevichCell;
 import org.neuroml.model.NeuroMLDocument;
 
 import org.neuroml.model.util.NeuroML2Validator;
-import org.neuroml.utils.Utils;
 import org.lemsml.jlems.core.xml.XMLElementReader;
 
 /**

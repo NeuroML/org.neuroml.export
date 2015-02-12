@@ -13,7 +13,7 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
-import org.neuroml.utils.Utils;
+import org.neuroml.export.utils.Utils;
 
 /**
  * @author Boris Marin & Padraig Gleeson

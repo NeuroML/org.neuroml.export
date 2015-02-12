@@ -8,9 +8,9 @@ import java.util.Date;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.neuroml.export.utils.ProcessOutputWatcher;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.ProcessOutputWatcher;
-import org.neuroml.utils.Utils;
 
 /**
  *

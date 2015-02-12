@@ -11,11 +11,11 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.info.model.ChannelInfoExtractor;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.IonChannel;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.Utils;
 
 /**
  * @author boris

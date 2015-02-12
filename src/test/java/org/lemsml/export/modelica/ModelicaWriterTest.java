@@ -10,9 +10,9 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.Utils;
 
 public class ModelicaWriterTest extends TestCase {
 

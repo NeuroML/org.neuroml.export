@@ -17,9 +17,9 @@ import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.info.model.InfoNode;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
-import org.neuroml.utils.Utils;
 
 /**
  * @author matteocantarelli

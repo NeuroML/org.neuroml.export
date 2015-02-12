@@ -9,9 +9,9 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.utils.ModelFeatureSupportException;
-import org.neuroml.utils.Utils;
 import org.neuroml.export.dnsim.DNSimWriter;
+import org.neuroml.export.utils.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
 
 public class DNSimWriterTest extends TestCase {

@@ -18,7 +18,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.utils.Utils;
+import org.neuroml.export.utils.Utils;
 
 /**
  *
