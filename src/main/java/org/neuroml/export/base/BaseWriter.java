@@ -45,6 +45,7 @@ public abstract class BaseWriter {
 		public StringBuilder params = new StringBuilder();
 		public StringBuilder eqns = new StringBuilder();
 		public StringBuilder initInfo = new StringBuilder();
+		public StringBuilder conditionInfo = new StringBuilder();
 	}
 
 

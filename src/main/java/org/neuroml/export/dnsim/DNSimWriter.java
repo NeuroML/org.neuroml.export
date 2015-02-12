@@ -1,7 +1,9 @@
-package org.neuroml.export.xpp;
+package org.neuroml.export.dnsim;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 import org.apache.velocity.Template;
@@ -12,28 +14,31 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.lemsml.export.base.GenerationException;
+import org.lemsml.export.dlems.DLemsKeywords;
 import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.base.BaseWriter;
-import org.neuroml.model.util.NeuroMLException;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.utils.ModelFeature;
 import org.neuroml.utils.ModelFeatureSupportException;
 import org.neuroml.utils.SupportLevelInfo;
 import org.neuroml.utils.Utils;
+import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class XppWriter extends BaseWriter {
 
-    public final String TEMPLATE = "xpp/xpp.vm";
+public class DNSimWriter extends BaseWriter {
+
+    public final String TEMPLATE_MAIN = "dnsim/dnsim.m.vm";
+    public final String TEMPLATE_MODULE = "dnsim/dnsim.txt.vm";
+   
     
-    public HashMap<String, String> keywordSubstitutions = new HashMap<String, String>();
-    
-	public XppWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public DNSimWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "XPP");
+		super(lems, "DNSim");
         sli.checkAllFeaturesSupported(FORMAT, lems);
-        keywordSubstitutions.put("compartment", "compart");
 	}
     
     
@@ -54,22 +59,35 @@ public class XppWriter extends BaseWriter {
 	@Override
 	protected void addComment(StringBuilder sb, String comment) {
 
-		String comm = "# ";
-		sb.append(comm+comment.replaceAll("\n", "\n# ")+"\n");
+		String comm = "% ";
+		sb.append(comm+comment.replaceAll("\n", "\n% ")+"\n");
 	}
 
 
-    @Override
-	public String getMainScript() throws GenerationException {
-		StringBuilder sb = new StringBuilder();
+	@Override
+	public String getMainScript() throws GenerationException, IOException {
+        ArrayList<File> files = generateMainScriptAndModules(null);
+		return FileUtil.readStringFromFile(files.get(0));
+	}
+		
+	public ArrayList<File> generateMainScriptAndModules(File dirForFiles) throws GenerationException {
         
-		addComment(sb, FORMAT+" export from LEMS\n\nPlease note that this is a work in progress " +
-				"and only works for a limited subset of LEMS/NeuroML 2!!\n");
-
-        addComment(sb, Utils.getHeaderComment(FORMAT)+"\n");
+    
+        ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+    
+		E.info("-Writing "+FORMAT+" files to: "+dirForFiles.getAbsolutePath());
         
-		addComment(sb, lems.textSummary(false, false));
-
+		StringBuilder mainScript = new StringBuilder();
+		StringBuilder moduleScript = new StringBuilder();
+        
+		addComment(mainScript, FORMAT+" export from LEMS\n\nPlease note that this is a work in progress " +
+				"and only works for a limited subset of LEMS/NeuroML 2!!\n"+Utils.getHeaderComment(FORMAT)+"\n"
+                +lems.textSummary(false, false));
+        
+		addComment(moduleScript, FORMAT+" export from LEMS\n\nPlease note that this is a work in progress " +
+				"and only works for a limited subset of LEMS/NeuroML 2!!\n"+Utils.getHeaderComment(FORMAT)+"\n"
+                +lems.textSummary(false, false));
+        
         Velocity.init();
 		
 		VelocityContext context = new VelocityContext();
@@ -87,19 +105,37 @@ public class XppWriter extends BaseWriter {
 			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
 			VelocityEngine ve = new VelocityEngine();
 			ve.init(props);
-			Template template = ve.getTemplate(TEMPLATE);
+			Template template = ve.getTemplate(TEMPLATE_MAIN);
 		   
-			StringWriter sw = new StringWriter();
+			StringWriter sw1 = new StringWriter();
 
-			template.merge( context, sw );
-            
-            String mapped = sw.toString();
-            for (String old: keywordSubstitutions.keySet()) {
-                String new_ = keywordSubstitutions.get(old);
-                mapped = Utils.replaceInExpression(mapped, old, new_);
-            }
+			template.merge( context, sw1 );
 			
-			sb.append(mapped);
+			mainScript.append(sw1);
+			
+			template = ve.getTemplate(TEMPLATE_MODULE);
+
+			StringWriter sw2 = new StringWriter();
+
+			template.merge( context, sw2 );
+			
+			moduleScript.append(sw2);
+            
+			if (dirForFiles!=null && dirForFiles.exists())
+			{
+				E.info("Writing "+FORMAT+" files to: "+dirForFiles.getAbsolutePath());
+				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
+				File mainScriptFile = new File(dirForFiles, name+".m");
+				File compScriptFile = new File(dirForFiles, name+"_dnsim.txt");
+	            FileUtil.writeStringToFile(mainScript.toString(), mainScriptFile);
+	            allGeneratedFiles.add(mainScriptFile);
+	            FileUtil.writeStringToFile(moduleScript.toString(), compScriptFile);
+	            allGeneratedFiles.add(compScriptFile);
+			}
+			else
+			{
+				throw new GenerationException("Not writing Modelica scripts to files! Problem with target dir: "+dirForFiles);
+			}
 		} 
 		catch (IOException e1) {
 			throw new GenerationException("Problem converting LEMS to dLEMS",e1);
@@ -121,7 +157,7 @@ public class XppWriter extends BaseWriter {
 			throw new GenerationException("Problem using template",e);
 		}
 		
-		return sb.toString();	
+		return allGeneratedFiles;	
         
 
 	}

@@ -32,8 +32,8 @@ public class NestWriter extends BaseWriter {
 	private final String runTemplateFile = "nest/run.vm";
 	private final String cellTemplateFile = "nest/cell.vm";
 
-	String comm = "'''";
-	String commPre = "#";
+	String comm = "#";
+	String commPre = "'''";
 	String commPost = "'''";
 
     public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
@@ -71,11 +71,12 @@ public class NestWriter extends BaseWriter {
 	
 
 	@Override
-	public String getMainScript() throws GenerationException {
-		return generateMainScriptAndCellFiles(null);
+	public String getMainScript() throws GenerationException, IOException {
+        ArrayList<File> files = generateMainScriptAndCellFiles(null);
+		return FileUtil.readStringFromFile(files.get(0));
 	}
 		
-	public String generateMainScriptAndCellFiles(File dirForFiles) throws GenerationException {
+	public ArrayList<File> generateMainScriptAndCellFiles(File dirForFiles) throws GenerationException {
 
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
@@ -124,7 +125,7 @@ public class NestWriter extends BaseWriter {
 				E.info("Writing "+FORMAT+" files to: "+dirForFiles);
 				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
 				File mainScriptFile = new File(dirForFiles, "run_"+name+"_nest.py");
-				File cellScriptFile = new File(dirForFiles, name+"_nest.py");
+				File cellScriptFile = new File(dirForFiles, name+".nestml");
 	            FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
 	            allGeneratedFiles.add(mainScriptFile);
 	            FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
@@ -146,7 +147,7 @@ public class NestWriter extends BaseWriter {
         } 
 		
 		
-		return mainRunScript.toString();	
+		return allGeneratedFiles;	
 
 	}
 

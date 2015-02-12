@@ -2,6 +2,7 @@ package org.neuroml.export.nest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
@@ -29,11 +30,11 @@ public class NestWriterTest extends TestCase {
         
         System.out.println("Loaded from: "+localFile);
 
-        NestWriter mw = new NestWriter(lems);
+        NestWriter nw = new NestWriter(lems);
 
-        String mod = mw.generateMainScriptAndCellFiles(AppTest.getTempDir());
+        ArrayList<File> files = nw.generateMainScriptAndCellFiles(AppTest.getTempDir());
         
-        for (File genFile: mw.allGeneratedFiles)
+        for (File genFile: files)
         {
         	assertTrue(genFile.exists());
             System.out.println("------------------"+genFile.getAbsolutePath()+"------------------------------------");
@@ -48,11 +49,11 @@ public class NestWriterTest extends TestCase {
         
         System.out.println("Loaded: "+exampleFilename);
 
-        NestWriter mw = new NestWriter(lems);
+        NestWriter nw = new NestWriter(lems);
 
-        String mod = mw.generateMainScriptAndCellFiles(AppTest.getTempDir());
+        ArrayList<File> files = nw.generateMainScriptAndCellFiles(AppTest.getTempDir());
         
-        for (File genFile: mw.allGeneratedFiles)
+        for (File genFile: files)
         {
         	assertTrue(genFile.exists());
             System.out.println("------------------"+genFile.getAbsolutePath()+"------------------------------------");

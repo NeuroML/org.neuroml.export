@@ -21,13 +21,20 @@ import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
+import org.lemsml.jlems.core.type.dynamics.OnCondition;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.utils.LEMSQuantityPath;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.SupportLevelInfo;
+import org.neuroml.utils.Utils;
 import org.neuroml.export.base.BaseWriter;
+import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 import org.neuroml.utils.ModelFeature;
 import org.neuroml.utils.ModelFeatureSupportException;
@@ -89,10 +96,14 @@ public class BrianWriter extends BaseWriter {
 
             addComment(sb, Utils.getHeaderComment(FORMAT));
 
-            if (!brian2)
+            String times = "times";
+            if (!brian2) {
                 sb.append("from brian import *\n\n");
-            else
+            }
+            else {
                 sb.append("from brian2 import *\n\n");
+                times = "t";
+            }
             
             sb.append("from math import *\n");
             sb.append("import sys\n\n");
@@ -135,9 +146,20 @@ public class BrianWriter extends BaseWriter {
                     sb.append("''')\n\n");
 
                     String flags = "";// ,implicit=True, freeze=True
+                    int size = -1;
+                    if (pop.getComponentType().isOrExtends(NeuroMLElements.POPULATION_LIST)){
+                        size = 0;
+                        for (Component comp : pop.getAllChildren()) {
+                            if (comp.getComponentType().getName().equals(NeuroMLElements.INSTANCE))
+                                size++;
+                        }
+                    } else {
+                        size = Integer.parseInt(pop.getStringValue("size"));
+                    }
+                    
                     sb.append(pop.getID() + " = NeuronGroup("
-                            + pop.getStringValue("size") + ", model=" + prefix + "eqs"
-                            + flags + ")\n");
+                            + size + ", model=" + prefix + "eqs"
+                            + flags + compInfo.conditionInfo + ")\n");
 
                     sb.append(compInfo.initInfo.toString());
                 }
@@ -173,41 +195,30 @@ public class BrianWriter extends BaseWriter {
                     String info = "\n# Saving to file: "+fileName+", reference: " + outComp.id + "\n";
                     preRunSave.append(info);
                     postRunSave.append(info);
-                    preRunSave.append("record_" + outComp.getID() + " = {}\n");
+                    //preRunSave.append("record_" + outComp.getID() + " = {}\n");
                     postRunSave.append("all_" + outComp.getID() + " = np.array( [ ");
                     
+                    boolean timesAdded = false;
                     for (Component colComp : outComp.getAllChildren()) {
                         if (colComp.getTypeName().equals("OutputColumn")) {
                             
-                            String monitor = "record_" + outComp.getID() + "[\"" + colComp.getID()+"\"]";
+                            String monitor = "record_" + outComp.getID() + "__" + colComp.getID()+"";
                             String ref = colComp.getStringValue("quantity");
 
-                            String pop, num, var;
-                            if (ref.indexOf("/")>0) {
-                                String[] splitSlash = ref.split("/");
-                                pop = splitSlash[0].split("\\[")[0];
-                                num = ref.split("\\[")[1].split("\\]")[0];
-                                var = "";
-                                for (int i=1;i<splitSlash.length;i++) {
-                                    if (var.length()>0)
-                                        var += "_";
-                                    var += splitSlash[i];
-                                }
-
-                            } else {
-                                pop = DEFAULT_POP;
-                                num = "0";
-                                var = ref;
+                            LEMSQuantityPath l1 = new LEMSQuantityPath(ref);
+                            String pop = l1.isVariableInPopulation() ? l1.getPopulation() : DEFAULT_POP;
+                            
+                            preRunSave.append(monitor + " = StateMonitor(" + pop + ",'" + l1.getVariable() + "',record=[" + l1.getPopulationIndex() + "]) # " + colComp.summary() + "\n");
+                            
+                            if (!timesAdded) {
+                                postRunSave.append(monitor+"."+times+", ");
+                                timesAdded = true;
                             }
-                            preRunSave.append(monitor + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + colComp.summary() + "\n");
                             
                             if (postRunSave.indexOf("[0]")>0)
                                 postRunSave.append(", ");
-                            postRunSave.append(monitor+"[0] ");
-                            /*
-                            postRunPlot.append("plot(" + trace + ".times/second,"
-                                    + trace + "[" + num + "], color=\""
-                                    + lineComp.getStringValue("color") + "\")\n");*/
+                            postRunSave.append(monitor+(brian2?"."+l1.getVariable():"")+"[0] ");
+                            
                         }
                     }
                     
@@ -217,7 +228,7 @@ public class BrianWriter extends BaseWriter {
                     postRunSave.append("for l in all_"+outComp.id+":\n");
                     postRunSave.append("    line = ''\n");
                     postRunSave.append("    for c in l: \n");
-                    postRunSave.append("        line = line + (', %f'%c if len(line)>0 else '%f'%c)\n");
+                    postRunSave.append("        line = line + (' %f'%c if len(line)>0 else '%f'%c)\n");
                     postRunSave.append("    file_"+outComp.id+".write(line+'\\n')\n");
                     postRunSave.append("file_"+outComp.id+".close()\n");
                 }
@@ -236,35 +247,18 @@ public class BrianWriter extends BaseWriter {
                     postRunPlot.append("\n    # Display: " + dispComp + "\n    "+dispId+" = plt.figure(\""+ dispComp.getTextParam("title") + "\")\n");
                     for (Component lineComp : dispComp.getAllChildren()) {
                         if (lineComp.getTypeName().equals("Line")) {
-                            String trace = "trace_" + dispComp.getID() + "_"
-                                    + lineComp.getID();
-                            String ref = lineComp.getStringValue("quantity");
-
-                            String pop, num, var;
-                            if (ref.indexOf("/")>0) {
-                                String[] splitSlash = ref.split("/");
-                                pop = splitSlash[0].split("\\[")[0];
-                                num = ref.split("\\[")[1].split("\\]")[0];
-                                var = "";
-                                for (int i=1;i<splitSlash.length;i++) {
-                                    if (var.length()>0)
-                                        var += "_";
-                                    var += splitSlash[i];
-                                }
-
-                            } else {
-                                pop = DEFAULT_POP;
-                                num = "0";
-                                var = ref;
-                            }
-                            preRunPlot.append("    "+trace + " = StateMonitor(" + pop + ",'" + var + "',record=[" + num + "]) # " + lineComp.summary() + "\n");
-                            String times = brian2 ? "t " : "times";
+                            String trace = "trace_" + dispComp.getID() + "__" + lineComp.getID();
                             
+                            LEMSQuantityPath l1 = new LEMSQuantityPath(lineComp.getStringValue("quantity"));
+                            String pop = l1.isVariableInPopulation() ? l1.getPopulation() : DEFAULT_POP;
+                            
+                            preRunPlot.append("    "+trace + " = StateMonitor(" + pop + ",'" + l1.getVariable() + "',record=[" + l1.getPopulationIndex() + "]) # " + lineComp.summary() + "\n");
+                                                        
                             String plotId = "plot_"+lineComp.getID();
                     
                             postRunPlot.append("    "+plotId+" = "+dispId+".add_subplot(111, autoscale_on=True)\n");
                             postRunPlot.append("    "+plotId+".plot(" + trace + "."+times+"/second,"
-                                    + trace + "[" + num + "], color=\""
+                                    + trace +(brian2?"."+l1.getVariable():"") + "[" + l1.getPopulationIndex() + "], color=\""
                                     + lineComp.getStringValue("color") + "\", label=\""+lineComp.getID()+"\")\n");
                             postRunPlot.append("    "+plotId+".legend()\n");
                         }
@@ -360,7 +354,7 @@ public class BrianWriter extends BaseWriter {
 			ArrayList<String> stateVars, String prefix) throws ContentError,
 			ParseError {
 
-        ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
+        ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
 
         ComponentType ctFlat;
         Component cpFlat;
@@ -490,6 +484,17 @@ public class BrianWriter extends BaseWriter {
 			}
 
 		}
+        LemsCollection<OnCondition> ocs = dyn.getOnConditions();
+        for (OnCondition oc: ocs) {
+            if (oc.test.startsWith("v .gt.")) {
+                compInfo.conditionInfo.append(", threshold = '"+oc.test.replace(".gt.", ">")+"'");
+                for (StateAssignment sa: oc.stateAssignments) {
+                    if (sa.variable.equals("v")) {
+                        compInfo.conditionInfo.append(", reset = 'v = "+sa.getValueExpression()+"'");
+                    }
+                }
+            }
+        }
 
 	}
 
@@ -498,16 +503,19 @@ public class BrianWriter extends BaseWriter {
     	
         File exampleFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
         exampleFile = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
+        //exampleFile = new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml");
         
 		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
         System.out.println("Loaded: "+exampleFile.getAbsolutePath());
 
         BrianWriter bw = new BrianWriter(lems);
+        
+        bw.setBrian2(true);
 
         String br = bw.getMainScript();
 
 
-        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian.py"));
+        File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian"+(bw.brian2?"2":"")+".py"));
         System.out.println("Writing to: "+brFile.getAbsolutePath());
         
         FileUtil.writeStringToFile(br, brFile);

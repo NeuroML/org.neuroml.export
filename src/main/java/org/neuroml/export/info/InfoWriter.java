@@ -74,7 +74,7 @@ public class InfoWriter extends BaseWriter
 		fileName = "../NeuroML2/examples/NML2_SingleCompHHCell.nml";
 		//fileName = "../NeuroML2/examples/NML2_InstanceBasedNetwork.nml";
 		//fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/ACnet2.nml";
-		//fileName = "../NeuroML2/examples/NML2_SimpleIonChannel.nml";
+		fileName = "../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/Na_bask.channel.nml";
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));

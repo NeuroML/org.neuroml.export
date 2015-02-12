@@ -20,6 +20,10 @@ public class ChannelMLGenericHHExpression implements IPlottableExpression {
 		// TODO Auto-generated method stub
 		return null;
 	}
+    
+	public String toString() {
+		return _function.toString();
+	}
 
 }
 
