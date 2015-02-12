@@ -6,7 +6,7 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
-import org.neuroml.export.LEMSQuantityPath;
+import org.neuroml.utils.LEMSQuantityPath;
 
 public class SEDMLWriter extends XMLWriter {
 

@@ -1,6 +1,6 @@
 
 
-package org.neuroml.export;
+package org.neuroml.utils;
 
 import java.io.*;
 import org.lemsml.jlems.core.logging.E;

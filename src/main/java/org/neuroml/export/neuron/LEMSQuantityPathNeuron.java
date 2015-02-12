@@ -7,13 +7,13 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.LEMSQuantityPath;
 import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Segment;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.LEMSQuantityPath;
 
 /**
  * @author Padraig Gleeson

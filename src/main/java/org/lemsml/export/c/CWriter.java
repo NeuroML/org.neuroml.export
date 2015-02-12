@@ -17,11 +17,11 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.SupportLevelInfo;
 
 public class CWriter extends BaseWriter {
 	

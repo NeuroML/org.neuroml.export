@@ -10,9 +10,9 @@ import org.neuroml.export.AppTest;
 import junit.framework.TestCase;
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.Utils;
 
 public class XppWriterTest extends TestCase {
 

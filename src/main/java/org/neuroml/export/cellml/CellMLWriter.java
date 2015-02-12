@@ -7,7 +7,6 @@ import java.io.File;
 import java.util.ArrayList;
 import org.lemsml.export.base.GenerationException;
 
-import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
@@ -26,10 +25,11 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.SupportLevelInfo;
+import org.neuroml.utils.Utils;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class CellMLWriter extends XMLWriter {

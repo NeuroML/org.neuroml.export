@@ -42,12 +42,6 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.LEMSQuantityPath;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.ProcessOutputWatcher;
-import org.neuroml.export.SupportLevelInfo;
-import org.neuroml.export.Utils;
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.export.base.JSONCellSerializer;
 import static org.neuroml.export.neuron.ProcessManager.findNeuronHome;
@@ -62,6 +56,12 @@ import org.neuroml.model.Species;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.LEMSQuantityPath;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.ProcessOutputWatcher;
+import org.neuroml.utils.SupportLevelInfo;
+import org.neuroml.utils.Utils;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends BaseWriter {

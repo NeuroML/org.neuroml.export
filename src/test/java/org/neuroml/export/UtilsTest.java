@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.type.Component;
 import org.neuroml.model.IafTauCell;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.Utils;
 
 public class UtilsTest extends TestCase {
 /*

@@ -12,7 +12,6 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.Utils;
 import org.neuroml.export.neuron.NRNConst;
 import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Annotation;
@@ -40,6 +39,7 @@ import org.neuroml.model.VariableParameter;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.Utils;
 import org.w3c.dom.Element;
 
 /**

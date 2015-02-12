@@ -1,5 +1,5 @@
 
-package org.neuroml.export;
+package org.neuroml.utils;
 
 /**
  *

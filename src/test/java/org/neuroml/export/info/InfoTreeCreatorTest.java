@@ -16,10 +16,10 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.Main;
 import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
+import org.neuroml.utils.Utils;
 
 /**
  * @author matteocantarelli
@@ -207,7 +207,7 @@ public class InfoTreeCreatorTest extends TestCase {
      * @throws JAXBException
      */
     private String getInfoTreeAsString(String nmlFilename) throws ContentError, JAXBException, Exception {
-        String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir() + "/" + nmlFilename);
+        String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + nmlFilename);
         NeuroMLConverter nmlc = new NeuroMLConverter();
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
         InfoNode root = InfoTreeCreator.createInfoTree(nmlDocument);

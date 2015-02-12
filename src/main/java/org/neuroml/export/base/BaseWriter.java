@@ -5,8 +5,8 @@ import javax.xml.bind.JAXBException;
 
 import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.SupportLevelInfo;
 import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.utils.SupportLevelInfo;
 
 public abstract class BaseWriter {
 

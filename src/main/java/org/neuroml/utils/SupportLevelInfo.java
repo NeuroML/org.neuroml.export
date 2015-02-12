@@ -1,5 +1,5 @@
 
-package org.neuroml.export;
+package org.neuroml.utils;
 
 import java.util.HashMap;
 import org.lemsml.jlems.core.sim.LEMSException;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.Utils;
 
 class ChannelMLStandardHHExpression implements IPlottableExpression
 {

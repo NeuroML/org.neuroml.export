@@ -17,11 +17,10 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Main;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.Utils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.Utils;
 
 public class NeuronWriterTest extends TestCase {
 
@@ -81,7 +80,7 @@ public class NeuronWriterTest extends TestCase {
     public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
         E.info("Loading: " + nmlFilename);
         
-		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
+		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
         
     	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
         

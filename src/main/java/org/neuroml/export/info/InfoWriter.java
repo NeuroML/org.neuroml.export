@@ -6,15 +6,15 @@ package org.neuroml.export.info;
 
 import java.io.File;
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
-import org.neuroml.export.Utils;
 
 import org.neuroml.export.base.BaseWriter;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.SupportLevelInfo;
+import org.neuroml.utils.Utils;
 
 /**
  * 

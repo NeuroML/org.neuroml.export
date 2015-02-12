@@ -10,7 +10,6 @@ import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Unit;
-import org.neuroml.export.Utils;
 import org.neuroml.export.info.model.ChannelInfoExtractor;
 import org.neuroml.export.info.model.InfoNode;
 import org.neuroml.model.Cell;
@@ -28,6 +27,7 @@ import org.neuroml.model.SpecificCapacitance;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.Utils;
 
 /**
  * @author matteocantarelli

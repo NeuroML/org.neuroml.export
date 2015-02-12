@@ -34,7 +34,7 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.Utils;
+import org.neuroml.utils.Utils;
 
 public class DLemsWriter extends BaseWriter
 {

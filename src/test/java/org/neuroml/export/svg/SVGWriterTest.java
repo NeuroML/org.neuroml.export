@@ -11,11 +11,11 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Main;
-import org.neuroml.export.ModelFeatureSupportException;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.Utils;
 
 public class SVGWriterTest extends TestCase {
 
@@ -23,7 +23,7 @@ public class SVGWriterTest extends TestCase {
 
     	String exampleFilename = "NML2_FullCell.nml";    
 
-		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
+		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+exampleFilename);
 		NeuroMLConverter nmlc = new NeuroMLConverter();
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
 

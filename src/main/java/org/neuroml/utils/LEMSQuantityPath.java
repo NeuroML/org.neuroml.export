@@ -1,4 +1,4 @@
-package org.neuroml.export;
+package org.neuroml.utils;
 
 import java.util.ArrayList;
 

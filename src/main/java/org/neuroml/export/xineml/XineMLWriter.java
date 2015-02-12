@@ -33,12 +33,12 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
-import org.neuroml.export.Utils;
 import org.neuroml.export.base.XMLWriter;
 import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.utils.ModelFeature;
+import org.neuroml.utils.ModelFeatureSupportException;
+import org.neuroml.utils.SupportLevelInfo;
+import org.neuroml.utils.Utils;
 
 public class XineMLWriter extends XMLWriter {
 
