@@ -3,7 +3,7 @@ package org.neuroml.export.utils.support;
 import java.util.HashMap;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.model.util.NeuroMLException;
 
 /**

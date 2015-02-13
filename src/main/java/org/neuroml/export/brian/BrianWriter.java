@@ -29,8 +29,8 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
@@ -521,7 +521,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
 		// TODO Auto-generated method stub
 		return null;

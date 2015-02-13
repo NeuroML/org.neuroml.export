@@ -3,6 +3,7 @@ package org.lemsml.export.c;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -18,16 +19,46 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.io.util.FileUtil;
+
 import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
 
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
 
 public class CWriter extends ABaseWriter
 {
+
+	private Solver solver = Solver.CVODE;
+
+	String comm = "// ";
+	String commPre = "/*";
+	String commPost = "*/";
+
+	private String outputFileName;
+
+	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Utils.cFormat);
+		initializeWriter();
+	}
+
+	public CWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Utils.cFormat, outputFolder);
+		this.outputFileName = outputFileName;
+		initializeWriter();
+	}
+
+	private void initializeWriter()
+	{
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
+	}
 
 	public enum Solver
 	{
@@ -56,20 +87,6 @@ public class CWriter extends ABaseWriter
 
 	};
 
-	private Solver solver = Solver.CVODE;
-
-	String comm = "// ";
-	String commPre = "/*";
-	String commPost = "*/";
-
-	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
-	{
-		super(lems, "C");
-		MinimalMessageHandler.setVeryMinimal(true);
-		E.setDebug(false);
-		sli.checkConversionSupported(format, lems);
-	}
-
 	@Override
 	protected void setSupportedFeatures()
 	{
@@ -86,13 +103,9 @@ public class CWriter extends ABaseWriter
 		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
 	}
 
-	@Override
-	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-	protected void addComment(StringBuilder sb, String comment)
+	public Solver getSolver()
 	{
-
-		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
-		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
+		return solver;
 	}
 
 	public void setSolver(Solver solver)
@@ -100,9 +113,13 @@ public class CWriter extends ABaseWriter
 		this.solver = solver;
 	}
 
-	public Solver getSolver()
+	@Override
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
+	protected void addComment(StringBuilder sb, String comment)
 	{
-		return solver;
+
+		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
+		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
 
 	public String getMakefile() throws GenerationException, ContentError
@@ -169,10 +186,37 @@ public class CWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File cFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
+			FileUtil.writeStringToFile(code, cFile);
+			outputFiles.add(cFile);
+
+			File mFile = new File(this.getOutputFolder(), "Makefile");
+			String makefile = this.getMakefile();
+			FileUtil.writeStringToFile(makefile, mFile);
+			outputFiles.add(mFile);
+
+		}
+		catch(LEMSException | GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		// TODO Auto-generated method stub
-		return null;
+		return outputFiles;
 	}
 
 }

@@ -21,8 +21,8 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -92,7 +92,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 		VelocityContext context = new VelocityContext();
 
-		DLemsWriter dlemsw = new DLemsWriter(lems);
+		DLemsWriter dlemsw = new DLemsWriter(lems, null);
 
 		try
 		{
@@ -163,7 +163,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
 		// TODO Auto-generated method stub
 		return null;

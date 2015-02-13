@@ -6,7 +6,7 @@ import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.neuroml.export.exception.GenerationException;
+import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.model.NeuroMLDocument;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

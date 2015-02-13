@@ -4,6 +4,7 @@ import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class AXMLWriter extends ABaseWriter

@@ -156,7 +156,7 @@ public class GeppettoWriter extends AXMLWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
 		// TODO Auto-generated method stub
 		return null;

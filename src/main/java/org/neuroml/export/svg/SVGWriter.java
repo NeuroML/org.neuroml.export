@@ -10,8 +10,8 @@ import org.lemsml.jlems.core.type.Lems;
 
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -232,7 +232,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
 		// TODO Auto-generated method stub
 		return null;

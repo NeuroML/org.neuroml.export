@@ -1,5 +1,7 @@
 package org.neuroml.export.base;
 
+import java.io.File;
+
 import org.lemsml.export.base.ABaseWriter;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.model.NeuroMLDocument;
@@ -20,6 +22,12 @@ public abstract class ANeuroMLBaseWriter extends ABaseWriter
 		this.nmlDocument = nmlDocument;
 	}
 
+	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, String format, File outputFolder)
+	{
+		super(null, format, outputFolder);
+		this.nmlDocument = nmlDocument;
+	}
+	
 	// public abstract String getMainScript() throws GenerationException, JAXBException, Exception;
 
 	public class CompInfo

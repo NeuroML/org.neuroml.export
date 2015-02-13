@@ -1,8 +1,10 @@
 package org.lemsml.export.base;
 
+import java.io.File;
+
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -12,7 +14,8 @@ public abstract class ABaseWriter implements IBaseWriter
 
 	protected Lems lems;
 	protected final String format;
-
+	private File outputFolder;
+	
 	protected static SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
 
 	public ABaseWriter(Lems lems, String format)
@@ -20,6 +23,23 @@ public abstract class ABaseWriter implements IBaseWriter
 		this.lems = lems;
 		this.format = format;
 		setSupportedFeatures();
+		if(!isConversionSupported())
+		{
+			// FIXME
+			System.out.println("Not supported");
+		}
+	}
+
+	//To be removed but not sure yet
+//	public ABaseWriter(String lemsFile, String format) throws LEMSException
+//	{
+//		this(Utils.readLemsNeuroMLFile(lemsFile).getLems(), format);
+//	}
+	
+	public ABaseWriter(Lems lems, String format, File outputFolder)
+	{
+		this(lems, format);
+		this.outputFolder = outputFolder;
 	}
 
 	protected abstract void addComment(StringBuilder sb, String comment);
@@ -31,7 +51,7 @@ public abstract class ABaseWriter implements IBaseWriter
 	}
 
 	@Override
-	public Boolean isConversionSupported(Lems lems)
+	public Boolean isConversionSupported()
 	{
 
 		try
@@ -51,7 +71,18 @@ public abstract class ABaseWriter implements IBaseWriter
 		return true;
 	}
 
-	// public abstract String getMainScript() throws LEMSException, IOException;
+	public File getOutputFolder()
+	{
+		return outputFolder;
+	}
+
+	public void setOutputFolder(File outputFolder)
+	{
+		this.outputFolder = outputFolder;
+	}
+	
+	
+
 
 	// public class CompInfo
 	// {

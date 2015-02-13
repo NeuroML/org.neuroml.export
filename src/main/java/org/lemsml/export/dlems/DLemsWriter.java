@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
@@ -16,7 +17,6 @@ import org.codehaus.jackson.type.TypeReference;
 import org.lemsml.export.base.ABaseWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
-import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
@@ -34,10 +34,11 @@ import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
+import org.neuroml.export.AppTest;
+import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.utils.Utils;
-import org.neuroml.export.utils.support.ModelFeature;
-import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.export.utils.visitors.CommonLangWriter;
 
 public class DLemsWriter extends ABaseWriter
@@ -47,17 +48,19 @@ public class DLemsWriter extends ABaseWriter
 
 	CommonLangWriter writer;
 
+	private String outputFileName;
+
 	public DLemsWriter(Lems lems, CommonLangWriter writer)
 	{
-		super(lems, "dLEMS");
+		super(lems, Utils.dLEMSFormat);
 		this.writer = writer;
 	}
 
-	public DLemsWriter(Lems lems)
+	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer)
 	{
-		super(lems, "dLEMS");
-		this.writer = null;
-
+		super(lems, Utils.dLEMSFormat, outputFolder);
+		this.writer = writer;
+		this.outputFileName = outputFileName;
 	}
 
 	public static void putIntoVelocityContext(String dlems, VelocityContext context) throws IOException
@@ -68,11 +71,9 @@ public class DLemsWriter extends ABaseWriter
 		{
 		});
 
-		for(String key : map.keySet())
+		for(Map.Entry<String, Object> entry : map.entrySet())
 		{
-			Object val = map.get(key);
-
-			context.put(key, val);
+			context.put(entry.getKey(), entry.getValue());
 		}
 
 	}
@@ -400,7 +401,7 @@ public class DLemsWriter extends ABaseWriter
 		for(File lemsFile : lemsFiles)
 		{
 			Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-			DLemsWriter dw = new DLemsWriter(lems);
+			DLemsWriter dw = new DLemsWriter(lems, null);
 			String ff = dw.getMainScript();
 			System.out.println("Output from " + lemsFile + ": ------------\n" + ff);
 
@@ -408,10 +409,32 @@ public class DLemsWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File dlemsFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
+			FileUtil.writeStringToFile(code, dlemsFile);
+			outputFiles.add(dlemsFile);
+
+		}
+		catch(LEMSException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		// TODO Auto-generated method stub
-		return null;
+		return outputFiles;
 	}
 
 	@Override

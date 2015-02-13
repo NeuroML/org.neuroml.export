@@ -3,6 +3,7 @@ package org.lemsml.export.matlab;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -19,14 +20,43 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
 
 public class MatlabWriter extends ABaseWriter
 {
+
+	private Method method = Method.ODE;
+
+	String comm = "% ";
+	String commPre = "%{";
+	String commPost = "%}";
+	
+	private String outputFileName;
+
+	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Utils.matlabFormat);
+		initializeWriter();
+	}
+	
+	public MatlabWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Utils.matlabFormat, outputFolder);
+		this.outputFileName = outputFileName;
+		initializeWriter();
+	}
+
+	private void initializeWriter()
+	{
+		MinimalMessageHandler.setVeryMinimal(true);
+		E.setDebug(false);
+	}
 
 	public enum Method
 	{
@@ -45,20 +75,6 @@ public class MatlabWriter extends ABaseWriter
 			return filename;
 		}
 	};
-
-	private Method method = Method.ODE;
-
-	String comm = "% ";
-	String commPre = "%{";
-	String commPost = "%}";
-
-	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
-	{
-		super(lems, "MATLAB");
-		MinimalMessageHandler.setVeryMinimal(true);
-		E.setDebug(false);
-		sli.checkConversionSupported(format, lems);
-	}
 
 	@Override
 	protected void setSupportedFeatures()
@@ -147,10 +163,32 @@ public class MatlabWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File cFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
+			FileUtil.writeStringToFile(code, cFile);
+			outputFiles.add(cFile);
+
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		// TODO Auto-generated method stub
-		return null;
+		return outputFiles;
 	}
 
 }

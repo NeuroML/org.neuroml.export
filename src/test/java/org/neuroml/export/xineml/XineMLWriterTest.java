@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.xineml.XineMLWriter.Variant;
 
 import junit.framework.TestCase;

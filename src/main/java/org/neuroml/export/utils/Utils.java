@@ -20,7 +20,7 @@ import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
 import org.neuroml.model.NeuroMLDocument;
@@ -52,6 +52,10 @@ public class Utils
 	public static final String LEMS_EXAMPLES_RESOURCES_DIR = "/LEMSexamples";
 	public static final String NEUROML_COMPTYPR_RESOURCES_DIR = "/NeuroML2CoreTypes";
 	public static final String NEUROML_EXAMPLES_RESOURCES_DIR = "/examples";
+	
+	public static final String cFormat = "C";
+	public static final String dLEMSFormat = "dLEMS";
+	public static final String matlabFormat = "MATLAB";
 
 	private static Lems getLemsWithNML2CompTypes() throws LEMSException
 	{

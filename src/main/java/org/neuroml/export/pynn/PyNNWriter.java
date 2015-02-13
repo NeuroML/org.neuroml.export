@@ -20,8 +20,8 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
-import org.neuroml.export.exception.GenerationException;
-import org.neuroml.export.exception.ModelFeatureSupportException;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -92,7 +92,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 		try
 		{
-			DLemsWriter somw = new DLemsWriter(lems);
+			DLemsWriter somw = new DLemsWriter(lems, null);
 			String som = somw.getMainScript();
 
 			DLemsWriter.putIntoVelocityContext(som, context);
@@ -153,7 +153,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert(Lems lems)
+	public List<File> convert()
 	{
 		// TODO Auto-generated method stub
 		return null;

@@ -1,4 +1,4 @@
-package org.neuroml.export.exception;
+package org.neuroml.export.exceptions;
 
 /**
  * 
