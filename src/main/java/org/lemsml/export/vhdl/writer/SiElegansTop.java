@@ -36,10 +36,8 @@ public class SiElegansTop {
 		sb.append("\r\n" + 
 				"entity sielegans_top is\r\n" + 
 				"    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-				"           rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-				"           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+				"           init_model : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 				"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-				"		   reset_model : in STD_LOGIC;\r\n" + 
 				"		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 				"		   \r\n" + 
 				"           mega_bus_in : in STD_LOGIC_Vector (99999 downto 0 );\r\n" + 
@@ -56,10 +54,8 @@ public class SiElegansTop {
 		sb.append("\r\n" + 
 				"component top_synth\r\n" + 
 				"    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-				"           rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-				"           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+				"           init_model : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 				"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-				"		   reset_model : in STD_LOGIC;\r\n" + 
 				"		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 				"		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);\r\n" + 
 				//"		   SelectSpikesIn :  in STD_LOGIC_VECTOR(4607 downto 0);\r\n" + 
@@ -101,10 +97,8 @@ public class SiElegansTop {
 				+ "\r\n"
 				+ "top_synth_uut : top_synth \r\n" + 
 				"    port map (	clk => clk,\r\n" + 
-				"				rst => rst, \r\n" + 
-				"				ce => ce,\r\n" + 
+				"				init_model => init_model, \r\n" + 
 				"		   step_once_go  => step_once_go,\r\n" + 
-				"		   reset_model => reset_model,\r\n" + 
 				"		   step_once_complete  => step_once_complete,\r\n" + 
 				"		   eventport_in_spike_aggregate =>  mega_bus_in(511 downto 0),\r\n" + 
 				//"		   SelectSpikesIn => mega_bus_in(5119 downto 512),\r\n" + 

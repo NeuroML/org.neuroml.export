@@ -158,7 +158,8 @@ public class VHDLWriter extends BaseWriter {
 		SIELEGANS_TOP,
 		DEFAULTPARAMJSON,
 		DEFAULTREADBACKJSON,
-		CONSTRAINTS
+		CONSTRAINTS,
+		DEFAULTSTATEJSON
 	}
 	
 	public enum Method {
@@ -325,8 +326,11 @@ public class VHDLWriter extends BaseWriter {
 		}
 	}
 	
-
 	public String getSimulationScript(ScriptType scriptType) throws ContentError, ParseError {
+		return getSimulationScript(scriptType,null);
+	}
+	
+	public String getSimulationScript(ScriptType scriptType, Map<String,Float> initialState) throws ContentError, ParseError {
 
 		StringBuilder output = new StringBuilder();
 		
@@ -437,9 +441,11 @@ public class VHDLWriter extends BaseWriter {
 			} else if (scriptType == ScriptType.SYNTH_TOP){
 				TopSynth.writeTop(edSimulation, output);
 			} else if (scriptType == ScriptType.TESTBENCH){
-				Testbench.writeTestBench(edSimulation, output);
+				Testbench.writeTestBench(edSimulation, output, initialState);
 			} else if (scriptType == ScriptType.CONSTRAINTS){
 				Constraints.writeConstraintsFile(edSimulation, output);
+			} else if (scriptType == ScriptType.DEFAULTSTATEJSON) {
+				MetadataWriter.writeJSONDefaultState(edSimulation, output,initialState);
 			}
 			
 			
@@ -498,7 +504,7 @@ public class VHDLWriter extends BaseWriter {
 		StringBuilder sb = new StringBuilder();
 	
 		//todo: this file should reflect some simulation settings
-		sb.append("onerror {resume}\r\nwave add /\r\nrun " + ( 100 + (simTime/simTimeStep) ) + " us;\r\nexit\r\n");
+		sb.append("onerror {resume}\r\nwave add /\r\nrun " + ( 100 + (simTime/simTimeStep) * 3 ) + " us;\r\nexit\r\n");
 		return sb.toString();
 	}
 	

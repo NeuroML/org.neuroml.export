@@ -1,6 +1,7 @@
 package org.lemsml.export.vhdl.writer;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.lemsml.export.vhdl.edlems.EDComponent;
 import org.lemsml.export.vhdl.edlems.EDConditionalDerivedVariable;
@@ -14,7 +15,8 @@ import org.lemsml.export.vhdl.edlems.EDState;
 
 public class Testbench {
 
-	public static void writeTestBench(EDSimulation sim, StringBuilder sb)
+	public static void writeTestBench(EDSimulation sim, StringBuilder sb, 
+			Map<String,Float> initialState)
 	{
 		sb.append("\r\n" + 
 				"library ieee;\r\n" + 
@@ -38,10 +40,8 @@ public class Testbench {
 			sb.append("component top_synth \r\n" + 
 			"    Port (\r\n" + 
 			"		   clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-			"           rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-			"           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+			"          init_model : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 			"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-			"		   reset_model : in STD_LOGIC;\r\n" + 
 			"		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 			"		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);\r\n");
 			//"		   SelectSpikesIn :  in STD_LOGIC_VECTOR(4607 downto 0); ");
@@ -68,10 +68,8 @@ public class Testbench {
 				"\r\n" + 
 				"	signal clk 			: std_logic := '0';\r\n" + 
 				"	signal eog 			: std_logic := '0';\r\n" + 
-				"	signal rst 			: std_logic := '1';\r\n" + 
-				"	signal ce 			: std_logic := '1';\r\n" + 
+				"	signal init_model 			: std_logic := '1';\r\n" + 
 				"	signal step_once_go 			: std_logic := '0';\r\n" + 
-				"	signal reset_model 			: std_logic := '0';\r\n" + 
 				"	\r\n" + 
 				"	signal step_once_complete 			: std_logic := '0';\r\n" + 
 				"	signal eventport_in_spike_aggregate : STD_LOGIC_VECTOR(511 downto 0);\r\n" + 
@@ -104,10 +102,8 @@ public class Testbench {
 			sb.append("\r\n" + 
 					"top_synth_uut : top_synth \r\n" + 
 					"    port map (	clk => clk,\r\n" + 
-					"				rst => rst,\r\n" + 
-					"				ce => ce,\r\n" + 
+					"				init_model => init_model,\r\n" + 
 					"		   step_once_go  => step_once_go,\r\n" + 
-					"		   reset_model => reset_model,\r\n" + 
 					"		   step_once_complete  => step_once_complete,\r\n" + 
 					"		   eventport_in_spike_aggregate => eventport_in_spike_aggregate,\r\n" + 
 					//"		   SelectSpikesIn => SelectSpikesIn,\r\n" + 
@@ -124,7 +120,7 @@ public class Testbench {
 				sb.append("			"+child.name + "_current_regimeRESTORE_stdlv => (others => '0'),\r\n" + 
 						  "			"+child.name + "_current_regimeCurrent_stdlv => "+child.name + "_current_regimeCurrent_stdlv_internal\r\n,");
 			
-			writeNeuronComponentMap(child,sb,"",child.name);
+			writeNeuronComponentMap(child,sb,"",child.name,initialState);
 			sb.append("\r\n" + 
 					"           sysparam_time_timestep => sysparam_time_timestep,\r\n" + 
 					"           sysparam_time_simtime => sysparam_time_simtime\r\n" + 
@@ -146,9 +142,8 @@ public class Testbench {
 		sb.append("\r\n" + 
 				"begin            \r\n" + 
 				"   -- wait for Reset to complete\r\n" + 
-				"   -- wait until rst='1';\r\n" + 
-				"   wait until reset_model='1';\r\n" + 
-				"   wait until reset_model='0';\r\n" + 
+				"   -- wait until init_model='1';\r\n" + 
+				"   wait until init_model='0';\r\n" + 
 				"\r\n" + 
 				"   \r\n" + 
 				"   while not endfile(stimulus) loop\r\n" + 
@@ -216,10 +211,6 @@ public class Testbench {
 		}
 		sb.append("\r\n" + 
 				"				writeline(test_out_data, L1); -- write row to output file\r\n" + 
-				"		rst <= '1';\r\n" + 
-				"		wait for 20 ns;\r\n" + 
-				"		rst <= '0';\r\n" + 
-				"        -- EDIT\r\n" + 
 				"        Wait;\r\n" + 
 				"    end process;\r\n" + 
 				"	\r\n" + 
@@ -231,8 +222,8 @@ public class Testbench {
 				"\r\n" + 
 				"begin            \r\n" + 
 				"   -- wait for Reset to complete\r\n" + 
-				"   -- wait until rst='1';\r\n" + 
-				"   wait until rst='0';\r\n" + 
+				"   -- wait until init_model='1';\r\n" + 
+				"   wait until init_model='0';\r\n" + 
 				"   \r\n" + 
 				"   wait for 180 ns;\r\n" + 
 				"   while 1 = 1 loop\r\n" + 
@@ -250,15 +241,11 @@ public class Testbench {
 				" \r\n" + 
 				" process\r\n" + 
 				" begin\r\n" + 
-				"   wait until rst='0';\r\n" + 
-				" \r\n" + 
-				" \r\n" + 
-				"	reset_model <= '1';\r\n" + 
-				"	\r\n" + 
-				"   \r\n" + 
-				"   wait for 100000 ns;\r\n" + 
-				"		reset_model <= '0';\r\n" + 
-				" \r\n" + 
+				"   wait for 20 ns;\r\n" + 
+				"	init_model <= '1';\r\n" + 
+				"   wait for 20 ns;\r\n" + 
+				"	init_model <= '0';\r\n"
+				+ "wait;\r\n" + 
 				" end process ;\r\n" + 
 				"  ");
 		
@@ -269,11 +256,11 @@ public class Testbench {
 				"	process(step_once_complete)\r\n" + 
 				"	variable L1              : LINE;\r\n" + 
 				"	begin\r\n" + 
-				"		if (rst = '1') then\r\n" + 
+				"		if (init_model = '1') then\r\n" + 
 				"		\r\n" + 
 				"				sysparam_time_simtime <= to_sfixed (0.0,6, -22);\r\n" + 
 				"		else\r\n" + 
-				"			if (step_once_complete'event and step_once_complete = '1' and reset_model = '0') then\r\n" + 
+				"			if (step_once_complete'event and step_once_complete = '1' and init_model = '0') then\r\n" + 
 				"				sysparam_time_simtime <= resize(sysparam_time_simtime + sysparam_time_timestep,6, -22);\r\n" + 
 				"				write(L1, real'image(to_real( sysparam_time_simtime )));  -- nth value in row\r\n" + 
 				"						write(L1, \" \");");
@@ -308,6 +295,26 @@ public class Testbench {
 					"				write(L1, \" \");\r\n" + 
 					"		");
 		}
+		for(Iterator<EDDerivedVariable> y = comp.derivedvariables.iterator(); y.hasNext(); ) {
+			EDDerivedVariable exposure = y.next(); 
+			if (exposure.ExposureIsUsed || exposure.IsUsedForOtherDerivedVariables) {
+				sb.append("\r\n" + 
+						"				write(L1, \"" +parentName + "_stateCURRENT_" + exposure.type +  "_" +  name +
+						exposure.name + "\" );\r\n" + 
+						"				write(L1, \" \");\r\n" + 
+						"		");
+			}
+		}
+		for(Iterator<EDConditionalDerivedVariable> y = comp.conditionalderivedvariables.iterator(); y.hasNext(); ) {
+			EDConditionalDerivedVariable exposure = y.next(); 
+			if (exposure.ExposureIsUsed || exposure.IsUsedForOtherDerivedVariables) {
+				sb.append("\r\n" + 
+						"				write(L1, \"" +parentName + "_stateCURRENT_" + exposure.type +  "_" +  name +
+						exposure.name + "\" );\r\n" + 
+						"				write(L1, \" \");\r\n" + 
+						"		");
+			}
+		}
 		for(Iterator<EDComponent> z = comp.Children.iterator(); z.hasNext(); ) {
 			EDComponent child = z.next(); 
 			String newName = name  + child.name + "_";
@@ -327,6 +334,26 @@ public class Testbench {
 					"				write(L1, \" \");\r\n" + 
 					"		");
 		}
+		for(Iterator<EDDerivedVariable> y = comp.derivedvariables.iterator(); y.hasNext(); ) {
+			EDDerivedVariable exposure = y.next(); 
+			if (exposure.ExposureIsUsed || exposure.IsUsedForOtherDerivedVariables) {
+				sb.append("\r\n" + 
+						"				write(L1, real'image(to_real(" +parentName + "_stateCURRENT_" + exposure.type +  "_" +  name +
+						exposure.name + "_int)) );\r\n" + 
+						"				write(L1, \" \");\r\n" + 
+						"		");
+			}
+		}
+		for(Iterator<EDConditionalDerivedVariable> y = comp.conditionalderivedvariables.iterator(); y.hasNext(); ) {
+			EDConditionalDerivedVariable exposure = y.next(); 
+			if (exposure.ExposureIsUsed || exposure.IsUsedForOtherDerivedVariables) {
+				sb.append("\r\n" + 
+						"				write(L1, real'image(to_real(" +parentName + "_stateCURRENT_" + exposure.type +  "_" +  name +
+						exposure.name + "_int)) );\r\n" + 
+						"				write(L1, \" \");\r\n" + 
+						"		");
+			}
+		}
 		for(Iterator<EDComponent> z = comp.Children.iterator(); z.hasNext(); ) {
 			EDComponent child = z.next(); 
 			String newName = name  + child.name + "_";
@@ -336,7 +363,8 @@ public class Testbench {
 	
 	
 
-	private static void writeNeuronComponentMap(EDComponent comp, StringBuilder sb, String name, String parentName)
+	private static void writeNeuronComponentMap(EDComponent comp, StringBuilder sb,
+			String name, String parentName, Map<String,Float> initialState)
 	{
 
 		for(Iterator<EDParameter> i = comp.parameters.iterator(); i.hasNext(); ) {
@@ -350,7 +378,8 @@ public class Testbench {
 			EDState item = i.next(); 
 			sb.append("			"+parentName + "_stateCURRENT_" + item.type +  "_" + name+ item.name + " => " + parentName +
 					"_stateCURRENT_" + item.type+   "_" +name+ item.name + "_int,\r\n"  );
-			sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (0," 
+			sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (" + 
+					initialState.get(parentName + "_stateCURRENT_" + item.type +  "_" + name+item.name) + "," 
 					+ item.integer + " , " + item.fraction + "),\r\n"  );
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
@@ -358,7 +387,8 @@ public class Testbench {
 			if (item.IsUsedForOtherDerivedVariables || item.ExposureIsUsed){
 				sb.append("			"+parentName + "_stateCURRENT_" + item.type +  "_" + name+ item.name + " => " + parentName +
 						"_stateCURRENT_" + item.type+   "_" +name+ item.name + "_int,\r\n"  );
-				sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (0," 
+				sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (" + 
+						initialState.get(parentName + "_stateCURRENT_" + item.type +  "_" + name+item.name) + "," 
 						+ item.integer + " , " + item.fraction + "),\r\n"  );
 			}
 		}
@@ -367,7 +397,8 @@ public class Testbench {
 			if (item.IsUsedForOtherDerivedVariables || item.ExposureIsUsed){
 				sb.append("			"+parentName + "_stateCURRENT_" + item.type +  "_" + name+ item.name + " => " + parentName +
 						"_stateCURRENT_" + item.type+   "_" +name+ item.name + "_int,\r\n"  );
-				sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (0," 
+				sb.append("			"+parentName + "_stateRESTORE_" + item.type +  "_" + name+item.name + " => to_sfixed (" + 
+						initialState.get(parentName + "_stateCURRENT_" + item.type +  "_" + name+item.name) + "," 
 						+ item.integer + " , " + item.fraction + "),\r\n"  );
 			}
 		}
@@ -375,7 +406,7 @@ public class Testbench {
 		for(Iterator<EDComponent> i = comp.Children.iterator(); i.hasNext(); ) {
 			EDComponent item = i.next(); 
 			String newName = name  + item.name + "_";
-			writeNeuronComponentMap(item, sb, newName, parentName);
+			writeNeuronComponentMap(item, sb, newName, parentName,initialState);
 		}
 		
 	

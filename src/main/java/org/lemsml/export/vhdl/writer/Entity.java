@@ -50,10 +50,8 @@ public class Entity {
 				"entity " + comp.name + " is\r\n" + 
 				"Port (\r\n" + 
 				"  clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-				"  rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-				"  ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+				"  init_model : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 				"  step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-				"  reset_model : in STD_LOGIC; --signal to all components to go into their reset state\r\n" + 
 				"");
 		
 		if (comp.name.contains("neuron_model"))

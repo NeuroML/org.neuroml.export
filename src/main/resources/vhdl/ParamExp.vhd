@@ -20,7 +20,7 @@ entity ParamExp is
 		BIT_BOTTOM	: integer := -20);	
 	port(
 		clk		: In  Std_logic;
-		rst		: In  Std_logic;
+		init_model : in STD_LOGIC; --signal to all components to go into their init state
 		Start		: In  Std_logic;
 		X			: In sfixed(BIT_TOP downto BIT_BOTTOM);
 		Done		: Out  Std_logic;
@@ -45,6 +45,7 @@ signal current_term_next : sfixed(BIT_TOP downto BIT_BOTTOM);
 signal COUNT_FRACTION : unsigned(3 downto 0);
 signal COUNT_FRACTION_next : unsigned(3 downto 0);
 signal DONEFRACTION : STD_LOGIC := '0';
+signal DONEFRACTION_next  : STD_LOGIC := '0';
 
 
 signal output_integer : sfixed(BIT_TOP downto BIT_BOTTOM);
@@ -52,6 +53,7 @@ signal output_integer_next : sfixed(BIT_TOP downto BIT_BOTTOM);
 signal COUNT_INTEGER : unsigned(BIT_TOP+1 downto 0);
 signal COUNT_INTEGER_next : unsigned(BIT_TOP+1 downto 0);
 signal DONEINTEGER : STD_LOGIC := '0';
+signal DONEINTEGER_next  : STD_LOGIC := '0';
 signal E : sfixed(BIT_TOP downto BIT_BOTTOM) := to_sfixed(2.71828182845904523536028747135266249775724709369995,BIT_TOP,BIT_BOTTOM);
 signal EInv : sfixed(BIT_TOP downto BIT_BOTTOM) := resize(reciprocal(to_sfixed(2.71828182845904523536028747135266249775724709369995,BIT_TOP,BIT_BOTTOM)),BIT_TOP,BIT_BOTTOM);
 signal EMul : sfixed(BIT_TOP downto BIT_BOTTOM);
@@ -79,50 +81,54 @@ begin
 	end process splitUpXProcess;
 	
 
-   fractionCombProcess: process(COUNT_FRACTION,Start,output_fraction,current_term,X_fraction,ISPOSITIVE,current_term_next)
+   fractionCombProcess: process(COUNT_FRACTION,Start,output_fraction,current_term,X_fraction,ISPOSITIVE,current_term_next,init_model)
 		variable MEM8Xsfixed : MEM := (to_sfixed (1,BIT_TOP, BIT_BOTTOM),to_sfixed (0.5,BIT_TOP, BIT_BOTTOM),to_sfixed (0.33333333,BIT_TOP, BIT_BOTTOM),to_sfixed (0.25,BIT_TOP, BIT_BOTTOM),
 		to_sfixed (0.2,BIT_TOP, BIT_BOTTOM),to_sfixed (0.16666666667,BIT_TOP, BIT_BOTTOM),to_sfixed (0.142857142857,BIT_TOP, BIT_BOTTOM),to_sfixed (0.125,BIT_TOP, BIT_BOTTOM));
 		begin
 			output_fraction_next <= output_fraction;
 			COUNT_FRACTION_next <= COUNT_FRACTION;
 			current_term_next <= current_term;
-			DONEFRACTION <= '0';
+			DONEFRACTION_next  <= '0';
 			current_term_next <= resize(MEM8Xsfixed(to_integer(unsigned(COUNT_FRACTION(2 downto 0)))) * 
 				resize(X_fraction * current_term,BIT_TOP, BIT_BOTTOM),BIT_TOP, BIT_BOTTOM);
-			if Start = '1' then
-				DONEFRACTION <= '0';
-				COUNT_FRACTION_next <= "0000"; 	
+			if init_model = '1' then
+				DONEFRACTION_next  <= '1';
+				COUNT_FRACTION_next <= "1001"; 	
 				output_fraction_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
 				current_term_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
-			elsif COUNT_FRACTION = "1001" then  
-				DONEFRACTION <= '1';
-				current_term_next <= current_term;
 			else
-				DONEFRACTION <= '0';
-				if (ISPOSITIVE = '1') then
-					output_fraction_next <= resize(output_fraction + current_term_next,BIT_TOP, BIT_BOTTOM);
+				if Start = '1' then
+					DONEFRACTION_next  <= '0';
+					COUNT_FRACTION_next <= "0000"; 	
+					output_fraction_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
+					current_term_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
+				elsif COUNT_FRACTION = "1001" then  
+					DONEFRACTION_next  <= '1';
+					current_term_next <= current_term;
 				else
-					if (COUNT_FRACTION(0) = '0') then
-						output_fraction_next <= resize(output_fraction - current_term_next,BIT_TOP, BIT_BOTTOM);
-					else
+					DONEFRACTION_next  <= '0';
+					if (ISPOSITIVE = '1') then
 						output_fraction_next <= resize(output_fraction + current_term_next,BIT_TOP, BIT_BOTTOM);
+					else
+						if (COUNT_FRACTION(0) = '0') then
+							output_fraction_next <= resize(output_fraction - current_term_next,BIT_TOP, BIT_BOTTOM);
+						else
+							output_fraction_next <= resize(output_fraction + current_term_next,BIT_TOP, BIT_BOTTOM);
+						end if;
 					end if;
-				end if;
-				COUNT_FRACTION_next <= COUNT_FRACTION + 1;
+					COUNT_FRACTION_next <= COUNT_FRACTION + 1;
+				end if; 
 			end if; 
 		end process fractionCombProcess;
 
-	fractionSynProcess: process(clk,rst)
+	fractionSynProcess: process(clk)
 		variable Sel : integer;
 		begin 
-			if rst = '1' then
-				COUNT_FRACTION <= "0000";
-				output_fraction <= to_sfixed (0,BIT_TOP, BIT_BOTTOM);
-				current_term <= to_sfixed (0,BIT_TOP, BIT_BOTTOM);
-			elsif clk'event and clk = '1' then
+			if clk'event and clk = '1' then
 				output_fraction <= output_fraction_next;
 				COUNT_FRACTION <= COUNT_FRACTION_next;
 				current_term <= current_term_next;
+				DONEFRACTION <= DONEFRACTION_next;
 				--report "The value of output_fraction = " & real'image(to_real(output_fraction)) & " and current_term " & 
 				--	real'image(to_real(current_term));
 			end if;
@@ -131,41 +137,45 @@ begin
 
 	
 	
-	integerCombProcess: process(COUNT_INTEGER,output_integer,x_integer,Start,EMul)
+	integerCombProcess: process(COUNT_INTEGER,output_integer,x_integer,Start,EMul,init_model)
 	
 		begin
-		DONEINTEGER <= '0';
+		DONEINTEGER_next <= '0';
 		COUNT_INTEGER_next <= COUNT_INTEGER;
 		output_integer_next <= output_integer;
-		if Start = '1' then
-			DONEINTEGER <= '0';
-			COUNT_INTEGER_next <= unsigned(ufixed(abs(X_integer))); 	
+		if init_model = '1' then
+			DONEINTEGER_next <= '0';
+			COUNT_INTEGER_next <= to_unsigned(0,COUNT_INTEGER_next'length); 	
 			output_integer_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
 		else
-			if COUNT_INTEGER = 0 then 
-				DONEINTEGER <= '1';
-				COUNT_INTEGER_next <= COUNT_INTEGER;
-				output_integer_next <= output_integer;
+			if Start = '1' then
+				DONEINTEGER_next <= '0';
+				COUNT_INTEGER_next <= unsigned(ufixed(abs(X_integer))); 	
+				output_integer_next <= to_sfixed (1,BIT_TOP, BIT_BOTTOM);
 			else
-				DONEINTEGER <= '0'; 
-				output_integer_next <= resize(output_integer * EMul,BIT_TOP,BIT_BOTTOM);
-				COUNT_INTEGER_next <= COUNT_INTEGER - 1;
-			end if;
+				if COUNT_INTEGER = 0 then 
+					DONEINTEGER_next <= '1';
+					COUNT_INTEGER_next <= COUNT_INTEGER;
+					output_integer_next <= output_integer;
+				else
+					DONEINTEGER_next <= '0'; 
+					output_integer_next <= resize(output_integer * EMul,BIT_TOP,BIT_BOTTOM);
+					COUNT_INTEGER_next <= COUNT_INTEGER - 1;
+				end if;
+			end if; 
 		end if; 
 	end process integerCombProcess;
 	
 	
 	
-	integerSynProcess: process(clk,rst,x_integer,count_integer,output_integer)
+	integerSynProcess: process(clk,x_integer,count_integer,output_integer)
 		begin
 		COUNT_INTEGER <= COUNT_INTEGER;
 		output_integer <= output_integer;
-		if rst = '1' then
-			COUNT_INTEGER <= (others => '0');
-			output_integer <= to_sfixed (0,BIT_TOP, BIT_BOTTOM);
-		elsif clk = '1' and clk'event then
+		if clk = '1' and clk'event then
 			COUNT_INTEGER <= COUNT_INTEGER_next;
 			output_integer <= output_integer_next;
+			DONEINTEGER <= DONEINTEGER_next;
 		end if;
 	end process integerSynProcess;
 

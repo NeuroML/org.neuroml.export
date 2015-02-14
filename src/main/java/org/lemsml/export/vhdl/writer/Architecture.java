@@ -48,10 +48,8 @@ public class Architecture {
 			sb.append(child.name + "_uut : " + child.name + " \r\n" + 
 			"port map (\r\n"
 			+ "  clk => clk,\r\n" + 
-			"  rst => rst,\r\n" + 
-			"  ce => ce,\r\n" + 
+			"  init_model => init_model,\r\n" + 
 			"  step_once_go => step_once_go,\r\n" + 
-			"  reset_model => reset_model,\r\n" + 
 			"  Component_done => " + child.name + "_Component_done,\r\n"
 			);
 
@@ -291,6 +289,8 @@ public class Architecture {
 				"signal subprocess_dyn_int_ready : STD_LOGIC := '0';\r\n" + 
 				"signal subprocess_dyn_ready : STD_LOGIC := '0';\r\n" + 
 				"signal subprocess_model_ready : STD_LOGIC := '1';\r\n" + 
+				"signal subprocess_all_ready_shotdone : STD_LOGIC := '0';\r\n" + 
+				"signal subprocess_all_ready_shot : STD_LOGIC := '0';\r\n" + 
 				"signal subprocess_all_ready : STD_LOGIC := '0';");
 		
 		if (name.contains("neuron_model"))
@@ -442,7 +442,7 @@ public class Architecture {
 					"  BIT_BOTTOM	: integer := -20);	\r\n" + 
 					"port(\r\n" + 
 					"  clk		: In  Std_logic;\r\n" + 
-					"  rst		: In  Std_logic;\r\n" + 
+					"  init_model		: In  Std_logic;\r\n" + 
 					"  Start	: In  Std_logic;\r\n" + 
 					"  Done	: Out  Std_logic;\r\n" + 
 					"  X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
@@ -456,7 +456,7 @@ public class Architecture {
 					"  Steps 	: integer := 10);	\n" + 
 					"port(\n" + 
 					"  clk		: In  Std_logic;\n" + 
-					"  rst		: In  Std_logic;\n" + 
+					"  init_model		: In  Std_logic;\n" + 
 					"  Start		: In  Std_logic;\n" + 
 					"  Done		: Out  Std_logic\n" + 
 					");\n" + 
@@ -469,7 +469,7 @@ public class Architecture {
 					"  BIT_BOTTOM	: integer := -12);\r\n	" +
 					"port(\r\n" + 
 					"  clk		: In  Std_logic;\r\n" + 
-					"  rst		: In  Std_logic;\r\n" + 
+					"  init_model		: In  Std_logic;\r\n" + 
 					"  Start	: In  Std_logic;\r\n" + 
 					"  Done	: Out  Std_logic;\r\n" + 
 					"  X		: In sfixed(BIT_TOP downto BIT_BOTTOM);\r\n" + 
@@ -484,20 +484,38 @@ public class Architecture {
 				"---------------------------------------------------------------------\r\n");
 		for(Iterator<EDDerivedVariable> z = comp.derivedvariables.iterator(); z.hasNext(); ) {
 			EDDerivedVariable EDDerivedVariable = z.next(); 
-			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + " : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");\r\n");
-			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + "_next : sfixed (" + EDDerivedVariable.integer + " downto " + EDDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + " : sfixed (" + 
+			EDDerivedVariable.integer + " downto " + 
+			EDDerivedVariable.fraction + ") := to_sfixed(0.0 ," +
+			EDDerivedVariable.integer +"," + EDDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDDerivedVariable.type +  "_" + EDDerivedVariable.name + "_next : sfixed (" +
+			EDDerivedVariable.integer + " downto " +
+					EDDerivedVariable.fraction +  ") := to_sfixed(0.0 ," +
+					EDDerivedVariable.integer +"," + EDDerivedVariable.fraction + ");\r\n");
 			
 		}
 		for(Iterator<EDConditionalDerivedVariable> z = comp.conditionalderivedvariables.iterator(); z.hasNext(); ) {
 			EDConditionalDerivedVariable EDConditionalDerivedVariable = z.next(); 
-			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + " : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");\r\n");
-			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + EDConditionalDerivedVariable.name + "_next : sfixed (" + EDConditionalDerivedVariable.integer + " downto " + EDConditionalDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + 
+			EDConditionalDerivedVariable.name + " : sfixed (" + EDConditionalDerivedVariable.integer + 
+			" downto " + EDConditionalDerivedVariable.fraction +  ") := to_sfixed(0.0 ," +
+			EDConditionalDerivedVariable.integer +"," + EDConditionalDerivedVariable.fraction + ");\r\n");
+			sb.append("signal DerivedVariable_" + EDConditionalDerivedVariable.type +  "_" + 
+			EDConditionalDerivedVariable.name + "_next : sfixed (" + EDConditionalDerivedVariable.integer
+			+ " downto " + EDConditionalDerivedVariable.fraction +  ") := to_sfixed(0.0 ," +
+			EDConditionalDerivedVariable.integer +"," + EDConditionalDerivedVariable.fraction + ");\r\n");
 			
 		}
 		for(Iterator<EDDerivedParameter> z = comp.derivedparameters.iterator(); z.hasNext(); ) {
 			EDDerivedParameter EDDerivedParameter = z.next(); 
-			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + " : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");\r\n");
-			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + EDDerivedParameter.name + "_next : sfixed (" + EDDerivedParameter.integer + " downto " + EDDerivedParameter.fraction + ");\r\n");
+			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + 
+			EDDerivedParameter.name + " : sfixed (" + EDDerivedParameter.integer + " downto " + 
+					EDDerivedParameter.fraction +  ") := to_sfixed(0.0 ," +
+					EDDerivedParameter.integer +"," + EDDerivedParameter.fraction + ");\r\n");
+			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + 
+					EDDerivedParameter.name + "_next : sfixed (" + EDDerivedParameter.integer + " downto " 
+					+ EDDerivedParameter.fraction +  ") := to_sfixed(0.0 ," +
+					EDDerivedParameter.integer +"," + EDDerivedParameter.fraction + ");\r\n");
 			
 		}
 		
@@ -564,10 +582,8 @@ public class Architecture {
 			sb.append("component " + child.name + " \r\n" + 
 			"Port (\r\n" + 
 			"  clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-			"  rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-			"  ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+			"  init_model : in STD_LOGIC;\r\n" + 
 			"  step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-			"  reset_model : in STD_LOGIC; --signal to all EDComponents to go into their reset state\r\n" + 
 			"");
 	
 			sb.append("  Component_done : out STD_LOGIC;\r\n");

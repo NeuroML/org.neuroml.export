@@ -95,7 +95,7 @@ public class StatevariableProcess {
 	static void writeDynamicsPreSynProc(StringBuilder sb, EDComponent comp)
 	{
 		sb.append("\r\n" + 
-				"dynamics_pre_process_syn :process ( clk, rst )\r\n" + 
+				"dynamics_pre_process_syn :process ( clk, init_model )\r\n" + 
 				"begin \r\n");
 		
 		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
@@ -108,26 +108,30 @@ public class StatevariableProcess {
 					{
 						for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 							EDExponential exponential = i.next();
-							sb.append("  if rst  = '1' then\r\n" + 
+							sb.append("if (clk'EVENT AND clk = '1') then	\r\n" +
+									/*"  if init_model  = '1' then\r\n" + 
 									"    pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-									"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-									"    if subprocess_all_ready = '1' then\r\n" + 
+									"  else	\r\n" + */
+									"    if subprocess_all_ready_shot = '1' then\r\n" + 
 									"      pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + " <= pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
 									"    end if;\r\n" + 
-									"  end if;\r\n" );
+									//"  end if;\r\n" + 
+									"end if;\r\n" );
 							
 						}
 						for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 							EDPower power = i.next();
-							sb.append("  if rst  = '1' then\r\n" + 
+							sb.append("if (clk'EVENT AND clk = '1') then	\r\n" +
+									"  if init_model  = '1' then\r\n" + 
 									"    pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 									"    pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-									"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-									"    if subprocess_all_ready = '1' then\r\n" + 
+									"  else	\r\n" + 
+									"    if subprocess_all_ready_shot = '1' then\r\n" + 
 									"      pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
 									"      pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X <= pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
 									"    end if;\r\n" + 
-									"  end if;\r\n");
+									"  end if;\r\n"+ 
+									"end if;\r\n");
 						}
 					}
 				}
@@ -138,25 +142,29 @@ public class StatevariableProcess {
 				{
 					for(Iterator<EDExponential> i = dynamic.Exponentials.iterator(); i.hasNext(); ) {
 						EDExponential exponential = i.next();
-						sb.append("  if rst  = '1' then\r\n" + 
+						sb.append("if (clk'EVENT AND clk = '1') then	\r\n" +
+								"  if init_model  = '1' then\r\n" + 
 								"    pre_exp_noregime_" + state.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-								"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-								"    if subprocess_all_ready = '1' then\r\n" + 
+								"  else	\r\n" + 
+								"    if subprocess_all_ready_shot = '1' then\r\n" + 
 								"      pre_exp_noregime_" + state.name + "_" + exponential.name + " <= pre_exp_noregime_" + state.name + "_" + exponential.name + "_next ;\r\n" + 
 								"    end if;\r\n" + 
-								"  end if;\r\n" );
+								"  end if;\r\n" + 
+								"end if;\r\n" );
 					}
 					for(Iterator<EDPower> i = dynamic.Powers.iterator(); i.hasNext(); ) {
 						EDPower power = i.next();
-						sb.append("  if rst  = '1' then\r\n" + 
+						sb.append("if (clk'EVENT AND clk = '1') then	\r\n" + 
+								"  if init_model  = '1' then\r\n" + 
 								"    pre_pow_noregime_" + state.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 								"    pre_pow_noregime_" + state.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-								"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-								"    if subprocess_all_ready = '1' then\r\n" + 
+								"  else	\r\n" + 
+								"    if subprocess_all_ready_shot = '1' then\r\n" + 
 								"      pre_pow_noregime_" + state.name + "_" + power.name + "_A <= pre_pow_noregime_" + state.name + "_" + power.name + "_A_next ;\r\n" + 
 								"      pre_pow_noregime_" + state.name + "_" + power.name + "_X <= pre_pow_noregime_" + state.name + "_" + power.name + "_X_next ;\r\n" + 
 								"    end if;\r\n" + 
-								"  end if;");
+								"  end if;\r\n" + 
+								"end if;");
 					}
 				}
 			}
@@ -187,7 +195,7 @@ public class StatevariableProcess {
 									"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
 									")\r\n" + 
 									"port map (	clk => clk,\r\n" + 
-									"  rst => rst,\r\n" + 
+									"  init_model => init_model,\r\n" + 
 									"  Start => step_once_go,\r\n" + 
 									"  Done => subprocess_dyn_int_ready,\r\n" + 
 									"  X => pre_exp_" + regime.name + "_" + state.name + "_" + exponential.name + ",\r\n" + 
@@ -204,7 +212,7 @@ public class StatevariableProcess {
 									")\r\n" + 
 									" " + 
 									"port map (	clk => clk,\r\n" + 
-									"  rst => rst,\r\n" + 
+									"  init_model => init_model,\r\n" + 
 									"  Start => step_once_go,\r\n" + 
 									"  Done => subprocess_dyn_int_ready,\r\n" + 
 									"  X => pre_pow_" + regime.name + "_" + state.name + "_" + power.name + "_X ,\r\n" + 
@@ -228,7 +236,7 @@ public class StatevariableProcess {
 								"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
 								")\r\n" + 
 								"port map (	clk => clk,\r\n" + 
-								"  rst => rst,\r\n" + 
+								"  init_model => init_model,\r\n" + 
 								"  Start => step_once_go,\r\n" + 
 								"  Done => subprocess_dyn_int_ready,\r\n" + 
 								"  X => pre_exp_noregime_" + state.name + "_" + exponential.name + ",\r\n" + 
@@ -244,7 +252,7 @@ public class StatevariableProcess {
 								"  BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
 								")\r\n" + 
 								"port map (	clk => clk,\r\n" + 
-								"  rst => rst,\r\n" + 
+								"  init_model => init_model,\r\n" + 
 								"  Start => step_once_go,\r\n" + 
 								"  Done => subprocess_dyn_int_ready,\r\n" + 
 								"  X => pre_pow_noregime_" + state.name + "_" + power.name + "_X ,\r\n" + 
@@ -328,7 +336,7 @@ public class StatevariableProcess {
 					"  )\n" + 
 					"PORT MAP(\n" + 
 					"  clk => clk,\n" + 
-					"  rst => rst,\n" + 
+					"  init_model => init_model,\n" + 
 					"  Start => step_once_go,\n" + 
 					"  Done => subprocess_dyn_ready\n" + 
 					");");
@@ -339,9 +347,10 @@ public class StatevariableProcess {
 	{
 
 		
-		sb.append("state_variable_process_dynamics_syn :process (CLK,rst)\r\n" + 
+		sb.append("state_variable_process_dynamics_syn :process (CLK,init_model)\r\n" + 
 				"begin\r\n" +
-				"  if rst = '1' then \r\n");
+				"if clk'event and clk = '1' then  \r\n");
+		/*sb.append("  if init_model = '1' then \r\n");
 		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
 			EDState state = j.next(); 
 			for(Iterator<EDRegime> k = comp.regimes.iterator(); k.hasNext(); ) {
@@ -367,8 +376,8 @@ public class StatevariableProcess {
 			}
 		}
 		
-		sb.append(" elsif clk'event and clk = '1' then  \r\n" + 
-				"    if subprocess_all_ready = '1' then  \r\n");
+		sb.append(" else  \r\n");*/
+		sb.append("    if subprocess_all_ready_shot = '1' then  \r\n");
 
 		for(Iterator<EDState> j = comp.state.iterator(); j.hasNext(); ) {
 			EDState state = j.next(); 
@@ -393,7 +402,8 @@ public class StatevariableProcess {
 		
 		sb.append("\r\n" + 
 				"    end if;\r\n" + 
-				"  end if;\r\n" + 
+				//"  end if;\r\n" + 
+				"end if;\r\n" + 
 				"end process state_variable_process_dynamics_syn;\r\n" + 
 				"");
 	}
@@ -406,7 +416,7 @@ public class StatevariableProcess {
 				"	---------------------------------------------------------------------\r\n");
 
 		sensitivityList = new StringBuilder();
-		sensitivityList.append("sysparam_time_timestep,reset_model");
+		sensitivityList.append("sysparam_time_timestep,init_model");
 		if (state.onstart != null && !state.onstart.matches("0") && sensitivityList != null && sensitivityList.length() > 0)
 		{
 			sensitivityList.append("," + state.sensitivityList);
@@ -701,8 +711,8 @@ public class StatevariableProcess {
 		}
 		
 		
-		sb.append("\r\n" + 
-				"  if reset_model = '1' then  \r\n" + 
+		/*sb.append("\r\n" + 
+				"  if init_model = '1' then  \r\n" + 
 				"");
 		if (state.onstart.matches("0")) {
 			sb.append("    statevariable_" + state.type +  "_" + state.name + "_next <= (others => '0');\r\n");
@@ -714,7 +724,7 @@ public class StatevariableProcess {
 		}
 		sb.append("\r\n" + 
 				"  else\r\n" + 
-				"");
+				"");*/
 		
 		if (currentTemporarySignalID == 1) {
 			sb.append("    statevariable_" + state.type +  "_" + state.name + 
@@ -728,9 +738,9 @@ public class StatevariableProcess {
 		}
 		
 		
-		sb.append("\r\n" + 
+		/*sb.append("\r\n" + 
 				"  end if;\r\n" + 
-				"");
+				"");*/
 		sb.append("\r\n" + 
 				"end process;\r\n");
 		sb.append("\r\n" + 
@@ -746,7 +756,7 @@ public class StatevariableProcess {
 		
 
 		sensitivityList = new StringBuilder();
-		sensitivityList.append("sysparam_time_timestep,reset_model");
+		sensitivityList.append("sysparam_time_timestep,init_model");
 		int temporarySignalsRequired = 1;
 		StringBuilder finalEDEventPort = new StringBuilder();
 		finalEDEventPort.append("eventport_" + port.direction + "_" + port.name + 
@@ -1019,29 +1029,62 @@ public class StatevariableProcess {
 				"-- Subprocess ready process\r\n" + 
 				"---------------------------------------------------------------------\r\n" + 
 				"\r\n" + 
-				"subprocess_all_ready_process: process(subprocess_der_int_ready,subprocess_der_int_pre_ready,subprocess_der_ready,subprocess_dyn_int_pre_ready,subprocess_dyn_int_ready,subprocess_dyn_ready,subprocess_model_ready)\r\n" + 
+				"subprocess_all_ready_process: process(step_once_go,subprocess_der_int_ready,subprocess_der_int_pre_ready,subprocess_der_ready,subprocess_dyn_int_pre_ready,subprocess_dyn_int_ready,subprocess_dyn_ready,subprocess_model_ready)\r\n" + 
 				"begin\r\n" + 
-				"  if subprocess_der_int_ready = '1'  and subprocess_der_int_pre_ready = '1'and subprocess_der_ready ='1' and subprocess_dyn_int_ready = '1' and subprocess_dyn_int_pre_ready = '1' and subprocess_dyn_ready = '1' and subprocess_model_ready = '1' then\r\n" + 
+				"  if step_once_go = '0' and subprocess_der_int_ready = '1'  and subprocess_der_int_pre_ready = '1'and subprocess_der_ready ='1' and subprocess_dyn_int_ready = '1' and subprocess_dyn_int_pre_ready = '1' and subprocess_dyn_ready = '1' and subprocess_model_ready = '1' then\r\n" + 
 				"    subprocess_all_ready <= '1';\r\n" + 
 				"  else\r\n" + 
 				"    subprocess_all_ready <= '0';\r\n" + 
 				"  end if;\r\n" + 
 				"end process subprocess_all_ready_process;\r\n" + 
+				
+
+				
+				"subprocess_all_ready_shot_process : process(clk)\r\n" + 
+				"begin\r\n" + 
+				"	if rising_edge(clk) then\r\n" + 
+				"			if (init_model='1') then \r\n" + 
+				"				subprocess_all_ready_shot <= '0';\r\n" + 
+				"			    subprocess_all_ready_shotdone <= '1';\r\n" + 
+				"			else\r\n" + 
+				"				if subprocess_all_ready = '1' and subprocess_all_ready_shotdone = '0' then\r\n" + 
+				"					subprocess_all_ready_shot <= '1';\r\n" + 
+				"					subprocess_all_ready_shotdone <= '1';\r\n" + 
+				"				elsif subprocess_all_ready_shot = '1' then\r\n" + 
+				"					subprocess_all_ready_shot <= '0';\r\n" + 
+				"				elsif subprocess_all_ready = '0' then\r\n" + 
+				"					subprocess_all_ready_shot <= '0';\r\n" + 
+				"					subprocess_all_ready_shotdone <= '0';\r\n" + 
+				"				end if;\r\n" + 
+				"			end if;\r\n" + 
+				"	end if;\r\n" + 
+				"\r\n" + 
+				"end process subprocess_all_ready_shot_process;\r\n" + 
+				
+				
+				
+				
+				
 				"---------------------------------------------------------------------\r\n" + 
 				"\r\n" + 
 				"\r\n" + 
 				"\r\n" + 
 				"count_proc:process(clk)\r\n" + 
 				"begin \r\n" + 
-				"  if (clk'EVENT AND clk = '1') then\r\n" + 
-				"    if step_once_go = '1' then\r\n" + 
-				"      COUNT <= \"000\";\r\n" + 
-				"      component_done_int <= '0';\r\n" + 
-				"    elsif COUNT = \"001\" then\r\n" + 
+				"  if (clk'EVENT AND clk = '1') then\r\n" +
+				"    if init_model = '1' then " + 
+				"      COUNT <= \"001\";\r\n" + 
 				"      component_done_int <= '1';\r\n" + 
-				"    elsif subprocess_all_ready = '1' then\r\n" + 
-				"      COUNT <= COUNT + 1;\r\n" + 
-				"      component_done_int <= '0';\r\n" + 
+				"    else " +
+				"      if step_once_go = '1' then\r\n" + 
+				"        COUNT <= \"000\";\r\n" + 
+				"        component_done_int <= '0';\r\n" + 
+				"      elsif COUNT = \"001\" then\r\n" + 
+				"        component_done_int <= '1';\r\n" + 
+				"      elsif subprocess_all_ready_shot = '1' then\r\n" + 
+				"        COUNT <= COUNT + 1;\r\n" + 
+				"        component_done_int <= '0';\r\n" + 
+				"      end if;\r\n" + 
 				"    end if;\r\n" + 
 				"  end if;\r\n" + 
 				"end process count_proc;");
@@ -1088,50 +1131,55 @@ public class StatevariableProcess {
 					"step_once_complete_synch:process(clk)\r\n" + 
 					"begin \r\n" + 
 					"  if (clk'EVENT AND clk = '1') then\r\n" + 
-					"    if component_done = '1' and step_once_complete_fired = '0'  then\r\n" + 
-					"      step_once_complete <= '1';\r\n" + 
+					"    if init_model = '1' then " +
+					"      step_once_complete <= '0';\r\n" + 
 					"      step_once_complete_fired <= '1';\r\n" + 
+					"    else  " +
+					"      if component_done = '1' and step_once_complete_fired = '0'  then\r\n" + 
+					"        step_once_complete <= '1';\r\n" + 
+					"        step_once_complete_fired <= '1';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("      eventport_" + port.direction +  "_" + port.name + 
+				sb.append("        eventport_" + port.direction +  "_" + port.name + 
 						" <=  eventport_" + port.direction + "_" + port.name + "_internal ;\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
-					"    elsif component_done = '0' then\r\n" + 
-					"      step_once_complete <= '0';\r\n" + 
-					"      step_once_complete_fired <= '0';\r\n" + 
+					"      elsif component_done = '0' then\r\n" + 
+					"        step_once_complete <= '0';\r\n" + 
+					"        step_once_complete_fired <= '0';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("      eventport_" + port.direction +  "_" + port.name + 
+				sb.append("        eventport_" + port.direction +  "_" + port.name + 
 						" <=  '0';\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 				
-					"    else\r\n" + 
-					"      step_once_complete <= '0';\r\n" + 
+					"      else\r\n" + 
+					"        step_once_complete <= '0';\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"-- Assign event ports to exposures\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
 					"");
 			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
 				EDEventPort port = j.next(); 
-				sb.append("      eventport_" + port.direction +  "_" + port.name + 
+				sb.append("        eventport_" + port.direction +  "_" + port.name + 
 						" <=  '0';\r\n" );
 				
 			}
 			sb.append("\r\n" + 
 					"---------------------------------------------------------------------\r\n" + 
+					"      end if;\r\n" + 
 					"    end if;\r\n" + 
 					"  end if;\r\n" + 
 					"end process step_once_complete_synch;\r\n" + 

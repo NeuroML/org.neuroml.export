@@ -38,7 +38,7 @@ entity delayDone is
 		Steps 	: integer := 10);	
 	port(
 		clk		: In  Std_logic;
-		rst		: In  Std_logic;
+		init_model : in STD_LOGIC; --signal to all components to go into their init state
 		Start		: In  Std_logic;
 		Done		: Out  Std_logic
 		);
@@ -47,28 +47,33 @@ end delayDone;
 architecture Behavioral of delayDone is
 signal count : integer ;
 signal count_next : integer ;
+signal Done_next : std_logic ;
 begin
 
 
-combinationProc : process (count,start)
+combinationProc : process (count,start,init_model)
 begin
 count_next <= count;
-Done <= '0';
-if start = '1' then
-count_next <= 0;
-elsif count < Steps then
-count_next <= count + 1;
+Done_next <= '0';
+if init_model = '1' then
+		count_next <= Steps;
+		Done_next <= '1';
 else
-Done <= '1';
+	if start = '1' then
+		count_next <= 0;
+	elsif count < Steps then
+		count_next <= count + 1;
+	else
+		Done_next <= '1';
+	end if;
 end if;
 end process;
 
-synchronousProc : process (clk,rst)
+synchronousProc : process (clk)
 begin
-if rst = '1' then
-	count <= Steps;
-elsif clk'event and clk = '1' then
+if clk'event and clk = '1' then
 	count <= count_next;
+	Done <= Done_next;
 end if;
 end process;
 

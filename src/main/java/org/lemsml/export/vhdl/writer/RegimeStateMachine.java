@@ -34,7 +34,7 @@ public class RegimeStateMachine {
 					defaultRegime = regime.name;
 			}
 			StringBuilder sensitivityList = new StringBuilder();
-			sensitivityList.append("sysparam_time_simtime,current_regime_in_int,reset_model,statevariable_voltage_v_in");
+			sensitivityList.append("sysparam_time_simtime,current_regime_in_int,init_model,statevariable_voltage_v_in");
 			if (comp.regimes.size() > 0)
 			{
 				for(Iterator<EDRegime> l = comp.regimes.iterator(); l.hasNext(); ) {
@@ -51,7 +51,7 @@ public class RegimeStateMachine {
 					"begin \r\n" + 
 					"  next_regime <= current_regime_in_int;\r\n" + 
 					"\r\n" + 
-					"  if reset_model = '1' then  \r\n" + 
+					"  if init_model = '1' then  \r\n" + 
 					"    next_regime <= " + defaultRegime + ";\r\n" + 
 					"  else\r\n");
 			for(Iterator<EDRegime> j = comp.regimes.iterator(); j.hasNext(); ) {

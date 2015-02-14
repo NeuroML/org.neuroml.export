@@ -43,10 +43,8 @@ public class TopSynth {
 				" \r\n" + 
 				"entity top_synth is\r\n" + 
 				"    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-				"           rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-				"           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+				"           init_model: in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 				"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-				"		   reset_model : in STD_LOGIC;\r\n" + 
 				"		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 				"		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);\r\n" + 
 				//"		   SelectSpikesIn :  in STD_LOGIC_VECTOR(4607 downto 0);\r\n" + 
@@ -69,12 +67,16 @@ public class TopSynth {
 					"end top_synth;\r\n\r\n" + 
 					"architecture top of top_synth is\r\n" + 
 					"\r\n" + 
+					
 					"signal step_once_complete_int : STD_LOGIC;\r\n" + 
 					"signal seven_steps_done : STD_LOGIC;\r\n" + 
 					"signal step_once_go_int : STD_LOGIC;\r\n" + 
 					"signal seven_steps_done_shot_done : STD_LOGIC;\r\n" + 
 					"signal seven_steps_done_shot : STD_LOGIC;\r\n" + 
 					"signal COUNT : unsigned(2 downto 0) := \"000\";\r\n" + 
+					"signal seven_steps_done_next : STD_LOGIC;\r\n" + 
+					"signal COUNT_next : unsigned(2 downto 0) := \"000\";\r\n" + 
+					"signal step_once_go_int_next : STD_LOGIC;\r\n" + 
 					"");
 			for(Iterator<EDEventPort> i = neuron.eventports.iterator(); i.hasNext(); ) {
 				EDEventPort eventport = i.next(); 
@@ -84,10 +86,8 @@ public class TopSynth {
 			sb.append("\r\n" + 
 					"component "+neuron.name+"\r\n" + 
 					"    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES\r\n" + 
-					"           rst : in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
-					"           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS\r\n" + 
+					"           init_model: in STD_LOGIC; --SYNCHRONOUS RESET\r\n" + 
 					"		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
-					"		   reset_model : in STD_LOGIC;\r\n" + 
 					"		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 					"		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);\r\n" + 
 					//"		   SelectSpikesIn :  in STD_LOGIC_VECTOR(4607 downto 0);\r\n" + 
@@ -125,10 +125,8 @@ public class TopSynth {
 					"\r\n" +
 					neuron.name+"_uut : "+ neuron.name+"\r\n" + 
 					"    port map (	clk => clk,\r\n" + 
-					"				rst => rst,\r\n" + 
-					"				ce => ce,\r\n" + 
+					"				init_model=> init_model,\r\n" + 
 					"		   step_once_go  => step_once_go_int,\r\n" + 
-					"		   reset_model => reset_model,\r\n" + 
 					"		   step_once_complete  => step_once_complete_int,\r\n" + 
 					"		   eventport_in_spike_aggregate => eventport_in_spike_aggregate,\r\n" + 
 					//"		   SelectSpikesIn => SelectSpikesIn,\r\n" + 
@@ -150,39 +148,63 @@ public class TopSynth {
 			
 			sb.append("\r\n" + 
 					"\r\n" + 
-					"count_proc:process(clk)\r\n" + 
+					"count_proc_comb:process(init_model,step_once_complete_int,COUNT,step_once_go)\r\n" + 
 					"  	begin \r\n" + 
-					"      if rising_edge(clk) then  \r\n" + 
-					"			if (rst='1') then \r\n" + 
-					"				COUNT <= \"000\";\r\n" + 
-					"				seven_steps_done <= '0';\r\n" + 
+					"		seven_steps_done_next <= '0';\r\n" + 
+					"		COUNT_next <= COUNT;\r\n" + 
+					"		step_once_go_int_next <= '0';\r\n" + 
+					"			if (init_model='1') then \r\n" + 
+					"				seven_steps_done_next <= '0';\r\n" + 
+					"				COUNT_next <= \"110\";\r\n" + 
+					"		        step_once_go_int_next <= '0';\r\n" + 
 					"			else\r\n" + 
 					"				if step_once_complete_int = '1'	then\r\n" + 
 					"					if (COUNT = \"110\") then\r\n" + 
-					"						seven_steps_done <= '1';\r\n" + 
+					"						seven_steps_done_next <= '1';\r\n" + 
+					"					    COUNT_next <= \"110\";\r\n" + 
+					"						step_once_go_int_next <= '0';\r\n" + 
 					"					else\r\n" + 
-					"						seven_steps_done <= '0';\r\n" + 
-					"						COUNT <= COUNT + 1;\r\n" + 
-					"						step_once_go_int <= '1';\r\n" + 
+					"						seven_steps_done_next <= '0';\r\n" + 
+					"						COUNT_next <= COUNT + 1;\r\n" + 
+					"						step_once_go_int_next <= '1';\r\n" + 
 					"					end if;\r\n" + 
 					"				elsif step_once_go = '1' then\r\n" + 
-					"					seven_steps_done <= '0';\r\n" + 
-					"					step_once_go_int <= '1';\r\n" + 
-					"					COUNT <= \"000\";\r\n" + 
+					"					seven_steps_done_next <= '0';\r\n" +
+					"					COUNT_next <= \"000\";\r\n" +  
+					"					step_once_go_int_next <= '1';\r\n" + 
 					"				else\r\n" + 
-					"					step_once_go_int <= '0';\r\n" + 
+					"		            seven_steps_done_next <= '0';\r\n" + 
+					"		            COUNT_next <= COUNT;\r\n" + 
+					"					step_once_go_int_next <= '0';\r\n" + 
 					"				end if;\r\n" + 
 					"			end if;\r\n" + 
+					"end process count_proc_comb;\r\n" + 
+					"\r\n" + 
+					"\r\n" + 
+					"\r\n" + 
+					"count_proc_syn:process(clk)\r\n" + 
+					"  	begin \r\n" + 
+					"      if rising_edge(clk) then  \r\n" + 
+					"		 if init_model = '1' then\n" + 
+					"		    COUNT <= \"110\";\n" + 
+					"			 seven_steps_done <= '1';\n" + 
+					"			 step_once_go_int <= '0';\n" + 
+					"		  else\n" + 
+					"		    COUNT <= COUNT_next;\n" + 
+					"		    seven_steps_done <= seven_steps_done_next;\n" + 
+					"		    step_once_go_int <= step_once_go_int_next;\n" + 
+					"		  end if;" +
 					"		end if;\r\n" + 
-					"end process count_proc;\r\n" + 
+					"end process count_proc_syn;\r\n" + 
 					"\r\n" + 
 					"\r\n" + 
 					"\r\n" + 
 					"shot_process:process(clk)\r\n" + 
 					"begin\r\n" + 
 					"	if rising_edge(clk) then\r\n" + 
-					"			if (rst='1') then \r\n" + 
+					"			if (init_model='1') then \r\n" + 
 					"				seven_steps_done_shot <= '0';\r\n" + 
+					"				seven_steps_done_shot_done <= '1';\r\n" + 
 					"			else\r\n" + 
 					"				if seven_steps_done = '1' and seven_steps_done_shot_done = '0' then\r\n" + 
 					"					seven_steps_done_shot <= '1';\r\n" + 
@@ -204,7 +226,7 @@ public class TopSynth {
 					"store_state: process (clk)\r\n" + 
 					"   begin\r\n" + 
 					"      if rising_edge(clk) then  \r\n" + 
-					"         if (rst='1') then   \r\n" + 
+					"         if (init_model='1') then   \r\n" + 
 					"		\r\n" + 
 					"");
 			
@@ -215,7 +237,7 @@ public class TopSynth {
 			}
 			sb.append("\r\n" + 
 					"		 \r\n" + 
-					"         elsif (ce='1' and seven_steps_done_shot='1') then\r\n" + 
+					"         elsif (seven_steps_done_shot='1') then\r\n" + 
 					"");
 			for(Iterator<EDEventPort> i = neuron.eventports.iterator(); i.hasNext(); ) {
 			    EDEventPort item = i.next();

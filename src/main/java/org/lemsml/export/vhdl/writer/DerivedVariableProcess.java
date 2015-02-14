@@ -75,7 +75,7 @@ public class DerivedVariableProcess {
 				"end process derived_variable_pre_process_comb;\r\n" + 
 				"");
 		
-		sb.append("\r\nderived_variable_pre_process_syn :process ( clk, rst )\r\n" + 
+		sb.append("\r\nderived_variable_pre_process_syn :process ( clk, init_model )\r\n" + 
 				"begin \r\n" + 
 				"");
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
@@ -83,27 +83,31 @@ public class DerivedVariableProcess {
 			for(Iterator<EDExponential> k = derivedvariable.Exponentials.iterator(); k.hasNext(); ) {
 				EDExponential exponential = k.next();
 				sb.append("\r\n" + 
-						"  if rst  = '1' then\r\n" + 
-						"  pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-						"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-						"    if subprocess_all_ready = '1' then\r\n" + 
+						"if (clk'EVENT AND clk = '1') then	\r\n" + 
+						"  if init_model  = '1' then\r\n" + 
+						"    pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
+						"  else \r\n" +
+						"    if subprocess_all_ready_shot = '1' then\r\n" + 
 						"      pre_exp_" + derivedvariable.name + "_" + exponential.name + " <= pre_exp_" + derivedvariable.name + "_" + exponential.name + "_next;\r\n" + 
 						"    end if;\r\n" + 
 						"  end if;\r\n" + 
+						"end if;\r\n" + 
 						"\r\n");
 				
 			}
 			for(Iterator<EDPower> k = derivedvariable.Powers.iterator(); k.hasNext(); ) {
 				EDPower power = k.next();
-				sb.append("  if rst  = '1' then\r\n" + 
+				sb.append("if (clk'EVENT AND clk = '1') then	\r\n" + 
+						"  if init_model  = '1' then\r\n" + 
 						"    pre_pow_" + derivedvariable.name + "_" + power.name + "_A <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 						"    pre_pow_" + derivedvariable.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-						"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-						"    if subprocess_all_ready = '1' then\r\n" + 
+						"  else \r\n" +
+						"    if subprocess_all_ready_shot = '1' then\r\n" + 
 						"      pre_pow_" + derivedvariable.name + "_" + power.name + "_A <= pre_pow_" + derivedvariable.name + "_" + power.name + "_A_next ;\r\n" + 
 						"      pre_pow_" + derivedvariable.name + "_" + power.name + "_X <= pre_pow_" + derivedvariable.name + "_" + power.name + "_X_next ;\r\n" + 
 						"    end if;\r\n" + 
-						"  end if;" );
+						"  end if;"+ 
+						"end if;" );
 			}
 
 		}
@@ -114,26 +118,30 @@ public class DerivedVariableProcess {
 				for(Iterator<EDExponential> k = thisEDCase.Exponentials.iterator(); k.hasNext(); ) {
 					EDExponential exponential = k.next();
 					sb.append("\r\n" + 
-							"  if rst  = '1' then\r\n" + 
+							"if (clk'EVENT AND clk = '1') then	\r\n" + 
+							"  if init_model  = '1' then\r\n" + 
 							"    pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " <= to_sfixed(0," + exponential.integer+"," +exponential.fraction +");\r\n" + 
-							"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-							"    if subprocess_all_ready = '1' then\r\n" + 
+							"  else \r\n" + 
+							"    if subprocess_all_ready_shot = '1' then\r\n" + 
 							"      pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " <= pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + "_next;\r\n" + 
 							"    end if;\r\n" + 
 							"  end if;\r\n" + 
+							"end if;\r\n" + 
 							"\r\n");
 				}
 				for(Iterator<EDPower> k = thisEDCase.Powers.iterator(); k.hasNext(); ) {
 					EDPower power = k.next();
-					sb.append("  if rst  = '1' then\r\n" + 
+					sb.append("if (clk'EVENT AND clk = '1') then	\r\n" + 
+							"  if init_model  = '1' then\r\n" + 
 							"    pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A  <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
 							"    pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X <= to_sfixed(0," + power.integer+"," +power.fraction +");\r\n" + 
-							"  elsif (clk'EVENT AND clk = '1') then	\r\n" + 
-							"    if subprocess_all_ready = '1' then\r\n" + 
+							"  else \r\n" + 
+							"    if subprocess_all_ready_shot = '1' then\r\n" + 
 							"      pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A <= pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_A_next ;\r\n" + 
 							"      pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X <= pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X_next ;\r\n" + 
 							"    end if;\r\n" + 
-							"  end if;\r\n\r\n" );
+							"  end if;\r\n" + 
+							"end if;\r\n\r\n" );
 				}
 			}
 
@@ -153,7 +161,7 @@ public class DerivedVariableProcess {
 								"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
 								")\r\n" + 
 						"port map (	clk => clk,\r\n" + 
-						"  rst => rst,\r\n" + 
+						"  init_model => init_model,\r\n" + 
 						"  Start => step_once_go,\r\n" + 
 						"  Done => subprocess_der_int_ready,\r\n" + 
 						"  X => pre_exp_" + derivedvariable.name + "_" + exponential.name + " ,\r\n" + 
@@ -170,7 +178,7 @@ public class DerivedVariableProcess {
 						"  BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
 						")\r\n" + 
 						"port map (	clk => clk,\r\n" + 
-						"  rst => rst,\r\n" + 
+						"  init_model => init_model,\r\n" + 
 						"  Start => step_once_go,\r\n" + 
 						"  Done => subprocess_der_int_ready,\r\n" + 
 						"  X => pre_pow_" + derivedvariable.name + "_" + power.name + "_X ,\r\n" + 
@@ -194,7 +202,7 @@ public class DerivedVariableProcess {
 							"  BIT_BOTTOM	=> " + exponential.fraction + "\r\n" + 
 							")\r\n" + 
 							"port map (	clk => clk,\r\n" + 
-							"  rst => rst,\r\n" + 
+							"  init_model => init_model,\r\n" + 
 							"  Start => step_once_go,\r\n" + 
 							"  Done => subprocess_der_int_ready,\r\n" + 
 							"  X => pre_exp_" + conditionalderivedvariable.name + "_" + exponential.name + " ,\r\n" + 
@@ -211,7 +219,7 @@ public class DerivedVariableProcess {
 							"  BIT_BOTTOM	=> " + power.fraction + "\r\n" + 
 							")\r\n" + 
 							"port map (	clk => clk,\r\n" + 
-							"  rst => rst,\r\n" + 
+							"  init_model => init_model,\r\n" + 
 							"  Start => step_once_go,\r\n" + 
 							"  Done => subprocess_der_int_ready,\r\n" + 
 							"  X => pre_pow_" + conditionalderivedvariable.name + "_" + power.name + "_X ,\r\n" + 
@@ -268,17 +276,18 @@ public class DerivedVariableProcess {
 					"  )\n" + 
 					"PORT MAP(\n" + 
 					"  clk => clk,\n" + 
-					"  rst => rst,\n" + 
+					"  init_model => init_model,\n" + 
 					"  Start => step_once_go,\n" + 
 					"  Done => subprocess_der_ready\n" + 
 					");");
 		}
 			
 		sb.append("\r\n" + 
-				"derived_variable_process_syn :process ( clk,rst )\r\n" + 
+				"derived_variable_process_syn :process ( clk,init_model )\r\n" + 
 				"begin \r\n" + 
 				"\r\n" + 
-				"  if rst = '1' then \r\n");
+				"if clk'event and clk = '1' then  \r\n");
+		/*sb.append("  if init_model = '1' then \r\n");
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
 			EDDerivedVariable derivedvariable = j.next(); 
 
@@ -289,8 +298,8 @@ public class DerivedVariableProcess {
 					derivedvariable.integer +"," + derivedvariable.fraction + ");\r\n");
 			}
 		}
-		sb.append(" elsif clk'event and clk = '1' then  \r\n" + 
-				"    if subprocess_all_ready = '1' then  \r\n");
+		sb.append(" else \r\n"); */
+		sb.append("    if subprocess_all_ready_shot = '1' then  \r\n");
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
 			EDDerivedVariable derivedvariable = j.next(); 
 
@@ -312,7 +321,8 @@ public class DerivedVariableProcess {
 		}
 		
 		sb.append("    end if;\r\n" + 
-				"  end if;\r\n" + 
+				//"  end if;\r\n" + 
+				"end if;\r\n" + 
 				"end process derived_variable_process_syn;\r\n" + 
 				"---------------------------------------------------------------------\r\n");
 	}
