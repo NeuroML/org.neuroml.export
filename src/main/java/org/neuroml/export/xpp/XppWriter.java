@@ -3,9 +3,11 @@ package org.neuroml.export.xpp;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -16,9 +18,11 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -32,15 +36,23 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 	public HashMap<String, String> keywordSubstitutions = new HashMap<String, String>();
 
+	private String outputFileName;
+
 	public XppWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "XPP");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.XPP);
+		keywordSubstitutions.put("compartment", "compart");
+	}
+
+	public XppWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Formats.XPP, outputFolder);
+		this.outputFileName = outputFileName;
 		keywordSubstitutions.put("compartment", "compart");
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -132,8 +144,29 @@ public class XppWriter extends ANeuroMLBaseWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

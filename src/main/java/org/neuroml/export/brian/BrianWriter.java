@@ -1,6 +1,7 @@
 package org.neuroml.export.brian;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
@@ -46,14 +48,21 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 	boolean brian2 = false;
 
+	private String outputFileName;
+
 	public BrianWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "Brian");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.BRIAN);
+	}
+
+	public BrianWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Formats.BRIAN, outputFolder);
+		this.outputFileName = outputFileName;
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
@@ -523,8 +532,28 @@ public class BrianWriter extends ANeuroMLBaseWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

@@ -36,9 +36,10 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.AppTest;
-import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.export.utils.visitors.CommonLangWriter;
 
 public class DLemsWriter extends ABaseWriter
@@ -52,13 +53,29 @@ public class DLemsWriter extends ABaseWriter
 
 	public DLemsWriter(Lems lems, CommonLangWriter writer)
 	{
-		super(lems, Utils.dLEMSFormat);
+		super(lems, Formats.DLEMS);
 		this.writer = writer;
+	}
+
+	public void setSupportedFeatures()
+	{
+		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+
 	}
 
 	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer)
 	{
-		super(lems, Utils.dLEMSFormat, outputFolder);
+		super(lems, Formats.DLEMS, outputFolder);
 		this.writer = writer;
 		this.outputFileName = outputFileName;
 	}
@@ -417,9 +434,9 @@ public class DLemsWriter extends ABaseWriter
 		{
 			String code = this.getMainScript();
 
-			File dlemsFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
-			FileUtil.writeStringToFile(code, dlemsFile);
-			outputFiles.add(dlemsFile);
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
 
 		}
 		catch(LEMSException e)

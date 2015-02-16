@@ -23,7 +23,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -41,13 +41,13 @@ public class MatlabWriter extends ABaseWriter
 
 	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Utils.matlabFormat);
+		super(lems, Formats.MATLAB);
 		initializeWriter();
 	}
 	
 	public MatlabWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Utils.matlabFormat, outputFolder);
+		super(lems, Formats.MATLAB, outputFolder);
 		this.outputFileName = outputFileName;
 		initializeWriter();
 	}
@@ -77,7 +77,7 @@ public class MatlabWriter extends ABaseWriter
 	};
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -171,9 +171,9 @@ public class MatlabWriter extends ABaseWriter
 		{
 			String code = this.getMainScript();
 
-			File cFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
-			FileUtil.writeStringToFile(code, cFile);
-			outputFiles.add(cFile);
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
 
 		}
 		catch(GenerationException e)

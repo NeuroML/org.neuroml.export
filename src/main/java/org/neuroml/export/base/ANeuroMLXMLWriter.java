@@ -1,12 +1,13 @@
 package org.neuroml.export.base;
 
+import java.io.File;
 import java.util.HashMap;
 
 import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.model.NeuroMLDocument;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -22,13 +23,25 @@ public abstract class ANeuroMLXMLWriter extends ANeuroMLBaseWriter
 	String commPre = "<!--";
 	String commPost = "-->";
 
-	public ANeuroMLXMLWriter(Lems lems, String format)
+	public ANeuroMLXMLWriter(Lems lems, Formats format)
 	{
 		super(lems, format);
 		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
 	}
 
-	public ANeuroMLXMLWriter(NeuroMLDocument nmlDocument, String format)
+	public ANeuroMLXMLWriter(Lems lems, Formats format, File outputFolder)
+	{
+		super(lems, format, outputFolder);
+		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
+	}
+
+	public ANeuroMLXMLWriter(Lems lems, NeuroMLDocument nmlDocument, Formats format, File outputFolder)
+	{
+		super(lems, nmlDocument, format, outputFolder);
+		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
+	}
+
+	public ANeuroMLXMLWriter(NeuroMLDocument nmlDocument, Formats format)
 	{
 		super(nmlDocument, format);
 		indentCounts.put(DEFAULT_INDENT_FLAG, 0);

@@ -1,10 +1,12 @@
 package org.lemsml.export.base;
 
+import java.io.File;
+
 import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class AXMLWriter extends ABaseWriter
@@ -16,9 +18,14 @@ public abstract class AXMLWriter extends ABaseWriter
 	String commPre = "<!--";
 	String commPost = "-->";
 
-	public AXMLWriter(Lems lems, String format)
+	public AXMLWriter(Lems lems, Formats format)
 	{
 		super(lems, format);
+	}
+
+	public AXMLWriter(Lems lems, Formats format, File outputFolder)
+	{
+		super(lems, format, outputFolder);
 	}
 
 	protected void addComment(StringBuilder sb, String comment)

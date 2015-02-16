@@ -1,4 +1,4 @@
-package org.neuroml.export.cellml;
+package org.neuroml.export.geppetto;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,31 +13,21 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.neuroml.model.util.NeuroMLException;
 
-public class CellMLWriterTest extends TestCase
+public class GeppettoWriterTest extends TestCase
 {
 
 	public void testGetMainScript1() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
-		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+		String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		CellMLWriter cw = new CellMLWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "cellml"));
+		GeppettoWriter gw = new GeppettoWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", ".g.xml"), new File(exampleFilename));
 
-		List<File> outputFiles = cw.convert();
+		List<File> outputFiles = gw.convert();
 		for(File outputFile : outputFiles)
 		{
 			assertTrue(outputFile.exists());
 		}
 	}
-	
-	/*
-	 * public void testGetMainScript2() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
-	 * 
-	 * String exampleFilename = "LEMS_NML2_Ex0_IaF.xml"; Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-	 * 
-	 * generateCellMLAndTestScript(lems, exampleFilename);
-	 * 
-	 * }
-	 */
 
 }

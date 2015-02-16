@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import org.apache.velocity.Template;
@@ -23,6 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -34,15 +34,21 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 	public final String TEMPLATE_MAIN = "dnsim/dnsim.m.vm";
 	public final String TEMPLATE_MODULE = "dnsim/dnsim.txt.vm";
+	
+	private List<File> outputFiles = new ArrayList<File>();
 
 	public DNSimWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "DNSim");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.DN_SIM);
+	}
+
+	public DNSimWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Formats.DN_SIM, outputFolder);
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -66,16 +72,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 	public String getMainScript() throws GenerationException, IOException
 	{
-		ArrayList<File> files = generateMainScriptAndModules(null);
-		return FileUtil.readStringFromFile(files.get(0));
-	}
-
-	public ArrayList<File> generateMainScriptAndModules(File dirForFiles) throws GenerationException
-	{
-
-		ArrayList<File> allGeneratedFiles = new ArrayList<File>();
-
-		E.info("-Writing " + format + " files to: " + dirForFiles.getAbsolutePath());
+		E.info("-Writing " + format + " files to: " + this.getOutputFolder().getAbsolutePath());
 
 		StringBuilder mainScript = new StringBuilder();
 		StringBuilder moduleScript = new StringBuilder();
@@ -121,21 +118,14 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 			moduleScript.append(sw2);
 
-			if(dirForFiles != null && dirForFiles.exists())
-			{
-				E.info("Writing " + format + " files to: " + dirForFiles.getAbsolutePath());
-				String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-				File mainScriptFile = new File(dirForFiles, name + ".m");
-				File compScriptFile = new File(dirForFiles, name + "_dnsim.txt");
-				FileUtil.writeStringToFile(mainScript.toString(), mainScriptFile);
-				allGeneratedFiles.add(mainScriptFile);
-				FileUtil.writeStringToFile(moduleScript.toString(), compScriptFile);
-				allGeneratedFiles.add(compScriptFile);
-			}
-			else
-			{
-				throw new GenerationException("Not writing Modelica scripts to files! Problem with target dir: " + dirForFiles);
-			}
+			E.info("Writing " + format + " files to: " + this.getOutputFolder().getAbsolutePath());
+			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+			File mainScriptFile = new File(this.getOutputFolder(), name + ".m");
+			File compScriptFile = new File(this.getOutputFolder(), name + "_dnsim.txt");
+			FileUtil.writeStringToFile(mainScript.toString(), mainScriptFile);
+			outputFiles.add(mainScriptFile);
+			FileUtil.writeStringToFile(moduleScript.toString(), compScriptFile);
+			outputFiles.add(compScriptFile);
 		}
 		catch(IOException e1)
 		{
@@ -158,15 +148,29 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 			throw new GenerationException("Problem using template", e);
 		}
 
-		return allGeneratedFiles;
+		return mainScript.toString();
 
 	}
 
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try
+		{
+			String code = this.getMainScript();
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return this.outputFiles;
 	}
 
 }

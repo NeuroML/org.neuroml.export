@@ -15,6 +15,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -56,14 +57,21 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 	private static final ArrayList<String> suppressChildren = new ArrayList<String>();
 
+	private String outputFileName;
+
 	public GraphWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, "GraphViz");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.GRAPH_VIZ);
+	}
+
+	public GraphWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Formats.GRAPH_VIZ, outputFolder);
+		this.outputFileName = outputFileName;
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
@@ -640,7 +648,27 @@ public class GraphWriter extends ANeuroMLBaseWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 }

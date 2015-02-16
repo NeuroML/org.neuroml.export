@@ -20,9 +20,9 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -38,18 +38,28 @@ public class ModelicaWriter extends ABaseWriter
 	String commPre = "/*";
 	String commPost = "*/";
 
-	public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+	private List<File> outputFiles = new ArrayList<File>();
 
 	public ModelicaWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "Modelica");
+		super(lems, Formats.MODELICA);
+		initializeWriter();
+	}
+
+	public ModelicaWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Formats.MODELICA, outputFolder);
+		initializeWriter();
+	}
+
+	private void initializeWriter()
+	{
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);
-		sli.checkConversionSupported(format, lems);
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -74,21 +84,15 @@ public class ModelicaWriter extends ABaseWriter
 
 	public String getMainScript() throws GenerationException
 	{
-		return generateMainScriptAndCompFiles(null);
-	}
-
-	public String generateMainScriptAndCompFiles(File dirForFiles) throws GenerationException
-	{
-
+		
+		
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder compScript = new StringBuilder();
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
-
 		addComment(compScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
 		Velocity.init();
-
 		VelocityContext context = new VelocityContext();
 
 		try
@@ -120,21 +124,14 @@ public class ModelicaWriter extends ABaseWriter
 
 			compScript.append(sw2);
 
-			if(dirForFiles != null && dirForFiles.exists())
-			{
-				E.info("Writing Modelica files to: " + dirForFiles);
-				String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-				File mainScriptFile = new File(dirForFiles, "run_" + name + ".mos");
-				File compScriptFile = new File(dirForFiles, name + ".mo");
-				FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-				allGeneratedFiles.add(mainScriptFile);
-				FileUtil.writeStringToFile(compScript.toString(), compScriptFile);
-				allGeneratedFiles.add(compScriptFile);
-			}
-			else
-			{
-				E.info("Not writing Modelica scripts to files! Problem with target dir: " + dirForFiles);
-			}
+			E.info("Writing Modelica files to: " + this.getOutputFolder());
+			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + ".mos");
+			File compScriptFile = new File(this.getOutputFolder(), name + ".mo");
+			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
+			this.outputFiles.add(mainScriptFile);
+			FileUtil.writeStringToFile(compScript.toString(), compScriptFile);
+			this.outputFiles.add(compScriptFile);
 
 		}
 		catch(IOException e1)
@@ -157,8 +154,18 @@ public class ModelicaWriter extends ABaseWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+
+		try
+		{
+			String code = this.getMainScript();
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return this.outputFiles;
 	}
 
 }

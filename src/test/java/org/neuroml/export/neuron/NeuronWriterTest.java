@@ -2,7 +2,7 @@ package org.neuroml.export.neuron;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
@@ -110,17 +110,12 @@ public class NeuronWriterTest extends TestCase {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
        
-        NeuronWriter nw = new NeuronWriter(lems);
+        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+        List<File> outputFiles = nw.convert();
 
-        File mainFile = new File(AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+        assertTrue(outputFiles.size() >= 2);
 
-        E.info("Generating NEURON from " + localFile);
-
-        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
-
-        assertTrue(genFiles.size() >= 2);
-
-        for (File f : genFiles) {
+        for (File f : outputFiles) {
             E.info("Written model behaviour to: " + f.getAbsolutePath());
             assertTrue(f.exists());
             assertTrue(f.length() > 0);
@@ -132,17 +127,12 @@ public class NeuronWriterTest extends TestCase {
         MinimalMessageHandler.setVeryMinimal(true);
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-        NeuronWriter nw = new NeuronWriter(lems);
+        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
+        List<File> outputFiles = nw.convert();
 
-        File mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
+        assertTrue(outputFiles.size() >= 2);
 
-        E.info("Generating NEURON from " + exampleFilename);
-
-        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
-
-        assertTrue(genFiles.size() >= 2);
-
-        for (File f : genFiles) {
+        for (File f : outputFiles) {
             E.info("Written model behaviour to: " + f.getAbsolutePath());
             assertTrue(f.exists());
             assertTrue(f.length() > 0);

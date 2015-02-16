@@ -1,32 +1,30 @@
 package org.neuroml.export.svg;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.lemsml.jlems.core.type.Lems;
-
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.model.Cell;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
 import org.neuroml.model.Segment;
-
-import org.neuroml.model.Cell;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriter extends ANeuroMLXMLWriter
 {
-
-	String originalFilename;
 
 	enum Orientation
 	{
@@ -37,20 +35,20 @@ public class SVGWriter extends ANeuroMLXMLWriter
 	private final String SVG_VERSION = "1.1";
 
 	int axisWidth = 1;
-	private final String styleXaxis = "stroke:rgb(0,255,0);stroke-width:" + axisWidth;
-	private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:" + axisWidth;
-	private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:" + axisWidth;
+	// private final String styleXaxis = "stroke:rgb(0,255,0);stroke-width:" + axisWidth;
+	// private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:" + axisWidth;
+	// private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:" + axisWidth;
 
-	public SVGWriter(NeuroMLDocument nmlDocument, String originalFilename) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	private String outputFileName;
+
+	public SVGWriter(NeuroMLDocument nmlDocument, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(nmlDocument, "SVG");
-		this.originalFilename = originalFilename;
-		lems = Utils.convertNeuroMLToSim(nmlDocument).getLems();
-		sli.checkConversionSupported(format, lems);
+		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Formats.SVG, outputFolder);
+		this.outputFileName = outputFileName;
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.NONE);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -217,9 +215,12 @@ public class SVGWriter extends ANeuroMLXMLWriter
 		// fileName = "../CATMAIDShowcase/NeuroML2/catmaid_skeleton.nml";
 		fileName = "../CATMAIDShowcase/NeuroML2/catmaid_skeleton_x10.nml";
 		NeuroMLConverter nmlc = new NeuroMLConverter();
-		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));
 
-		SVGWriter svgw = new SVGWriter(nmlDocument, fileName);
+		File inputFile = new File(fileName);
+
+		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
+
+		SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
 		String svg = svgw.getMainScript();
 
 		System.out.println(svg);
@@ -234,8 +235,28 @@ public class SVGWriter extends ANeuroMLXMLWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

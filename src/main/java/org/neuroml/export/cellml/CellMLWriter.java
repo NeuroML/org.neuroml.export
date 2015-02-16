@@ -4,17 +4,18 @@
 package org.neuroml.export.cellml;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 
-import org.lemsml.jlems.core.type.dynamics.OnCondition;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
@@ -41,16 +42,23 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 	public static final String LOCAL_CELLML_SCHEMA = "???.xsd";
 
 	public static final String GLOBAL_TIME_CELLML = "time";
+	
+	private String outputFileName;
 
 	// private final String sbmlTemplateFile = "sbml/template.sbml";
-	public CellMLWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public CellMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(l, "CellML");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.CELLML);
+	}
+
+	public CellMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Formats.CELLML, outputFolder);
+		this.outputFileName = outputFileName;
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -275,8 +283,29 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

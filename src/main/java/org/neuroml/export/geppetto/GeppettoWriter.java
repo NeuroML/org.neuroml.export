@@ -1,17 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.neuroml.export.geppetto;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.lemsml.export.base.AXMLWriter;
 import org.lemsml.jlems.core.logging.E;
@@ -20,7 +12,9 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.support.ModelFeature;
 
 /**
  * 
@@ -29,12 +23,19 @@ import org.neuroml.export.utils.Utils;
 public class GeppettoWriter extends AXMLWriter
 {
 
-	private final File lemsFile;
+	private final String outputFileName;
+	private final File inputFile;
 
-	public GeppettoWriter(Lems l, File lemsFile)
+	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile)
 	{
-		super(l, "Geppetto");
-		this.lemsFile = lemsFile;
+		super(lems, Formats.GEPPETTO, outputFolder);
+		this.outputFileName = outputFileName;
+		this.inputFile = inputFile;
+	}
+
+	public void setSupportedFeatures()
+	{
+		sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
 	}
 
 	public String getMainScript() throws ContentError
@@ -67,13 +68,13 @@ public class GeppettoWriter extends AXMLWriter
 
 		startElement(main, "model");
 		startEndTextElement(main, "modelInterpreterId", "lemsModelInterpreter");
-		startEndTextElement(main, "modelURL", "file:///" + lemsFile.getAbsolutePath());
+		startEndTextElement(main, "modelURL", "file:///" + this.inputFile.getAbsolutePath());
 		endElement(main, "model");
 
 		endElement(main, "aspect");
 		endElement(main, "entity");
 
-		File geppettoScript = new File(lemsFile.getParentFile(), lemsFile.getName().replace(".xml", ".js"));
+		File geppettoScript = new File(this.inputFile.getParentFile(), this.inputFile.getName().replace(".xml", ".js"));
 
 		StringBuilder gScript = new StringBuilder();
 
@@ -136,30 +137,32 @@ public class GeppettoWriter extends AXMLWriter
 		return main.toString();
 	}
 
-	public static void main(String[] args) throws Exception
-	{
-
-		File exampleFile = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
-
-		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
-		System.out.println("Loaded: " + exampleFile.getAbsolutePath());
-
-		GeppettoWriter gw = new GeppettoWriter(lems, exampleFile);
-
-		String g = gw.getMainScript();
-
-		File grFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", ".g.xml"));
-		System.out.println("Writing to: " + grFile.getAbsolutePath());
-
-		FileUtil.writeStringToFile(g, grFile);
-
-	}
-
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(ContentError e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

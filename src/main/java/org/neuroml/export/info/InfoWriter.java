@@ -8,10 +8,9 @@ import java.io.File;
 import java.util.List;
 
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.lemsml.jlems.core.type.Lems;
-
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -30,12 +29,12 @@ public class InfoWriter extends ANeuroMLBaseWriter
 	 */
 	public InfoWriter(NeuroMLDocument nmlDocument) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(nmlDocument, "Information");
-		sli.checkConversionSupported(format, Utils.convertNeuroMLToSim(nmlDocument).getLems());
+		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Formats.INFORMATION, null);
+		//sli.checkConversionSupported(format, Utils.convertNeuroMLToSim(nmlDocument).getLems());
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);

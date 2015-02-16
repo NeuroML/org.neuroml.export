@@ -1,38 +1,48 @@
 package org.lemsml.export.sedml;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.lemsml.export.base.AXMLWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.LEMSQuantityPath;
+import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.model.util.NeuroMLException;
+import org.neuroml.export.utils.support.SupportLevelInfo;
 
 public class SEDMLWriter extends AXMLWriter
 {
 
 	public static final String PREF_SEDML_SCHEMA = "http://sourceforge.net/apps/trac/neuroml/export/1021/NeuroML2/Schemas/SED-ML/sed-ml-L1-V1.xsd";
-	public static final String LOCAL_SEDML_SCHEMA = "src/test/resources/Schemas/SED-ML/sed-ml-L1-V1.xsd";
 
 	public static final String GLOBAL_TIME_SBML = "t";
 	public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
-	private final String originalFilename;
-	private final ModelFormat modelFormat;
+	private final String outputFileName;
+	private final String inputFileName;
+	private final Formats modelFormat;
 
-	public enum ModelFormat
+	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Formats modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		NEUROML2, SBML, CELLML
-	};
-
-	public SEDMLWriter(Lems l, String originalFilename, ModelFormat modelFormat)
-	{
-		super(l, "SED-ML");
-		this.originalFilename = originalFilename;
+		super(lems, Formats.SEDML, outputFolder);
+		this.outputFileName = outputFileName;
+		this.inputFileName = inputFileName;
 		this.modelFormat = modelFormat;
+	}
+
+	public void setSupportedFeatures()
+	{
+		sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
 	}
 
 	public String getMainScript() throws ContentError
@@ -79,17 +89,17 @@ public class SEDMLWriter extends AXMLWriter
 
 		startElement(main, "listOfModels");
 
-		if(modelFormat == ModelFormat.NEUROML2)
+		if(modelFormat == Formats.NEUROML2)
 		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + originalFilename);
+			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + inputFileName);
 		}
-		else if(modelFormat == ModelFormat.SBML)
+		else if(modelFormat == Formats.SBML)
 		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:sbml", "source=" + originalFilename.replaceAll(".xml", ".sbml"));
+			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:sbml", "source=" + inputFileName.replaceAll(".xml", ".sbml"));
 		}
-		else if(modelFormat == ModelFormat.CELLML)
+		else if(modelFormat == Formats.CELLML)
 		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:cellml", "source=" + originalFilename.replaceAll(".xml", ".cellml"));
+			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:cellml", "source=" + inputFileName.replaceAll(".xml", ".cellml"));
 		}
 
 		endElement(main, "listOfModels");
@@ -206,7 +216,28 @@ public class SEDMLWriter extends AXMLWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(ContentError e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 }

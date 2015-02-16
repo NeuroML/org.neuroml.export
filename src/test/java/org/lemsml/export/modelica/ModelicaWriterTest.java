@@ -14,63 +14,44 @@ import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
 
-public class ModelicaWriterTest extends TestCase {
+public class ModelicaWriterTest extends TestCase
+{
 
+	public void testFN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
+	{
 
-	public void testFN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
+		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-    	String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-    	generateMainScript(exampleFilename);
+		ModelicaWriter mw = new ModelicaWriter(lems, AppTest.getTempDir());
+		for(File genFile : mw.convert())
+		{
+			assertTrue(genFile.exists());
+			// System.out.println("------------------" + genFile.getAbsolutePath() + "------------------------------------");
+			// System.out.println(FileUtil.readStringFromFile(genFile));
+		}
 	}
-	
-    /*
-	public void testHH() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
 
-    	String exampleFilename = "LEMS_NML2_Ex1_HH.xml";
-    	generateMainScript(exampleFilename);
-	}*/
-    
-	public void testSBML() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
+	/*
+	 * public void testHH() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException {
+	 * 
+	 * String exampleFilename = "LEMS_NML2_Ex1_HH.xml"; generateMainScript(exampleFilename); }
+	 */
 
-    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
-    	generateMainScript(exampleSBML);
-	}
-	
-	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
+	public void testSBML() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
+	{
 
-    	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
-        
-        System.out.println("Loaded from: "+localFile);
+		File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+		Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(exampleSBML)).getLems();
 
-        ModelicaWriter mw = new ModelicaWriter(lems);
+		ModelicaWriter mw = new ModelicaWriter(lems, AppTest.getTempDir());
 
-        String mod = mw.generateMainScriptAndCompFiles(AppTest.getTempDir());
-        
-        for (File genFile: mw.allGeneratedFiles)
-        {
-        	assertTrue(genFile.exists());
-            System.out.println("------------------"+genFile.getAbsolutePath()+"------------------------------------");
-            System.out.println(FileUtil.readStringFromFile(genFile));
-        }
-	}
-	
-	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException  {
-
-
-    	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-        
-        System.out.println("Loaded: "+exampleFilename);
-
-        ModelicaWriter mw = new ModelicaWriter(lems);
-
-        String mod = mw.generateMainScriptAndCompFiles(AppTest.getTempDir());
-        
-        for (File genFile: mw.allGeneratedFiles)
-        {
-        	assertTrue(genFile.exists());
-            System.out.println("------------------"+genFile.getAbsolutePath()+"------------------------------------");
-            System.out.println(FileUtil.readStringFromFile(genFile));
-        }
+		for(File genFile : mw.convert())
+		{
+			assertTrue(genFile.exists());
+			// System.out.println("------------------" + genFile.getAbsolutePath() + "------------------------------------");
+			// System.out.println(FileUtil.readStringFromFile(genFile));
+		}
 	}
 
 }

@@ -22,6 +22,8 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -37,18 +39,28 @@ public class NestWriter extends ANeuroMLBaseWriter
 	String commPre = "'''";
 	String commPost = "'''";
 
-	public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+	private List<File> outputFiles = new ArrayList<File>();
 
 	public NestWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, "NEST");
+		super(lems, Formats.NEST);
+		initializeWriter();
+	}
+
+	public NestWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Formats.NEST, outputFolder);
+		initializeWriter();
+	}
+
+	private void initializeWriter()
+	{
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);
-		sli.checkConversionSupported(format, lems);
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.NONE);
@@ -72,13 +84,6 @@ public class NestWriter extends ANeuroMLBaseWriter
 
 	public String getMainScript() throws GenerationException, IOException
 	{
-		ArrayList<File> files = generateMainScriptAndCellFiles(null);
-		return FileUtil.readStringFromFile(files.get(0));
-	}
-
-	public ArrayList<File> generateMainScriptAndCellFiles(File dirForFiles) throws GenerationException
-	{
-
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 
@@ -118,21 +123,14 @@ public class NestWriter extends ANeuroMLBaseWriter
 
 			cellScript.append(sw2);
 
-			if(dirForFiles != null && dirForFiles.exists())
-			{
-				E.info("Writing " + format + " files to: " + dirForFiles);
-				String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-				File mainScriptFile = new File(dirForFiles, "run_" + name + "_nest.py");
-				File cellScriptFile = new File(dirForFiles, name + ".nestml");
-				FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-				allGeneratedFiles.add(mainScriptFile);
-				FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
-				allGeneratedFiles.add(cellScriptFile);
-			}
-			else
-			{
-				E.info("Not writing " + format + " scripts to files! Problem with target dir: " + dirForFiles);
-			}
+			E.info("Writing " + format + " files to: " + this.getOutputFolder());
+			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_nest.py");
+			File cellScriptFile = new File(this.getOutputFolder(), name + ".nestml");
+			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
+			outputFiles.add(mainScriptFile);
+			FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
+			outputFiles.add(cellScriptFile);
 
 		}
 		catch(IOException e1)
@@ -148,15 +146,29 @@ public class NestWriter extends ANeuroMLBaseWriter
 			throw new GenerationException("Problem generating the files", e);
 		}
 
-		return allGeneratedFiles;
+		return mainRunScript.toString();
 
 	}
 
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try
+		{
+			String code = this.getMainScript();
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return this.outputFiles;
 	}
 
 }

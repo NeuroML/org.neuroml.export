@@ -9,5 +9,7 @@ public interface IBaseWriter
 	List<File> convert();
 
 	Boolean isConversionSupported();
-
+	
+	void setSupportedFeatures();
+	
 }

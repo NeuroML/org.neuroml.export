@@ -1,5 +1,7 @@
 package org.lemsml.export.c;
 
+import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -20,12 +22,9 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-
-import static org.lemsml.jlems.io.util.JUtil.getRelativeResource;
-
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -43,13 +42,13 @@ public class CWriter extends ABaseWriter
 
 	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Utils.cFormat);
+		super(lems, Formats.C);
 		initializeWriter();
 	}
 
 	public CWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Utils.cFormat, outputFolder);
+		super(lems, Formats.C, outputFolder);
 		this.outputFileName = outputFileName;
 		initializeWriter();
 	}
@@ -88,7 +87,7 @@ public class CWriter extends ABaseWriter
 	};
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -194,7 +193,7 @@ public class CWriter extends ABaseWriter
 		{
 			String code = this.getMainScript();
 
-			File cFile = new File(this.getOutputFolder(), this.outputFileName.replaceAll(".xml", ".c"));
+			File cFile = new File(this.getOutputFolder(), this.outputFileName);
 			FileUtil.writeStringToFile(code, cFile);
 			outputFiles.add(cFile);
 
@@ -215,7 +214,6 @@ public class CWriter extends ABaseWriter
 			e.printStackTrace();
 		}
 
-		// TODO Auto-generated method stub
 		return outputFiles;
 	}
 

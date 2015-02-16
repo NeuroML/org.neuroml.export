@@ -12,6 +12,7 @@ import java.util.List;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -49,21 +50,27 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 {
 
 	public static final String PREF_SBML_SCHEMA = "http://sbml.org/Special/xml-schemas/sbml-l2v2-schema/sbml.xsd";
-	public static final String LOCAL_SBML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
 
 	public static final String GLOBAL_TIME_SBML = "t";
 	public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
 	private final String sbmlTemplateFile = "sbml/template.sbml";
 
-	public SBMLWriter(Lems l) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	private String outputFileName;
+
+	public SBMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(l, "SBML");
-		sli.checkConversionSupported(format, lems);
+		super(lems, Formats.SBML);
+	}
+
+	public SBMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		super(lems, Formats.SBML, outputFolder);
+		this.outputFileName = outputFileName;
 	}
 
 	@Override
-	protected void setSupportedFeatures()
+	public void setSupportedFeatures()
 	{
 
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
@@ -371,8 +378,29 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 	@Override
 	public List<File> convert()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<File> outputFiles = new ArrayList<File>();
+
+		try
+		{
+			String code = this.getMainScript();
+
+			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			FileUtil.writeStringToFile(code, outputFile);
+			outputFiles.add(outputFile);
+
+		}
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return outputFiles;
 	}
 
 }

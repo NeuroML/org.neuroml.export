@@ -22,7 +22,6 @@ import org.neuroml.export.utils.Utils;
 public class NRNUtils
 {
 
-	final static String NEURON_FORMAT = "NEURON";
 	final static String NEURON_VOLTAGE = "v";
 	final static String NEURON_TEMP = "celsius";
 	final static String RESERVED_STATE_SUFFIX = "I";
