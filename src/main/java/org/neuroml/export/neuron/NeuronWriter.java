@@ -533,7 +533,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 						if(preCell != null)
 						{
-							main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, 0, 1))\")\n\n", preSecName, postPop, postCellId, preFractionAlong, synObjName, index));
+							main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, 0, 1))\")\n\n", preSecName, postPop, postCellId, preFractionAlong, synObjName,
+									index));
 						}
 						else
 						{
@@ -1063,10 +1064,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 			throw new GenerationException("Error with LEMS content", e);
 		}
 
-
 	}
-
-
 
 	private void writeModFile(String compName) throws ContentError
 	{
@@ -2510,7 +2508,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 			Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
 			nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 			// nw.setNoGui(true);
-			
+
 			List<File> ff = nw.generateAndRun(false, false);
 			for(File f : ff)
 			{
@@ -2541,17 +2539,27 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 	public List<File> convert()
 	{
 		List<File> outputFiles = new ArrayList<File>();
-		
+
 		try
 		{
 			outputFiles = this.generateMainScriptAndMods();
 		}
-		catch(LEMSException | GenerationException | NeuroMLException e)
+		catch(LEMSException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		catch(GenerationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(NeuroMLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return outputFiles;
 	}
 

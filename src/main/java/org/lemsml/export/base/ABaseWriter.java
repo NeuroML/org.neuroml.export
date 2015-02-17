@@ -56,12 +56,16 @@ public abstract class ABaseWriter implements IBaseWriter
 		{
 			return false;
 		}
-		catch(LEMSException | NeuroMLException e)
+		catch(LEMSException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		catch(NeuroMLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return true;
 	}
 

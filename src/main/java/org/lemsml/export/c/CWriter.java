@@ -203,7 +203,12 @@ public class CWriter extends ABaseWriter
 			outputFiles.add(mFile);
 
 		}
-		catch(LEMSException | GenerationException e)
+		catch(LEMSException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(GenerationException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
