@@ -21,7 +21,7 @@ public class GeppettoWriterTest extends TestCase
 		String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		GeppettoWriter gw = new GeppettoWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", ".g.xml"), new File(exampleFilename));
+		GeppettoWriter gw = new GeppettoWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "g.xml"), new File(exampleFilename));
 
 		List<File> outputFiles = gw.convert();
 		for(File outputFile : outputFiles)

@@ -74,7 +74,7 @@ public class GeppettoWriter extends AXMLWriter
 		endElement(main, "aspect");
 		endElement(main, "entity");
 
-		File geppettoScript = new File(this.inputFile.getParentFile(), this.inputFile.getName().replace(".xml", ".js"));
+		File geppettoScript = new File(getOutputFolder(), this.inputFile.getName().replace(".xml", ".js"));
 
 		StringBuilder gScript = new StringBuilder();
 
