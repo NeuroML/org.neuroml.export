@@ -39,6 +39,11 @@ public class SEDMLWriter extends AXMLWriter
 		this.inputFileName = inputFileName;
 		this.modelFormat = modelFormat;
 	}
+	
+	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	{
+		this(lems, outputFolder, outputFileName, inputFileName, Formats.NEUROML2);
+	}
 
 	public void setSupportedFeatures()
 	{

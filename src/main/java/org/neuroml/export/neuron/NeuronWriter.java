@@ -2,6 +2,9 @@ package org.neuroml.export.neuron;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +15,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.log.NullLogChute;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -46,6 +50,7 @@ import org.neuroml.export.utils.Formats;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.ProcessOutputWatcher;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 
@@ -1118,7 +1123,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         String json = JSONCellSerializer.cellToJson(cell, SupportedUnits.NEURON);
         cellString.append("/*\n" + json + "\n*/");
 
-        Velocity.init();
+        VelocityUtils.initializeVelocity();
 
         VelocityContext context = new VelocityContext();
 
@@ -1131,20 +1136,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             throw new NeuroMLException("Problem converting Cell to JSON format", ex);
         }
 
-        Properties props = new Properties();
-        props.put("resource.loader", "class");
-        props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        VelocityEngine ve = new VelocityEngine();
-        ve.init(props);
-        Template template = ve.getTemplate(NRNUtils.cellTemplateFile);
-
+        VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                
+        InputStream inputStream = NeuronWriter.class.getResourceAsStream("/neuron/cell.vm");
+        Reader reader = new InputStreamReader(inputStream);
         StringWriter sw1 = new StringWriter();
-
-        template.merge(context, sw1);
-
+                
+        boolean generationStatus = ve.evaluate(context, sw1, "LOG", reader);
         cellString.append(sw1.toString());
-
         return cellString.toString();
+
     }
 
     // TODO: to be made more general

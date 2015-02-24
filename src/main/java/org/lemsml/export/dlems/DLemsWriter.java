@@ -73,6 +73,13 @@ public class DLemsWriter extends ABaseWriter
 
 	}
 
+	public DLemsWriter(Lems lems, File outputFolder, String outputFileName)
+	{
+		super(lems, Formats.DLEMS, outputFolder);
+		this.writer = null;
+		this.outputFileName = outputFileName;
+	}
+	
 	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer)
 	{
 		super(lems, Formats.DLEMS, outputFolder);
