@@ -110,7 +110,7 @@ public class NRNUtils
 		newExpr = newExpr.replaceAll("\\.and.", "&&");
 
 		newExpr = newExpr.replaceAll(" ln\\(", " log(");
-		newExpr = newExpr.replaceAll(" random\\(", " exprand(");
+		newExpr = newExpr.replaceAll(" random\\(", " scop_random(");
 
 		HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 

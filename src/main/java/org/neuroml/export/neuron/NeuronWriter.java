@@ -10,12 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.log.NullLogChute;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -1667,9 +1663,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             blockNetReceive.append("\n    " + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
                         }
-                        blockNetReceive.append("net_event(t)\n");
-                        blockNetReceive.append("WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
-                        blockNetReceive.append("}\n");
+                        blockNetReceive.append("    net_event(t)\n");
+                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+                        blockNetReceive.append("\n}\n");
                         
                     }
                 }
@@ -2501,6 +2497,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
+        //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml")); 
