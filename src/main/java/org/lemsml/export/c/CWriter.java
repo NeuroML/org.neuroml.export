@@ -24,7 +24,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -39,17 +39,22 @@ public class CWriter extends ABaseWriter
 	String commPost = "*/";
 
 	private String outputFileName;
+    private final DLemsWriter dlemsw;
 
 	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.C);
+		super(lems, Format.C);
+        
+        dlemsw = new DLemsWriter(lems, new CVisitors());
 		initializeWriter();
 	}
 
 	public CWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.C, outputFolder);
+		super(lems, Format.C, outputFolder);
 		this.outputFileName = outputFileName;
+        
+        dlemsw = new DLemsWriter(lems, new CVisitors());
 		initializeWriter();
 	}
 
@@ -135,7 +140,7 @@ public class CWriter extends ABaseWriter
 		}
 	}
 
-	public String getMainScript() throws LEMSException, GenerationException
+	public String getMainScript() throws LEMSException, GenerationException, NeuroMLException
 	{
 
 		StringBuilder sb = new StringBuilder();
@@ -146,13 +151,13 @@ public class CWriter extends ABaseWriter
 
 		VelocityContext context = new VelocityContext();
 
-		DLemsWriter somw = new DLemsWriter(lems, new CVisitors());
 
 		try
 		{
-			String som = somw.getMainScript();
+            
+			String dlems = dlemsw.getMainScript();
 
-			DLemsWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(dlems, context);
 
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -185,7 +190,7 @@ public class CWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
@@ -205,18 +210,11 @@ public class CWriter extends ABaseWriter
 		}
 		catch(LEMSException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GenerationException("Issue when converting files", e);
 		}
-		catch(GenerationException e)
+		catch(NeuroMLException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GenerationException("Issue when converting files", e);
 		}
 
 		return outputFiles;

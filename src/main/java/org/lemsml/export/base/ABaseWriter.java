@@ -5,7 +5,7 @@ import java.io.File;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -13,61 +13,41 @@ public abstract class ABaseWriter implements IBaseWriter
 {
 
 	protected Lems lems;
-	protected final Formats format;
+	protected final Format format;
 	private File outputFolder;
 
 	protected static SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
 
-	public ABaseWriter(Lems lems, Formats format)
+	public ABaseWriter(Lems lems, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		this(lems, format, true);
+	}
+    
+	public ABaseWriter(Lems lems, Format format, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		this.lems = lems;
 		this.format = format;
 		setSupportedFeatures();
-		if(!isConversionSupported())
-		{
-			// FIXME
-			System.out.println("Not supported");
-		}
+        if (checkSupportedFeatures)
+        {
+            sli.checkConversionSupported(format, lems);
+        }
 	}
+    
 
-	// To be removed but not sure yet
-	// public ABaseWriter(String lemsFile, String format) throws LEMSException
-	// {
-	// this(Utils.readLemsNeuroMLFile(lemsFile).getLems(), format);
-	// }
-
-	public ABaseWriter(Lems lems, Formats format, File outputFolder)
+	public ABaseWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException 
+    {
+		this(lems, format, outputFolder, true);
+    }
+            
+	public ABaseWriter(Lems lems, Format format, File outputFolder, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		this(lems, format);
+		this(lems, format, checkSupportedFeatures);
 		this.outputFolder = outputFolder;
 	}
 
 	protected abstract void addComment(StringBuilder sb, String comment);
 
-	@Override
-	public Boolean isConversionSupported()
-	{
-
-		try
-		{
-			sli.checkConversionSupported(format, lems);
-		}
-		catch(ModelFeatureSupportException e)
-		{
-			return false;
-		}
-		catch(LEMSException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(NeuroMLException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return true;
-	}
 
 	public File getOutputFolder()
 	{
@@ -79,12 +59,5 @@ public abstract class ABaseWriter implements IBaseWriter
 		this.outputFolder = outputFolder;
 	}
 
-	// public class CompInfo
-	// {
-	// public StringBuilder stateVars = new StringBuilder();
-	// public StringBuilder params = new StringBuilder();
-	// public StringBuilder eqns = new StringBuilder();
-	// public StringBuilder initInfo = new StringBuilder();
-	// }
 
 }

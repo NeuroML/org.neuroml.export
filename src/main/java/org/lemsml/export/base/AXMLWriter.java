@@ -6,7 +6,10 @@ import org.lemsml.jlems.core.eval.DoubleEvaluator;
 import org.lemsml.jlems.core.expression.*;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.neuroml.export.utils.Formats;
+import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
+import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public abstract class AXMLWriter extends ABaseWriter
@@ -18,16 +21,17 @@ public abstract class AXMLWriter extends ABaseWriter
 	String commPre = "<!--";
 	String commPost = "-->";
 
-	public AXMLWriter(Lems lems, Formats format)
+	public AXMLWriter(Lems lems, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format);
 	}
 
-	public AXMLWriter(Lems lems, Formats format, File outputFolder)
+	public AXMLWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format, outputFolder);
 	}
 
+    @Override
 	protected void addComment(StringBuilder sb, String comment)
 	{
 		addComment(sb, comment, false);
@@ -37,7 +41,7 @@ public abstract class AXMLWriter extends ABaseWriter
 	{
 
 		if(extraReturns) sb.append("\n");
-		if(comment.indexOf("\n") < 0) sb.append(getIndent() + commPre + comment + commPost + "\n");
+		if(!comment.contains("\n")) sb.append(getIndent() + commPre + comment + commPost + "\n");
 		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 
 		if(extraReturns) sb.append("\n");
@@ -82,7 +86,6 @@ public abstract class AXMLWriter extends ABaseWriter
 	{
 
 		main.append(getIndent());
-		String[] aa = a1.split("=");
 		String end = endToo ? "/" : "";
 		main.append("<" + name + " " + processAttr(a1) + end + ">\n");
 		if(!endToo) indentCount++;

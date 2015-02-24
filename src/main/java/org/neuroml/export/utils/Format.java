@@ -1,6 +1,6 @@
 package org.neuroml.export.utils;
 
-public enum Formats
+public enum Format
 {
 	LEMS("LEMS","xml"),
 	C("c","c"),
@@ -8,17 +8,17 @@ public enum Formats
 	MATLAB("Matlab", "m"),
 	NEUROML2("NeuroML2", "nml"),
 	SBML("SBML", "sbml"),
-	CELLML("CellML", "CELLML"),
+	CELLML("CellML", "cellml"),
 	SEDML("SED-ML", "sedml"),
 	BRIAN("Brian", "py"),
-	MODELICA("Modelica", "Modelica"),
-	DN_SIM("DNSim", "DNSim"),
+	MODELICA("Modelica", "mos"),
+	DN_SIM("DNSim", "m"),
 	GEPPETTO("Geppetto", "xml"),
 	GRAPH_VIZ("GraphViz", "gv"),
-	NEST("NEST", "NEST"),
+	NEST("NEST", "py"),
 	NEURON("NEURON", "nrn"),
 	NEURON_A("NEURONa", "NEURONa"),
-	PYNN("PyNN", "PyNN"),
+	PYNN("PyNN", "py"),
 	SVG("SVG", "svg"),
 	NINEML("NineML", "9ml"),
 	SPINEML("SpineML", "spineml"),
@@ -29,7 +29,7 @@ public enum Formats
 	private final String label;
 	private final String extension;
 
-	private Formats(String label, String extension)
+	private Format(String label, String extension)
 	{
 		this.label = label;
 		this.extension = extension;

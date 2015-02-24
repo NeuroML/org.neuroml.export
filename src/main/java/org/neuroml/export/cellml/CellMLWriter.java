@@ -11,7 +11,7 @@ import java.util.List;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -48,12 +48,12 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 	// private final String sbmlTemplateFile = "sbml/template.sbml";
 	public CellMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.CELLML);
+		super(lems, Format.CELLML);
 	}
 
 	public CellMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.CELLML, outputFolder);
+		super(lems, Format.CELLML, outputFolder);
 		this.outputFileName = outputFileName;
 	}
 
@@ -281,30 +281,17 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws IOException, GenerationException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+	
 		return outputFiles;
 	}
 

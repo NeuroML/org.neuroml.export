@@ -13,8 +13,9 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.model.util.NeuroMLException;
@@ -30,11 +31,11 @@ public class SEDMLWriter extends AXMLWriter
 
 	private final String outputFileName;
 	private final String inputFileName;
-	private final Formats modelFormat;
+	private final Format modelFormat;
 
-	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Formats modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Format modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.SEDML, outputFolder);
+		super(lems, Format.SEDML, outputFolder);
 		this.outputFileName = outputFileName;
 		this.inputFileName = inputFileName;
 		this.modelFormat = modelFormat;
@@ -42,7 +43,7 @@ public class SEDMLWriter extends AXMLWriter
 	
 	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		this(lems, outputFolder, outputFileName, inputFileName, Formats.NEUROML2);
+		this(lems, outputFolder, outputFileName, inputFileName, Format.NEUROML2);
 	}
 
 	public void setSupportedFeatures()
@@ -94,15 +95,15 @@ public class SEDMLWriter extends AXMLWriter
 
 		startElement(main, "listOfModels");
 
-		if(modelFormat == Formats.NEUROML2)
+		if(modelFormat == Format.NEUROML2)
 		{
 			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + inputFileName);
 		}
-		else if(modelFormat == Formats.SBML)
+		else if(modelFormat == Format.SBML)
 		{
 			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:sbml", "source=" + inputFileName.replaceAll(".xml", ".sbml"));
 		}
-		else if(modelFormat == Formats.CELLML)
+		else if(modelFormat == Format.CELLML)
 		{
 			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:cellml", "source=" + inputFileName.replaceAll(".xml", ".cellml"));
 		}
@@ -219,7 +220,7 @@ public class SEDMLWriter extends AXMLWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws IOException, GenerationException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
@@ -232,15 +233,9 @@ public class SEDMLWriter extends AXMLWriter
 			outputFiles.add(outputFile);
 
 		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		catch(ContentError e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GenerationException("Issue when converting files", e);
 		}
 
 		return outputFiles;

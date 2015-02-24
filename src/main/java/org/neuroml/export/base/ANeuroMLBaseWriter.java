@@ -3,38 +3,41 @@ package org.neuroml.export.base;
 import java.io.File;
 
 import org.lemsml.export.base.ABaseWriter;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
 import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.model.util.NeuroMLException;
 
 public abstract class ANeuroMLBaseWriter extends ABaseWriter
 {
 
 	protected NeuroMLDocument nmlDocument;
 
-	public ANeuroMLBaseWriter(Lems lems, Formats format)
+	public ANeuroMLBaseWriter(Lems lems, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format);
 	}
-
-	public ANeuroMLBaseWriter(Lems lems, Formats format, File outputFolder)
+	
+	public ANeuroMLBaseWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format, outputFolder);
 	}
 	
-	public ANeuroMLBaseWriter(Lems lems, NeuroMLDocument nmlDocument, Formats format, File outputFolder)
+	public ANeuroMLBaseWriter(Lems lems, NeuroMLDocument nmlDocument, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format, outputFolder);
 		this.nmlDocument = nmlDocument;
 	}
 	
-	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Formats format)
+	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(null, format);
 		this.nmlDocument = nmlDocument;
 	}
 
-	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Formats format, File outputFolder)
+	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(null, format, outputFolder);
 		this.nmlDocument = nmlDocument;

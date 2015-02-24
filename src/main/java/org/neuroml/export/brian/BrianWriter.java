@@ -32,7 +32,7 @@ import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
@@ -52,12 +52,12 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 	public BrianWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.BRIAN);
+		super(lems, Format.BRIAN);
 	}
 
 	public BrianWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.BRIAN, outputFolder);
+		super(lems, Format.BRIAN, outputFolder);
 		this.outputFileName = outputFileName;
 	}
 
@@ -530,28 +530,16 @@ public class BrianWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
+
 
 		return outputFiles;
 	}

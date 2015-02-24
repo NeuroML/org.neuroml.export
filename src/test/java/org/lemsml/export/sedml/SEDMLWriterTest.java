@@ -9,10 +9,10 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
-import org.neuroml.model.util.NeuroML2Validator;
+import org.neuroml.export.utils.Format;
 import org.neuroml.model.util.NeuroMLException;
 import org.xml.sax.SAXException;
 
@@ -26,13 +26,8 @@ public class SEDMLWriterTest extends TestCase
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		SEDMLWriter sw = new SEDMLWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "sedml"), exampleFilename, Formats.SBML);
+		SEDMLWriter sw = new SEDMLWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "sedml"), exampleFilename, Format.SBML);
 
-		List<File> outputFiles = sw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-			NeuroML2Validator.testValidity(outputFile, LOCAL_SEDML_SCHEMA);
-		}
+		UtilsTest.checkConvertedFiles(sw.convert());
 	}
 }

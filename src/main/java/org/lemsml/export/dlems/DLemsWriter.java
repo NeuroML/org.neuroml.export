@@ -36,11 +36,14 @@ import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.export.utils.visitors.CommonLangWriter;
+import org.neuroml.model.util.NeuroMLException;
 
 public class DLemsWriter extends ABaseWriter
 {
@@ -51,12 +54,41 @@ public class DLemsWriter extends ABaseWriter
 
 	private String outputFileName;
 
-	public DLemsWriter(Lems lems, CommonLangWriter writer)
+	public DLemsWriter(Lems lems, CommonLangWriter writer, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.DLEMS);
+		super(lems, Format.DLEMS, checkSupportedFeatures);
+		this.writer = writer;
+	}
+    
+	public DLemsWriter(Lems lems, CommonLangWriter writer) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.DLEMS);
 		this.writer = writer;
 	}
 
+	public DLemsWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.DLEMS, outputFolder);
+		this.writer = null;
+		this.outputFileName = outputFileName;
+	}
+	
+	
+	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.DLEMS, outputFolder, checkSupportedFeatures);
+		this.writer = writer;
+		this.outputFileName = outputFileName;
+	}
+	
+	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.DLEMS, outputFolder);
+		this.writer = writer;
+		this.outputFileName = outputFileName;
+	}
+
+    @Override
 	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
@@ -71,20 +103,6 @@ public class DLemsWriter extends ABaseWriter
 		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
 
-	}
-
-	public DLemsWriter(Lems lems, File outputFolder, String outputFileName)
-	{
-		super(lems, Formats.DLEMS, outputFolder);
-		this.writer = null;
-		this.outputFileName = outputFileName;
-	}
-	
-	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer)
-	{
-		super(lems, Formats.DLEMS, outputFolder);
-		this.writer = writer;
-		this.outputFileName = outputFileName;
 	}
 
 	public static void putIntoVelocityContext(String dlems, VelocityContext context) throws IOException
@@ -433,7 +451,7 @@ public class DLemsWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
@@ -448,13 +466,7 @@ public class DLemsWriter extends ABaseWriter
 		}
 		catch(LEMSException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GenerationException("Issue when converting files", e);
 		}
 
 		// TODO Auto-generated method stub

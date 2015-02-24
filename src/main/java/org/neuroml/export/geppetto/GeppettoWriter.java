@@ -8,13 +8,16 @@ import java.util.List;
 import org.lemsml.export.base.AXMLWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * 
@@ -26,9 +29,9 @@ public class GeppettoWriter extends AXMLWriter
 	private final String outputFileName;
 	private final File inputFile;
 
-	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile)
+	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.GEPPETTO, outputFolder);
+		super(lems, Format.GEPPETTO, outputFolder);
 		this.outputFileName = outputFileName;
 		this.inputFile = inputFile;
 	}

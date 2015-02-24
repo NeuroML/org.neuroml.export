@@ -9,9 +9,10 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.model.util.NeuroMLException;
 
 public class XineMLWriterTest extends TestCase
@@ -42,24 +43,15 @@ public class XineMLWriterTest extends TestCase
 
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		XineMLWriter nw = new XineMLWriter(lems, Formats.NINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
+		XineMLWriter nw = new XineMLWriter(lems, Format.NINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
 
-		List<File> outputFiles = nw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
-		assertFalse(outputFiles.isEmpty());
+		UtilsTest.checkConvertedFiles(nw.convert());
 
 		// Refresh..
 		lems = AppTest.readLemsFileFromExamples(exampleFilename);
-		XineMLWriter sw = new XineMLWriter(lems, Formats.SPINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
-		outputFiles = nw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
-		assertFalse(outputFiles.isEmpty());
+		XineMLWriter sw = new XineMLWriter(lems, Format.SPINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
+		
+		UtilsTest.checkConvertedFiles(nw.convert());
 	}
 
 }

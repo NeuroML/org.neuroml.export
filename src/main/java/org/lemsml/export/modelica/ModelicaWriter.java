@@ -22,7 +22,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -37,18 +37,23 @@ public class ModelicaWriter extends ABaseWriter
 	String comm = "// ";
 	String commPre = "/*";
 	String commPost = "*/";
+	private String outputFileName;
 
 	private List<File> outputFiles = new ArrayList<File>();
+    private final DLemsWriter dlemsw;
 
 	public ModelicaWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.MODELICA);
+		super(lems, Format.MODELICA);
+        dlemsw = new DLemsWriter(lems, null);
 		initializeWriter();
 	}
 
-	public ModelicaWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ModelicaWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.MODELICA, outputFolder);
+		super(lems, Format.MODELICA, outputFolder);
+        dlemsw = new DLemsWriter(lems, null);
+		this.outputFileName = outputFileName;
 		initializeWriter();
 	}
 
@@ -78,13 +83,13 @@ public class ModelicaWriter extends ABaseWriter
 	protected void addComment(StringBuilder sb, String comment)
 	{
 
-		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
+		if(!comment.contains("\n")) sb.append(comm + comment + "\n");
 		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
 
-	public String getMainScript() throws GenerationException
+	@Override
+	public List<File> convert() throws GenerationException, IOException
 	{
-		
 		
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder compScript = new StringBuilder();
@@ -97,11 +102,10 @@ public class ModelicaWriter extends ABaseWriter
 
 		try
 		{
-			DLemsWriter somw = new DLemsWriter(lems, null);
 
-			String som = somw.getMainScript();
+			String dlems = dlemsw.getMainScript();
 
-			DLemsWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(dlems, context);
 
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -126,7 +130,7 @@ public class ModelicaWriter extends ABaseWriter
 
 			E.info("Writing Modelica files to: " + this.getOutputFolder());
 			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + ".mos");
+			File mainScriptFile = new File(this.getOutputFolder(), this.outputFileName);
 			File compScriptFile = new File(this.getOutputFolder(), name + ".mo");
 			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
 			this.outputFiles.add(mainScriptFile);
@@ -147,23 +151,7 @@ public class ModelicaWriter extends ABaseWriter
 			throw new GenerationException("Problem generating the files", e);
 		}
 
-		return mainRunScript.toString();
 
-	}
-
-	@Override
-	public List<File> convert()
-	{
-
-		try
-		{
-			String code = this.getMainScript();
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 		return this.outputFiles;
 	}

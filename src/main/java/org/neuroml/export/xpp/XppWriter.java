@@ -22,7 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -37,17 +37,20 @@ public class XppWriter extends ANeuroMLBaseWriter
 	public HashMap<String, String> keywordSubstitutions = new HashMap<String, String>();
 
 	private String outputFileName;
+    private final DLemsWriter dlemsw;
 
 	public XppWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.XPP);
+		super(lems, Format.XPP);
+        dlemsw = new DLemsWriter(lems, null);
 		keywordSubstitutions.put("compartment", "compart");
 	}
 
 	public XppWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.XPP, outputFolder);
+		super(lems, Format.XPP, outputFolder);
 		this.outputFileName = outputFileName;
+        dlemsw = new DLemsWriter(lems, null);
 		keywordSubstitutions.put("compartment", "compart");
 	}
 
@@ -88,10 +91,10 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 		VelocityContext context = new VelocityContext();
 
-		DLemsWriter dlemsw = new DLemsWriter(lems, null);
 
 		try
 		{
+            
 			String dlems = dlemsw.getMainScript();
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
@@ -142,29 +145,16 @@ public class XppWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		return outputFiles;
 	}

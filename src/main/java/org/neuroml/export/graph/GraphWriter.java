@@ -15,7 +15,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -61,12 +61,12 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 	public GraphWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.GRAPH_VIZ);
+		super(lems, Format.GRAPH_VIZ);
 	}
 
 	public GraphWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.GRAPH_VIZ, outputFolder);
+		super(lems, Format.GRAPH_VIZ, outputFolder);
 		this.outputFileName = outputFileName;
 	}
 

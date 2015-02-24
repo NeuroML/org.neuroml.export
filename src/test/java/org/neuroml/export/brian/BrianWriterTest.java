@@ -61,7 +61,7 @@ public class BrianWriterTest extends TestCase
 	public void generateMainScript(Lems lems, String filename, boolean brian2) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
 
-		BrianWriter bw = new BrianWriter(lems, AppTest.getTempDir(), filename.replaceAll(".xml", ".py"));
+		BrianWriter bw = new BrianWriter(lems, AppTest.getTempDir(), filename.replaceAll(".xml", "_brian.py"));
 		bw.setBrian2(brian2);
 
 		//AQ: Remove this is a test and there is no point for this

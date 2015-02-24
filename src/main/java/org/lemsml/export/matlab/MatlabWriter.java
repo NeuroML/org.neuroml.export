@@ -23,7 +23,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -41,13 +41,13 @@ public class MatlabWriter extends ABaseWriter
 
 	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.MATLAB);
+		super(lems, Format.MATLAB);
 		initializeWriter();
 	}
 	
 	public MatlabWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.MATLAB, outputFolder);
+		super(lems, Format.MATLAB, outputFolder);
 		this.outputFileName = outputFileName;
 		initializeWriter();
 	}
@@ -116,10 +116,10 @@ public class MatlabWriter extends ABaseWriter
 
 		VelocityContext context = new VelocityContext();
 
-		DLemsWriter writer = new DLemsWriter(lems, new MatlabVisitors());
-
 		try
 		{
+            DLemsWriter writer = new DLemsWriter(lems, new MatlabVisitors());
+            
 			String som = writer.getMainScript();
 
 			DLemsWriter.putIntoVelocityContext(som, context);
@@ -163,29 +163,16 @@ public class MatlabWriter extends ABaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		// TODO Auto-generated method stub
 		return outputFiles;

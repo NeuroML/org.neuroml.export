@@ -5,14 +5,13 @@ package org.neuroml.export.sbml;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -30,14 +29,6 @@ import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.sim.ContentError;
-import java.util.Properties;
-
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.VelocityException;
-import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
@@ -60,12 +51,12 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 
 	public SBMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.SBML);
+		super(lems, Format.SBML);
 	}
 
 	public SBMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.SBML, outputFolder);
+		super(lems, Format.SBML, outputFolder);
 		this.outputFileName = outputFileName;
 	}
 
@@ -112,40 +103,7 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 			)
 			{
 
-				Velocity.init();
-				VelocityContext context = new VelocityContext();
-
-				try
-				{
-					DLemsWriter somw = new DLemsWriter(lems, null);
-					String som = somw.getMainScript();
-					som = som.replaceAll("This dLEMS file", "This SBML file");
-					System.out.println(som);
-					DLemsWriter.putIntoVelocityContext(som, context);
-
-					Properties props = new Properties();
-					props.put("resource.loader", "class");
-					props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-					VelocityEngine ve = new VelocityEngine();
-					ve.init(props);
-					Template template = ve.getTemplate(sbmlTemplateFile);
-
-					StringWriter sw1 = new StringWriter();
-					template.merge(context, sw1);
-					main.append(sw1);
-				}
-				catch(IOException e1)
-				{
-					throw new GenerationException("Problem converting LEMS to dLEMS", e1);
-				}
-				catch(VelocityException e)
-				{
-					throw new GenerationException("Problem using Velocity template", e);
-				}
-				catch(LEMSException e)
-				{
-					throw new GenerationException("Problem generating the files", e);
-				}
+				/// Nothing...
 
 			}
 			else
@@ -376,29 +334,16 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
 		List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		return outputFiles;
 	}

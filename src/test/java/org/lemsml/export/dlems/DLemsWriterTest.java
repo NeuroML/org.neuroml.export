@@ -15,6 +15,7 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.model.util.NeuroMLException;
@@ -47,13 +48,9 @@ public class DLemsWriterTest extends TestCase
 		String exampleFilename = lemsFilename.substring(lemsFilename.lastIndexOf('/') + 1);
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		DLemsWriter sw = new DLemsWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".json"), null);
+		DLemsWriter sw = new DLemsWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".json"), null, false);
 
-		List<File> outputFiles = sw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+		UtilsTest.checkConvertedFiles(sw.convert());
 	}
 
 	public void testVelocity() throws LEMSException, GenerationException, IOException

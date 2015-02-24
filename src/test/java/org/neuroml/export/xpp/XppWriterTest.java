@@ -2,7 +2,6 @@ package org.neuroml.export.xpp;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
@@ -13,6 +12,7 @@ import org.neuroml.export.utils.Utils;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class XppWriterTest extends TestCase
@@ -25,11 +25,8 @@ public class XppWriterTest extends TestCase
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
 		XppWriter xppw = new XppWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "ode"));
-		List<File> outputFiles = xppw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+		
+		UtilsTest.checkConvertedFiles(xppw.convert());
 	}
 
 	public void testSBML() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
@@ -40,11 +37,7 @@ public class XppWriterTest extends TestCase
 
 		XppWriter xppw = new XppWriter(lems, AppTest.getTempDir(), exampleSBML.getName().replaceAll("xml", "ode"));
 
-		List<File> outputFiles = xppw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+		UtilsTest.checkConvertedFiles(xppw.convert());
 
 	}
 

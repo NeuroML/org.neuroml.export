@@ -16,6 +16,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
@@ -115,11 +116,7 @@ public class NeuronWriterTest extends TestCase {
 
         assertTrue(outputFiles.size() >= 2);
 
-        for (File f : outputFiles) {
-            E.info("Written model behaviour to: " + f.getAbsolutePath());
-            assertTrue(f.exists());
-            assertTrue(f.length() > 0);
-        }
+		UtilsTest.checkConvertedFiles(outputFiles);
     }
 
     public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
@@ -132,11 +129,7 @@ public class NeuronWriterTest extends TestCase {
 
         assertTrue(outputFiles.size() >= 2);
 
-        for (File f : outputFiles) {
-            E.info("Written model behaviour to: " + f.getAbsolutePath());
-            assertTrue(f.exists());
-            assertTrue(f.length() > 0);
-        }
+		UtilsTest.checkConvertedFiles(outputFiles);
 
     }
 

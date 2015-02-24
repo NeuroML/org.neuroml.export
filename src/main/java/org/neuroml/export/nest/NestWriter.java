@@ -22,7 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -38,18 +38,23 @@ public class NestWriter extends ANeuroMLBaseWriter
 	String comm = "#";
 	String commPre = "'''";
 	String commPost = "'''";
+	private String outputFileName;
 
-	private List<File> outputFiles = new ArrayList<File>();
+	private final List<File> outputFiles = new ArrayList<File>();
+    private final DLemsWriter dlemsw;
 
 	public NestWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.NEST);
+		super(lems, Format.NEST);
+        dlemsw = new DLemsWriter(lems, null);
 		initializeWriter();
 	}
 
-	public NestWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+	public NestWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Formats.NEST, outputFolder);
+		super(lems, Format.NEST, outputFolder);
+		this.outputFileName = outputFileName;
+        dlemsw = new DLemsWriter(lems, null);
 		initializeWriter();
 	}
 
@@ -97,10 +102,9 @@ public class NestWriter extends ANeuroMLBaseWriter
 
 		try
 		{
-			DLemsWriter somw = new DLemsWriter(lems, null);
-			String som = somw.getMainScript();
+			String dlems = dlemsw.getMainScript();
 
-			DLemsWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(dlems, context);
 
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -151,22 +155,13 @@ public class NestWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
-		try
-		{
-			String code = this.getMainScript();
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        String code = this.getMainScript();
+
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 		
 		return this.outputFiles;
 	}

@@ -11,6 +11,7 @@ import org.neuroml.export.exceptions.ModelFeatureSupportException;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class CellMLWriterTest extends TestCase
@@ -23,11 +24,7 @@ public class CellMLWriterTest extends TestCase
 
 		CellMLWriter cw = new CellMLWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "cellml"));
 
-		List<File> outputFiles = cw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+		UtilsTest.checkConvertedFiles(cw.convert());
 	}
 	
 	/*

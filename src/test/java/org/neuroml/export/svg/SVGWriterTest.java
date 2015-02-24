@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
@@ -30,11 +31,7 @@ public class SVGWriterTest extends TestCase
 
 		SVGWriter sw = new SVGWriter(nmlDocument, AppTest.getTempDir(), exampleFilename.replaceAll("nml", "svg"));
 		
-		List<File> outputFiles = sw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+		UtilsTest.checkConvertedFiles(sw.convert());
 		
 	}
 }

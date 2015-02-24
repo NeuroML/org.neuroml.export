@@ -35,7 +35,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -58,12 +58,12 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 	private String outputFileName;
 
 	// public static final String LOCAL_9ML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
-	public XineMLWriter(Lems lems, Formats format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public XineMLWriter(Lems lems, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format);
 	}
 
-	public XineMLWriter(Lems lems, Formats format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public XineMLWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, format, outputFolder);
 		this.outputFileName = outputFileName;
@@ -122,13 +122,13 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 			String defaultDimension = null;
 
-			if(format.equals(Formats.NINEML))
+			if(format.equals(Format.NINEML))
 			{
 				namespace = NAMESPACE_9ML;
 				schema = SCHEMA_9ML;
 				defaultDimension = "none";
 			}
-			else if(format.equals(Formats.SPINEML))
+			else if(format.equals(Format.SPINEML))
 			{
 				namespace = NAMESPACE_SPINEML_COMP_LAYER;
 				schema = SCHEMA_SPINEML_COMP_LAYER;
@@ -145,7 +145,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 			addComment(mainFile, info);
 
-			if(format.equals(Formats.SPINEML))
+			if(format.equals(Format.SPINEML))
 			{
 
 				expLayer.append("<?xml version='1.0' encoding='UTF-8'?>\n");
@@ -176,7 +176,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 			{
 
 				// //addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
-				if(format.equals(Formats.SPINEML))
+				if(format.equals(Format.SPINEML))
 				{
 					startElement(expLayer, "Experiment", "name=" + simCpt.getID() + "description=Export from LEMS", expLayerFlag);
 					startEndElement(expLayer, "Model", "network_layer_url=network_" + tgtNet.id, expLayerFlag);
@@ -286,7 +286,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 						String defaultRegime = "defaultRegime";
 
-						if(format.equals(Formats.SPINEML))
+						if(format.equals(Format.SPINEML))
 						{
 							dynInitRegInfo = "initial_regime=" + defaultRegime;
 							ocTargetRegInfo = "target_regime=" + defaultRegime;
@@ -310,11 +310,11 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 						}
 						for(Exposure exp : ctFlat.getExposures())
 						{
-							if(format.equals(Formats.NINEML))
+							if(format.equals(Format.NINEML))
 							{
 								startEndElement(ports, "AnalogPort", "name=" + exp.getName(), "mode=send", "dimension=" + defaultDimension);
 							}
-							else if(format.equals(Formats.SPINEML))
+							else if(format.equals(Format.SPINEML))
 							{
 								startEndElement(ports, "AnalogSendPort", "name=" + exp.getName());
 							}
@@ -322,11 +322,11 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 						for(EventPort port : ctFlat.getEventPorts())
 						{
 
-							if(format.equals(Formats.NINEML))
+							if(format.equals(Format.NINEML))
 							{
 								startEndElement(ports, "EventPort", "name=" + port.getName(), "mode=" + (port.direction.equals("out") ? "send" : "receive"));
 							}
-							else if(format.equals(Formats.SPINEML))
+							else if(format.equals(Format.SPINEML))
 							{
 								startEndElement(ports, (port.direction.equals("out") ? "EventSendPort" : "EventReceivePort"), "name=" + port.getName());
 							}
@@ -369,7 +369,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 									startEndTextElement(trigger, "MathInline", oc.test);
 								}
 								endElement(trigger, "Trigger");
-								if(format.equals(Formats.NINEML))
+								if(format.equals(Format.NINEML))
 								{
 									regimes.append(trigger);
 								}
@@ -388,7 +388,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 									startEndElement(regimes, "EventOut", "port=" + eo.port);
 								}
 
-								if(format.equals(Formats.SPINEML))
+								if(format.equals(Format.SPINEML))
 								{
 									regimes.append(trigger);
 								}
@@ -409,7 +409,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 						}
 
-						if(format.equals(Formats.NINEML))
+						if(format.equals(Format.NINEML))
 						{
 							abstLayer.append(params);
 							abstLayer.append(ports);
@@ -418,7 +418,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 							endElement(dynamics, "Dynamics");
 							abstLayer.append(dynamics);
 						}
-						else if(format.equals(Formats.SPINEML))
+						else if(format.equals(Format.SPINEML))
 						{
 							dynamics.append(regimes);
 							dynamics.append(stateVars);
@@ -443,7 +443,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 			}
 
-			if(format.equals(Formats.SPINEML))
+			if(format.equals(Format.SPINEML))
 			{
 				endElement(expLayer, "Experiment", expLayerFlag);
 				endElement(expLayer, root, expLayerFlag);
@@ -506,7 +506,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 		// lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
 		// lemsFiles.add(new File("../git/GPUShowcase/NeuroML2/LEMS_simplenet.xml"));
 
-		for(Formats v : new Formats[] { Formats.NINEML, Formats.SPINEML })
+		for(Format v : new Format[] { Format.NINEML, Format.SPINEML })
 		{
 
 			for(File lemsFile : lemsFiles)

@@ -1,6 +1,5 @@
 package org.neuroml.export.pynn;
 
-import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -8,6 +7,7 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.model.util.NeuroMLException;
@@ -34,13 +34,9 @@ public class PyNNWriterTest extends TestCase
 
 		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-		PyNNWriter pw = new PyNNWriter(lems, AppTest.getTempDir());
-		for(File genFile : pw.convert())
-		{
-			assertTrue(genFile.exists());
-			// System.out.println("------------------" + genFile.getAbsolutePath() + "------------------------------------");
-			// System.out.println(FileUtil.readStringFromFile(genFile));
-		}
+		PyNNWriter pw = new PyNNWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_pynn.py"));
+	
+		UtilsTest.checkConvertedFiles(pw.convert());
 
 	}
 

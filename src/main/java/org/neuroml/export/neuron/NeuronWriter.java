@@ -42,7 +42,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.ProcessOutputWatcher;
 import org.neuroml.export.utils.Utils;
@@ -86,12 +86,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public NeuronWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
-        super(lems, Formats.NEURON);
+        super(lems, Format.NEURON);
     }
 
     public NeuronWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
-        super(lems, Formats.NEURON, outputFolder);
+        super(lems, Format.NEURON, outputFolder);
         this.outputFileName = outputFileName;
     }
 
@@ -1190,7 +1190,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         mod.append("TITLE Mod file for component: " + comp + "\n\n");
 
-        mod.append("COMMENT\n\n" + Utils.getHeaderComment(Formats.NEURON) + "\n\nENDCOMMENT\n\n");
+        mod.append("COMMENT\n\n" + Utils.getHeaderComment(Format.NEURON) + "\n\nENDCOMMENT\n\n");
 
         StringBuilder blockNeuron = new StringBuilder();
         StringBuilder blockUnits = new StringBuilder();

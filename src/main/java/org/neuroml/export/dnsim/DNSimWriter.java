@@ -22,7 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -35,16 +35,21 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 	public final String TEMPLATE_MAIN = "dnsim/dnsim.m.vm";
 	public final String TEMPLATE_MODULE = "dnsim/dnsim.txt.vm";
 	
-	private List<File> outputFiles = new ArrayList<File>();
+	private final List<File> outputFiles = new ArrayList<File>();
+	private String outputFileName;
+    private final DLemsWriter dlemsw;
 
 	public DNSimWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.DN_SIM);
+		super(lems, Format.DN_SIM);
+        dlemsw = new DLemsWriter(lems, null);
 	}
 
-	public DNSimWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public DNSimWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.DN_SIM, outputFolder);
+		super(lems, Format.DN_SIM, outputFolder);
+		this.outputFileName = outputFileName;
+        dlemsw = new DLemsWriter(lems, null);
 	}
 
 	@Override
@@ -88,8 +93,6 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 		Velocity.init();
 
 		VelocityContext context = new VelocityContext();
-
-		DLemsWriter dlemsw = new DLemsWriter(lems, null);
 
 		try
 		{
@@ -153,22 +156,13 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
-		try
-		{
-			String code = this.getMainScript();
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        String code = this.getMainScript();
+
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 		
 		return this.outputFiles;
 	}

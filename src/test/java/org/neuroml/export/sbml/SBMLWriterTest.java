@@ -16,6 +16,7 @@ import org.xml.sax.SAXException;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.neuroml.export.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class SBMLWriterTest extends TestCase
@@ -52,10 +53,8 @@ public class SBMLWriterTest extends TestCase
 
 		SBMLWriter sbmlw = new SBMLWriter(lems, AppTest.getTempDir(), exampleFileName.replaceAll("xml", "sbml"));
 		List<File> outputFiles = sbmlw.convert();
-		for(File outputFile : outputFiles)
-		{
-			assertTrue(outputFile.exists());
-		}
+        
+		UtilsTest.checkConvertedFiles(outputFiles);
 
 		NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
 

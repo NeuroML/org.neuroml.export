@@ -22,7 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
-import org.neuroml.export.utils.Formats;
+import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -37,18 +37,23 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	String comm = "#";
 	String commPre = "'''";
 	String commPost = "'''";
+	private String outputFileName;
 
 	private List<File> outputFiles = new ArrayList<File>();
+    private final DLemsWriter dlemsw;
 
 	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.PYNN);
+		super(lems, Format.PYNN);
+        dlemsw = new DLemsWriter(lems, null, false);
 		initializeWriter();
 	}
 	
-	public PyNNWriter(Lems lems, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public PyNNWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Formats.PYNN, outputFolder);
+		super(lems, Format.PYNN, outputFolder);
+		this.outputFileName = outputFileName;
+        dlemsw = new DLemsWriter(lems, null, false);
 		initializeWriter();
 	}
 
@@ -97,10 +102,9 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 		try
 		{
-			DLemsWriter somw = new DLemsWriter(lems, null);
-			String som = somw.getMainScript();
+			String dlems = dlemsw.getMainScript();
 
-			DLemsWriter.putIntoVelocityContext(som, context);
+			DLemsWriter.putIntoVelocityContext(dlems, context);
 
 			Properties props = new Properties();
 			props.put("resource.loader", "class");
@@ -151,17 +155,14 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	}
 
 	@Override
-	public List<File> convert()
+	public List<File> convert() throws GenerationException, IOException
 	{
-		try
-		{
-			String code = this.getMainScript();
-		}
-		catch(GenerationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+        String code = this.getMainScript();
+
+        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
 		
 		return this.outputFiles;
 	}
