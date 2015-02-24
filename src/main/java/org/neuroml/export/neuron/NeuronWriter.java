@@ -1631,7 +1631,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(OnCondition oc : dyn.getOnConditions())
             {
-
                 String cond = NRNUtils.checkForBinaryOperators(oc.test);
 
                 boolean resetVoltage = false;
@@ -1640,19 +1639,42 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     resetVoltage = resetVoltage || sa.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE);
                 }
 
-                if(!resetVoltage)
+                if(!resetVoltage)  // A "normal" OnCondition
                 {
-                    blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
-                    for(StateAssignment sa : oc.getStateAssignments())
+                    if (!comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE)) 
                     {
-                        blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = "
-                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ? standard OnCondition\n");
+                        blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
+                        for(StateAssignment sa : oc.getStateAssignments())
+                        {
+                            blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = "
+                                    + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ? standard OnCondition\n");
+                        }
+                        blockBreakpoint.append("}\n\n");
                     }
-                    blockBreakpoint.append("}\n\n");
+                    else 
+                    {
+                        blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
+                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+
+                        blockNetReceive.append("}\n");
+                        blockNetReceive.append("if (flag == " + conditionFlag + ") {\n");
+                        if(debug)
+                        {
+                            blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
+                                    + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
+                        }
+                        for(StateAssignment sa : oc.getStateAssignments())
+                        {
+                            blockNetReceive.append("\n    " + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
+                        }
+                        blockNetReceive.append("net_event(t)\n");
+                        blockNetReceive.append("WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+                        blockNetReceive.append("}\n");
+                        
+                    }
                 }
                 else
                 {
-
                     blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
                     blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
 
@@ -2482,7 +2504,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml")); 
-        /* lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml")); 
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml")); 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml")); 
@@ -2518,7 +2540,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Syns.xml")); 
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Social.xml"));
-        */
+        /* */
         String testScript = "set -e\n";
 
         NeuronWriter nw;
