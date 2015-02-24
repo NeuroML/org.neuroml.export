@@ -68,7 +68,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private final ArrayList<String> generatedModComponents = new ArrayList<String>();
 
     private final List<File> outputFiles = new ArrayList<File>();
-    private String outputFileName;
 
     boolean nogui = false;
 
@@ -91,8 +90,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public NeuronWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
-        super(lems, Format.NEURON, outputFolder);
-        this.outputFileName = outputFileName;
+        super(lems, Format.NEURON, outputFolder, outputFileName);
     }
 
     @Override
@@ -126,7 +124,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             File neuronHome = findNeuronHome();
             String nrncmd = nogui ? "nrniv" : "nrngui";
             String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
-                    + new File(this.getOutputFolder(), this.outputFileName).getCanonicalPath();
+                    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
 
             Runtime rt = Runtime.getRuntime();
             Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
@@ -183,7 +181,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public List<File> generateMainScriptAndMods() throws LEMSException, GenerationException, NeuroMLException
     {
-        File mainFile = new File(this.getOutputFolder(), this.outputFileName);
+        File mainFile = new File(this.getOutputFolder(), this.getOutputFileName());
         try
         {
             String main = getMainScript();

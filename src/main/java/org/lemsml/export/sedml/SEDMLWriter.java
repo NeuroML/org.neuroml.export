@@ -29,14 +29,12 @@ public class SEDMLWriter extends AXMLWriter
 	public static final String GLOBAL_TIME_SBML = "t";
 	public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
-	private final String outputFileName;
 	private final String inputFileName;
 	private final Format modelFormat;
 
 	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Format modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.SEDML, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.SEDML, outputFolder, outputFileName);
 		this.inputFileName = inputFileName;
 		this.modelFormat = modelFormat;
 	}
@@ -228,7 +226,7 @@ public class SEDMLWriter extends AXMLWriter
 		{
 			String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
 

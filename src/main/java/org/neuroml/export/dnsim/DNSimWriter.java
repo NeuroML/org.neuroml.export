@@ -36,7 +36,6 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 	public final String TEMPLATE_MODULE = "dnsim/dnsim.txt.vm";
 	
 	private final List<File> outputFiles = new ArrayList<File>();
-	private String outputFileName;
     private final DLemsWriter dlemsw;
 
 	public DNSimWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
@@ -47,8 +46,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 	public DNSimWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.DN_SIM, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.DN_SIM, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, null);
 	}
 
@@ -160,7 +158,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 	{
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 		

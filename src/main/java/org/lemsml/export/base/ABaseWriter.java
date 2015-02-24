@@ -15,6 +15,7 @@ public abstract class ABaseWriter implements IBaseWriter
 	protected Lems lems;
 	protected final Format format;
 	private File outputFolder;
+	private String outputFileName;
 
 	protected static SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
 
@@ -35,15 +36,16 @@ public abstract class ABaseWriter implements IBaseWriter
 	}
     
 
-	public ABaseWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException 
+	public ABaseWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException 
     {
-		this(lems, format, outputFolder, true);
+		this(lems, format, outputFolder, outputFileName, true);
     }
             
-	public ABaseWriter(Lems lems, Format format, File outputFolder, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ABaseWriter(Lems lems, Format format, File outputFolder, String outputFileName, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		this(lems, format, checkSupportedFeatures);
 		this.outputFolder = outputFolder;
+		this.outputFileName = outputFileName;
 	}
 
 	protected abstract void addComment(StringBuilder sb, String comment);
@@ -58,6 +60,18 @@ public abstract class ABaseWriter implements IBaseWriter
 	{
 		this.outputFolder = outputFolder;
 	}
+
+	public String getOutputFileName()
+	{
+		return outputFileName;
+	}
+
+	public void setOutputFileName(String outputFileName)
+	{
+		this.outputFileName = outputFileName;
+	}
+	
+	
 
 
 }

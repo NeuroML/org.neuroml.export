@@ -47,8 +47,6 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 
 	private final String sbmlTemplateFile = "sbml/template.sbml";
 
-	private String outputFileName;
-
 	public SBMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.SBML);
@@ -56,8 +54,7 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 
 	public SBMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.SBML, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.SBML, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -340,7 +337,7 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 

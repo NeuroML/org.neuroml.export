@@ -37,8 +37,6 @@ public class MatlabWriter extends ABaseWriter
 	String commPre = "%{";
 	String commPost = "%}";
 	
-	private String outputFileName;
-
 	public MatlabWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.MATLAB);
@@ -47,8 +45,7 @@ public class MatlabWriter extends ABaseWriter
 	
 	public MatlabWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.MATLAB, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.MATLAB, outputFolder, outputFileName);
 		initializeWriter();
 	}
 
@@ -169,7 +166,7 @@ public class MatlabWriter extends ABaseWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 

@@ -26,9 +26,9 @@ public abstract class AXMLWriter extends ABaseWriter
 		super(lems, format);
 	}
 
-	public AXMLWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public AXMLWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, format, outputFolder);
+		super(lems, format, outputFolder, outputFileName);
 	}
 
     @Override

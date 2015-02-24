@@ -25,14 +25,11 @@ import org.neuroml.model.util.NeuroMLException;
  */
 public class GeppettoWriter extends AXMLWriter
 {
-
-	private final String outputFileName;
 	private final File inputFile;
 
 	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.GEPPETTO, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.GEPPETTO, outputFolder,outputFileName);
 		this.inputFile = inputFile;
 	}
 
@@ -150,7 +147,7 @@ public class GeppettoWriter extends AXMLWriter
 		{
 			String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
 

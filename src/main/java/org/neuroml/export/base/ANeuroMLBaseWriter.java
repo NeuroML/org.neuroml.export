@@ -20,14 +20,20 @@ public abstract class ANeuroMLBaseWriter extends ABaseWriter
 		super(lems, format);
 	}
 	
-	public ANeuroMLBaseWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ANeuroMLBaseWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, format, outputFolder);
+		super(lems, format, outputFolder, outputFileName);
 	}
 	
-	public ANeuroMLBaseWriter(Lems lems, NeuroMLDocument nmlDocument, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ANeuroMLBaseWriter(Lems lems, NeuroMLDocument nmlDocument, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, format, outputFolder);
+		super(lems, format);
+		this.nmlDocument = nmlDocument;
+	}
+	
+	public ANeuroMLBaseWriter(Lems lems, NeuroMLDocument nmlDocument, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, format, outputFolder, outputFileName);
 		this.nmlDocument = nmlDocument;
 	}
 	
@@ -37,9 +43,9 @@ public abstract class ANeuroMLBaseWriter extends ABaseWriter
 		this.nmlDocument = nmlDocument;
 	}
 
-	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ANeuroMLBaseWriter(NeuroMLDocument nmlDocument, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(null, format, outputFolder);
+		super(null, format, outputFolder, outputFileName);
 		this.nmlDocument = nmlDocument;
 	}
 	

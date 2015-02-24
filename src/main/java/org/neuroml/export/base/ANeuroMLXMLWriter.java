@@ -32,15 +32,15 @@ public abstract class ANeuroMLXMLWriter extends ANeuroMLBaseWriter
 		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
 	}
 
-	public ANeuroMLXMLWriter(Lems lems, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ANeuroMLXMLWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, format, outputFolder);
+		super(lems, format, outputFolder, outputFileName);
 		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
 	}
 
-	public ANeuroMLXMLWriter(Lems lems, NeuroMLDocument nmlDocument, Format format, File outputFolder) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public ANeuroMLXMLWriter(Lems lems, NeuroMLDocument nmlDocument, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, nmlDocument, format, outputFolder);
+		super(lems, nmlDocument, format, outputFolder, outputFileName);
 		indentCounts.put(DEFAULT_INDENT_FLAG, 0);
 	}
 

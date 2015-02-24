@@ -39,12 +39,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
 	// private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:" + axisWidth;
 	// private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:" + axisWidth;
 
-	private String outputFileName;
-
 	public SVGWriter(NeuroMLDocument nmlDocument, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Format.SVG, outputFolder);
-		this.outputFileName = outputFileName;
+		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Format.SVG, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -241,7 +238,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 		{
 			String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
 		}

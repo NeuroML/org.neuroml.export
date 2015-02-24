@@ -57,8 +57,6 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 	private static final ArrayList<String> suppressChildren = new ArrayList<String>();
 
-	private String outputFileName;
-
 	public GraphWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
 		super(lems, Format.GRAPH_VIZ);
@@ -66,8 +64,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 	public GraphWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.GRAPH_VIZ, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.GRAPH_VIZ, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -654,7 +651,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
 		{
 			String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
 		}

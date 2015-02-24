@@ -38,7 +38,6 @@ public class NestWriter extends ANeuroMLBaseWriter
 	String comm = "#";
 	String commPre = "'''";
 	String commPost = "'''";
-	private String outputFileName;
 
 	private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
@@ -52,8 +51,7 @@ public class NestWriter extends ANeuroMLBaseWriter
 
 	public NestWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.NEST, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.NEST, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, null);
 		initializeWriter();
 	}
@@ -159,7 +157,7 @@ public class NestWriter extends ANeuroMLBaseWriter
 	{
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 		

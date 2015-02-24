@@ -55,7 +55,6 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 	public static final String NAMESPACE_SPINEML_EXP_LAYER = "http://www.shef.ac.uk/SpineMLExperimentLayer";
 
 	private List<File> outputFiles = new ArrayList<File>();
-	private String outputFileName;
 
 	// public static final String LOCAL_9ML_SCHEMA = "src/test/resources/Schemas/sbml-l2v2-schema/sbml.xsd";
 	public XineMLWriter(Lems lems, Format format) throws ModelFeatureSupportException, LEMSException, NeuroMLException
@@ -65,8 +64,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 	public XineMLWriter(Lems lems, Format format, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, format, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, format, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -89,7 +87,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 	{
 
 		String main = getMainScript();
-		File outputFile = new File(getOutputFolder(), this.outputFileName);
+		File outputFile = new File(getOutputFolder(), this.getOutputFileName());
 		try
 		{
 			FileUtil.writeStringToFile(main, outputFile);
@@ -214,7 +212,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 					startElement(userNetLayer, "Population", userNetLayerFlag);
 
-					startElement(userNetLayer, "Neuron", "name=" + pop.id, "size=" + num, "url=" + this.outputFileName, userNetLayerFlag);
+					startElement(userNetLayer, "Neuron", "name=" + pop.id, "size=" + num, "url=" + this.getOutputFileName(), userNetLayerFlag);
 
 					for(ParamValue pv : popComp.getParamValues())
 					{
@@ -448,14 +446,14 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 				endElement(expLayer, "Experiment", expLayerFlag);
 				endElement(expLayer, root, expLayerFlag);
 
-				String expFilename = "Experiment_" + this.outputFileName;
+				String expFilename = "Experiment_" + this.getOutputFileName();
 				File expFile = new File(getOutputFolder(), expFilename);
 
 				FileUtil.writeStringToFile(expLayer.toString(), expFile);
 				outputFiles.add(expFile);
 
 				endElement(userNetLayer, root, userNetLayerFlag);
-				String userFilename = "NetLayer_" + this.outputFileName;
+				String userFilename = "NetLayer_" + this.getOutputFileName();
 				File netFile = new File(getOutputFolder(), userFilename);
 
 				FileUtil.writeStringToFile(userNetLayer.toString(), netFile);

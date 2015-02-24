@@ -36,7 +36,6 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 	public HashMap<String, String> keywordSubstitutions = new HashMap<String, String>();
 
-	private String outputFileName;
     private final DLemsWriter dlemsw;
 
 	public XppWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
@@ -48,8 +47,7 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 	public XppWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.XPP, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.XPP, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, null);
 		keywordSubstitutions.put("compartment", "compart");
 	}
@@ -151,7 +149,7 @@ public class XppWriter extends ANeuroMLBaseWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 

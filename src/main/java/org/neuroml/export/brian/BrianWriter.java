@@ -48,8 +48,6 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 	boolean brian2 = false;
 
-	private String outputFileName;
-
 	public BrianWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.BRIAN);
@@ -57,8 +55,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 	public BrianWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.BRIAN, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.BRIAN, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -536,7 +533,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 

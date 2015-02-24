@@ -38,7 +38,6 @@ public class CWriter extends ABaseWriter
 	String commPre = "/*";
 	String commPost = "*/";
 
-	private String outputFileName;
     private final DLemsWriter dlemsw;
 
 	public CWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
@@ -51,8 +50,7 @@ public class CWriter extends ABaseWriter
 
 	public CWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.C, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.C, outputFolder, outputFileName);
         
         dlemsw = new DLemsWriter(lems, new CVisitors());
 		initializeWriter();
@@ -198,7 +196,7 @@ public class CWriter extends ABaseWriter
 		{
 			String code = this.getMainScript();
 
-			File cFile = new File(this.getOutputFolder(), this.outputFileName);
+			File cFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, cFile);
 			outputFiles.add(cFile);
 

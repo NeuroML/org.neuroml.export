@@ -52,8 +52,6 @@ public class DLemsWriter extends ABaseWriter
 
 	CommonLangWriter writer;
 
-	private String outputFileName;
-
 	public DLemsWriter(Lems lems, CommonLangWriter writer, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.DLEMS, checkSupportedFeatures);
@@ -68,24 +66,21 @@ public class DLemsWriter extends ABaseWriter
 
 	public DLemsWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.DLEMS, outputFolder);
+		super(lems, Format.DLEMS, outputFolder, outputFileName);
 		this.writer = null;
-		this.outputFileName = outputFileName;
 	}
 	
 	
 	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.DLEMS, outputFolder, checkSupportedFeatures);
+		super(lems, Format.DLEMS, outputFolder, outputFileName, checkSupportedFeatures);
 		this.writer = writer;
-		this.outputFileName = outputFileName;
 	}
 	
 	public DLemsWriter(Lems lems, File outputFolder, String outputFileName, CommonLangWriter writer) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.DLEMS, outputFolder);
+		super(lems, Format.DLEMS, outputFolder, outputFileName);
 		this.writer = writer;
-		this.outputFileName = outputFileName;
 	}
 
     @Override
@@ -459,7 +454,7 @@ public class DLemsWriter extends ABaseWriter
 		{
 			String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
 

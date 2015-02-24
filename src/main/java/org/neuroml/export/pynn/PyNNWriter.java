@@ -37,7 +37,6 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	String comm = "#";
 	String commPre = "'''";
 	String commPost = "'''";
-	private String outputFileName;
 
 	private List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
@@ -51,8 +50,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	
 	public PyNNWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.PYNN, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.PYNN, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, null, false);
 		initializeWriter();
 	}
@@ -160,7 +158,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 		

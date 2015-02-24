@@ -29,7 +29,7 @@ public class InfoWriter extends ANeuroMLBaseWriter
 	 */
 	public InfoWriter(NeuroMLDocument nmlDocument) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Format.INFORMATION, null);
+		super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Format.INFORMATION);
 		//sli.checkConversionSupported(format, Utils.convertNeuroMLToSim(nmlDocument).getLems());
 	}
 

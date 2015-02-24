@@ -43,8 +43,6 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 
 	public static final String GLOBAL_TIME_CELLML = "time";
 	
-	private String outputFileName;
-
 	// private final String sbmlTemplateFile = "sbml/template.sbml";
 	public CellMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
@@ -53,8 +51,7 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 
 	public CellMLWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
-		super(lems, Format.CELLML, outputFolder);
-		this.outputFileName = outputFileName;
+		super(lems, Format.CELLML, outputFolder, outputFileName);
 	}
 
 	@Override
@@ -287,7 +284,7 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 
         String code = this.getMainScript();
 
-        File outputFile = new File(this.getOutputFolder(), this.outputFileName);
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
         outputFiles.add(outputFile);
 

@@ -37,7 +37,6 @@ public class ModelicaWriter extends ABaseWriter
 	String comm = "// ";
 	String commPre = "/*";
 	String commPost = "*/";
-	private String outputFileName;
 
 	private List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
@@ -51,9 +50,8 @@ public class ModelicaWriter extends ABaseWriter
 
 	public ModelicaWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.MODELICA, outputFolder);
+		super(lems, Format.MODELICA, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, null);
-		this.outputFileName = outputFileName;
 		initializeWriter();
 	}
 
@@ -130,7 +128,7 @@ public class ModelicaWriter extends ABaseWriter
 
 			E.info("Writing Modelica files to: " + this.getOutputFolder());
 			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-			File mainScriptFile = new File(this.getOutputFolder(), this.outputFileName);
+			File mainScriptFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			File compScriptFile = new File(this.getOutputFolder(), name + ".mo");
 			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
 			this.outputFiles.add(mainScriptFile);
