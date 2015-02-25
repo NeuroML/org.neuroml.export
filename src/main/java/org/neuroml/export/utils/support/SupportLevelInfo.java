@@ -42,6 +42,7 @@ public class SupportLevelInfo
 		addSupportInfo(Format.LEMS, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_GAP_JUNCTIONS_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
 		addSupportInfo(Format.LEMS, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.HIGH);
