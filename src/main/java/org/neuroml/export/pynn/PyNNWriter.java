@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.dlems.DLemsKeywords;
@@ -23,6 +20,7 @@ import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -30,9 +28,6 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class PyNNWriter extends ANeuroMLBaseWriter
 {
-
-	private final String runTemplateFile = "pynn/run.vm";
-	private final String cellTemplateFile = "pynn/cell.vm";
 
 	String comm = "#";
 	String commPre = "'''";
@@ -94,8 +89,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 		addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-		Velocity.init();
-
+		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
 
 		try
@@ -104,25 +98,13 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(runTemplateFile);
-
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
 			StringWriter sw1 = new StringWriter();
-
-			template.merge(context, sw1);
-
+			boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
 			mainRunScript.append(sw1);
 
-			template = ve.getTemplate(cellTemplateFile);
-
 			StringWriter sw2 = new StringWriter();
-
-			template.merge(context, sw2);
-
+			boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
 			cellScript.append(sw2);
 
 			E.info("Writing " + format + " files to: " + this.getOutputFolder());

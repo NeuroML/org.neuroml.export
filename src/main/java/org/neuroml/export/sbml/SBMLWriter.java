@@ -45,8 +45,6 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 	public static final String GLOBAL_TIME_SBML = "t";
 	public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
-	private final String sbmlTemplateFile = "sbml/template.sbml";
-
 	public SBMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.SBML);

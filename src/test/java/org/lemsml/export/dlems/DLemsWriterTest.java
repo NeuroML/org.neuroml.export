@@ -11,6 +11,7 @@ import junit.framework.TestCase;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
@@ -18,6 +19,7 @@ import org.neuroml.export.AppTest;
 import org.neuroml.export.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.model.util.NeuroMLException;
 
 /**
@@ -55,8 +57,7 @@ public class DLemsWriterTest extends TestCase
 
 	public void testVelocity() throws LEMSException, GenerationException, IOException
 	{
-		Velocity.init();
-
+		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
 
 		context.put("name", new String("VelocityOnOSB"));

@@ -6,11 +6,8 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
@@ -24,6 +21,7 @@ import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -31,8 +29,6 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class XppWriter extends ANeuroMLBaseWriter
 {
-
-	public final String TEMPLATE = "xpp/xpp.vm";
 
 	public HashMap<String, String> keywordSubstitutions = new HashMap<String, String>();
 
@@ -85,10 +81,8 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 		addComment(sb, lems.textSummary(false, false));
 
-		Velocity.init();
-
+		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
-
 
 		try
 		{
@@ -97,17 +91,10 @@ public class XppWriter extends ANeuroMLBaseWriter
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(TEMPLATE);
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
 
 			StringWriter sw = new StringWriter();
-
-			template.merge(context, sw);
-
+			boolean generationStatus = ve.evaluate(context, sw, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.xppTemplateFile));
 			String mapped = sw.toString();
 			for(String old : keywordSubstitutions.keySet())
 			{

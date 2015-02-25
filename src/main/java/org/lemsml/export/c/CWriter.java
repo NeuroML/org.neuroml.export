@@ -7,11 +7,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.ABaseWriter;
@@ -25,6 +22,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -66,7 +64,7 @@ public class CWriter extends ABaseWriter
 	{
 
 		// Default (& only supported version) is CVODE
-		CVODE("cvode/cvode.vm", "cvode/Makefile");
+		CVODE(VelocityUtils.cTemplateFile, VelocityUtils.makeFile);
 
 		private final String template;
 		private final String makefile;
@@ -145,29 +143,19 @@ public class CWriter extends ABaseWriter
 
 		addComment(sb, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-		Velocity.init();
+		VelocityUtils.initializeVelocity();
 
 		VelocityContext context = new VelocityContext();
 
-
 		try
 		{
-            
 			String dlems = dlemsw.getMainScript();
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(solver.getTemplate());
-
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
 			StringWriter sw = new StringWriter();
-
-			template.merge(context, sw);
-
+			boolean generationStatus = ve.evaluate(context, sw, "LOG", VelocityUtils.getTemplateAsReader(solver.getTemplate()));
 			sb.append(sw);
 		}
 		catch(IOException e1)

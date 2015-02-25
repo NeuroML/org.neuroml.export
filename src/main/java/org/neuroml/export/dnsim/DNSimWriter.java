@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
@@ -24,6 +21,7 @@ import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -32,9 +30,6 @@ import org.neuroml.model.util.NeuroMLException;
 public class DNSimWriter extends ANeuroMLBaseWriter
 {
 
-	public final String TEMPLATE_MAIN = "dnsim/dnsim.m.vm";
-	public final String TEMPLATE_MODULE = "dnsim/dnsim.txt.vm";
-	
 	private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
 
@@ -88,7 +83,7 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 				format + " export from LEMS\n\nPlease note that this is a work in progress " + "and only works for a limited subset of LEMS/NeuroML 2!!\n" + Utils.getHeaderComment(format) + "\n"
 						+ lems.textSummary(false, false));
 
-		Velocity.init();
+		VelocityUtils.initializeVelocity();
 
 		VelocityContext context = new VelocityContext();
 
@@ -98,25 +93,14 @@ public class DNSimWriter extends ANeuroMLBaseWriter
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(TEMPLATE_MAIN);
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
 
 			StringWriter sw1 = new StringWriter();
-
-			template.merge(context, sw1);
-
+			boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.dnsimMainFile));
 			mainScript.append(sw1);
 
-			template = ve.getTemplate(TEMPLATE_MODULE);
-
 			StringWriter sw2 = new StringWriter();
-
-			template.merge(context, sw2);
-
+			boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.dnsimModuleFile));
 			moduleScript.append(sw2);
 
 			E.info("Writing " + format + " files to: " + this.getOutputFolder().getAbsolutePath());

@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.lemsml.export.base.ABaseWriter;
@@ -23,6 +20,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -30,9 +28,6 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class ModelicaWriter extends ABaseWriter
 {
-
-	private final String classTemplateFile = "modelica/main_class.vm";
-	private final String runTemplateFile = "modelica/run.vm";
 
 	String comm = "// ";
 	String commPre = "/*";
@@ -95,7 +90,8 @@ public class ModelicaWriter extends ABaseWriter
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 		addComment(compScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-		Velocity.init();
+		VelocityUtils.initializeVelocity();
+		
 		VelocityContext context = new VelocityContext();
 
 		try
@@ -105,24 +101,15 @@ public class ModelicaWriter extends ABaseWriter
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(runTemplateFile);
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
 
 			StringWriter sw1 = new StringWriter();
-
-			template.merge(context, sw1);
-
+			boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.modelicaRunTemplateFile));
+			
 			mainRunScript.append(sw1);
 
-			template = ve.getTemplate(classTemplateFile);
-
 			StringWriter sw2 = new StringWriter();
-
-			template.merge(context, sw2);
+			boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.modelicaClassTemplateFile));
 
 			compScript.append(sw2);
 

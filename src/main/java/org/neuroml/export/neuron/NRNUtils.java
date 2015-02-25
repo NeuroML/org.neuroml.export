@@ -36,7 +36,6 @@ public class NRNUtils
 	final static String commPost = "'''";
 
 	static final int commentOffset = 40;
-	static final String cellTemplateFile = "neuron/cell.vm";
 
 	static final String generalUnits = "\n(nA) = (nanoamp)\n" + "(uA) = (microamp)\n" + "(mA) = (milliamp)\n" + "(A) = (amp)\n" + "(mV) = (millivolt)\n" + "(mS) = (millisiemens)\n"
 			+ "(uS) = (microsiemens)\n" + "(molar) = (1/liter)\n" + "(kHz) = (kilohertz)\n" + "(mM) = (millimolar)\n" + "(um) = (micrometer)\n" + "(S) = (siemens)\n";

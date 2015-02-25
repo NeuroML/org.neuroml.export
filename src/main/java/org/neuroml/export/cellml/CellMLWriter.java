@@ -43,7 +43,6 @@ public class CellMLWriter extends ANeuroMLXMLWriter
 
 	public static final String GLOBAL_TIME_CELLML = "time";
 	
-	// private final String sbmlTemplateFile = "sbml/template.sbml";
 	public CellMLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.CELLML);

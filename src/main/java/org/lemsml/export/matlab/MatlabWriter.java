@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
@@ -24,6 +21,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
@@ -58,7 +56,7 @@ public class MatlabWriter extends ABaseWriter
 	public enum Method
 	{
 		// Default (& only supported version) is matlab_ode.vm
-		ODE("matlab/matlab_ode.vm"), EULER("matlab/matlab_euler.vm");
+		ODE(VelocityUtils.matlabOdeFile), EULER(VelocityUtils.matlabEulerFile);
 
 		private String filename;
 
@@ -109,7 +107,7 @@ public class MatlabWriter extends ABaseWriter
 
 		addComment(sb, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-		Velocity.init();
+		VelocityUtils.initializeVelocity();
 
 		VelocityContext context = new VelocityContext();
 
@@ -121,16 +119,10 @@ public class MatlabWriter extends ABaseWriter
 
 			DLemsWriter.putIntoVelocityContext(som, context);
 
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(method.getFilename());
-
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
+			
 			StringWriter sw = new StringWriter();
-
-			template.merge(context, sw);
+			boolean generationStatus = ve.evaluate(context, sw, "LOG", VelocityUtils.getTemplateAsReader(method.getFilename()));
 
 			sb.append(sw);
 		}
