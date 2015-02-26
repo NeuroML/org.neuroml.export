@@ -8,6 +8,7 @@ import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
 import org.neuroml.model.GateHHTauInf;
 import org.neuroml.model.GateHHUndetermined;
+import org.neuroml.model.GateTypes;
 import org.neuroml.model.IonChannel;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -26,12 +27,16 @@ public class ChannelInfoExtractor
 
 		for(GateHHUndetermined g : chan.getGate())
 		{
-
-			HHRateProcessor rateinfo = new HHRateProcessor(g);
 			InfoNode gate = new InfoNode();
-
-			gate.put("instances", g.getInstances());
-			generateRatePlots(chan, gate, rateinfo);
+			if (g.getType() == GateTypes.GATE_H_HRATES){
+				HHRateProcessor rateinfo = new HHRateProcessor(g);
+	
+				gate.put("instances", g.getInstances());
+				generateRatePlots(chan, gate, rateinfo);
+			}
+			else{
+				gate.put("instances", g.getInstances());
+			}
 
 			gates.put("gate " + g.getId(), gate);
 		}
