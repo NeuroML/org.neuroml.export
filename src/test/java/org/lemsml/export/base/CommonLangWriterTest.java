@@ -12,6 +12,7 @@ import org.lemsml.jlems.core.expression.ParseTree;
 import org.lemsml.jlems.core.expression.Parser;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.neuroml.export.utils.visitors.PythonVisitors;
 
 /**
  * @author boris

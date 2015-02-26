@@ -2,13 +2,12 @@ package org.neuroml.export.neuron;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
 
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
@@ -17,9 +16,10 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.Main;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.Utils;
+import org.neuroml.export.UtilsTest;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -81,7 +81,7 @@ public class NeuronWriterTest extends TestCase {
     public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
         E.info("Loading: " + nmlFilename);
         
-		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
+		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
         
     	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
         
@@ -111,21 +111,12 @@ public class NeuronWriterTest extends TestCase {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
        
-        NeuronWriter nw = new NeuronWriter(lems);
+        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+        List<File> outputFiles = nw.convert();
 
-        File mainFile = new File(AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+        assertTrue(outputFiles.size() >= 2);
 
-        E.info("Generating NEURON from " + localFile);
-
-        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
-
-        assertTrue(genFiles.size() >= 2);
-
-        for (File f : genFiles) {
-            E.info("Written model behaviour to: " + f.getAbsolutePath());
-            assertTrue(f.exists());
-            assertTrue(f.length() > 0);
-        }
+		UtilsTest.checkConvertedFiles(outputFiles);
     }
 
     public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
@@ -133,21 +124,12 @@ public class NeuronWriterTest extends TestCase {
         MinimalMessageHandler.setVeryMinimal(true);
         Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
 
-        NeuronWriter nw = new NeuronWriter(lems);
+        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
+        List<File> outputFiles = nw.convert();
 
-        File mainFile = new File(AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
+        assertTrue(outputFiles.size() >= 2);
 
-        E.info("Generating NEURON from " + exampleFilename);
-
-        ArrayList<File> genFiles = nw.generateMainScriptAndMods(mainFile);
-
-        assertTrue(genFiles.size() >= 2);
-
-        for (File f : genFiles) {
-            E.info("Written model behaviour to: " + f.getAbsolutePath());
-            assertTrue(f.exists());
-            assertTrue(f.length() > 0);
-        }
+		UtilsTest.checkConvertedFiles(outputFiles);
 
     }
 

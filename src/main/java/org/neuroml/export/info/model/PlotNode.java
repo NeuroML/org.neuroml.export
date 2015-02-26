@@ -13,10 +13,10 @@ import org.neuroml.export.info.model.pairs.Pair;
 public class PlotNode extends PlotMetadataNode
 {
 
-//	private String _plotTitle;
-//	private String _xAxisLabel;
-//	private String _yAxisLabel;
-	private List<Data> _data=null;
+	// private String _plotTitle;
+	// private String _xAxisLabel;
+	// private String _yAxisLabel;
+	private List<Data> _data = null;
 
 	public PlotNode(String plotTitle, String xAxisLabel, String yAxisLabel, Double initialValue, Double finalValue, Double stepValue)
 	{
@@ -27,15 +27,15 @@ public class PlotNode extends PlotMetadataNode
 	{
 		super(plotTitle, xAxisLabel, yAxisLabel);
 	}
-	
+
 	/**
 	 * @return
 	 */
 	public List<Data> getData()
 	{
-		if(_data==null)
+		if(_data == null)
 		{
-			_data=new ArrayList<Data>();
+			_data = new ArrayList<Data>();
 		}
 		return _data;
 	}
@@ -45,19 +45,20 @@ public class PlotNode extends PlotMetadataNode
 	{
 		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Data=" + toTruncatedArray(_data) + "]";
 	}
-    
+
 	public String toShortString()
 	{
 		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Num data points=" + _data.size() + "]";
 	}
 
-	private String toTruncatedArray(List<Data> _data) {
+	private String toTruncatedArray(List<Data> _data)
+	{
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(Data data : _data)
 		{
-			IterablePair<Double,Double> listPair = new IterablePair<Double, Double>(data.getXData(),data.getYData());
-			for (Pair<Double, Double> d: listPair)
+			IterablePair<Double, Double> listPair = new IterablePair<Double, Double>(data.getXData(), data.getYData());
+			for(Pair<Double, Double> d : listPair)
 			{
 				sb.append(String.format("%.4f %.4f", d.first(), d.second()));
 			}
@@ -65,6 +66,5 @@ public class PlotNode extends PlotMetadataNode
 		return sb.toString();
 
 	}
-	
-	
+
 }

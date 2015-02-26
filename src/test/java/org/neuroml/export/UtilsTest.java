@@ -3,6 +3,7 @@ package org.neuroml.export;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -14,10 +15,12 @@ import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.type.Component;
 import org.neuroml.model.IafTauCell;
 import org.neuroml.model.util.NeuroMLException;
@@ -123,6 +126,20 @@ public class UtilsTest extends TestCase {
             System.out.println("To:   "+n);
             assertEquals(s.replaceAll("\\s+",""), n.replaceAll("\\s+",""));
         }
+    }
+    
+    public static void checkConvertedFiles(List<File> files) 
+    {
+        
+		assertTrue(files.size()>=1);
+        
+        for(File genFile : files)
+		{
+            E.info("Checking generated file: " + genFile.getAbsolutePath());
+			assertTrue(genFile.exists());
+			assertTrue(genFile.length()>0);
+            
+		}
     }
     
         

@@ -28,7 +28,7 @@ public class PlotMetadataNode
 		this._finalValue = finalValue;
 		this._stepValue = stepValue;
 	}
-	
+
 	public PlotMetadataNode(String plotTitle, String xAxisLabel, String yAxisLabel)
 	{
 		super();
@@ -90,19 +90,20 @@ public class PlotMetadataNode
 	{
 		return "MetadataPlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + "]";
 	}
-    
+
 	public String toShortString()
 	{
 		return "MetadataPlotNode [Title=" + _plotTitle + ", X=" + _xAxisLabel + ", Y=" + _yAxisLabel + "]";
 	}
 
-	private String toTruncatedArray(List<Data> _data) {
+	private String toTruncatedArray(List<Data> _data)
+	{
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(Data data : _data)
 		{
-			IterablePair<Double,Double> listPair = new IterablePair<Double, Double>(data.getXData(),data.getYData());
-			for (Pair<Double, Double> d: listPair)
+			IterablePair<Double, Double> listPair = new IterablePair<Double, Double>(data.getXData(), data.getYData());
+			for(Pair<Double, Double> d : listPair)
 			{
 				sb.append(String.format("%.4f %.4f", d.first(), d.second()));
 			}
@@ -110,6 +111,5 @@ public class PlotMetadataNode
 		return sb.toString();
 
 	}
-	
-	
+
 }
