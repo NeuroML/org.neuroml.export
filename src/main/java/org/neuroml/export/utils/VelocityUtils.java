@@ -55,7 +55,7 @@ public class VelocityUtils
 	}
 	
 	public static Reader getTemplateAsReader(String path){
-		InputStream inputStream = VelocityUtils.class.getResourceAsStream("/neuron/cell.vm");
+		InputStream inputStream = VelocityUtils.class.getResourceAsStream(path);
         Reader reader = new InputStreamReader(inputStream);
         return reader;
         
