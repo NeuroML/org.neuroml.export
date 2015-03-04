@@ -452,7 +452,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(Component projection : projections)
             {
-
                 String id = projection.getID();
                 String prePop = projection.getStringValue("presynapticPopulation");
                 String postPop = projection.getStringValue("postsynapticPopulation");
@@ -483,29 +482,26 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 int index = 0;
                 for(Component conn : projection.getAllChildren())
                 {
-
                     if(conn.getComponentType().getName().equals(NeuroMLElements.CONNECTION))
                     {
                         int preCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("preCellId"));
                         int postCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("postCellId"));
 
-                        int preSegmentId = conn.hasTextParam("preSegmentId") ? Integer.parseInt(conn.getStringValue("preSegmentId")) : 0;
-                        int postSegmentId = conn.hasTextParam("postSegmentId") ? Integer.parseInt(conn.getStringValue("postSegmentId")) : 0;
+                        int preSegmentId = conn.hasAttribute("preSegmentId") ? Integer.parseInt(conn.getAttributeValue("preSegmentId")) : 0;
+                        int postSegmentId = conn.hasAttribute("postSegmentId") ? Integer.parseInt(conn.getAttributeValue("postSegmentId")) : 0;
 
-                        float preFractionAlong = conn.hasTextParam("preFractionAlong") ? Float.parseFloat(conn.getStringValue("preFractionAlong")) : 0.5f;
-                        float postFractionAlong = conn.hasTextParam("postFractionAlong") ? Float.parseFloat(conn.getStringValue("postFractionAlong")) : 0.5f;
+                        float preFractionAlong = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
 
-                        if(preSegmentId != 0 || postSegmentId != 0)
-                        {
-                            throw new GenerationException("Connections on locations other than segment id=0 not yet supported...");
-                        }
+                        addComment(main, String.format("Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong));
+
 
                         String preSecName;
 
                         if(preCell != null)
                         {
                             NamingHelper nhPre = new NamingHelper(preCell);
-                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(preCell.getMorphology().getSegment().get(0)));
+                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(preCell.getMorphology().getSegment().get(preSegmentId)));
                         }
                         else
                         {
@@ -516,7 +512,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(postCell != null)
                         {
                             NamingHelper nhPost = new NamingHelper(postCell);
-                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(postCell.getMorphology().getSegment().get(0)));
+                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(postCell.getMorphology().getSegment().get(postSegmentId)));
                         }
                         else
                         {
@@ -699,11 +695,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
                         int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
 
-                        int preSegmentId = ec.hasStringValue("preSegment") ? Integer.parseInt(ec.getStringValue("preSegment")) : 0;
-                        int postSegmentId = ec.hasStringValue("postSegment") ? Integer.parseInt(ec.getStringValue("postSegment")) : 0;
+                        int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
+                        int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
 
-                        float preFractionAlong = ec.hasStringValue("preFractionAlong") ? Float.parseFloat(ec.getStringValue("preFractionAlong")) : 0.5f;
-                        float postFractionAlong = ec.hasStringValue("postFractionAlong") ? Float.parseFloat(ec.getStringValue("postFractionAlong")) : 0.5f;
+                        float preFractionAlong = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
 
                         // System.out.println("preCellId: "+preCellId+", preSegmentId: "+preSegmentId+", preFractionAlong: "+preFractionAlong);
 
@@ -762,8 +758,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component input : inputs)
                 {
                     String targetString = input.getStringValue("target");
-                    int segmentId = input.hasStringValue("segmentId") ? Integer.parseInt(input.getStringValue("segmentId")) : 0;
-                    float fractionAlong = input.hasStringValue("fractionAlong") ? Float.parseFloat(input.getStringValue("fractionAlong")) : 0.5f;
+                    
+                    int segmentId = input.hasAttribute("segmentId") ? Integer.parseInt(input.getAttributeValue("segmentId")) : 0;
+                    float fractionAlong = input.hasAttribute("fractionAlong") ? Float.parseFloat(input.getAttributeValue("fractionAlong")) : 0.5f;
 
                     int cellNum = Utils.parseCellRefStringForCellNum(targetString);
                     String popName = Utils.parseCellRefStringForPopulation(targetString);
@@ -2491,8 +2488,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
+        //lemsFiles.add(new File("../git/SpinyStellateNMDA/NeuroML2/LEMS_TestMultiSim.xml"));
         
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml")); 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml")); 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
