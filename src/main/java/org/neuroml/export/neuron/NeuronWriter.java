@@ -61,7 +61,6 @@ import org.neuroml.model.util.NeuroMLException;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class NeuronWriter extends ANeuroMLBaseWriter
 {
-
     private final ArrayList<String> generatedModComponents = new ArrayList<String>();
 
     private final List<File> outputFiles = new ArrayList<File>();
@@ -638,12 +637,22 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         Component fromComp = popIdsVsComps.get(fromPop);
                         float threshold = 0;
-                        if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
+                        
+                        String sourceVarToListenFor = "&v(0.5)";
+                        
+                        if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+                           fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
                         {
                             threshold = NRNUtils.convertToNeuronUnits(fromComp.getStringValue("thresh"), lems);
                         }
+                        
+                        if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
+                        {
+                            String hocMechName = NRNUtils.getMechanismName(fromComp.getComponentType().getName(), fromPop) + "["+fromCellId+"]";
+                            sourceVarToListenFor = hocMechName;
+                        }
                         main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synArrayName, i));
-                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(&v(%f), %s[%d], %f, %f, %f)\")  \n\n", fromSecName, synArrayName, i, 0.5, synArrayName, i, threshold, delay, weight));
+                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %f, %f)\")  \n\n", fromSecName, synArrayName, i, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
                     }
 
                 }
@@ -2488,12 +2497,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
-        //lemsFiles.add(new File("../git/SpinyStellateNMDA/NeuroML2/LEMS_TestMultiSim.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
+       
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml")); 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml")); 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        
+        //lemsFiles.add(new File("../git/SpinyStellateNMDA/NeuroML2/LEMS_TestMultiSim.xml"));
+        
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/InputTest.xml"));
         
         lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml")); 
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_TestBasket.xml")); 
@@ -2501,7 +2514,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml")); 
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml")); lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml")); 
+        lemsFiles.add(new File("src/test/resources/BIOMD0000000185_LEMS.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
 
@@ -2565,28 +2579,19 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     @Override
-    public List<File> convert()
+    public List<File> convert() throws GenerationException
     {
-        List<File> outputFiles = new ArrayList<File>();
-
         try
         {
-            outputFiles = this.generateMainScriptAndMods();
+            generateMainScriptAndMods();
         }
         catch(LEMSException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch(GenerationException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new GenerationException("Problem generating "+format+" files", e);
         }
         catch(NeuroMLException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new GenerationException("Problem generating "+format+" files", e);
         }
 
         return outputFiles;
