@@ -25,45 +25,57 @@ import org.neuroml.model.util.NeuroMLException;
 public class ExportFactory
 {
 
-	public IBaseWriter getExportWriter(Lems lems, File outputFolder, String outputFileName, String stringFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
+	public static IBaseWriter getExportWriter(Lems lems, File outputFolder, String outputFileName, String stringFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
 		Format format = Format.valueOf(stringFormat);
 		return getExportWriter(lems, outputFolder, outputFileName, format);
 	}			
 	
-	public IBaseWriter getExportWriter(Lems lems, File outputFolder, String outputFileName, Format format) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
+	public static IBaseWriter getExportWriter(Lems lems, Format format) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
+		IBaseWriter writer = null;
 		switch(format)
 		{
 			case C:
-				return new CWriter(lems, outputFolder, outputFileName);
+				writer = new CWriter(lems);
+				break;
 			case DLEMS:
-				return new DLemsWriter(lems, outputFolder, outputFileName);
+				writer = new DLemsWriter(lems);
+				break;
 			case MATLAB:
-				return new MatlabWriter(lems, outputFolder, outputFileName);
+				writer = new MatlabWriter(lems);
+				break;
 			case MODELICA:
-				return new ModelicaWriter(lems, outputFolder, outputFileName);
+				writer = new ModelicaWriter(lems);
+				break;
 			case SEDML:	
 				//FIXME
 				//String inputFileName = ((URL)((ModelWrapper) model).getModel(NeuroMLAccessUtility.URL_ID)).getPath();
-				String inputFileName = "";
-				return new SEDMLWriter(lems, outputFolder, outputFileName, inputFileName);
+				writer = new SEDMLWriter(lems);
+				break;
 			case BRIAN:
-				return new BrianWriter(lems, outputFolder, outputFileName);
+				writer = new BrianWriter(lems);
+				break;
 			case CELLML:
-				return new CellMLWriter(lems, outputFolder, outputFileName);
+				writer = new CellMLWriter(lems);
+				break;
 			case DN_SIM:
-				return new DNSimWriter(lems, outputFolder, outputFileName);
+				writer = new DNSimWriter(lems);
+				break;
 			case GRAPH_VIZ:
-				return new GraphWriter(lems, outputFolder, outputFileName);
+				writer = new GraphWriter(lems);
+				break;
 			case NEST:
-				return new NestWriter(lems, outputFolder, outputFileName);
+				writer = new NestWriter(lems);
+				break;
 			case NEURON:
-				NeuronWriter neuronWriter = new NeuronWriter(lems, outputFolder, outputFileName);
-				neuronWriter.setNoGui(true);
-				return neuronWriter;
+				writer = new NeuronWriter(lems);
+				((NeuronWriter)writer).setNoGui(true);
+				break;
 			case PYNN:
-				return new PyNNWriter(lems, outputFolder, outputFileName);
+				writer = new PyNNWriter(lems);
+				break;
 			case SBML:
-				return new SBMLWriter(lems, outputFolder, outputFileName);
+				writer = new SBMLWriter(lems);
+				break;
 			case SVG:
 				//FIXME: We need to look for a method which converts from lems to neuroml
 				// String outputFileName = "";
@@ -75,10 +87,18 @@ public class ExportFactory
 //						exportWriter = new XineMLWriter(lems, outputFolder, outputFileName);
 				break;
 			case XPP:
-				return new XppWriter(lems, outputFolder, outputFileName);
+				writer = new XppWriter(lems);
 			default:
 				break;
 		}
-		return null;
+		
+		return writer;
+	}
+	
+	public static IBaseWriter getExportWriter(Lems lems, File outputFolder, String outputFileName, Format format) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
+		IBaseWriter writer = getExportWriter(lems, format);
+		writer.setOutputFileName(outputFileName);
+		writer.setOutputFolder(outputFolder);
+		return writer;
 	}
 }

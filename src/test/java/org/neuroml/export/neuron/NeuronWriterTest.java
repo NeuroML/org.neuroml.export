@@ -39,73 +39,73 @@ public class NeuronWriterTest extends TestCase {
         testGetMainScript(exampleFilename, lems);
     }*/
 
-    public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
-
-        String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-        testGetMainScript(exampleFilename);
-    }
-
-    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
-    	
-    	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
-         testGetMainScript(exampleFilename);
-     }
-       
-    
-    public void testChannel() throws LEMSException, IOException, GenerationException {
-
-        testComponentToMod("NML2_SimpleIonChannel.nml", "na");
-    }
-
-    public void testSynapse() throws LEMSException, IOException, GenerationException {
-
-        testComponentToMod("NML2_SynapseTypes.nml", "blockStpSynDepFac");
-    }
-
-    public void testIaFCells() throws LEMSException, IOException, GenerationException {
-
-        testComponentToMod("NML2_AbstractCells.nml", "iafTau");
-        testComponentToMod("NML2_AbstractCells.nml", "iafTauRef");
-        testComponentToMod("NML2_AbstractCells.nml", "iaf");
-        testComponentToMod("NML2_AbstractCells.nml", "iafRef");
-    }
-    
-    public void testInputs() throws LEMSException, IOException, GenerationException {
-
-        testComponentToMod("NML2_Inputs.nml", "pulseGen");
-        testComponentToMod("NML2_Inputs.nml", "sineGen");
-        testComponentToMod("NML2_Inputs.nml", "rampGen");
-        testComponentToMod("NML2_Inputs.nml", "vClamp");
-    }
-
-    public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
-        E.info("Loading: " + nmlFilename);
-        
-		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
-        
-    	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
-        
-        Lems lems = Utils.readLemsNeuroMLFile(nmlLems).getLems();
-        Component comp = lems.getComponent(compId);
-        E.info("Found component: " + comp);
-
-        String modFile = NeuronWriter.generateModFile(comp);
-
-        String origName = comp.getComponentType().getName();
-        String newName = "MOD_" + compId;
-
-        modFile = modFile.replaceAll(origName, newName);
-        File newMechFile = new File(AppTest.getTempDir(), newName + ".mod");
-
-        FileUtil.writeStringToFile(modFile, newMechFile);
-        E.info("Written to file: " + newMechFile);
-    }
-    
-    public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
-
-    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
-    	generateMainScript(exampleSBML);
-	}
+//    public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+//
+//        String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
+//        testGetMainScript(exampleFilename);
+//    }
+//
+//    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+//    	
+//    	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
+//         testGetMainScript(exampleFilename);
+//     }
+//       
+//    
+//    public void testChannel() throws LEMSException, IOException, GenerationException {
+//
+//        testComponentToMod("NML2_SimpleIonChannel.nml", "na");
+//    }
+//
+//    public void testSynapse() throws LEMSException, IOException, GenerationException {
+//
+//        testComponentToMod("NML2_SynapseTypes.nml", "blockStpSynDepFac");
+//    }
+//
+//    public void testIaFCells() throws LEMSException, IOException, GenerationException {
+//
+//        testComponentToMod("NML2_AbstractCells.nml", "iafTau");
+//        testComponentToMod("NML2_AbstractCells.nml", "iafTauRef");
+//        testComponentToMod("NML2_AbstractCells.nml", "iaf");
+//        testComponentToMod("NML2_AbstractCells.nml", "iafRef");
+//    }
+//    
+//    public void testInputs() throws LEMSException, IOException, GenerationException {
+//
+//        testComponentToMod("NML2_Inputs.nml", "pulseGen");
+//        testComponentToMod("NML2_Inputs.nml", "sineGen");
+//        testComponentToMod("NML2_Inputs.nml", "rampGen");
+//        testComponentToMod("NML2_Inputs.nml", "vClamp");
+//    }
+//
+//    public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
+//        E.info("Loading: " + nmlFilename);
+//        
+//		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
+//        
+//    	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
+//        
+//        Lems lems = Utils.readLemsNeuroMLFile(nmlLems).getLems();
+//        Component comp = lems.getComponent(compId);
+//        E.info("Found component: " + comp);
+//
+//        String modFile = NeuronWriter.generateModFile(comp);
+//
+//        String origName = comp.getComponentType().getName();
+//        String newName = "MOD_" + compId;
+//
+//        modFile = modFile.replaceAll(origName, newName);
+//        File newMechFile = new File(AppTest.getTempDir(), newName + ".mod");
+//
+//        FileUtil.writeStringToFile(modFile, newMechFile);
+//        E.info("Written to file: " + newMechFile);
+//    }
+//    
+//    public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
+//
+//    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+//    	generateMainScript(exampleSBML);
+//	}
 	
 	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
 

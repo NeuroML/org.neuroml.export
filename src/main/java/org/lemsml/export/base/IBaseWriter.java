@@ -12,4 +12,8 @@ public interface IBaseWriter
 	
 	void setSupportedFeatures();
 	
+	void setOutputFolder(File outputFolder);
+	
+	void setOutputFileName(String outputFileName);
+	
 }
