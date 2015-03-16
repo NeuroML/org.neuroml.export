@@ -97,8 +97,10 @@ public class ExportFactory
 	
 	public static IBaseWriter getExportWriter(Lems lems, File outputFolder, String outputFileName, Format format) throws ModelFeatureSupportException, NeuroMLException, LEMSException{
 		IBaseWriter writer = getExportWriter(lems, format);
-		writer.setOutputFileName(outputFileName);
-		writer.setOutputFolder(outputFolder);
+		if (writer != null){
+			writer.setOutputFileName(outputFileName);
+			writer.setOutputFolder(outputFolder);
+		}
 		return writer;
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.lemsml.export.base.IBaseWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
@@ -22,9 +23,14 @@ public class SupportedFormats
 		for (Format format : Format.values()){
 			try
 			{
-				ExportFactory.getExportWriter(lems, format);
-				supportedOutputs.add(format);
-				E.info("Format " + format + " supported");
+				IBaseWriter writer = ExportFactory.getExportWriter(lems, format);
+				if (writer != null){
+					supportedOutputs.add(format);
+					E.info("Format " + format + " supported");
+				}
+				else{
+					E.info("Format " + format + " not supported");
+				}
 			}
 			catch(ModelFeatureSupportException e)
 			{
