@@ -52,6 +52,12 @@ public class DLemsWriter extends ABaseWriter
 
 	CommonLangWriter writer;
 
+	public DLemsWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.DLEMS);
+		this.writer = null;
+	}
+	
 	public DLemsWriter(Lems lems, CommonLangWriter writer, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.DLEMS, checkSupportedFeatures);

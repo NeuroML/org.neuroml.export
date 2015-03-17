@@ -23,6 +23,7 @@ public enum Format
 	NINEML("NineML", "9ml"),
 	SPINEML("SpineML", "spineml"),
 	INFORMATION("Summary", ""),
+	XINEML("Xineml", ""),
 	XPP("Xpp", "ode"),
 	PNG("PNG", "png");
 	
