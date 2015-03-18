@@ -141,9 +141,9 @@ public class NRNUtils
 		return newExpr;
 	}
 
-	public static String getMechanismName(String compType, String popName)
+	public static String getMechanismName(Component comp, String popName)
 	{
-		return String.format("m_%s_%s", compType, popName);
+		return String.format("m_%s_%s", comp.getID(), popName);
 	}
 
 	protected static String getNeuronUnit(String dimensionName)

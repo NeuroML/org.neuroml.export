@@ -394,9 +394,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     main.append("h(\" {n_" + popName + " = " + number + "} \")\n");
 
-                    String mechName = NRNUtils.getMechanismName(compTypeName, popName);
+                    String mechName = NRNUtils.getMechanismName(popComp, popName);
 
-                    addComment(main, "Population " + popName + " contains instances of " + popComp + "\n" + "whose dynamics will be implemented as a mechanism (" + compTypeName + ") in a mod file");
+                    addComment(main, "Population " + popName + " contains instances of " + popComp + "\n" + 
+                                     "whose dynamics will be implemented as a mechanism (" + popComp.getID() + ") in a mod file");
 
                     main.append("h(\" create " + popName + "[" + number + "]\")\n");
                     main.append("h(\" objectvar " + mechName + "[" + number + "] \")\n\n");
@@ -421,7 +422,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
 
                     main.append("    h." + instName + ".push()\n");
-                    main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { " + mechName + "[%i] = new " + compTypeName + "(0.5) } \"%(i,i))\n\n");
+                    main.append("    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { " + mechName + "[%i] = new " + popComp.getID() + "(0.5) } \"%(i,i))\n\n");
 
                     if(!compMechsCreated.containsKey(compTypeName))
                     {
@@ -430,7 +431,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     compMechsCreated.put(compTypeName, compMechsCreated.get(compTypeName) + 1);
 
-                    String hocMechName = NRNUtils.getMechanismName(compTypeName, popName) + "[i]";
+                    String hocMechName = NRNUtils.getMechanismName(popComp, popName) + "[i]";
 
                     compMechNamesHoc.put(instName, hocMechName);
 
@@ -538,7 +539,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             }
                             else if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                             {
-                                String hocMechName = NRNUtils.getMechanismName(preComp.getComponentType().getName(), prePop) + "["+preCellId+"]";
+                                String hocMechName = NRNUtils.getMechanismName(preComp, prePop) + "["+preCellId+"]";
                                 sourceVarToListenFor = hocMechName;
                             }
                             main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synObjName, index));
@@ -648,7 +649,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         
                         if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                         {
-                            String hocMechName = NRNUtils.getMechanismName(fromComp.getComponentType().getName(), fromPop) + "["+fromCellId+"]";
+                            String hocMechName = NRNUtils.getMechanismName(fromComp, fromPop) + "["+fromCellId+"]";
                             sourceVarToListenFor = hocMechName;
                         }
                         main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synArrayName, i));
@@ -1185,7 +1186,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     {
         StringBuilder mod = new StringBuilder();
 
-        String mechName = comp.getComponentType().getName();
+        String mechName = comp.getID();
 
         mod.append("TITLE Mod file for component: " + comp + "\n\n");
 
