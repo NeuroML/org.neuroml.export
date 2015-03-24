@@ -235,7 +235,8 @@
 
                 <species segmentGroup="soma_group" id="ca" ion="ca" concentrationModel="Ca_conc" initialConcentration="5.0E-11 mol_per_cm3" initialExtConcentration="3.0E-6 mol_per_cm3"/>
 
-                <resistivity value="0.2 kohm_cm"/>
+                <resistivity value="0.21 kohm_cm" segmentGroup="soma_group"/>
+                <resistivity value="0.22 kohm_cm" segmentGroup="dendrite_group"/>
 
             </intracellularProperties>
 

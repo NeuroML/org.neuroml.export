@@ -75,13 +75,14 @@
 
                 <specificCapacitance value="1.5 uF_per_cm2"/>
 
-                <initMembPotential value="-65.0 mV"/>
+                <initMembPotential value="-65.111 mV"/>
 
             </membraneProperties>
 
             <intracellularProperties>
 
-                <resistivity value="0.07 kohm_cm"/>
+                <resistivity value="0.21 kohm_cm" segmentGroup="soma_group"/>
+                <resistivity value="0.22 kohm_cm" segmentGroup="dendrite_group"/>
 
             </intracellularProperties>
 
