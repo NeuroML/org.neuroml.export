@@ -17,3 +17,8 @@ src/test/resources/*.mod
 src/test/resources/*.dat
 src/test/resources/*nrn*
 x86_64
+
+src/test/resources/examples/*.mod
+src/test/resources/examples/*.dat
+src/test/resources/examples/*.hoc
+src/test/resources/examples/*nrn.py
