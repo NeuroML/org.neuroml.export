@@ -1607,12 +1607,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ratesMethod.insert(0, localsLine);
         // blockDerivative.insert(0, localsLine);
 
-        blockInitial.append("rates()\n");
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE) || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
-            blockInitial.append("\n" + NeuroMLElements.TEMPERATURE + " = " + NRNUtils.NEURON_TEMP + " + 273.15\n");
+            blockInitial.append(NeuroMLElements.TEMPERATURE + " = " + NRNUtils.NEURON_TEMP + " + 273.15\n\n");
         }
+        
+        blockInitial.append("rates()\n");
+        blockInitial.append("rates() ? To ensure correct initialisation.\n");
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, paramMappings);
 
@@ -2498,6 +2500,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml")); 
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
        
