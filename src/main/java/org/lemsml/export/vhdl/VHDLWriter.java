@@ -34,8 +34,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.lemsml.export.base.GenerationException;
-import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.export.base.ABaseWriter;
 import org.lemsml.export.vhdl.edlems.EDCase;
 import org.lemsml.export.vhdl.edlems.EDComponent;
 import org.lemsml.export.vhdl.edlems.EDCondition;
@@ -69,8 +68,8 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.base.BaseWriter;
 import org.lemsml.jlems.core.type.Attachments;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
@@ -105,11 +104,16 @@ import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
 import org.lemsml.jlems.core.util.StringUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
-import org.neuroml.export.Utils;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.model.util.NeuroMLException;
 
 
 
-public class VHDLWriter extends BaseWriter {
+public class VHDLWriter extends ABaseWriter {
 	
 	enum SOMKeywords
 	{
@@ -190,8 +194,8 @@ public class VHDLWriter extends BaseWriter {
 	 }};
 	
 
-	public VHDLWriter(Lems lems) {
-		super(lems, "VHDL");
+	public VHDLWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
+		super(lems, Format.VHDL);
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);
 	}
@@ -350,7 +354,6 @@ public class VHDLWriter extends BaseWriter {
 		boolean useSynapseMux = false;
 		try
 		{
-			DLemsWriter somw = new DLemsWriter(lems);
 
 			Target target = lems.getTarget();
 			Component simCpt = target.getComponent();
@@ -916,13 +919,13 @@ public class VHDLWriter extends BaseWriter {
 					}
 					if (conn.getComponentType().getName().matches("projection") )
 					{
-						String presynapticPopulation = conn.attributes.getByName("presynapticPopulation").getValue();
-						String postsynapticPopulation = conn.attributes.getByName("postsynapticPopulation").getValue();
+						String presynapticPopulation = conn.getAttributes().getByName("presynapticPopulation").getValue();
+						String postsynapticPopulation = conn.getAttributes().getByName("postsynapticPopulation").getValue();
 						for(Component connection: conn.getAllChildren())
 						{
 							if (connection.getTypeName().matches("connection"))
 							{
-								String postCellId = connection.attributes.getByName("postCellId").getValue();
+								String postCellId = connection.getAttributes().getByName("postCellId").getValue();
 								if (postCellId.endsWith(comp.getID()))
 								{
 									Component comp2 = (conn.getRefComponents().get("synapse"));
@@ -1320,16 +1323,24 @@ public class VHDLWriter extends BaseWriter {
 	
 
 	@Override
-	protected void setSupportedFeatures() {
-		// TODO Auto-generated method stub
-		
+	public void setSupportedFeatures()
+	{
+		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
+		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
+
 	}
 
 
-
-	@Override
-	public String getMainScript() throws GenerationException, JAXBException,
-			Exception {
+	public List convert() throws GenerationException, IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}

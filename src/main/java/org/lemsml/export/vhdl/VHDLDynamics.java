@@ -429,13 +429,13 @@ public class VHDLDynamics {
 							}
 							if (conn.getComponentType().getName().matches("projection") )
 							{
-								String presynapticPopulation = conn.attributes.getByName("presynapticPopulation").getValue();
-								String postsynapticPopulation = conn.attributes.getByName("postsynapticPopulation").getValue();
+								String presynapticPopulation = conn.getAttributes().getByName("presynapticPopulation").getValue();
+								String postsynapticPopulation = conn.getAttributes().getByName("postsynapticPopulation").getValue();
 								for(Component connection: conn.getAllChildren())
 								{
 									if (connection.getTypeName().matches("connection"))
 									{
-										String postCellId = connection.attributes.getByName("postCellId").getValue();
+										String postCellId = connection.getAttributes().getByName("postCellId").getValue();
 										if (postCellId.endsWith(comp.getID()))
 										{
 											edDerivedVariable.isSynapseSelect = true;
