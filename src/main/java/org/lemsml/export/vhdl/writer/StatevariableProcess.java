@@ -586,7 +586,7 @@ public class StatevariableProcess {
 		for(Iterator<EDRegime> l = comp.regimes.iterator(); l.hasNext(); ) {
 			EDRegime regime = l.next();
 			boolean hasEDDynamics = false;
-			for(Iterator<EDDynamic> i = regime.dynamics.iterator(); i.hasNext(); ) {
+			for(Iterator<EDDynamic> i = regime.dynamics.iterator(); i.hasNext(); )  	{
 				EDDynamic dynamic = i.next();
 				if (dynamic.name.matches(state.name))
 				{
@@ -602,7 +602,7 @@ public class StatevariableProcess {
 						"_" + state.name + "_temp_1;\r\n" + 
 						"  end if;\r\n" + 
 						"");
-				currentTemporarySignalID++;
+				currentTemporarySignalID = 2;
 			}
 			else {
 				sb.append("\r\n" + 
@@ -612,7 +612,9 @@ public class StatevariableProcess {
 						"");
 			}
 			
-			
+		}
+		for(Iterator<EDRegime> l = comp.regimes.iterator(); l.hasNext(); ) {
+			EDRegime regime = l.next();
 			
 			for(Iterator<EDEvent> i = regime.events.iterator(); i.hasNext(); ) {
 				EDEvent event = i.next();
@@ -752,11 +754,11 @@ public class StatevariableProcess {
 			int currentPort)
 	{
 		StringBuilder sensitivityList = new StringBuilder();
-		sensitivityList.append("sysparam_time_timestep");
+		sensitivityList.append("clk,sysparam_time_timestep");
 		
 
 		sensitivityList = new StringBuilder();
-		sensitivityList.append("sysparam_time_timestep,init_model");
+		sensitivityList.append("clk,sysparam_time_timestep,init_model");
 		int temporarySignalsRequired = 1;
 		StringBuilder finalEDEventPort = new StringBuilder();
 		finalEDEventPort.append("eventport_" + port.direction + "_" + port.name + 
@@ -847,6 +849,7 @@ public class StatevariableProcess {
 		
 		sb.append("\r\n\r\n" + 
 				"begin\r\n" + 
+				"if rising_edge(clk) and subprocess_all_ready_shot = '1' then\r\n" + 
 				"");
 		
 		int currentVariableID = 1;
@@ -915,17 +918,18 @@ public class StatevariableProcess {
 				}					
 			}
 		}
-		if (currentVariableID == 0) {
+		if (currentVariableID == 1) {
 			finalEDEventPort.append( " '0' ");
 		}
-		sb.append(finalEDEventPort.toString() + ";\r\n\r\n" + 
+		sb.append(finalEDEventPort.toString() + ";\r\n\r\nend if;\r\n\r\n" + 
 				"end process;\r\n" + 
 				"---------------------------------------------------------------------\r\n" );
 		
 		 
 	}
 	
-	static void writeStateVariableProcess(StringBuilder sb, EDComponent comp,boolean isTopLevelNeuronModel)
+	static void writeStateVariableProcess(StringBuilder sb, EDComponent comp,
+			boolean isTopLevelNeuronModel, boolean useVirtualSynapses)
 	{
 		StringBuilder sensitivityList = new StringBuilder();
 		writeDynamicsPreCombProc(sb,comp,sensitivityList);
@@ -1100,6 +1104,8 @@ public class StatevariableProcess {
 			int count = 0;
 			for(Iterator<EDComponent> j = comp.Children.iterator(); j.hasNext(); ) {
 				EDComponent child = j.next(); 
+				if (child.isSynapse && useVirtualSynapses)
+					continue;
 				childCombiner.append(child.name + "_component_done,");
 				if (count > 0)
 				{
@@ -1184,6 +1190,17 @@ public class StatevariableProcess {
 					"  end if;\r\n" + 
 					"end process step_once_complete_synch;\r\n" + 
 					"---------------------------------------------------------------------\r\n");
+		}
+		else
+		{
+			for(Iterator<EDEventPort> j = comp.eventports.iterator(); j.hasNext(); ) {
+				EDEventPort port = j.next();
+				if (port.direction.matches("out"))
+				{
+					sb.append("        eventport_" + port.direction +  "_" + port.name + 
+							" <=  eventport_" + port.direction + "_" + port.name + "_internal ;\r\n" );
+				}
+			}
 		}
 		sb.append("\r\n" + 
 				"end RTL;\r\n" + 

@@ -36,6 +36,11 @@ public class VHDLFixedPointDimensions {
 					Integer fract = fract1 + fract2;
 					edSignal.integer= inte;
 					edSignal.fraction= fract;
+					
+					//override to keep within 32 bits for everything
+
+					edSignal.integer= 18;
+					edSignal.fraction= -13;
 				}
 			
 	}
@@ -45,7 +50,7 @@ public class VHDLFixedPointDimensions {
 		int fract = 0;
 		if (dimension == null || dimension.equals("none"))
 		{
-			 fract = -16;//-16
+			 fract = -13;//-16
 		} else if (dimension.equals("voltage"))
 		{
 			 fract = -22;//-24
@@ -89,7 +94,7 @@ public class VHDLFixedPointDimensions {
 			integer = -33;//-33
 		} else if (dimension.equals("conductance"))
 		{
-			integer = -20;//-20
+			integer = -22;//-20
 		} else if (dimension.equals("per_time"))
 		{
 			integer = 18;//20

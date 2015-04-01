@@ -2,6 +2,7 @@ package org.lemsml.export.vhdl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -27,6 +28,7 @@ import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.EventOut;
@@ -382,21 +384,33 @@ public class VHDLDynamics {
 					} else {
 						int iwc = sel.lastIndexOf("/");
 						rt = sel.substring(0, iwc);
-						var = sel.substring(iwc + 2, sel.length());
+						var = sel.substring(iwc + 1, sel.length());
 					} 
 						
-					
+
 					ArrayList<String> items = new ArrayList<String>();
+					ArrayList<String> itemsParents = new ArrayList<String>();
 					items.add(dflt);
 					for (Component c : comp.getChildrenAL(rt)) {
 						items.add("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal");
 						sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var +  "_internal,");
 					}
+					Component c2 = comp.quietGetChild(rt);
+					if (c2 != null)
+					{
+						items.add("exposure_" + dv.getDimension().getName() + "_" + c2.getID() + "_" + var + "_internal");
+						sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c2.getID() + "_" + var +  "_internal,");
+					}
 					LemsCollection<Attachments> attachs = comp.getComponentType().getAttachmentss();
 					Attachments attach = attachs.getByName(rt);
 					if (attach != null)
 					{
-						for(Component conn: lems.getComponent("net1").getAllChildren())
+						Target target = lems.getTarget();
+						 Component simCpt = target.getComponent();
+						 String targetId = simCpt.getStringValue("target");
+						 Component networkComp = lems.getComponent(targetId);
+						 List<String> attachedSynapses = new ArrayList<String>();
+						for(Component conn: networkComp.getAllChildren())
 						{
 							String attachName = attach.getName();
 							if (conn.getComponentType().getName().matches("synapticConnection") || conn.getComponentType().getName().matches("synapticConnectionWD") )
@@ -405,13 +419,41 @@ public class VHDLDynamics {
 								String path = conn.getPathParameterPath("to");
 								if ((destination == null || destination.matches(attachName)) && path.startsWith(comp.getID()))
 								{
+									edDerivedVariable.isSynapseSelect = true;
 									Component c = (conn.getRefComponents().get("synapse"));
 									items.add("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var+ "_internal");
+									itemsParents.add(c.getID());
 									sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal,");
 								
 								}
 							}
+							if (conn.getComponentType().getName().matches("projection") )
+							{
+								String presynapticPopulation = conn.attributes.getByName("presynapticPopulation").getValue();
+								String postsynapticPopulation = conn.attributes.getByName("postsynapticPopulation").getValue();
+								for(Component connection: conn.getAllChildren())
+								{
+									if (connection.getTypeName().matches("connection"))
+									{
+										String postCellId = connection.attributes.getByName("postCellId").getValue();
+										if (postCellId.endsWith(comp.getID()))
+										{
+											edDerivedVariable.isSynapseSelect = true;
+											Component c = (conn.getRefComponents().get("synapse"));
+											String synapseComponentName = c.getID();
+											if (attachedSynapses.contains(synapseComponentName))
+												continue;
+											attachedSynapses.add(synapseComponentName);
+											//comp2.setID(attach.getName() + "_" +  numberID);
+											items.add("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var+ "_internal");
+											itemsParents.add(c.getID());
+											sensitivityList.append("exposure_" + dv.getDimension().getName() + "_" + c.getID() + "_" + var + "_internal,");
+										}
+									}
+								}						
+							}
 						}
+						
 					}
 					
 					
@@ -421,6 +463,11 @@ public class VHDLDynamics {
 						items.remove(0);
 					}
 					selval = iterativeReduction(items,op).get(0); //StringUtil.join(items, op);
+					
+					if (edDerivedVariable.isSynapseSelect) {
+						edDerivedVariable.items = items;			
+						edDerivedVariable.itemsParents = itemsParents;
+					}
 					
 					String encodedValue = VHDLEquations.encodeVariablesStyle(selval,
 							ct.getFinalParams(),ct.getDynamics().getStateVariables(),ct.getDynamics().getDerivedVariables(),

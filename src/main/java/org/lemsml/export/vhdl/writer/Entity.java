@@ -6,16 +6,21 @@ import org.lemsml.export.vhdl.edlems.*;
 
 public class Entity {
 
-	public static void writeEDComponent(EDComponent comp, StringBuilder sb, boolean isTopLevelNeuronModel)
+	public static void writeEDComponent(EDComponent comp, StringBuilder sb, 
+			boolean isTopLevelNeuronModel, boolean useMuxForSynapses, boolean useVirtualSynapses
+			,String neuronName)
 	{
 		writePreamble(sb);
-		writeEntityDescription(sb,comp);
-		Architecture.writeArchitecture(comp,sb,comp.name);
-		Architecture.writeChildrenDeclarations(sb,comp);
-		Architecture.writeChildrenInstantiations(comp,sb);
-		DerivedVariableProcess.writeEDDerivedVariableProcess(sb,comp);
+		writeEntityDescription(sb,comp,useVirtualSynapses,neuronName);
+		Architecture.writeArchitecture(comp,sb,comp.name,useMuxForSynapses&&isTopLevelNeuronModel
+				,useVirtualSynapses,neuronName);
+		Architecture.writeChildrenDeclarations(sb,comp,useVirtualSynapses);
+		Architecture.writeChildrenInstantiations(comp,sb,useMuxForSynapses&&isTopLevelNeuronModel
+				,useVirtualSynapses,neuronName);
+		DerivedVariableProcess.writeEDDerivedVariableProcess(sb,comp,useVirtualSynapses);
 		RegimeStateMachine.writeEDRegimeEDStateMachine(sb, comp);
-		StatevariableProcess.writeStateVariableProcess( sb,  comp, isTopLevelNeuronModel);
+		StatevariableProcess.writeStateVariableProcess( sb,  comp, 
+				isTopLevelNeuronModel,useVirtualSynapses);
 	}
 	
 	private static void writePreamble(StringBuilder sb)
@@ -42,7 +47,8 @@ public class Entity {
 				"---------------------------------------------------------------------\r\n");
 	}
 	
-	private static void writeEntityDescription(StringBuilder sb,EDComponent comp)
+	private static void writeEntityDescription(StringBuilder sb,EDComponent comp,
+			boolean useVirtualSynapses, String neuronModel)
 	{
 		sb.append("---------------------------------------------------------------------\r\n" + 
 				"-- Entity Description\r\n" + 
@@ -54,10 +60,15 @@ public class Entity {
 				"  step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated\r\n" + 
 				"");
 		
-		if (comp.name.contains("neuron_model"))
+		if (comp.name.contains(neuronModel))
+		{
 			sb.append("  step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished\r\n" + 
 					  "  eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);\r\n" + 
 					  "  SelectSpikesIn			: Std_logic_vector(4607 downto 0) := (others => '0');\r\n");
+			if (useVirtualSynapses)
+			sb.append("  step_once_clearCurrent : in STD_LOGIC;\r\n");
+				
+		}
 		else
 			sb.append("  component_done : out STD_LOGIC;\r\n");
 		
@@ -76,7 +87,7 @@ public class Entity {
 			EDRequirement item = i.next(); 
 			sb.append("  requirement_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 		}
-		writeEntitySignals(comp,sb,name);
+		writeEntitySignals(comp,sb,name,useVirtualSynapses);
 		sb.append("  sysparam_time_timestep : in sfixed (-6 downto -22);\r\n" + 
 				  "  sysparam_time_simtime : in sfixed (6 downto -22)\r\n" + 
 				  ");\r\n" + 
@@ -88,13 +99,19 @@ public class Entity {
 	
 
 
-	public static void writeEntitySignals(EDComponent comp, StringBuilder sb, String name)
+	public static void writeEntitySignals(EDComponent comp, StringBuilder sb, String name,
+			boolean useVirtualSynapses)
 	{
-		writeEntitySignals(comp,sb,name,"");
+		writeEntitySignals(comp,sb,name,"",useVirtualSynapses);
 	}
-	public static void writeEntitySignals(EDComponent comp, StringBuilder sb, String name, String prepend)
+	public static void writeEntitySignals(EDComponent comp, StringBuilder sb, String name, 
+			String prepend, boolean useVirtualSynapses)
 	{
-
+		if (name.length() > 0 && useVirtualSynapses && comp.isSynapse)
+		{
+			sb.append("  "+name+"step_once_go : in STD_LOGIC;\r\n");
+			sb.append("  "+name+"step_once_addCurrent : in STD_LOGIC;\r\n");
+		}
 		for(Iterator<EDParameter> i = comp.parameters.iterator(); i.hasNext(); ) {
 			EDParameter item = i.next(); 
 			sb.append("  "+prepend+"param_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
@@ -151,7 +168,7 @@ public class Entity {
 		for(Iterator<EDComponent> i = comp.Children.iterator(); i.hasNext(); ) {
 			EDComponent item = i.next(); 
 			String newName = name + item.name + "_";
-			 writeEntitySignals(item, sb, newName,prepend);
+			 writeEntitySignals(item, sb, newName,prepend,useVirtualSynapses);
 		}
 	
 	}

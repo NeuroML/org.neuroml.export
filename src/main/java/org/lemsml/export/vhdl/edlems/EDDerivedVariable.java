@@ -14,4 +14,7 @@ public class EDDerivedVariable extends EDSignalComplex {
 	public boolean ExposureIsUsed = false;
 	public boolean IsUsedForOtherDerivedVariables = false;
 	public boolean isEmpty = false;
+	public boolean isSynapseSelect = false;
+	public List<String> items;
+	public List<String> itemsParents;
 }

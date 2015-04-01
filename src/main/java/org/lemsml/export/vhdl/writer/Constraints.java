@@ -39,7 +39,7 @@ public class Constraints {
 				{
 					count++;
 					//sb.append("NET \"derivedvariable_" + derivedvariable.type +  "_" + derivedvariable.name + "_next\"  TNM = \"TNM_DERIVED"+count+"\";\r\n");
-					sb.append("NET \"U_NM/top_synth_i/neuron_model_uut/" + path + 
+					sb.append("NET \"U_NM/top_synth_uut/neuron_model_uut/" + path + 
 							"derivedvariable_" + 
 							derivedvariable.type +  "_" + 
 							derivedvariable.name +"*\"" +
@@ -56,7 +56,7 @@ public class Constraints {
 				if (thisEDCase.value.contains("/"))
 				{
 					count++;
-					sb.append("NET \"U_NM/top_synth_i/neuron_model_uut/" + path + "derivedvariable_" + 
+					sb.append("NET \"U_NM/top_synth_uut/neuron_model_uut/" + path + "derivedvariable_" + 
 					conditionalderivedvariable.type +  "_" + 
 							conditionalderivedvariable.name +"*\"" +
 							" TNM = FFS \"tnm_multipath" + count + "\";");
@@ -77,7 +77,7 @@ public class Constraints {
 						if (dynamic.Dynamics.contains("/"))
 						{
 							count++;
-							sb.append("NET \"U_NM/top_synth_i/neuron_model_uut/" + path + "statevariable_" + state.type 
+							sb.append("NET \"U_NM/top_synth_uut/neuron_model_uut/" + path + "statevariable_" + state.type 
 									+ "_" + regime.name +  "_" + state.name 
 											+ "_temp_1_next*\" TNM = FFS \"tnm_multipath" + count + "\";");
 							sb.append("TIMESPEC \"ts_multipath"+count+"\" = TO \"tnm_multipath" + count +
@@ -93,7 +93,7 @@ public class Constraints {
 					if (dynamic.Dynamics.contains("/"))
 					{
 						count++;
-						sb.append("NET \"U_NM/top_synth_i/neuron_model_uut/" + path + "statevariable_"
+						sb.append("NET \"U_NM/top_synth_uut/neuron_model_uut/" + path + "statevariable_"
 								+state.type + "_noregime_" + state.name
 										+ "_temp_1*\" TNM = FFS \"tnm_multipath" + count + "\";");
 						sb.append("TIMESPEC \"ts_multipath"+count+"\" = TO \"tnm_multipath" + count +

@@ -5,6 +5,7 @@ import java.util.List;
 
 public class EDComponent {
 
+	public boolean isSynapse = false;
 	public float t_end;
 	public float t_start;
 	public String name;

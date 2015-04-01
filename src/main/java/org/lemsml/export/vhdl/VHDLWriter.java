@@ -59,6 +59,7 @@ import org.lemsml.export.vhdl.edlems.EDStateAssignment;
 import org.lemsml.export.vhdl.metadata.MetadataWriter;
 import org.lemsml.export.vhdl.writer.Constraints;
 import org.lemsml.export.vhdl.writer.Entity;
+import org.lemsml.export.vhdl.writer.NeuronCoreTop;
 import org.lemsml.export.vhdl.writer.SiElegansTop;
 import org.lemsml.export.vhdl.writer.Testbench;
 import org.lemsml.export.vhdl.writer.TopSynth;
@@ -156,6 +157,10 @@ public class VHDLWriter extends BaseWriter {
 		TESTBENCH,
 		SYNTH_TOP,
 		SIELEGANS_TOP,
+		SIELEGANS_IMETA,
+		SIELEGANS_INITMETA,
+		NEURONCORE_TOP,
+		NEURONCORE_CONFIG,
 		DEFAULTPARAMJSON,
 		DEFAULTREADBACKJSON,
 		CONSTRAINTS,
@@ -205,9 +210,13 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 
-
-	public Map<String,String> getNeuronModelScripts(String neuronModel, boolean useFlattenedModels) throws ContentError, ParseError, ConnectionError {
-
+	public Map<String,String> getNeuronModelScripts(String neuronModel,
+			boolean useFlattenedModels) throws ContentError, ParseError, ConnectionError {
+		return getNeuronModelScripts(neuronModel, useFlattenedModels, false);
+	}
+	public Map<String,String> getNeuronModelScripts(String neuronModel,
+			boolean useFlattenedModels, boolean useVirtualSynapses) throws ContentError, ParseError, ConnectionError {
+		boolean useSynapseMux = false;
 		Map<String,String> componentScripts = new HashMap<String,String>();
 
 		
@@ -258,7 +267,8 @@ public class VHDLWriter extends BaseWriter {
 			Boolean counterUsed = false;
 			
 			
-			loopOverEDComponent(edComponent,componentScripts,expUsed,powUsed);
+			loopOverEDComponent(edComponent,componentScripts,expUsed,powUsed,useSynapseMux,
+					useVirtualSynapses,neuronModel);
 			for (String script : componentScripts.values())
 			{
 				if (script.toString().contains(": ParamExp"))
@@ -281,7 +291,7 @@ public class VHDLWriter extends BaseWriter {
 				componentScripts.put("delayDone",getCounterScript());
 			}
 			//componentScripts.put("ParamMux",getMuxScript());
-			componentScripts.put("top_synth",getSimulationScript(ScriptType.SYNTH_TOP));
+			componentScripts.put("top_synth",getSimulationScript(ScriptType.SYNTH_TOP,neuronModel,useVirtualSynapses));
 			
 		}
 		catch (IOException e1) {
@@ -311,10 +321,12 @@ public class VHDLWriter extends BaseWriter {
 	}
 	
 	private void loopOverEDComponent(EDComponent edComponent,
-			Map<String,String> componentScripts, Boolean expUsed, Boolean powUsed)
+			Map<String,String> componentScripts, Boolean expUsed, Boolean powUsed, 
+			boolean useSynapseMux, boolean useVirtualSynapses, String neuronName)
 	{
 		StringBuilder newScript = new StringBuilder();
-		Entity.writeEDComponent(edComponent, newScript, edComponent.name.matches("neuron_model"));
+		Entity.writeEDComponent(edComponent, newScript, edComponent.name.matches(neuronName),
+				useSynapseMux,useVirtualSynapses,neuronName);
 		componentScripts.put(edComponent.name,newScript.toString());
 		if (newScript.toString().contains(": ParamExp"))
 			expUsed = true;
@@ -322,20 +334,20 @@ public class VHDLWriter extends BaseWriter {
 			powUsed = true;
 		for (EDComponent child : edComponent.Children)
 		{
-			loopOverEDComponent(child, componentScripts, expUsed, powUsed);
+			loopOverEDComponent(child, componentScripts, expUsed, powUsed,useSynapseMux,
+					useVirtualSynapses,neuronName);
 		}
 	}
 	
-	public String getSimulationScript(ScriptType scriptType) throws ContentError, ParseError {
-		return getSimulationScript(scriptType,null);
+	public String getSimulationScript(ScriptType scriptType,String neuronName, boolean useVirtualSynapses) throws ContentError, ParseError {
+		return getSimulationScript(scriptType,null,neuronName,useVirtualSynapses);
 	}
 	
-	public String getSimulationScript(ScriptType scriptType, Map<String,Float> initialState) throws ContentError, ParseError {
+	public String getSimulationScript(ScriptType scriptType, 
+			Map<String,Float> initialState, String neuronName, boolean useVirtualSynapses) throws ContentError, ParseError {
 
 		StringBuilder output = new StringBuilder();
-		
-
-		//context.put( "name", new String("VelocityOnOSB") );
+		boolean useSynapseMux = false;
 		try
 		{
 			DLemsWriter somw = new DLemsWriter(lems);
@@ -367,9 +379,10 @@ public class VHDLWriter extends BaseWriter {
 			{
 				Component comp = networkComponents.get(i);
 				ComponentType comT = comp.getComponentType();
-				if (comT.name.toLowerCase().matches("population"))
+				if (comT.name.toLowerCase().matches("population") || 
+						comT.name.toLowerCase().matches("populationlist"))
 				{
-						//add a new neuron component
+					//add a new neuron component
 					Component neuron = lems.getComponent(comp.getStringValue("component"));
 					if (!neuronTypes.contains(neuron.getID()) && !neuron.getID().contains("spikeGen"))
 					{
@@ -433,19 +446,45 @@ public class VHDLWriter extends BaseWriter {
 			edSimulation.synapseCount = (count);
 			
 			if (scriptType == ScriptType.DEFAULTPARAMJSON){
-				MetadataWriter.writeJSONDefaultParameters(edSimulation, output);
+				MetadataWriter.writeJSONDefaultParameters(edSimulation, output,neuronName);
 			} else if (scriptType == ScriptType.DEFAULTREADBACKJSON){
-				MetadataWriter.writeJSONDefaultReadback(edSimulation, output);
+				MetadataWriter.writeJSONDefaultReadback(edSimulation, output,neuronName);
 			} else if (scriptType == ScriptType.SIELEGANS_TOP){
 				SiElegansTop.writeTop(edSimulation, output);
+			} else if (scriptType == ScriptType.SIELEGANS_IMETA){
+				StringBuilder dummy = new StringBuilder();
+				SiElegansTop.writeTop(edSimulation, dummy);
+				MetadataWriter.writeSiIMeta(edSimulation,output,neuronName);
+			} else if (scriptType == ScriptType.SIELEGANS_INITMETA){	
+				StringBuilder dummy = new StringBuilder();
+				SiElegansTop.writeTop(edSimulation, dummy);
+				MetadataWriter.writeSiInitMeta(edSimulation,output,neuronName,Float.parseFloat(edSimulation.simlength),initialState);				
+			} else if (scriptType == ScriptType.NEURONCORE_TOP){
+				JsonFactory f = new JsonFactory();
+				StringWriter sw = new StringWriter();
+				JsonGenerator g = f.createJsonGenerator(sw);
+				g.writeStartObject();
+				NeuronCoreTop.writeNeuronCoreTop(edSimulation, output,g,initialState,neuronName);
+				g.writeEndObject();
+				g.close();
+			} else if (scriptType == ScriptType.NEURONCORE_CONFIG){
+				JsonFactory f = new JsonFactory();
+				StringWriter sw = new StringWriter();
+				JsonGenerator g = f.createJsonGenerator(sw);
+				g.writeStartObject();
+				NeuronCoreTop.writeNeuronCoreTop(edSimulation, output,g,initialState,neuronName);
+				g.writeEndObject();
+				g.close();
+				output = new StringBuilder();
+				output.append(sw);
 			} else if (scriptType == ScriptType.SYNTH_TOP){
-				TopSynth.writeTop(edSimulation, output);
+				TopSynth.writeTop(edSimulation, output,neuronName,useVirtualSynapses); 
 			} else if (scriptType == ScriptType.TESTBENCH){
-				Testbench.writeTestBench(edSimulation, output, initialState);
+				Testbench.writeTestBench(edSimulation, output, initialState,useSynapseMux);
 			} else if (scriptType == ScriptType.CONSTRAINTS){
 				Constraints.writeConstraintsFile(edSimulation, output);
 			} else if (scriptType == ScriptType.DEFAULTSTATEJSON) {
-				MetadataWriter.writeJSONDefaultState(edSimulation, output,initialState);
+				MetadataWriter.writeJSONDefaultState(edSimulation, output,initialState,neuronName);
 			}
 			
 			
@@ -498,6 +537,49 @@ public class VHDLWriter extends BaseWriter {
 		return sb.toString();
 	}
 	
+	public String getVLLFile(Set<String> files) throws ContentError, ParseError {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[Project]\n" + 
+				"Name = NeuronModel\n" + 
+				"Description = \n" + 
+				"Top module = NC_Top\n" + 
+				"Project type = VHDL\n" + 
+				"BaseDir = .\n" + 
+				"\n" + 
+				"[History]\n" + 
+				"\n" + 
+				"[Project files]\n" + 
+				"File1 = ..%..%..%VL_MKII_core%DLM_Rst_Ctrl.vhd\n" + 
+				"File2 = ..%..%..%VL_MKII_core%NC_Clk.vhd\n" + 
+				"File3 = ..%..%..%VL_MKII_core%DLM_Cfg.vhd\n" + 
+				"File4 = ..%..%..%VL_MKII_core%EtherMacLite.v\n" + 
+				"File5 = ..%..%..%VL_MKII_core%DLM_EMAC.vhd\n" + 
+				"File6 = ..%..%..%VL_MKII_core%NC_SP.vhd\n" + 
+				"File7 = ..%..%..%VL_MKII_core%NC_ML605.ucf\n" + 
+				"File8 = ..%..%..%VL_MKII_core%fifo_async_2k_8r32w.xco\n" + 
+				"File9 = ..%..%..%VL_MKII_core%Clk25M_to_50M_clk_wiz_v3_6.xco\n" + 
+				"File10 = ..%..%..%VL_MKII_core%fifo_sync_2k_8.xco\n" + 
+				"File11 = ..%..%..%VL_MKII_core%ReadDna.v\n" + 
+				"File12 = ..%..%..%VL_MKII_core%NC_UC.vhd\n" + 
+				"File13 = ..%..%..%VL_MKII_core%DLM_RM.vhd\n" + 
+				"File14 = ..%..%..%VL_MKII_core%SpikeModule.v\n" + 
+				"File15 = ..%..%..%VL_MKII_core%Top.vhd\n" + 
+				"File16 = ..%..%..%VL_MKII_core%DLM_AD.vhd\n" + 
+				"File17 = ..%..%..%VL_MKII_core%EtherMacLiteCrc.v\n" + 
+				"File18 = ..%..%..%VL_MKII_core%NC.vhd\n" + 
+				"");
+		sb.append("File19 = sielegans_top.vhdl\n");
+		sb.append("File20 = constraints.ucf\n");
+		int n = 21;
+		for (String file: files)
+		{
+			sb.append("File" + n + " = "+file+".vhdl\n");
+			n++;
+		}
+
+		
+		return sb.toString();
+	}
 	
 	//this file is required by Xilinx ISIM simulations for automation purposes
 	public String getTCLScript(double simTime, double simTimeStep) throws ContentError, ParseError {
@@ -804,13 +886,20 @@ public class VHDLWriter extends BaseWriter {
 				edComponent.Children.add(child);
 			}
 			//Attachments synapses are children in this initial model of VHDL neurons
+			//This finds all synapse component instances which are ever connected to a population of this neuron type
+			List<String> attachedSynapses = new ArrayList<String>();
 			for(Attachments attach: comp.getComponentType().getAttachmentss())
 			{
 				int numberID = 0;
-				for(Component conn: lems.getComponent("net1").getAllChildren())
+				Target target = lems.getTarget();
+				 Component simCpt = target.getComponent();
+				 String targetId = simCpt.getStringValue("target");
+				 Component networkComp = lems.getComponent(targetId);
+				for(Component conn: networkComp.getAllChildren())
 				{
 					String attachName = attach.getName();
-					if (conn.getComponentType().getName().matches("synapticConnection")  || conn.getComponentType().getName().matches("synapticConnectionWD")  )
+					if (conn.getComponentType().getName().matches("synapticConnection") 
+							|| conn.getComponentType().getName().matches("synapticConnectionWD")  )
 					{
 						String destination = conn.getTextParam("destination");
 						String path = conn.getPathParameterPath("to");
@@ -819,10 +908,37 @@ public class VHDLWriter extends BaseWriter {
 							Component comp2 = (conn.getRefComponents().get("synapse"));
 							//comp2.setID(attach.getName() + "_" +  numberID);
 							EDComponent child = new EDComponent();
+							child.isSynapse = true;
 							writeNeuronComponent(child, comp2);
 							edComponent.Children.add(child);
 							numberID++;
 						}
+					}
+					if (conn.getComponentType().getName().matches("projection") )
+					{
+						String presynapticPopulation = conn.attributes.getByName("presynapticPopulation").getValue();
+						String postsynapticPopulation = conn.attributes.getByName("postsynapticPopulation").getValue();
+						for(Component connection: conn.getAllChildren())
+						{
+							if (connection.getTypeName().matches("connection"))
+							{
+								String postCellId = connection.attributes.getByName("postCellId").getValue();
+								if (postCellId.endsWith(comp.getID()))
+								{
+									Component comp2 = (conn.getRefComponents().get("synapse"));
+									String synapseComponentName = comp2.getID();
+									if (attachedSynapses.contains(synapseComponentName))
+										continue;
+									attachedSynapses.add(synapseComponentName);
+									//comp2.setID(attach.getName() + "_" +  numberID);
+									EDComponent child = new EDComponent();
+									child.isSynapse = true;
+									writeNeuronComponent(child, comp2);
+									edComponent.Children.add(child);
+									numberID++;
+								}
+							}
+						}						
 					}
 				}
 			}

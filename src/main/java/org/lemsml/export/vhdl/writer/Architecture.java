@@ -19,14 +19,15 @@ import org.lemsml.export.vhdl.edlems.EDState;
 
 public class Architecture {
 
-	static void writeChildrenInstantiations(EDComponent comp, StringBuilder sb)
+	static void writeChildrenInstantiations(EDComponent comp, StringBuilder sb, 
+			boolean useSynapseMux, boolean useVirtualSynapses, String neuronModel)
 	{
 		sb.append("---------------------------------------------------------------------\r\n" + 
 				"-- Begin Internal Processes\r\n" + 
 				"---------------------------------------------------------------------\r\n" + 
 				"\r\n" + 
 				"begin\r\n");
-		if (false && comp.name.contains("neuron_model"))
+		if (useSynapseMux && comp.name.contains(neuronModel))
 		{
 			sb.append("dut : ParamMux\r\n" + 
 					"generic map (\r\n" + 
@@ -48,15 +49,42 @@ public class Architecture {
 			sb.append(child.name + "_uut : " + child.name + " \r\n" + 
 			"port map (\r\n"
 			+ "  clk => clk,\r\n" + 
-			"  init_model => init_model,\r\n" + 
-			"  step_once_go => step_once_go,\r\n" + 
-			"  Component_done => " + child.name + "_Component_done,\r\n"
+			"  init_model => init_model,\r\n");
+
+			if (useVirtualSynapses && child.isSynapse)
+			{
+				sb.append("  step_once_go => "+child.name + "_step_once_go,\r\n");
+			}
+			else
+			sb.append("  step_once_go => step_once_go,\r\n");
+			
+			sb.append("  Component_done => " + child.name + "_Component_done,\r\n"
 			);
 
 			for(Iterator<EDEventPort> i = child.eventports.iterator(); i.hasNext(); ) {
-			    EDEventPort item = i.next(); //TODO change EventPort_in_spike_aggregate back to SpikeOut
-			    sb.append("  eventport_" + item.direction +  "_" + item.name + " => EventPort_in_spike_aggregate(" + count +  "),\r\n"  );
-			    count++;
+			    EDEventPort item = i.next(); 
+			    //TODO change EventPort_in_spike_aggregate back to SpikeOut
+			    if (item.direction.matches("in"))
+			    {
+				    if ( comp.name.contains(neuronModel))
+				    {
+					    sb.append("  eventport_" + item.direction +  "_" + item.name + " => EventPort_in_spike_aggregate(" + count +  "),\r\n"  );
+					    count++;
+				    }
+				    else
+				    {
+				    	//look for an out event port to fit this childs input port
+				    	for(Iterator<EDEventPort> i2 = comp.eventports.iterator(); i2.hasNext(); ) {
+						    EDEventPort item2 = i2.next(); 
+					    	if (item2.direction.matches("out"))
+					    	{
+					    		sb.append("  eventport_" + item.direction +  "_" + item.name + 
+					    				" => eventport_" + item2.direction +  "_" + item2.name + "_internal,\r\n"  );
+							    
+					    	}
+				    	}
+				    }
+			    }
 			}
 			writeEDComponentMap(child,sb,"",child,comp.state);
 			sb.append("  sysparam_time_timestep => sysparam_time_timestep,\r\n" + 
@@ -268,7 +296,8 @@ public class Architecture {
 	}
 	
 
-	static void writeArchitecture(EDComponent comp, StringBuilder sb, String name)
+	static void writeArchitecture(EDComponent comp, StringBuilder sb, String name, 
+			boolean useSynapseMux, boolean useVirtualSynapses, String neuronModel)
 	{
 		sb.append("-------------------------------------------------------------------------------------------\r\n" + 
 				"-- Architecture Begins\r\n" + 
@@ -293,7 +322,8 @@ public class Architecture {
 				"signal subprocess_all_ready_shot : STD_LOGIC := '0';\r\n" + 
 				"signal subprocess_all_ready : STD_LOGIC := '0';");
 		
-		if (name.contains("neuron_model"))
+		if (name.contains(neuronModel))
+		{
 			sb.append("\r\n" + 
 					"\r\n" + 
 					"signal step_once_complete_fired : STD_LOGIC := '0';\r\n" + 
@@ -303,8 +333,9 @@ public class Architecture {
 					"constant cNSpikeSources : integer := 512;	-- The number of spike sources.\r\n" + 
 					"constant cNOutputs		: integer := 512;	-- The number of Synapses in the neuron model.\r\n" + 
 					"constant cNSelectBits	: integer := 9;		-- Log2(NOutputs), rounded up.\r\n" + 
-					"\r\n" + 
-					/*"component ParamMux\r\n" + 
+					"\r\n");
+					if (useSynapseMux) {
+						sb.append("component ParamMux\r\n" + 
 					"	generic( \r\n" + 
 					"		NSpikeSources 	: integer := 512;	-- The number of spike sources.\r\n" + 
 					"		NOutputs		: integer := 512;	-- The number of Synapses in the neuron model.\r\n" + 
@@ -313,10 +344,11 @@ public class Architecture {
 					"		SpikeIn			: In  Std_logic_vector(NSpikeSources-1 downto 0);\r\n" + 
 					"		SelectIn		: In  Std_logic_vector((NOutputs*NSelectBits)-1 downto 0);\r\n" + 
 					"		SpikeOut		: Out Std_logic_vector((NOutputs-1) downto 0));\r\n" + 
-					"end component;\r\n" + 
-					*/"signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);\r\n" + 
+					"end component;\r\n");
+					}
+					sb.append("signal SpikeOut			: Std_logic_vector((cNOutputs-1) downto 0);\r\n" + 
 					"\r\n");
-		
+		}
 		boolean expExists = false;
 		boolean powExists = false;
 		boolean dividerExists = false;
@@ -506,7 +538,7 @@ public class Architecture {
 			EDConditionalDerivedVariable.integer +"," + EDConditionalDerivedVariable.fraction + ");\r\n");
 			
 		}
-		for(Iterator<EDDerivedParameter> z = comp.derivedparameters.iterator(); z.hasNext(); ) {
+		/*for(Iterator<EDDerivedParameter> z = comp.derivedparameters.iterator(); z.hasNext(); ) {
 			EDDerivedParameter EDDerivedParameter = z.next(); 
 			sb.append("signal DerivedParameter_" + EDDerivedParameter.type +  "_" + 
 			EDDerivedParameter.name + " : sfixed (" + EDDerivedParameter.integer + " downto " + 
@@ -517,7 +549,7 @@ public class Architecture {
 					+ EDDerivedParameter.fraction +  ") := to_sfixed(0.0 ," +
 					EDDerivedParameter.integer +"," + EDDerivedParameter.fraction + ");\r\n");
 			
-		}
+		}*/
 		
 
 		sb.append("\r\n" + 
@@ -572,7 +604,7 @@ public class Architecture {
 
 	}
 	
-	static void writeChildrenDeclarations(StringBuilder sb, EDComponent comp)
+	static void writeChildrenDeclarations(StringBuilder sb, EDComponent comp, boolean useVirtualSynapses)
 	{
 		sb.append("---------------------------------------------------------------------\r\n" + 
 				"-- Child Components\r\n" + 
@@ -597,7 +629,7 @@ public class Architecture {
 				EDRequirement item = i.next(); 
 				sb.append("  requirement_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 			}
-			Entity.writeEntitySignals(child,sb,name);
+			Entity.writeEntitySignals(child,sb,name,useVirtualSynapses);
 			sb.append("  sysparam_time_timestep : in sfixed (-6 downto -22);\r\n" + 
 				  "  sysparam_time_simtime : in sfixed (6 downto -22)\r\n" + 
 				  ");\r\n" + 

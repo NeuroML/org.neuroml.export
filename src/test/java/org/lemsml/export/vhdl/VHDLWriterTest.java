@@ -55,7 +55,8 @@ public class VHDLWriterTest extends TestCase {
 		
 		Map<String,String> componentScripts = vw.getNeuronModelScripts(modelToConvert,false);
 		
-		String testbenchScript = vw.getSimulationScript(VHDLWriter.ScriptType.TESTBENCH);
+		String testbenchScript = vw.getSimulationScript(VHDLWriter.ScriptType.TESTBENCH,
+				"neuron_model",true);
 		String tclScript = vw.getTCLScript(1,0.0001);
 		String prjScript = vw.getPrjFile(componentScripts.keySet());
 		//String defaultJSON = vw.getMainScript(Method.DEFAULTPARAMJSON);

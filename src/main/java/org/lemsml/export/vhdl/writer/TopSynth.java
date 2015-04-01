@@ -15,10 +15,19 @@ import org.lemsml.export.vhdl.edlems.EDState;
 
 public class TopSynth {
 
-	public static void writeTop(EDSimulation sim, StringBuilder sb)
+	public static void writeTop(EDSimulation sim, StringBuilder sb, String neuronName,boolean useVirtualSynapses)
 	{
 		//assume one neuron in a test so one top synth
 		EDComponent neuron = sim.neuronComponents.get(0);
+		for (int i = 0; i < sim.neuronComponents.size(); i++)
+		{
+			if (sim.neuronComponents.get(i).name.matches(neuronName))
+			{
+				neuron = sim.neuronComponents.get(i);
+				break;
+			}
+		}
+		
 		sb.append("\r\n" + 
 				"library ieee;\r\n" + 
 				"use ieee.std_logic_1164.all;\r\n" + 
@@ -101,7 +110,7 @@ public class TopSynth {
 			if (neuron.regimes.size() > 0)
 				sb.append("			current_regime_in_stdlv : in STD_LOGIC_VECTOR(1 downto 0);\r\n" + 
 						  "			current_regime_out_stdlv : out STD_LOGIC_VECTOR(1 downto 0);\r\n");
-			Entity.writeEntitySignals(neuron,sb,name,"");
+			Entity.writeEntitySignals(neuron,sb,name,"",useVirtualSynapses);
 			sb.append("\r\n" + 
 					"           sysparam_time_timestep : sfixed (-6 downto -22);\r\n" + 
 					"           sysparam_time_simtime : sfixed (6 downto -22)\r\n" + 
@@ -276,7 +285,7 @@ public class TopSynth {
 
 		for(Iterator<EDParameter> i = comp.parameters.iterator(); i.hasNext(); ) {
 			EDParameter item = i.next(); 
-			sb.append("			"+prepend+"param_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			sb.append("  "+prepend+"param_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 		}
 
 		for(Iterator<EDDerivedVariable> j = comp.derivedvariables.iterator(); j.hasNext(); ) {
@@ -284,7 +293,7 @@ public class TopSynth {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
 			{
-				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  "+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
 						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
 			}
 		}
@@ -293,7 +302,7 @@ public class TopSynth {
 			if (dv.exposure!= null && dv.exposure.length() > 0 && 
 					(dv.ExposureIsUsed || dv.IsUsedForOtherDerivedVariables))
 			{
-				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  "+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
 						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
 			}	
 		}
@@ -301,28 +310,28 @@ public class TopSynth {
 			EDState dv = j.next(); 
 			if (dv.exposure!= null && dv.exposure.length() > 0)
 			{
-				sb.append("			"+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
+				sb.append("  "+prepend+"exposure_" + dv.type +  "_" + name + dv.name + 
 						" : out sfixed (" + dv.integer + " downto " + dv.fraction + ");\r\n"  );
 			}	
 		}
 
 		for(Iterator<EDState> i = comp.state.iterator(); i.hasNext(); ) {
 			EDState item = i.next(); 
-			sb.append("			"+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
-			sb.append("			"+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			sb.append("  "+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+			sb.append("  "+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 		}
 		for(Iterator<EDDerivedVariable> i = comp.derivedvariables.iterator(); i.hasNext(); ) {
 			EDDerivedVariable item = i.next(); 
 			if (item.IsUsedForOtherDerivedVariables || item.ExposureIsUsed){
-				sb.append("			"+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
-				sb.append("			"+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("  "+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("  "+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 			}
 		}
 		for(Iterator<EDConditionalDerivedVariable> i = comp.conditionalderivedvariables.iterator(); i.hasNext(); ) {
 			EDConditionalDerivedVariable item = i.next(); 
 			if (item.IsUsedForOtherDerivedVariables || item.ExposureIsUsed){
-				sb.append("			"+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
-				sb.append("			"+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("  "+prepend+"stateCURRENT_" + item.type +  "_" + name + item.name + " : out sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
+				sb.append("	 "+prepend+"stateRESTORE_" + item.type +  "_" + name + item.name + " : in sfixed (" + item.integer + " downto " + item.fraction + ");\r\n"  );
 			}
 		}
 		

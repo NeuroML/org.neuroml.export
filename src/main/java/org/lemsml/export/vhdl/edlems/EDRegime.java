@@ -3,7 +3,7 @@ package org.lemsml.export.vhdl.edlems;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EDRegime {
+public class EDRegime extends EDSignal {
 	public String name;
 	public String isDefault;
 	public List<EDDynamic> dynamics = new ArrayList<EDDynamic>();
