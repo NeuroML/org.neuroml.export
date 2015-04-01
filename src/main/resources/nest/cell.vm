@@ -1,2 +1,37 @@
-// Class file in NestML for Component: $name
+// NESTML file for Component: $name
+
+
+/////////////////////////////////////////////////////////////
+// 
+//    PLEASE NOTE: This export is far from complete
+//
+//    Waiting for an initial reference example of NESTML....
+//
+/////////////////////////////////////////////////////////////
+
+neuron $name:
+
+    state:
+#foreach ($s in $state.keySet())##
+        $s
+#end
+    end
+
+    parameter:
+#foreach ($p in $parameters.keySet())##
+        $p = $parameters.get($p)
+#end
+    end
+
+    dynamics timestep (x ms):
+#foreach ($dyn in $dynamics.keySet())##
+        $dyn' = $dynamics.get($dyn);
+#end##
+    end
+
+end
+
+
+
+
 

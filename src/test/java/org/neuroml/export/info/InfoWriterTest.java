@@ -7,7 +7,6 @@ import javax.xml.bind.JAXBException;
 
 import junit.framework.TestCase;
 
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -16,7 +15,8 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.Main;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 
@@ -50,7 +50,7 @@ public class InfoWriterTest extends TestCase
 
 	public void generateBasicInfo(String nmlFilename) throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception {  
 
-		String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+nmlFilename);
+		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
 		NeuroMLConverter nmlc = new NeuroMLConverter();
     	NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
 

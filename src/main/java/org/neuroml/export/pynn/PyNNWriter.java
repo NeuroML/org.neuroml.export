@@ -4,14 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Properties;
+import java.util.List;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.export.dlems.DLemsKeywords;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
@@ -19,137 +16,135 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
-import org.neuroml.export.base.BaseWriter;
+import org.neuroml.export.base.ANeuroMLBaseWriter;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.VelocityUtils;
+import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.util.NeuroMLException;
 
-
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class PyNNWriter extends BaseWriter {
-
-	private final String runTemplateFile = "pynn/run.vm";
-	private final String cellTemplateFile = "pynn/cell.vm";
+public class PyNNWriter extends ANeuroMLBaseWriter
+{
 
 	String comm = "#";
 	String commPre = "'''";
 	String commPost = "'''";
 
-    public ArrayList<File> allGeneratedFiles = new ArrayList<File>();
+	private List<File> outputFiles = new ArrayList<File>();
+    private final DLemsWriter dlemsw;
 
-	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
-		super(lems, "PyNN");
+	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.PYNN);
+        dlemsw = new DLemsWriter(lems, null, false);
+		initializeWriter();
+	}
+	
+	public PyNNWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	{
+		super(lems, Format.PYNN, outputFolder, outputFileName);
+        dlemsw = new DLemsWriter(lems, null, false);
+		initializeWriter();
+	}
+
+	private void initializeWriter()
+	{
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);
-        sli.checkAllFeaturesSupported(FORMAT, lems);
 	}
-    
-    
-    @Override
-    protected void setSupportedFeatures() {
-        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
-    }
-	
-	@Override
-	protected void addComment(StringBuilder sb, String comment) {
-	
-		if (comment.indexOf("\n") < 0)
-			sb.append(comm + comment + "\n");
-		else
-			sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
-	}
-	
 
 	@Override
-	public String getMainScript() throws GenerationException {
-		return generateMainScriptAndCellFiles(null);
+	public void setSupportedFeatures()
+	{
+		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
+		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
 	}
-		
-	public String generateMainScriptAndCellFiles(File dirForFiles) throws GenerationException {
 
+	@Override
+	protected void addComment(StringBuilder sb, String comment)
+	{
+
+		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
+		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
+	}
+
+	public String getMainScript() throws GenerationException
+	{
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 
-		addComment(mainRunScript, FORMAT+" simulator compliant export for:\n\n"
-		+ lems.textSummary(false, false));
-		
-		addComment(cellScript, FORMAT+" simulator compliant export for:\n\n"
-		+ lems.textSummary(false, false));
-		
-		Velocity.init();
-		
+		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+
+		addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+
+		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
 
 		try
 		{
-            DLemsWriter somw = new DLemsWriter(lems);
-			String som = somw.getMainScript();
-			
-			DLemsWriter.putIntoVelocityContext(som, context);
-        
-			Properties props = new Properties();
-			props.put("resource.loader", "class");
-			props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-			VelocityEngine ve = new VelocityEngine();
-			ve.init(props);
-			Template template = ve.getTemplate(runTemplateFile);
-		   
-			StringWriter sw1 = new StringWriter();
+			String dlems = dlemsw.getMainScript();
 
-			template.merge( context, sw1 );
-			
+			DLemsWriter.putIntoVelocityContext(dlems, context);
+
+			VelocityEngine ve = VelocityUtils.getVelocityEngine();
+			StringWriter sw1 = new StringWriter();
+			boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
 			mainRunScript.append(sw1);
-			
-			template = ve.getTemplate(cellTemplateFile);
 
 			StringWriter sw2 = new StringWriter();
-
-			template.merge( context, sw2 );
-			
+			boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
 			cellScript.append(sw2);
-			
-			if (dirForFiles!=null && dirForFiles.exists())
-			{
-				E.info("Writing "+FORMAT+" files to: "+dirForFiles);
-				String name = (String)context.internalGet(DLemsKeywords.NAME.get());
-				File mainScriptFile = new File(dirForFiles, "run_"+name+"_pynn.py");
-				File cellScriptFile = new File(dirForFiles, name+"_pynn.py");
-	            FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-	            allGeneratedFiles.add(mainScriptFile);
-	            FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
-	            allGeneratedFiles.add(cellScriptFile);
-			}
-			else
-			{
-				E.info("Not writing "+FORMAT+" scripts to files! Problem with target dir: "+dirForFiles);
-			}
-			
-			
-		}  catch (IOException e1) {
-			throw new GenerationException("Problem converting LEMS to dLEMS",e1);
-		} catch( VelocityException e ) {
-			throw new GenerationException("Problem using Velocity template",e);
-		} catch (LEMSException e) {
-			throw new GenerationException("Problem generating the files",e);
-        } catch (ModelFeatureSupportException e) {
-			throw new GenerationException("Problem with the types of models currently supported in "+FORMAT,e);
-        } catch (NeuroMLException e) {
-			throw new GenerationException("Problem generating the files",e);
-        }
-		
-		return mainRunScript.toString();	
 
+			E.info("Writing " + format + " files to: " + this.getOutputFolder());
+			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_pynn.py");
+			File cellScriptFile = new File(this.getOutputFolder(), name + "_pynn.py");
+			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
+			outputFiles.add(mainScriptFile);
+			FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
+			outputFiles.add(cellScriptFile);
+
+		}
+		catch(IOException e1)
+		{
+			throw new GenerationException("Problem converting LEMS to dLEMS", e1);
+		}
+		catch(VelocityException e)
+		{
+			throw new GenerationException("Problem using Velocity template", e);
+		}
+		catch(LEMSException e)
+		{
+			throw new GenerationException("Problem generating the files", e);
+		}
+
+		return mainRunScript.toString();
+
+	}
+
+	@Override
+	public List<File> convert() throws GenerationException, IOException
+	{
+
+        String code = this.getMainScript();
+
+        File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
+        FileUtil.writeStringToFile(code, outputFile);
+        outputFiles.add(outputFile);
+		
+		return this.outputFiles;
 	}
 
 }

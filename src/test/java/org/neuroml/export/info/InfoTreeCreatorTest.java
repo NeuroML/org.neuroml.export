@@ -7,7 +7,6 @@ import javax.xml.bind.JAXBException;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -16,8 +15,9 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.Main;
+import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.info.model.InfoNode;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 
@@ -122,17 +122,13 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    ID: na\n"
             + "    Gates:\n"
             + "        gate m:\n"
-            + "            forward rate: 1000 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))\n"
-            + "            reverse rate: 4000 * exp((v - (-0.06))/-0.02)\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpLinearRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
             + "            instances: 3\n"
+            + "            forward rate: 1E3 * (v - (-4E-2))/1E-2 / ( 1 - exp(-(v - (-4E-2)) / 1E-2))\n"
+            + "            reverse rate: 4E3 * exp((v - (-6.5E-2))/-1.8E-2)\n"
             + "        gate h:\n"
-            + "            forward rate: 70 * exp((v - (-0.06))/-0.02)\n"
-            + "            reverse rate: 1000 /(1 + exp((v - (-0.04))/0.01))\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHSigmoidRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            instances: 1";
+            + "            instances: 1\n"
+            + "            forward rate: 7E1 * exp((v - (-6.5E-2))/-2E-2)\n"
+            + "            reverse rate: 1E3 /(1 + exp((v - (-3.5E-2))/1E-2))";
 
         compare(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
     }
@@ -211,7 +207,7 @@ public class InfoTreeCreatorTest extends TestCase {
      * @throws JAXBException
      */
     private String getInfoTreeAsString(String nmlFilename) throws ContentError, JAXBException, Exception {
-        String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir() + "/" + nmlFilename);
+        String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + nmlFilename);
         NeuroMLConverter nmlc = new NeuroMLConverter();
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
         InfoNode root = InfoTreeCreator.createInfoTree(nmlDocument);
