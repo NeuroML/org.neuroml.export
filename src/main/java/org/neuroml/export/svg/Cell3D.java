@@ -1,8 +1,6 @@
 package org.neuroml.export.svg;
 
-import org.neuroml.model.Cell;
-import org.neuroml.model.Point3DWithDiam;
-import org.neuroml.model.Segment;
+import org.neuroml.model.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,7 +81,8 @@ public class Cell3D
             return result;
         }
 
-        List<Segment> segments = cell.getMorphology().getSegment();
+        Morphology morphology = cell.getMorphology();
+        List<Segment> segments = morphology.getSegment();
         HashMap<Integer, Segment> segmentMap = new HashMap<Integer, Segment>();
 
         for(Segment segment : segments)
@@ -104,7 +103,16 @@ public class Cell3D
             line.Distal = new Vector3D(distal.getX(), distal.getY(), distal.getZ());
             line.Proximal = new Vector3D(proximal.getX(), proximal.getY(), proximal.getZ());
             line.Diameter = (int) Math.round(0.49 + ((proximal.getDiameter() + distal.getDiameter()) / 2));
-            line.SegmentName = segment.getName();
+
+            //Get the group name of the segment
+            for(SegmentGroup group : morphology.getSegmentGroup())
+            {
+                for(Member member : group.getMember())
+                {
+                    if(member.getSegment().equals(segment.getId()))
+                        line.SegmentName = group.getId();
+                }
+            }
 
             result.add(line);
             segmentMap.put(segment.getId(), segment);

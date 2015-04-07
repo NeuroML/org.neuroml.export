@@ -22,6 +22,8 @@ import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriter extends ANeuroMLXMLWriter
 {
+    public boolean UseColor = false;
+
     private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
     private final String SVG_VERSION = "1.1";
     private int perspectiveMargin = 20;
@@ -100,17 +102,20 @@ public class SVGWriter extends ANeuroMLXMLWriter
             String color = "rgb(100,100,100)";
             String segmentName = line.SegmentName.toLowerCase();
 
-            if(segmentName.contains("soma"))
+            if(UseColor)
             {
-                color = "red";
-            }
-            else if(segmentName.contains("dend"))
-            {
-                color = "black";
-            }
-            else if(segmentName.contains("apic"))
-            {
-                color = "blue";
+                if(segmentName.contains("soma"))
+                {
+                    color = "red";
+                }
+                else if(segmentName.contains("dend"))
+                {
+                    color = "black";
+                }
+                else if(segmentName.contains("axo") || segmentName.contains("apic"))
+                {
+                    color = "blue";
+                }
             }
 
             String style = "stroke:"+color+";stroke-width:" + line.Diameter;
@@ -121,7 +126,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
     private RectanglePacker<Cell2D> packViews(ArrayList<Cell2D> views)
     {
-        //Sort by descending area
+        //Sort by descending width
         Collections.sort(views);
 
         //Find max width/height
@@ -136,19 +141,36 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 maxWidth = view.Width();
         }
 
-        //Favor wider over taller
-        RectanglePacker<Cell2D> packer = new RectanglePacker<Cell2D>
-        (
-                (int)(maxWidth * 4 + 4*perspectiveMargin),
-                (int)(maxHeight * 1.5),
-                perspectiveMargin //margin
-        );
+        int scale = 1;
+        boolean doesNotFit;
+        RectanglePacker<Cell2D> packer;
 
-        //Place the views, starting with largest into packer, and have it recursively try packing
-        for(Cell2D cellView : views)
+        do
         {
-            packer.insert((int)cellView.Width(), (int)cellView.Height(), cellView);
+            doesNotFit = false;
+
+            //Define the region in which to pack
+            packer = new RectanglePacker<Cell2D>
+            (
+                    (int)(maxWidth * scale),
+                    (int)(maxHeight * scale),
+                    perspectiveMargin //margin
+            );
+
+            //Place the views, starting with largest into packer, and have it recursively try packing
+            //If one does not fit into the current size, increase the region by scaling dimensions
+            for(Cell2D cellView : views)
+            {
+                if(packer.insert((int)cellView.Width(), (int)cellView.Height(), cellView) == null)
+                {
+                    doesNotFit = true;
+                    break;
+                }
+            }
+
+            scale++;
         }
+        while (doesNotFit);
 
         return packer;
     }
@@ -167,7 +189,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
     public static void main(String[] args) throws Exception
     {
 
-        String fileName = "src/test/resources/examples/L23PyrRS.nml";
+        //String fileName = "src/test/resources/examples/L23PyrRS.nml";
+        String fileName = "src/test/resources/examples/L5PC.cell.nml";
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
         File inputFile = new File(fileName);
@@ -175,6 +198,10 @@ public class SVGWriter extends ANeuroMLXMLWriter
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
 
         SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
+
+        //Color different segment groups differently
+        svgw.UseColor = false;
+
         String svg = svgw.getMainScript();
 
         System.out.println(svg);
