@@ -68,7 +68,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
             views.add(cell3D.TopView());
             views.add(cell3D.SideView());
             views.add(cell3D.FrontView());
-            views.add(cell3D.PerspectiveView(45, 45));
+            views.add(cell3D.PerspectiveView(180+45, 45));
 
             //Pack views to minimize occupied area
             RectanglePacker<Cell2D> packer = packViews(views);
