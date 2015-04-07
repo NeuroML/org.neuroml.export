@@ -2,10 +2,7 @@ package org.neuroml.export.svg;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
@@ -25,19 +22,12 @@ import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriter extends ANeuroMLXMLWriter
 {
-
-    enum Orientation
-    {
-        xy, yz, xz
-    };
+    public boolean UseColor = false;
 
     private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
     private final String SVG_VERSION = "1.1";
-
-    int axisWidth = 1;
-    // private final String styleXaxis = "stroke:rgb(0,255,0);stroke-width:" + axisWidth;
-    // private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:" + axisWidth;
-    // private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:" + axisWidth;
+    private int perspectiveMargin = 20;
+    private final String borderStyle = "fill:none;stroke:black;stroke-width:1;";
 
     public SVGWriter(NeuroMLDocument nmlDocument, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
@@ -61,135 +51,128 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
     public String getMainScript() throws GenerationException
     {
+        StringBuilder result = new StringBuilder();
 
-        StringBuilder main = new StringBuilder();
-        main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
-
-        startElement(main, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION);
-        int spacer = 20;
+        //Add header
+        result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION);
 
         for(Cell cell : nmlDocument.getCell())
         {
-            analyseCell(cell);
-            cellToLines(main, cell, spacer, spacer, Orientation.xy);
-            cellToLines(main, cell, spacer + spacer + (int) (maxX - minX), spacer, Orientation.xz);
-            cellToLines(main, cell, spacer, spacer + spacer + (int) (maxY - minY), Orientation.yz);
-        }
-        endElement(main, "svg");
-        // System.out.println(main);
-        return main.toString();
-    }
+            //Extract 3d vectors from morphology
+            Cell3D cell3D = new Cell3D(cell);
 
-    double minX = Double.MAX_VALUE;
-    double maxX = Double.MIN_VALUE;
-    double minY = Double.MAX_VALUE;
-    double maxY = Double.MIN_VALUE;
-    double minZ = Double.MAX_VALUE;
-    double maxZ = Double.MIN_VALUE;
+            ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
 
-    private void analyseCell(Cell cell)
-    {
-        if(cell.getMorphology() != null)
-        {
-            Hashtable<Integer, Segment> segs = new Hashtable<Integer, Segment>();
-            for(Segment segment : cell.getMorphology().getSegment())
+            //Project 2D views from different perspectives
+            views.add(cell3D.TopView());
+            views.add(cell3D.SideView());
+            views.add(cell3D.FrontView());
+            views.add(cell3D.PerspectiveView(45, 45));
+
+            //Pack views to minimize occupied area
+            RectanglePacker<Cell2D> packer = packViews(views);
+
+            for(Cell2D cellView : views)
             {
-                Point3DWithDiam dist = segment.getDistal();
+                //Find where the view will be drawn
+                RectanglePacker.Rectangle location = packer.findRectangle(cellView);
 
-                minX = Math.min(minX, dist.getX());
-                maxX = Math.max(maxX, dist.getX());
-                minY = Math.min(minY, dist.getY());
-                maxY = Math.max(maxY, dist.getY());
-                minZ = Math.min(minZ, dist.getZ());
-                maxZ = Math.max(maxZ, dist.getZ());
+                //Translate coordinates for the view location
+                ArrayList<Line2D> lines = cellView.GetLinesForSVG(location.x, location.y);
 
-                Point3DWithDiam prox = segment.getProximal();
-                if(prox != null)
-                {
-                    minX = Math.min(minX, prox.getX());
-                    maxX = Math.max(maxX, prox.getX());
-                    minY = Math.min(minY, prox.getY());
-                    maxY = Math.max(maxY, prox.getY());
-                    minZ = Math.min(minZ, prox.getZ());
-                    maxZ = Math.max(maxZ, prox.getZ());
-                }
-            }
-        }
-    }
+                //Write SVG for each line
+                renderLines(result, lines);
 
-    void cellToLines(StringBuilder main, Cell cell, int xTotOffset, int yTotOffset, Orientation or)
-    {
-
-        if(cell.getMorphology() != null)
-        {
-            HashMap<Integer, Segment> segs = new HashMap<Integer, Segment>();
-            for(Segment segment : cell.getMorphology().getSegment())
-            {
-                int segId = segment.getId();
-                // <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2"/>
-
-                Point3DWithDiam prox = segment.getProximal();
-                Point3DWithDiam dist = segment.getDistal();
-                if(prox == null)
-                {
-                    Segment parent = segs.get(new Integer(segment.getParent().getSegment().intValue()));
-                    prox = parent.getDistal();
-                }
-                int avgDiam = (int) Math.round(0.49 + ((prox.getDiameter() + dist.getDiameter()) / 2));
-                String style = "stroke:rgb(100,100,100);stroke-width:" + avgDiam;
-
-                double x1 = 0;
-                double y1 = 0;
-                double x2 = 0;
-                double y2 = 0;
-                String borderStyle = "fill:none;stroke:black;stroke-width:1;";
-
-                if(or.equals(Orientation.xy))
-                {
-                    x1 = prox.getX() - minX;
-                    y1 = prox.getY() - maxY;
-                    x2 = dist.getX() - minX;
-                    y2 = dist.getY() - maxY;
-
-                    // addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleXaxis);
-                    // addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleYaxis);
-
-                    addRect(main, xTotOffset, yTotOffset, 0, 0, (maxX - minX), (maxY - minY), borderStyle);
-
-                }
-                else if(or.equals(Orientation.xz))
-                {
-                    x1 = prox.getX() - minX;
-                    y1 = prox.getZ() - maxZ;
-                    x2 = dist.getX() - minX;
-                    y2 = dist.getZ() - maxZ;
-
-                    // addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleXaxis);
-                    // addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleZaxis);
-
-                    addRect(main, xTotOffset, yTotOffset, 0, 0, (maxX - minX), (maxZ - minZ), borderStyle);
-
-                }
-                else if(or.equals(Orientation.yz))
-                {
-                    x1 = prox.getY() - minY;
-                    y1 = prox.getZ() - maxZ;
-                    x2 = dist.getY() - minY;
-                    y2 = dist.getZ() - maxZ;
-
-                    // addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleYaxis);
-                    // addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleZaxis);
-                    addRect(main, xTotOffset, yTotOffset, 0, 0, (maxY - minY), (maxZ - minZ), borderStyle);
-                }
-
-                addLine(main, (x1 + xTotOffset), ((-y1) + yTotOffset), (x2 + xTotOffset), ((-y2) + yTotOffset), style);
-
-                segs.put(segId, segment);
+                //Draw border around each perspective
+                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle);
             }
         }
 
-        // main.append("<circle cx=\""+xTotOffset+"\" cy=\""+yTotOffset+"\" r=\"4\" stroke=\"black\" stroke-width=\"1\" fill=\"red\"/>");
-        // main.append("<circle cx=\""+(minX+xTotOffset)+"\" cy=\""+(minY+yTotOffset)+"\" r=\"4\" stroke=\"black\" stroke-width=\"1\" fill=\"yellow\"/>");
+        endElement(result, "svg");
+
+        return result.toString();
+    }
+
+    private void renderLines(StringBuilder result, ArrayList<Line2D> lines)
+    {
+        for(Line2D line : lines)
+        {
+            //Gray is default
+            String color = "rgb(100,100,100)";
+            String segmentName = line.SegmentName.toLowerCase();
+
+            if(UseColor)
+            {
+                if(segmentName.contains("soma"))
+                {
+                    color = "red";
+                }
+                else if(segmentName.contains("dend"))
+                {
+                    color = "black";
+                }
+                else if(segmentName.contains("axo") || segmentName.contains("apic"))
+                {
+                    color = "blue";
+                }
+            }
+
+            String style = "stroke:"+color+";stroke-width:" + line.Diameter;
+
+            addLine(result, line.x1, line.y1, line.x2, line.y2, style);
+        }
+    }
+
+    private RectanglePacker<Cell2D> packViews(ArrayList<Cell2D> views)
+    {
+        //Sort by descending width
+        Collections.sort(views);
+
+        //Find max width/height
+        double maxHeight = views.get(0).Height();
+        double maxWidth = views.get(0).Width();
+        for(Cell2D view : views)
+        {
+            if(view.Height() > maxHeight)
+                maxHeight = view.Height();
+
+            if(view.Width() > maxWidth)
+                maxWidth = view.Width();
+        }
+
+        int scale = 1;
+        boolean doesNotFit;
+        RectanglePacker<Cell2D> packer;
+
+        do
+        {
+            doesNotFit = false;
+
+            //Define the region in which to pack
+            packer = new RectanglePacker<Cell2D>
+            (
+                    (int)(maxWidth * scale),
+                    (int)(maxHeight * scale),
+                    perspectiveMargin //margin
+            );
+
+            //Place the views, starting with largest into packer, and have it recursively try packing
+            //If one does not fit into the current size, increase the region by scaling dimensions
+            for(Cell2D cellView : views)
+            {
+                if(packer.insert((int)cellView.Width(), (int)cellView.Height(), cellView) == null)
+                {
+                    doesNotFit = true;
+                    break;
+                }
+            }
+
+            scale++;
+        }
+        while (doesNotFit);
+
+        return packer;
     }
 
     private void addLine(StringBuilder main, double x1, double y1, double x2, double y2, String style)
@@ -206,7 +189,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
     public static void main(String[] args) throws Exception
     {
 
-        String fileName = "src/test/resources/examples/L23PyrRS.nml";
+        //String fileName = "src/test/resources/examples/L23PyrRS.nml";
+        String fileName = "src/test/resources/examples/L5PC.cell.nml";
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
         File inputFile = new File(fileName);
@@ -214,6 +198,10 @@ public class SVGWriter extends ANeuroMLXMLWriter
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
 
         SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
+
+        //Color different segment groups differently
+        svgw.UseColor = false;
+
         String svg = svgw.getMainScript();
 
         System.out.println(svg);
