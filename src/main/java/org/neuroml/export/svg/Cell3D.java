@@ -27,12 +27,12 @@ public class Cell3D
 
     public Cell2D SideView()
     {
-        return Rotate(90, 0).DefaultView();
+        return Rotate(0, 90).DefaultView();
     }
 
     public Cell2D FrontView()
     {
-        return Rotate(0, 90).DefaultView();
+        return Rotate(90, 90).DefaultView();
     }
 
     public Cell2D PerspectiveView(double degreesAroundZ, double degreesAroundY)
