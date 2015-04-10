@@ -22,17 +22,17 @@ public class Cell3D
 
     public Cell2D TopView()
     {
-        return DefaultView();
+        return Rotate(180,0).DefaultView();
     }
 
     public Cell2D SideView()
     {
-        return Rotate(90, 0).DefaultView();
+        return Rotate(180, 90).DefaultView();
     }
 
     public Cell2D FrontView()
     {
-        return Rotate(0, 90).DefaultView();
+        return Rotate(270, 90).DefaultView();
     }
 
     public Cell2D PerspectiveView(double degreesAroundZ, double degreesAroundY)

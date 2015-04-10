@@ -68,7 +68,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
             views.add(cell3D.TopView());
             views.add(cell3D.SideView());
             views.add(cell3D.FrontView());
-            views.add(cell3D.PerspectiveView(45, 45));
+            views.add(cell3D.PerspectiveView(180+45, 45));
 
             //Pack views to minimize occupied area
             RectanglePacker<Cell2D> packer = packViews(views);
@@ -126,7 +126,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
     private RectanglePacker<Cell2D> packViews(ArrayList<Cell2D> views)
     {
-        //Sort by descending width
+        //Sort by descending height
         Collections.sort(views);
 
         //Find max width/height
@@ -200,7 +200,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
 
         //Color different segment groups differently
-        svgw.UseColor = false;
+        svgw.UseColor = true;
 
         String svg = svgw.getMainScript();
 

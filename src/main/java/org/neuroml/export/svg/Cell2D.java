@@ -121,6 +121,6 @@ public class Cell2D implements Comparable<Cell2D>
     @Override
     public int compareTo(Cell2D o)
     {
-        return (int)Math.round(o.Width() - Width());
+        return (int)Math.round(o.Height() - Height());
     }
 }
