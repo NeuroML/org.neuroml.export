@@ -21,177 +21,180 @@ import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.model.util.NeuroMLException;
 
 /**
- * 
+ *
  * @author padraig
  */
 public class GeppettoWriter extends AXMLWriter
 {
 
-	private final File inputFile;
+    private final File inputFile;
 
-	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile) throws ModelFeatureSupportException, LEMSException, NeuroMLException
-	{
-		super(lems, Format.GEPPETTO, outputFolder,outputFileName);
-		this.inputFile = inputFile;
-	}
+    public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+    {
+        super(lems, Format.GEPPETTO, outputFolder, outputFileName);
+        this.inputFile = inputFile;
+    }
 
     @Override
-	public void setSupportedFeatures()
-	{
-		sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
-	}
+    public void setSupportedFeatures()
+    {
+        sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
+    }
 
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-	public String getMainScript() throws ContentError
-	{
+    public String getMainScript() throws ContentError
+    {
 
-		StringBuilder main = new StringBuilder();
-		main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+        StringBuilder main = new StringBuilder();
+        main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
 
-		String[] attrs = new String[] { "xmlns=http://www.openworm.org/simulationSchema", "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-				"xsi:schemaLocation=http://www.openworm.org/simulationSchema https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd" };
+        String[] attrs = new String[]
+        {
+            "xmlns=http://www.openworm.org/simulationSchema", "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+            "xsi:schemaLocation=http://www.openworm.org/simulationSchema https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd"
+        };
 
-		startElement(main, "simulation", attrs);
+        startElement(main, "simulation", attrs);
 
-		startElement(main, "entity");
+        startElement(main, "entity");
 
-		Target target = lems.getTarget();
+        Target target = lems.getTarget();
 
-		Component simCpt = target.getComponent();
-		E.info("simCpt: " + simCpt);
-		String simId = simCpt.getID();
-		startEndTextElement(main, "id", simId);
+        Component simCpt = target.getComponent();
+        E.info("simCpt: " + simCpt);
+        String simId = simCpt.getID();
+        startEndTextElement(main, "id", simId);
 
-		startElement(main, "aspect");
+        startElement(main, "aspect");
 
-		startEndTextElement(main, "id", "electrical");
+        startEndTextElement(main, "id", "electrical");
 
-		startElement(main, "simulator");
-		startEndTextElement(main, "simulatorId", "jLemsSimulator");
-		endElement(main, "simulator");
+        startElement(main, "simulator");
+        startEndTextElement(main, "simulatorId", "jLemsSimulator");
+        endElement(main, "simulator");
 
-		startElement(main, "model");
-		startEndTextElement(main, "modelInterpreterId", "lemsModelInterpreter");
-		startEndTextElement(main, "modelURL", "file:///" + this.inputFile.getAbsolutePath());
-		endElement(main, "model");
+        startElement(main, "model");
+        startEndTextElement(main, "modelInterpreterId", "lemsModelInterpreter");
+        startEndTextElement(main, "modelURL", "file:///" + this.inputFile.getAbsolutePath());
+        endElement(main, "model");
 
-		endElement(main, "aspect");
-		endElement(main, "entity");
+        endElement(main, "aspect");
+        endElement(main, "entity");
 
-		File geppettoScript = new File(getOutputFolder(), this.inputFile.getName().replace(".xml", ".js"));
+        File geppettoScript = new File(getOutputFolder(), this.inputFile.getName().replace(".xml", ".js"));
 
-		StringBuilder gScript = new StringBuilder();
+        StringBuilder gScript = new StringBuilder();
 
-		ArrayList<String> watchVars = new ArrayList<String>();
+        ArrayList<String> watchVars = new ArrayList<String>();
 
-		gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
+        gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
 
-		StringBuilder gScriptPlots = new StringBuilder();
-        
-		int dispIndex = 1;
-		for(Component dispComp : simCpt.getAllChildren())
-		{
-			if(dispComp.getTypeName().equals("Display"))
-			{
+        StringBuilder gScriptPlots = new StringBuilder();
 
-				gScriptPlots.append("\nG.addWidget(GEPPETTO.Widgets.PLOT);\n");
-				String plot = "Plot" + dispIndex;
-				gScriptPlots.append(plot + ".setOptions({yaxis:{min:-.08,max:-.04},xaxis:{min:0,max:400,show:false}});\n");
-				gScriptPlots.append(plot + ".setSize(400, 600);\n");
-				gScriptPlots.append(plot + ".setPosition(" + (dispIndex * 200) + "," + (dispIndex * 200) + ");\n");
-				gScriptPlots.append(plot + ".setName(\"" + dispComp.getStringValue("title") + "\");\n");
+        int dispIndex = 1;
+        for (Component dispComp : simCpt.getAllChildren())
+        {
+            if (dispComp.getTypeName().equals("Display"))
+            {
 
-				dispIndex++;
-				for(Component lineComp : dispComp.getAllChildren())
-				{
-					if(lineComp.getTypeName().equals("Line"))
-					{
+                gScriptPlots.append("\nG.addWidget(GEPPETTO.Widgets.PLOT);\n");
+                String plot = "Plot" + dispIndex;
+                gScriptPlots.append(plot + ".setOptions({yaxis:{min:-.08,max:-.04},xaxis:{min:0,max:400,show:false}});\n");
+                gScriptPlots.append(plot + ".setSize(400, 600);\n");
+                gScriptPlots.append(plot + ".setPosition(" + (dispIndex * 200) + "," + (dispIndex * 200) + ");\n");
+                gScriptPlots.append(plot + ".setName(\"" + dispComp.getStringValue("title") + "\");\n");
 
-						String ref = lineComp.getStringValue("quantity");
-						String gepRef = simId + ".electrical.SimulationTree." + ref.replaceAll("/", ".");
-						gScriptPlots.append(plot + ".plotData(" + gepRef + ");\n");
-						watchVars.add(gepRef);
-					}
-				}
-			}
-		}
+                dispIndex++;
+                for (Component lineComp : dispComp.getAllChildren())
+                {
+                    if (lineComp.getTypeName().equals("Line"))
+                    {
 
-		for(int ii = 0; ii < watchVars.size(); ii++)
-		{
-			if(ii > 0) gScript.append(", ");
-			gScript.append("\"" + watchVars.get(ii) + "\"");
-		}
-		gScript.append(" ]}]);\n\n");
-        
+                        String ref = lineComp.getStringValue("quantity");
+                        String gepRef = simId + ".electrical.SimulationTree." + ref.replaceAll("/", ".");
+                        gScriptPlots.append(plot + ".plotData(" + gepRef + ");\n");
+                        watchVars.add(gepRef);
+                    }
+                }
+            }
+        }
+
+        for (int ii = 0; ii < watchVars.size(); ii++)
+        {
+            if (ii > 0)
+            {
+                gScript.append(", ");
+            }
+            gScript.append("\"" + watchVars.get(ii) + "\"");
+        }
+        gScript.append(" ]}]);\n\n");
+
         gScript.append(gScriptPlots.toString());
 
-		gScript.append("\nSimulation.startWatch();\n");
-		//gScript.append("Simulation.start();\n");
+        gScript.append("\nSimulation.startWatch();\n");
+        //gScript.append("Simulation.start();\n");
 
-		try
-		{
-			FileUtil.writeStringToFile(gScript.toString(), geppettoScript);
+        try
+        {
+            FileUtil.writeStringToFile(gScript.toString(), geppettoScript);
 
-		}
-		catch(IOException ex)
-		{
-			throw new ContentError("Error saving Geppetto script", ex);
-		}
+        } catch (IOException ex)
+        {
+            throw new ContentError("Error saving Geppetto script", ex);
+        }
 
-		startEndTextElement(main, "script", "file:///" + geppettoScript.getAbsolutePath());
+        startEndTextElement(main, "script", "file:///" + geppettoScript.getAbsolutePath());
 
-		endElement(main, "simulation");
+        endElement(main, "simulation");
 
-		return main.toString();
-	}
+        return main.toString();
+    }
 
-	@Override
-	public List<File> convert()
-	{
-		List<File> outputFiles = new ArrayList<File>();
+    @Override
+    public List<File> convert()
+    {
+        List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        try
+        {
+            String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+            File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
+            FileUtil.writeStringToFile(code, outputFile);
+            outputFiles.add(outputFile);
 
-		}
-		catch(IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(ContentError e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        } catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ContentError e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-		return outputFiles;
-	}
-    	
+        return outputFiles;
+    }
+
     public static void main(String[] args) throws Exception
-	{
+    {
         File exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
         exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
-		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
+        Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
 
-		GeppettoWriter gw = new GeppettoWriter(lems, exampleFile.getParentFile(), exampleFile.getName().replaceAll("xml", "geppetto.xml"), exampleFile);
+        GeppettoWriter gw = new GeppettoWriter(lems, exampleFile.getParentFile(), exampleFile.getName().replaceAll("xml", "geppetto.xml"), exampleFile);
 
-		List<File> outputFiles = gw.convert();
-		for(File outputFile : outputFiles)
-		{
-            System.out.println("Checking: "+outputFile.getCanonicalPath());
-            if (outputFile.getName().indexOf("geppetto")>0) {
+        List<File> outputFiles = gw.convert();
+        for (File outputFile : outputFiles)
+        {
+            System.out.println("Checking: " + outputFile.getCanonicalPath());
+            if (outputFile.getName().indexOf("geppetto") > 0)
+            {
                 System.out.println("\nTry running this file locally with Geppetto using:\n\n    "
-                    + "http://localhost:8080/org.geppetto.frontend/?sim=file://"+outputFile+"\n");
+                    + "http://localhost:8080/org.geppetto.frontend/?sim=file://" + outputFile + "\n");
             }
-		}
+        }
 
-
-	}
+    }
 
 }
