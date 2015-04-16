@@ -16,6 +16,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -25,6 +26,7 @@ import org.neuroml.model.util.NeuroMLException;
  */
 public class GeppettoWriter extends AXMLWriter
 {
+
 	private final File inputFile;
 
 	public GeppettoWriter(Lems lems, File outputFolder, String outputFileName, File inputFile) throws ModelFeatureSupportException, LEMSException, NeuroMLException
@@ -39,6 +41,7 @@ public class GeppettoWriter extends AXMLWriter
 		sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
 	}
 
+    @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	public String getMainScript() throws ContentError
 	{
 
@@ -83,18 +86,20 @@ public class GeppettoWriter extends AXMLWriter
 
 		gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
 
+		StringBuilder gScriptPlots = new StringBuilder();
+        
 		int dispIndex = 1;
 		for(Component dispComp : simCpt.getAllChildren())
 		{
 			if(dispComp.getTypeName().equals("Display"))
 			{
 
-				gScript.append("\nG.addWidget(GEPPETTO.Widgets.PLOT);\n");
+				gScriptPlots.append("\nG.addWidget(GEPPETTO.Widgets.PLOT);\n");
 				String plot = "Plot" + dispIndex;
-				gScript.append(plot + ".setOptions({yaxis:{min:-.08,max:-.04},xaxis:{min:0,max:400,show:false}});\n");
-				gScript.append(plot + ".setSize(400, 600);\n");
-				gScript.append(plot + ".setPosition(" + (dispIndex * 200) + "," + (dispIndex * 200) + ");\n");
-				gScript.append(plot + ".setName(\"" + dispComp.getStringValue("title") + "\");\n");
+				gScriptPlots.append(plot + ".setOptions({yaxis:{min:-.08,max:-.04},xaxis:{min:0,max:400,show:false}});\n");
+				gScriptPlots.append(plot + ".setSize(400, 600);\n");
+				gScriptPlots.append(plot + ".setPosition(" + (dispIndex * 200) + "," + (dispIndex * 200) + ");\n");
+				gScriptPlots.append(plot + ".setName(\"" + dispComp.getStringValue("title") + "\");\n");
 
 				dispIndex++;
 				for(Component lineComp : dispComp.getAllChildren())
@@ -104,7 +109,7 @@ public class GeppettoWriter extends AXMLWriter
 
 						String ref = lineComp.getStringValue("quantity");
 						String gepRef = simId + ".electrical.SimulationTree." + ref.replaceAll("/", ".");
-						gScript.append(plot + ".plotData(" + gepRef + ");\n");
+						gScriptPlots.append(plot + ".plotData(" + gepRef + ");\n");
 						watchVars.add(gepRef);
 					}
 				}
@@ -117,9 +122,11 @@ public class GeppettoWriter extends AXMLWriter
 			gScript.append("\"" + watchVars.get(ii) + "\"");
 		}
 		gScript.append(" ]}]);\n\n");
+        
+        gScript.append(gScriptPlots.toString());
 
-		gScript.append("Simulation.startWatch();\n");
-		gScript.append("Simulation.start();\n");
+		gScript.append("\nSimulation.startWatch();\n");
+		//gScript.append("Simulation.start();\n");
 
 		try
 		{
@@ -164,6 +171,27 @@ public class GeppettoWriter extends AXMLWriter
 		}
 
 		return outputFiles;
+	}
+    	
+    public static void main(String[] args) throws Exception
+	{
+        File exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
+        exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
+		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
+
+		GeppettoWriter gw = new GeppettoWriter(lems, exampleFile.getParentFile(), exampleFile.getName().replaceAll("xml", "geppetto.xml"), exampleFile);
+
+		List<File> outputFiles = gw.convert();
+		for(File outputFile : outputFiles)
+		{
+            System.out.println("Checking: "+outputFile.getCanonicalPath());
+            if (outputFile.getName().indexOf("geppetto")>0) {
+                System.out.println("\nTry running this file locally with Geppetto using:\n\n    "
+                    + "http://localhost:8080/org.geppetto.frontend/?sim=file://"+outputFile+"\n");
+            }
+		}
+
+
 	}
 
 }
