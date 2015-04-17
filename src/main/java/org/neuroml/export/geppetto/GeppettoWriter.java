@@ -75,7 +75,7 @@ public class GeppettoWriter extends AXMLWriter
 
         startElement(main, "model");
         startEndTextElement(main, "modelInterpreterId", "lemsModelInterpreter");
-        startEndTextElement(main, "modelURL", "file:///" + this.inputFile.getAbsolutePath());
+        startEndTextElement(main, "modelURL", "file://" + this.inputFile.getAbsolutePath());
         endElement(main, "model");
 
         endElement(main, "aspect");
@@ -180,6 +180,7 @@ public class GeppettoWriter extends AXMLWriter
     {
         File exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
         exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
+        exampleFile = new File("/home/padraig/Dropbox/work/temp/nmltest/LEMSexamples/LEMS_NML2_Ex13_Instances.xml");
         Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
 
         GeppettoWriter gw = new GeppettoWriter(lems, exampleFile.getParentFile(), exampleFile.getName().replaceAll("xml", "geppetto.xml"), exampleFile);
