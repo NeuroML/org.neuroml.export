@@ -93,6 +93,7 @@ public class GeppettoWriter extends AXMLWriter
         gScript.append("treeViewWidget.setName(\"Model information\");\n\n");
 
         
+        gScript.append("/*");
         
         gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
 
@@ -140,6 +141,9 @@ public class GeppettoWriter extends AXMLWriter
 
         gScript.append("\nSimulation.startWatch();\n");
         //gScript.append("Simulation.start();\n");
+        
+        gScript.append("*/\n");
+        
 
         try
         {
@@ -188,6 +192,7 @@ public class GeppettoWriter extends AXMLWriter
         File exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
         exampleFile = new File("/home/padraig/NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
         exampleFile = new File("/home/padraig/Dropbox/work/temp/nmltest/LEMSexamples/LEMS_NML2_Ex13_Instances.xml");
+        exampleFile = new File("/home/padraig/Dropbox/work/temp/nmltest/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
         Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
 
         GeppettoWriter gw = new GeppettoWriter(lems, exampleFile.getParentFile(), exampleFile.getName().replaceAll("xml", "geppetto.xml"), exampleFile);
