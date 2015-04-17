@@ -264,6 +264,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 String popName;
                 int number;
                 Component popComp;
+                
+                HashMap<Integer,String> locations = new HashMap<Integer,String>();
+                        
 
                 if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION))
                 {
@@ -279,11 +282,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
                     popComp = lems.getComponent(compReference);
                     number = 0;
-                    for(Component comp : popsOrComponent.getAllChildren())
+                    for(Component instance : popsOrComponent.getAllChildren())
                     {
-                        if(comp.getComponentType().getName().equals(NeuroMLElements.INSTANCE))
+                        if(instance.getComponentType().getName().equals(NeuroMLElements.INSTANCE))
                         {
                             number++;
+                            Component loc = instance.getChild(NeuroMLElements.LOCATION);
+                            String location = "("+loc.getAttributeValue(NeuroMLElements.LOCATION_X)
+                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Y)
+                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Z)+")";
+                            
+                            locations.put(Integer.parseInt(instance.getID()), location);
                         }
                     }
                     popComp.getAllChildren().size();
@@ -331,8 +340,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append("    h(\"a_" + popName + "[%i] = new " + cellName + "()\"%i)\n");
                     // main.append("    cell."+getNrnSectionName(cell.getMorphology().getSegment().get(0))+".push()\n");
                     main.append("    h(\"access a_" + popName + "[%i]." + nh.getNrnSectionName(cell.getMorphology().getSegment().get(0)) + "\"%i)\n\n");
-
-                    main.append(String.format("h(\"proc initialiseV_%s() { for i = 0, n_%s-1 { a_%s[i].set_initial_v() } }\")\n", popName, popName, popName));
+                    
+                    for (Integer cell_id: locations.keySet()) {
+                        main.append("h(\"a_" + popName + "["+cell_id+"].position"+locations.get(cell_id)+"\")\n");
+                    }
+                   
+                    main.append(String.format("\nh(\"proc initialiseV_%s() { for i = 0, n_%s-1 { a_%s[i].set_initial_v() } }\")\n", popName, popName, popName));
                     main.append(String.format("h(\"objref fih_%s\")\n", popName));
                     main.append(String.format("h(\'{fih_%s = new FInitializeHandler(0, \"initialiseV_%s()\")}\')\n\n", popName, popName));
 
@@ -2499,9 +2512,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
+                
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
+        
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml")); 
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
+
         
        
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml")); 
