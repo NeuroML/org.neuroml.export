@@ -87,6 +87,13 @@ public class GeppettoWriter extends AXMLWriter
 
         ArrayList<String> watchVars = new ArrayList<String>();
 
+        gScript.append(simId+".electrical.getModelTree()\n");
+        gScript.append("var treeViewWidget = G.addWidget(3);\n");
+        gScript.append("treeViewWidget.setData("+simId+");\n\n");
+        gScript.append("treeViewWidget.setName(\"Model information\");\n\n");
+
+        
+        
         gScript.append("Simulation.addWatchLists([{name:\"variables\", variablePaths:[ ");
 
         StringBuilder gScriptPlots = new StringBuilder();
