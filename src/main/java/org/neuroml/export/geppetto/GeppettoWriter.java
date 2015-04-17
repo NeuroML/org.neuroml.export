@@ -143,7 +143,7 @@ public class GeppettoWriter extends AXMLWriter
             throw new ContentError("Error saving Geppetto script", ex);
         }
 
-        startEndTextElement(main, "script", "file:///" + geppettoScript.getAbsolutePath());
+        startEndTextElement(main, "script", "file://" + geppettoScript.getAbsolutePath());
 
         endElement(main, "simulation");
 
