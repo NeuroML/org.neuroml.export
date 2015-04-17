@@ -1404,6 +1404,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             blockNeuron.append("POINT_PROCESS " + mechName + "\n");
         }
+        
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))
+        {
+            blockAssigned.append("v (mV)\n");
+        }
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
@@ -1652,7 +1657,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(!resetVoltage)  // A "normal" OnCondition
                 {
-                    if (!comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE)) 
+                    System.out.println(comp.getComponentType());
+                    System.out.println(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE));
+                    if (! (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) ||
+                           comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))) 
                     {
                         blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
                         for(StateAssignment sa : oc.getStateAssignments())
@@ -1882,7 +1890,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         blockInitial.append("\n" + var + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
                     }
                 }
-                if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
+                if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) || 
+                   comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))
                 {
                     blockInitial.append("\nnet_send(0, 1) : go to NET_RECEIVE block, flag 1, for initial state\n");
                 }
@@ -2512,7 +2521,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
-                
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
