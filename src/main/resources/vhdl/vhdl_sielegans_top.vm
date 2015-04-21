@@ -1,0 +1,919 @@
+######################################################
+### Template for SOM-VHDL codegen.                 ###
+### This is work in progress. Expect major changes.###
+######################################################
+
+###################################################################
+###################################################################
+-- VHDL script automatically generated from a LEMS/SEM description
+###################################################################
+###################################################################
+
+
+###################################################################
+-- Standard Library Bits
+###################################################################
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+library ieee_proposed;
+use ieee_proposed.fixed_pkg.all;
+use ieee_proposed.fixed_float_types.ALL;
+use std.textio.all;
+use ieee.std_logic_textio.all; -- if you're saving this type of signal
+use IEEE.numeric_std.all;
+
+###################################################################
+###################################################################
+
+
+
+
+
+
+
+
+
+
+ 
+entity sielegans_top is
+    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES
+           rst : in STD_LOGIC; --SYNCHRONOUS RESET
+           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS
+		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
+		   reset_model : in STD_LOGIC;
+		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
+		   
+           mega_bus_in : in STD_LOGIC_Vector (99999 downto 0 );
+           mega_bus_out : out STD_LOGIC_Vector (99999 downto 0 )
+		   );
+end sielegans_top;
+
+---------------------------------------------------------------------
+
+architecture top of sielegans_top is
+
+signal step_once_complete_int : STD_LOGIC;
+signal seven_steps_done : STD_LOGIC;
+signal step_once_go_int : STD_LOGIC;
+signal seven_steps_done_shot_done : STD_LOGIC;
+signal seven_steps_done_shot : STD_LOGIC;
+signal COUNT : unsigned(2 downto 0) := "000";
+
+## Go through each component and gets it definition here
+
+#foreach ($neuron in $NeuronComponents)
+
+component top_synth
+    Port ( clk : in STD_LOGIC; --SYSTEM CLOCK, THIS ITSELF DOES NOT SIGNIFY TIME STEPS - AKA A SINGLE TIMESTEP MAY TAKE MANY CLOCK CYCLES
+           rst : in STD_LOGIC; --SYNCHRONOUS RESET
+           ce : in STD_LOGIC; --FOR THE SAKE OF COMPLETION ALL INTERNAL REGISTERS WILL BE CONNECTED TO THIS
+		   step_once_go : in STD_LOGIC; --signals to the neuron from the core that a time step is to be simulated
+		   reset_model : in STD_LOGIC;
+		   step_once_complete : out STD_LOGIC; --signals to the core that a time step has finished
+		   eventport_in_spike_aggregate : in STD_LOGIC_VECTOR(511 downto 0);
+		   SelectSpikesIn :  in STD_LOGIC_VECTOR(4607 downto 0);
+		   
+##Event Ports
+    #foreach ($par in $neuron.eventports)
+		#set( $foo = $neuron.name + "_eventport_" + $par.direction +  "_" + $par.name + " : " + $par.direction + " STD_LOGIC;"  )
+		$foo
+	#end
+	
+
+##Parameters
+	#foreach ($par in $neuron.parameters)
+		#set( $foo = $neuron.name + "_param_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##StateVariables
+	#foreach ($par in $neuron.state)
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $neuron.state)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $neuron.derivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $neuron.conditionalderivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+	
+##THE CHILDREN
+#foreach ($child in $neuron.Children)
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set( $foo = $neuron.name + "_param_" + $par.type  +  "_" + $child.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name +  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name +  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		
+##derivedVariables
+	#foreach ($par in $child.derivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+		
+			
+##THE CHILDREN
+#foreach ($child3 in $child.Children)
+
+
+##Parameters
+	#foreach ($par in $child3.parameters)
+		#set( $foo = $neuron.name + "_param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $child3.derivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end				
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+					
+					
+##THE CHILDREN
+#foreach ($child4 in $child3.Children)
+
+	
+##Parameters
+	#foreach ($par in $child4.parameters)
+		#set( $foo = $neuron.name + "_param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $child4.derivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end						
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end						
+	
+		
+								
+								
+##THE CHILDREN
+#foreach ($child5 in $child4.Children)
+
+	
+##Parameters
+	#foreach ($par in $child5.parameters)
+		#set( $foo = $neuron.name + "_param_" + $par.type  +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+##derivedVariables
+	#foreach ($par in $child5.derivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+   "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set( $foo = $neuron.name + "_stateRESTORE_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+   "_" + $par.name + " : in sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+		#set( $foo = $neuron.name + "_stateCURRENT_" + $par.type +  "_" + $child.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + " : out sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+		
+#end
+
+#end
+
+#end
+		
+		
+		
+#end
+## END THE CHILDREN
+		   
+##System Parameters
+           sysparam_time_timestep : sfixed (-6 downto -22);
+           sysparam_time_simtime : sfixed (6 downto -22)
+		   );
+end component;
+#end
+
+##Internal TestbenchSignals - all events and exposures of all instantiated neurons
+
+	
+#foreach ($child in $NeuronComponents)
+##Exposure Signals
+
+
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child.derivedvariables)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set( $foo ="signal " +  $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+##EventPorts
+#foreach ($par in $child.eventports)
+	#set( $foo = "signal " + $child.name + "_eventport_" + $par.direction + "_" + $par.name + "_internal : std_logic; ")
+$foo
+#end
+
+
+##THE CHILDREN
+#foreach ($child2 in $child.Children)
+
+
+##StateVariables
+	#foreach ($par in $child2.state)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child2.derivedvariables)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child2.conditionalderivedvariables)
+		#set( $foo ="signal " +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name  +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+		
+		
+##THE CHILDREN
+#foreach ($child3 in $child2.Children)
+
+		
+				
+
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child3.derivedvariables)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set( $foo ="signal " +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name  +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+					
+					
+		
+##THE CHILDREN
+#foreach ($child4 in $child3.Children)
+
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child4.derivedvariables)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set( $foo ="signal " +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name  +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+							
+				
+##THE CHILDREN
+#foreach ($child5 in $child4.Children)
+
+		
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child5.derivedvariables)
+		#set( $foo = "signal " + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set( $foo ="signal " +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name  +  "_" + $par.name + "_int : sfixed (" + $par.integer + " downto " + $par.fraction + ");"  )
+		$foo
+	#end	
+					
+
+#end
+
+#end
+
+#end
+
+#end
+## END THE CHILDREN
+
+
+#end	
+
+begin
+
+
+##instantiate each neuron
+#set ($currentBit = 5119)
+#set ($currentLength = 0)
+#set($Integer = 0)
+
+#foreach ($child in $NeuronComponents)
+#set( $foo = $child.name + "_uut")
+top_synth_uut : top_synth 
+    port map (	clk => clk,
+				rst => rst, 
+				ce => ce,
+		   step_once_go  => step_once_go,
+		   reset_model => reset_model,
+		   step_once_complete  => step_once_complete,
+		   eventport_in_spike_aggregate =>  mega_bus_in(511 downto 0),
+		   SelectSpikesIn => mega_bus_in(5119 downto 512),
+		   
+##Event Ports
+    #foreach ($par in $child.eventports)
+		#set( $foo =  $child.name + "_eventport_" + $par.direction +  "_" + $par.name + " => " + $child.name + "_eventport_" + $par.direction + "_" + $par.name + "_internal ,"  )
+		$foo
+	#end
+
+##Parameters
+	#foreach ($par in $child.parameters)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo =  $child.name + "_param_" + $par.type +  "_" + $par.name + " => to_sfixed ( mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+
+	
+##StateVariables
+	#foreach ($par in $child.state)
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+
+##StateVariables
+	#foreach ($par in $child.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $child.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+	
+
+##THE CHILDREN
+#foreach ($child2 in $child.Children)
+
+##Parameters
+#foreach ($par in $child2.parameters)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+	#set( $foo =  $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+	$foo
+#end
+
+
+##StateVariables
+	#foreach ($par in $child2.state)
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child2.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+		
+##derivedVariables
+	#foreach ($par in $child2.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+	#foreach ($par in $child2.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +   "_" + $par.name + "_int,"  )
+		$foo
+	#end
+		
+##THE CHILDREN
+#foreach ($child3 in $child2.Children)
+##Parameters
+#foreach ($par in $child3.parameters)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+	#set( $foo = $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+	$foo
+#end
+
+
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+    "_" + $par.name + "_int,"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $child3.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name +" => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+    "_" + $par.name + "_int,"  )
+		$foo
+	#end				
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+    "_" + $par.name + "_int,"  )
+		$foo
+	#end	
+					
+							
+							
+##THE CHILDREN
+#foreach ($child4 in $child3.Children)
+##Parameters
+#foreach ($par in $child4.parameters)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+	#set( $foo =  $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+	$foo
+#end
+
+
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int,"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+	
+##derivedVariables
+	#foreach ($par in $child4.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int,"  )
+		$foo
+	#end						
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $par.name + "_int,"  )
+		$foo
+	#end						
+			
+							
+							
+									
+##THE CHILDREN
+#foreach ($child5 in $child4.Children)
+##Parameters
+#foreach ($par in $child5.parameters)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+	#set( $foo =  $child.name + "_param_" + $par.type  +  "_" + $child2.name +  "_" + $child3.name +  "_" + $child4.name +  "_" + $child5.name +  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+	$foo
+#end
+
+
+
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name  +  "_" + $par.name + "_int,"  )
+		$foo
+	#end
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+ "_" + $child5.name+  "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+	#end
+##derivedVariables
+	#foreach ($par in $child5.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+   "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name  +  "_" + $par.name + "_int,"  )
+		$foo
+	#end	
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = $child.name + "_stateRESTORE_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+ "_" + $child5.name+   "_" + $par.name + " => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + ")," + $par.integer + " , " + $par.fraction + "),"  )
+		$foo
+		#set( $foo = $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name + "_" + $child3.name+ "_" + $child4.name+  "_" + $child5.name+  "_" + $par.name + " => " + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name  +  "_" + $par.name + "_int,"  )
+		$foo
+	#end	
+
+#end
+#end
+#end
+#end
+## END THE CHILDREN
+	
+##System Parameters
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = 16)
+		#set ($currentTop = $currentBit + $currentLength)
+           #set( $foo = "sysparam_time_timestep => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + "),-6 , -22),")
+		   $foo
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = 28)
+		#set ($currentTop = $currentBit + $currentLength)
+           #set( $foo = "sysparam_time_simtime => to_sfixed (mega_bus_in(" + $currentTop + " downto " + $currentBit + "),6, -22)")
+		   $foo
+		   );
+		
+
+#end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#set ($currentBit = -1)
+#set ($currentLength = 0)
+#set($Integer = 0)
+
+#foreach ($child in $NeuronComponents)
+##Exposure Signals
+
+
+##StateVariables
+	#foreach ($par in $child.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+	#foreach ($par in $child.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo =" mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" +  $child.name + "_stateCURRENT_" + $par.type +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+##EventPorts
+#foreach ($par in $child.eventports)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+	#set( $foo = " mega_bus_out("  + $currentBit + ") <= " + $child.name + "_eventport_" + $par.direction + "_" + $par.name + "_internal; ")
+$foo
+#end
+
+
+##THE CHILDREN
+#foreach ($child2 in $child.Children)
+
+
+##StateVariables
+	#foreach ($par in $child2.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child2.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+	#foreach ($par in $child2.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo =" mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name  +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+		
+		
+##THE CHILDREN
+#foreach ($child3 in $child2.Children)
+
+		
+				
+
+##StateVariables
+	#foreach ($par in $child3.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child3.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+	#foreach ($par in $child3.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo =" mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" +  $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name  +  "_" + $par.name + "_int);"  )
+		$foo
+	#end	
+					
+					
+		
+##THE CHILDREN
+#foreach ($child4 in $child3.Children)
+
+##StateVariables
+	#foreach ($par in $child4.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child4.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" +$child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+	#foreach ($par in $child4.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name  +  "_" + $par.name + "_int);"  )
+		$foo
+	#end	
+							
+				
+##THE CHILDREN
+#foreach ($child5 in $child4.Children)
+
+		
+##StateVariables
+	#foreach ($par in $child5.state)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+
+	
+##derivedVariables
+	#foreach ($par in $child5.derivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" +$child.name + "_stateCURRENT_" + $par.type +  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name +  "_" + $par.name + "_int);"  )
+		$foo
+	#end
+	#foreach ($par in $child5.conditionalderivedvariables)
+		#set ($currentBit = $currentBit + $currentLength + 1)
+		#set ($currentLength = $Integer.parseInt($par.integer) - $Integer.parseInt($par.fraction))
+		#set ($currentTop = $currentBit + $currentLength)
+		#set( $foo = " mega_bus_out(" + $currentTop + " downto " + $currentBit + ") <= to_slv(" + $child.name + "_stateCURRENT_" + $par.type+  "_" + $child2.name +  "_" + $child3.name+  "_" + $child4.name+   "_" + $child5.name  +  "_" + $par.name + "_int);"  )
+		$foo
+	#end	
+					
+
+#end
+
+#end
+
+#end
+
+#end
+## END THE CHILDREN
+
+
+#end	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end top;
+
+###################################################################
+###################################################################
