@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lemsml.export.base.AXMLWriter;
-import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
@@ -73,7 +72,7 @@ public class SEDMLWriter extends AXMLWriter
 		Target target = lems.getTarget();
 
 		Component simCpt = target.getComponent();
-		E.info("simCpt: " + simCpt);
+        
 		String simId = simCpt.getID();
 
 		String targetId = simCpt.getStringValue("target");
@@ -138,8 +137,6 @@ public class SEDMLWriter extends AXMLWriter
 		addTextElement(main, "ci", " var_time_0 ");
 		endElement(main, "math");
 		endElement(main, "dataGenerator");
-
-		System.out.println("--- <" + simCpt.getAllChildren() + ">");
 
 		for(Component dispComp : simCpt.getAllChildren())
 		{

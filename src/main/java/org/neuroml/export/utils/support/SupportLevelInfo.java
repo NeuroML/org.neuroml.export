@@ -24,7 +24,11 @@ public class SupportLevelInfo
 
 	public enum Level
 	{
-		OUTSIDE_CURRENT_SCOPE, NONE, LOW, MEDIUM, HIGH;
+		OUTSIDE_CURRENT_SCOPE, /* Not supported and unlikely to be any time soon, due to known limitations of target simulator/format */
+        NONE,                  /* Not supported yet, but possibly could be in future*/
+        LOW,                   /* Supported format, but with known shortcomings */
+        MEDIUM,                /* Supported format, tested with a number of examples */
+        HIGH;                  /* Supported format, well tested */
 
 		public boolean isSupported()
 		{
@@ -34,7 +38,7 @@ public class SupportLevelInfo
 
 	private SupportLevelInfo()
 	{
-
+        /* Add info on formats supported in jLEMS */
 		addSupportInfo(Format.LEMS, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
 		addSupportInfo(Format.LEMS, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.HIGH);
