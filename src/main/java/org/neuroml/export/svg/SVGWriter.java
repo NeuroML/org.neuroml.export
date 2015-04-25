@@ -83,7 +83,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x, location.y);
 
                 //Write SVG for each line
-                renderLines(result, lines);
+                renderLines(result, lines, cell3D.somaSegIds, cell3D.dendSegIds, cell3D.axonSegIds, cell3D.apicalDendSegIds);
             }
         }
 
@@ -92,31 +92,35 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return result.toString();
     }
 
-    private void renderLines(StringBuilder result, ArrayList<Line2D> lines)
+    private void renderLines(StringBuilder result, 
+                             ArrayList<Line2D> lines,
+                             ArrayList<Integer> somaSegIds,
+                             ArrayList<Integer> dendSegIds,
+                             ArrayList<Integer> axonSegIds,
+                             ArrayList<Integer> apicalDendSegIds)
     {
         for(Line2D line : lines)
         {
             //Gray is default
             String color = "rgb(100,100,100)";
-            String segmentName = line.segmentName.toLowerCase();
 
             if(useColor)
             {
-                if(segmentName.contains("soma"))
+                if(somaSegIds.contains(line.segmentId))
                 {
                     color = "red";
                 }
-                else if(segmentName.contains("dend"))
+                else if(dendSegIds.contains(line.segmentId))
                 {
-                    color = "black";
+                    color = "green";
                 }
-                else if(segmentName.contains("axo"))
+                else if(axonSegIds.contains(line.segmentId))
                 {
                     color = "blue";
                 }
-                else if(segmentName.contains("apic"))
+                else if(apicalDendSegIds.contains(line.segmentId))
                 {
-                    color = "green";
+                    color = "black";
                 }
             }
 

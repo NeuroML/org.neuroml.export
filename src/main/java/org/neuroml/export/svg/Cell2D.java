@@ -113,7 +113,7 @@ public class Cell2D implements Comparable<Cell2D>
             line2D.y2 = line3D.distal.getY();
 
 
-            line2D.segmentName = line3D.segmentName;
+            line2D.segmentId = line3D.segmentId;
             line2D.diameter = line3D.diameter;
 
             Lines.add(line2D);

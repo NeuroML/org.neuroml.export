@@ -13,7 +13,7 @@ public class Line2D extends LineND
         Line2D result = new Line2D();
 
         result.diameter = diameter;
-        result.segmentName = segmentName;
+        result.segmentId = segmentId;
 
         result.x1 = x1;
         result.x2 = x2;

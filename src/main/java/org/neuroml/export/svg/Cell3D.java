@@ -4,12 +4,18 @@ import org.neuroml.model.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import org.neuroml.model.util.CellUtils;
 
 public class Cell3D
 {
     public ArrayList<Line3D> Lines;
     public String comment;
+    public ArrayList<Integer> somaSegIds = new ArrayList<Integer>();
+    public ArrayList<Integer> dendSegIds = new ArrayList<Integer>();
+    public ArrayList<Integer> axonSegIds = new ArrayList<Integer>();
+    public ArrayList<Integer> apicalDendSegIds = new ArrayList<Integer>();
     
 
     public Cell3D(String comment)
@@ -68,7 +74,7 @@ public class Cell3D
             newLine.distal = new Vector3D(line.distal.transform(rotationM));
             newLine.proximal = new Vector3D(line.proximal.transform(rotationM));
             newLine.diameter = line.diameter;
-            newLine.segmentName = line.segmentName;
+            newLine.segmentId = line.segmentId;
 
             result.Lines.add(newLine);
         }
@@ -89,6 +95,19 @@ public class Cell3D
         List<Segment> segments = morphology.getSegment();
         HashMap<Integer, Segment> segmentMap = new HashMap<Integer, Segment>();
 
+
+        LinkedHashMap<SegmentGroup, ArrayList<Integer>> segGrpsVsSegIds = CellUtils.getSegmentGroupsVsSegIds(cell);
+        
+        try{
+            somaSegIds = CellUtils.getSegmentIdsInGroup(cell, "soma_group");
+            dendSegIds = CellUtils.getSegmentIdsInGroup(cell, "dendrite_group");
+            axonSegIds = CellUtils.getSegmentIdsInGroup(cell, "axon_group");
+            apicalDendSegIds = CellUtils.getSegmentIdsInGroup(cell, "apical_dends");
+        }
+        catch (Exception e) {
+
+        }
+
         for(Segment segment : segments)
         {
             //Get both ends of the segment
@@ -108,15 +127,8 @@ public class Cell3D
             line.proximal = new Vector3D(proximal.getX(), proximal.getY(), proximal.getZ());
             line.diameter = (int) Math.round(0.49 + ((proximal.getDiameter() + distal.getDiameter()) / 2));
 
-            //Get the group name of the segment
-            for(SegmentGroup group : morphology.getSegmentGroup())
-            {
-                for(Member member : group.getMember())
-                {
-                    if(member.getSegment().equals(segment.getId()))
-                        line.segmentName = group.getId();
-                }
-            }
+            line.segmentId = segment.getId();
+
 
             result.add(line);
             segmentMap.put(segment.getId(), segment);

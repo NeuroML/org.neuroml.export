@@ -1,5 +1,6 @@
 package org.neuroml.export.svg;
 
+import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -18,16 +19,27 @@ import org.neuroml.model.util.NeuroMLException;
 public class SVGWriterTest extends TestCase
 {
 
-    public void testGetMainScript() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException
+    public void testRS() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException
     {
+        convertExample("L23PyrRS.nml");
+    }
+    public void testL5() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException
+    {
+        convertExample("L5PC.cell.nml");
+    }
+    public void testSCell() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException
+    {
+        convertExample("ShapedCell.cell.nml");
+    }
 
-        String exampleFilename = "L23PyrRS.nml";
+    public void convertExample(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, NeuroMLException
+    {
 
         String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + exampleFilename);
         NeuroMLConverter nmlc = new NeuroMLConverter();
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
 
-        SVGWriter sw = new SVGWriter(nmlDocument, AppTest.getTempDir(), exampleFilename.replaceAll("nml", "svg"));
+        SVGWriter sw = new SVGWriter(nmlDocument, new File(AppTest.getTempDir(), "../"+Utils.NEUROML_EXAMPLES_RESOURCES_DIR), exampleFilename.replaceAll("nml", "svg"));
 
         UtilsTest.checkConvertedFiles(sw.convert());
 
