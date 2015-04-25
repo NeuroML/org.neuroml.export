@@ -2,6 +2,6 @@ package org.neuroml.export.svg;
 
 public class LineND
 {
-    public double Diameter;
-    public String SegmentName;
+    public double diameter;
+    public String segmentName;
 }

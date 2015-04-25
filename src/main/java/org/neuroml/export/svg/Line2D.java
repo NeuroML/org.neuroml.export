@@ -8,12 +8,12 @@ public class Line2D extends LineND
     public double x2;
     public double y2;
 
-    public Line2D Copy()
+    public Line2D copy()
     {
         Line2D result = new Line2D();
 
-        result.Diameter = Diameter;
-        result.SegmentName = SegmentName;
+        result.diameter = diameter;
+        result.segmentName = segmentName;
 
         result.x1 = x1;
         result.x2 = x2;

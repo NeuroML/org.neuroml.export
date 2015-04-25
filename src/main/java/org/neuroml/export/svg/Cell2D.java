@@ -5,14 +5,16 @@ import java.util.ArrayList;
 public class Cell2D implements Comparable<Cell2D>
 {
     public ArrayList<Line2D> Lines;
+    public String comment;
 
     public double xMin;
     public double xMax;
     public double yMin;
     public double yMax;
 
-    public Cell2D(Cell3D source)
+    public Cell2D(Cell3D source, String comment)
     {
+        this.comment = comment;
         Lines = new ArrayList<Line2D>(source.Lines.size());
 
         flatten3DCell(source);
@@ -20,29 +22,29 @@ public class Cell2D implements Comparable<Cell2D>
         getRange();
     }
 
-    public double Width()
+    public double width()
     {
         return xMax - xMin;
     }
 
-    public double Height()
+    public double height()
     {
         return yMax - yMin;
     }
 
-    public double Area()
+    public double area()
     {
-        return Width()*Height();
+        return width()*height();
     }
 
     //Make all coordinates positive and translate them by the offsets
-    public ArrayList<Line2D> GetLinesForSVG(int offsetX, int offsetY)
+    public ArrayList<Line2D> getLinesForSVG(int offsetX, int offsetY)
     {
         ArrayList<Line2D> result = new ArrayList<Line2D>(Lines.size());
 
         for(Line2D line : Lines)
         {
-            Line2D newLine = line.Copy();
+            Line2D newLine = line.copy();
 
             newLine.x1 = line.x1 + offsetX - xMin;
             newLine.x2 = line.x2 + offsetX - xMin;
@@ -104,15 +106,15 @@ public class Cell2D implements Comparable<Cell2D>
             Line2D line2D = new Line2D();
 
             //Flatten by taking only X-Y coordinates
-            line2D.x1 = line3D.Proximal.getX();
-            line2D.y1 = line3D.Proximal.getY();
+            line2D.x1 = line3D.proximal.getX();
+            line2D.y1 = line3D.proximal.getY();
 
-            line2D.x2 = line3D.Distal.getX();
-            line2D.y2 = line3D.Distal.getY();
+            line2D.x2 = line3D.distal.getX();
+            line2D.y2 = line3D.distal.getY();
 
 
-            line2D.SegmentName = line3D.SegmentName;
-            line2D.Diameter = line3D.Diameter;
+            line2D.segmentName = line3D.segmentName;
+            line2D.diameter = line3D.diameter;
 
             Lines.add(line2D);
         }
@@ -121,6 +123,6 @@ public class Cell2D implements Comparable<Cell2D>
     @Override
     public int compareTo(Cell2D o)
     {
-        return (int)Math.round(o.Height() - Height());
+        return (int)Math.round(o.height() - height());
     }
 }

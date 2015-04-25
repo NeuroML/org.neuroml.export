@@ -15,14 +15,12 @@ import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
 import org.neuroml.model.NeuroMLDocument;
-import org.neuroml.model.Point3DWithDiam;
-import org.neuroml.model.Segment;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
 public class SVGWriter extends ANeuroMLXMLWriter
 {
-    public boolean UseColor = false;
+    public boolean useColor = true;
 
     private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
     private final String SVG_VERSION = "1.1";
@@ -65,10 +63,10 @@ public class SVGWriter extends ANeuroMLXMLWriter
             ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
 
             //Project 2D views from different perspectives
-            views.add(cell3D.TopView());
-            views.add(cell3D.SideView());
-            views.add(cell3D.FrontView());
-            views.add(cell3D.PerspectiveView(180+45, 45));
+            views.add(cell3D.topView());
+            views.add(cell3D.sideView());
+            views.add(cell3D.frontView());
+            views.add(cell3D.perspectiveView(180+45, 45));
 
             //Pack views to minimize occupied area
             RectanglePacker<Cell2D> packer = packViews(views);
@@ -78,14 +76,14 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 //Find where the view will be drawn
                 RectanglePacker.Rectangle location = packer.findRectangle(cellView);
 
+                //Draw border around perspective
+                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, cellView.comment);
+                
                 //Translate coordinates for the view location
-                ArrayList<Line2D> lines = cellView.GetLinesForSVG(location.x, location.y);
+                ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x, location.y);
 
                 //Write SVG for each line
                 renderLines(result, lines);
-
-                //Draw border around each perspective
-                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle);
             }
         }
 
@@ -100,9 +98,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
         {
             //Gray is default
             String color = "rgb(100,100,100)";
-            String segmentName = line.SegmentName.toLowerCase();
+            String segmentName = line.segmentName.toLowerCase();
 
-            if(UseColor)
+            if(useColor)
             {
                 if(segmentName.contains("soma"))
                 {
@@ -112,13 +110,17 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 {
                     color = "black";
                 }
-                else if(segmentName.contains("axo") || segmentName.contains("apic"))
+                else if(segmentName.contains("axo"))
                 {
                     color = "blue";
                 }
+                else if(segmentName.contains("apic"))
+                {
+                    color = "green";
+                }
             }
 
-            String style = "stroke:"+color+";stroke-width:" + line.Diameter;
+            String style = "stroke:"+color+";stroke-width:" + line.diameter;
 
             addLine(result, line.x1, line.y1, line.x2, line.y2, style);
         }
@@ -130,15 +132,15 @@ public class SVGWriter extends ANeuroMLXMLWriter
         Collections.sort(views);
 
         //Find max width/height
-        double maxHeight = views.get(0).Height();
-        double maxWidth = views.get(0).Width();
+        double maxHeight = views.get(0).height();
+        double maxWidth = views.get(0).width();
         for(Cell2D view : views)
         {
-            if(view.Height() > maxHeight)
-                maxHeight = view.Height();
+            if(view.height() > maxHeight)
+                maxHeight = view.height();
 
-            if(view.Width() > maxWidth)
-                maxWidth = view.Width();
+            if(view.width() > maxWidth)
+                maxWidth = view.width();
         }
 
         int scale = 1;
@@ -161,7 +163,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
             //If one does not fit into the current size, increase the region by scaling dimensions
             for(Cell2D cellView : views)
             {
-                if(packer.insert((int)cellView.Width(), (int)cellView.Height(), cellView) == null)
+                if(packer.insert((int)cellView.width(), (int)cellView.height(), cellView) == null)
                 {
                     doesNotFit = true;
                     break;
@@ -180,36 +182,41 @@ public class SVGWriter extends ANeuroMLXMLWriter
         startEndElement(main, "line", "x1=" + x1, "y1=" + y1, "x2=" + x2, "y2=" + y2, "style=" + style);
     }
 
-    private void addRect(StringBuilder main, double xOffset, double yOffset, double x, double y, double width, double height, String style)
+    private void addRect(StringBuilder main, double xOffset, double yOffset, double x, double y, double width, double height, String style, String comment)
     {
         // <rect x="50" y="20" width="150" height="150" style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9" />
+        addComment(main, comment);
         startEndElement(main, "rect", "x=" + (x + xOffset), "y=" + (y + yOffset), "width=" + width, "height=" + height, "style=" + style);
     }
 
     public static void main(String[] args) throws Exception
     {
 
-        //String fileName = "src/test/resources/examples/L23PyrRS.nml";
-        String fileName = "src/test/resources/examples/L5PC.cell.nml";
+        //String fileName = 
+        ArrayList<String> fileNames = new ArrayList<String>();
+        fileNames.add("src/test/resources/examples/L5PC.cell.nml");
+        fileNames.add("src/test/resources/examples/L23PyrRS.nml");
+        fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
+        
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
-        File inputFile = new File(fileName);
+        for (String fileName: fileNames) {
+            File inputFile = new File(fileName);
 
-        NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
+            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
 
-        SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
+            SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
 
-        //Color different segment groups differently
-        svgw.UseColor = true;
+            //Color different segment groups differently
+            svgw.useColor = true;
 
-        String svg = svgw.getMainScript();
+            String svg = svgw.getMainScript();
 
-        System.out.println(svg);
+            File svgFile = new File(fileName.replaceAll("nml", "svg"));
+            System.out.println("Writing file to: " + svgFile.getAbsolutePath());
 
-        File svgFile = new File(fileName.replaceAll("nml", "svg"));
-        System.out.println("Writing file to: " + svgFile.getAbsolutePath());
-
-        FileUtil.writeStringToFile(svg, svgFile);
+            FileUtil.writeStringToFile(svg, svgFile);
+        }
 
     }
 
