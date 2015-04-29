@@ -14,7 +14,11 @@ import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
+import org.neuroml.model.Instance;
+import org.neuroml.model.Location;
+import org.neuroml.model.Network;
 import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.model.Population;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -55,44 +59,79 @@ public class SVGWriter extends ANeuroMLXMLWriter
         result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
         startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION);
 
-        for(Cell cell : nmlDocument.getCell())
+        if (nmlDocument.getNetwork().isEmpty()) 
         {
-            //Extract 3d vectors from morphology
-            Cell3D cell3D = new Cell3D(cell);
-
-            ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
-
-            //Project 2D views from different perspectives
-            views.add(cell3D.topView());
-            views.add(cell3D.sideView());
-            views.add(cell3D.frontView());
-            views.add(cell3D.perspectiveView(-10, -20));
-
-            //Pack views to minimize occupied area
-            RectanglePacker<Cell2D> packer = packViews(views);
-
-            for(Cell2D cellView : views)
+            for(Cell cell : nmlDocument.getCell())
             {
-                //Find where the view will be drawn
-                RectanglePacker.Rectangle location = packer.findRectangle(cellView);
+                //Extract 3d vectors from morphology
+                Cell3D cell3D = new Cell3D(cell);
 
-                String comment = cellView.comment + "\n" + location;
-                //Draw border around perspective
-                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, comment);
-                
-                //addText(result, location.x+5, location.y+location.height-5, cellView.comment, "black");
-                
-                //Translate coordinates for the view location
-                ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+10, location.y+10);
+                renderCells(cell3D, result);
 
-                //Write SVG for each line
-                renderLines(result, lines, cell3D.somaSegIds, cell3D.dendSegIds, cell3D.axonSegIds, cell3D.apicalDendSegIds);
             }
+        }
+        else 
+        {
+            Cell3D net3D = new Cell3D("View of network");
+            for (Network net: nmlDocument.getNetwork()) 
+            {
+                for (Population pop: net.getPopulation()) 
+                {
+                    String comp = pop.getComponent();
+                    Cell cell = null;
+                    for(Cell nextCell : nmlDocument.getCell())
+                    {
+                        if (nextCell.getId().equals(comp))
+                            cell = nextCell;
+                    }
+                    
+                
+                    for (Instance instance: pop.getInstance())
+                    {
+                        Location loc = instance.getLocation();
+                        net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ());
+                    }
+                    
+                }
+            }
+            renderCells(net3D, result);
         }
 
         endElement(result, "svg");
 
         return result.toString();
+    }
+    
+    private void renderCells(Cell3D cell3D, StringBuilder result) 
+    {
+        ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
+
+        //Project 2D views from different perspectives
+        views.add(cell3D.topView());
+        views.add(cell3D.sideView());
+        views.add(cell3D.frontView());
+        views.add(cell3D.perspectiveView(-10, -20));
+
+        //Pack views to minimize occupied area
+        RectanglePacker<Cell2D> packer = packViews(views);
+
+        for(Cell2D cellView : views)
+        {
+            //Find where the view will be drawn
+            RectanglePacker.Rectangle location = packer.findRectangle(cellView);
+
+            String comment = cellView.comment + "\n" + location;
+            //Draw border around perspective
+            addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, comment);
+
+            //addText(result, location.x+5, location.y+location.height-5, cellView.comment, "black");
+
+            //Translate coordinates for the view location
+            ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+20, location.y+20);
+
+            //Write SVG for each line
+            renderLines(result, lines, cell3D.somaSegIds, cell3D.dendSegIds, cell3D.axonSegIds, cell3D.apicalDendSegIds);
+        }
     }
 
     private void renderLines(StringBuilder result, 
@@ -224,13 +263,17 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/L5PC.cell.nml");
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");
         fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
+        fileNames.add("src/test/resources/examples/TwoCell.net.nml");
+        fileNames.add("src/test/resources/examples/MediumNet.net.nml");
         
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
         for (String fileName: fileNames) {
             File inputFile = new File(fileName);
 
-            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile);
+            boolean inclIncludes = fileName.indexOf("net.nml") >0;
+            
+            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile, inclIncludes);
 
             SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
 

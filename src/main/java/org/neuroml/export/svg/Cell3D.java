@@ -10,7 +10,7 @@ import org.neuroml.model.util.CellUtils;
 
 public class Cell3D
 {
-    public ArrayList<Line3D> Lines;
+    public ArrayList<Line3D> lines;
     public String comment;
     public ArrayList<Integer> somaSegIds = new ArrayList<Integer>();
     public ArrayList<Integer> dendSegIds = new ArrayList<Integer>();
@@ -21,13 +21,18 @@ public class Cell3D
     public Cell3D(String comment)
     {
         this.comment = comment;
-        Lines = new ArrayList<Line3D>(100);
+        lines = new ArrayList<Line3D>(100);
     }
 
     public Cell3D(Cell cell)
     {
         this.comment = "Cell: "+cell.getId();
-        Lines = extractLines(cell);
+        lines = extractLines(cell);
+    }
+    
+    public void addCell(Cell cell, float offsetX, float offsetY, float offsetZ)
+    {
+        lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ));
     }
 
     public Cell2D topView()
@@ -67,7 +72,7 @@ public class Cell3D
 
         Cell3D result = new Cell3D("Rot z: "+degreesAroundZ+", rot y: "+degreesAroundY+" of: "+comment);
 
-        for(Line3D line : Lines)
+        for(Line3D line : lines)
         {
             Line3D newLine = new Line3D();
 
@@ -76,7 +81,7 @@ public class Cell3D
             newLine.diameter = line.diameter;
             newLine.segmentId = line.segmentId;
 
-            result.Lines.add(newLine);
+            result.lines.add(newLine);
         }
 
         return result;
@@ -84,6 +89,11 @@ public class Cell3D
 
     
     private ArrayList<Line3D> extractLines(Cell cell)
+    {
+        return extractLines(cell, 0, 0, 0);
+    }
+    
+    private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ)
     {
         ArrayList<Line3D> result = new ArrayList<Line3D>();
 
@@ -124,8 +134,8 @@ public class Cell3D
 
             //Parse the end coordinates into matrix transformable vectors
             Line3D line = new Line3D();
-            line.distal = new Vector3D(distal.getX(), distal.getY(), distal.getZ());
-            line.proximal = new Vector3D(proximal.getX(), proximal.getY(), proximal.getZ());
+            line.distal = new Vector3D(distal.getX()+offsetX, distal.getY()+offsetY, distal.getZ()+offsetZ);
+            line.proximal = new Vector3D(proximal.getX()+offsetX, proximal.getY()+offsetY, proximal.getZ()+offsetZ);
             line.diameter = (int) Math.round(0.49 + ((proximal.getDiameter() + distal.getDiameter()) / 2));
 
             line.segmentId = segment.getId();

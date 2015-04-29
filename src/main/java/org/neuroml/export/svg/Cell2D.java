@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Cell2D implements Comparable<Cell2D>
 {
-    public ArrayList<Line2D> Lines;
+    public ArrayList<Line2D> lines;
     public String comment;
 
     public double xMin;
@@ -15,7 +15,7 @@ public class Cell2D implements Comparable<Cell2D>
     public Cell2D(Cell3D source, String comment)
     {
         this.comment = comment;
-        Lines = new ArrayList<Line2D>(source.Lines.size());
+        lines = new ArrayList<Line2D>(source.lines.size());
 
         flatten3DCell(source);
 
@@ -40,9 +40,9 @@ public class Cell2D implements Comparable<Cell2D>
     //Make all coordinates positive and translate them by the offsets
     public ArrayList<Line2D> getLinesForSVG(int offsetX, int offsetY)
     {
-        ArrayList<Line2D> result = new ArrayList<Line2D>(Lines.size());
+        ArrayList<Line2D> result = new ArrayList<Line2D>(lines.size());
 
-        for(Line2D line : Lines)
+        for(Line2D line : lines)
         {
             Line2D newLine = line.copy();
 
@@ -61,15 +61,15 @@ public class Cell2D implements Comparable<Cell2D>
     private void getRange()
     {
         //Assume the first point has the min/max
-        if(Lines.size() > 0)
+        if(lines.size() > 0)
         {
-            Line2D first = Lines.get(0);
+            Line2D first = lines.get(0);
 
             xMin = xMax = first.x1;
             yMin = yMax = first.y1;
         }
 
-        for(Line2D line : Lines)
+        for(Line2D line : lines)
         {
             //Minimums
             if(line.x1 < xMin)
@@ -101,7 +101,7 @@ public class Cell2D implements Comparable<Cell2D>
 
     private void flatten3DCell(Cell3D source)
     {
-        for(Line3D line3D : source.Lines)
+        for(Line3D line3D : source.lines)
         {
             Line2D line2D = new Line2D();
 
@@ -116,7 +116,7 @@ public class Cell2D implements Comparable<Cell2D>
             line2D.segmentId = line3D.segmentId;
             line2D.diameter = line3D.diameter;
 
-            Lines.add(line2D);
+            lines.add(line2D);
         }
     }
 
