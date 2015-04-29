@@ -84,8 +84,10 @@ public class SVGWriter extends ANeuroMLXMLWriter
                         if (nextCell.getId().equals(comp))
                             cell = nextCell;
                     }
-                    
-                
+                    if (cell==null) 
+                    {
+                        throw new GenerationException("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId());
+                    }
                     for (Instance instance: pop.getInstance())
                     {
                         Location loc = instance.getLocation();
@@ -264,7 +266,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");
         fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
-        fileNames.add("src/test/resources/examples/MediumNet.net.nml");
+        //fileNames.add("src/test/resources/examples/MediumNet.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
         
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
