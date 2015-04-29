@@ -66,7 +66,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
             views.add(cell3D.topView());
             views.add(cell3D.sideView());
             views.add(cell3D.frontView());
-            views.add(cell3D.perspectiveView(180+45, 45));
+            views.add(cell3D.perspectiveView(-10, -20));
 
             //Pack views to minimize occupied area
             RectanglePacker<Cell2D> packer = packViews(views);
@@ -76,11 +76,14 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 //Find where the view will be drawn
                 RectanglePacker.Rectangle location = packer.findRectangle(cellView);
 
+                String comment = cellView.comment + "\n" + location;
                 //Draw border around perspective
-                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, cellView.comment);
+                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, comment);
+                
+                //addText(result, location.x+5, location.y+location.height-5, cellView.comment, "black");
                 
                 //Translate coordinates for the view location
-                ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x, location.y);
+                ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+10, location.y+10);
 
                 //Write SVG for each line
                 renderLines(result, lines, cell3D.somaSegIds, cell3D.dendSegIds, cell3D.axonSegIds, cell3D.apicalDendSegIds);
@@ -124,9 +127,16 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 }
             }
 
-            String style = "stroke:"+color+";stroke-width:" + line.diameter;
+            if (line.x1 == line.x2 && line.y1 == line.y2) 
+            {
+                addCircle(result, line.x1, line.y1, line.diameter, color);
+            } 
+            else 
+            {
+                String style = "stroke:"+color+";stroke-width:" + line.diameter;
 
-            addLine(result, line.x1, line.y1, line.x2, line.y2, style);
+                addLine(result, line.x1, line.y1, line.x2, line.y2, style);
+            }
         }
     }
 
@@ -185,12 +195,25 @@ public class SVGWriter extends ANeuroMLXMLWriter
     {
         startEndElement(main, "line", "x1=" + x1, "y1=" + y1, "x2=" + x2, "y2=" + y2, "style=" + style);
     }
+    
+    private void addCircle(StringBuilder main, double x, double y, double diameter, String color)
+    {
+        // <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+        startEndElement(main, "circle", "cx=" + x, "cy=" + y, "r=" + diameter/2, "stroke-width=0", "fill="+color);
+    }
 
     private void addRect(StringBuilder main, double xOffset, double yOffset, double x, double y, double width, double height, String style, String comment)
     {
         // <rect x="50" y="20" width="150" height="150" style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9" />
         addComment(main, comment);
         startEndElement(main, "rect", "x=" + (x + xOffset), "y=" + (y + yOffset), "width=" + width, "height=" + height, "style=" + style);
+    }
+
+    private void addText(StringBuilder main, double x, double y, String text, String color)
+    {
+        startElement(main, "text", "x=" + x, "y=" + y, "fill=" + color);
+        main.append(text);
+        endElement(main, "text");
     }
 
     public static void main(String[] args) throws Exception

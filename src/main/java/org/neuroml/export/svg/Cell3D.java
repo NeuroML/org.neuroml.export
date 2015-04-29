@@ -26,37 +26,37 @@ public class Cell3D
 
     public Cell3D(Cell cell)
     {
-        this.comment = "3D lines of cell: "+cell.getId();
+        this.comment = "Cell: "+cell.getId();
         Lines = extractLines(cell);
     }
 
     public Cell2D topView()
     {
-        return rotate(180,0).defaultView();
+        return rotate(0,90).rotate(90,0).rotate(0,90).defaultView();
     }
 
     public Cell2D sideView()
     {
-        return rotate(180, 90).defaultView();
+        return rotate(0, 90).defaultView();
     }
 
     public Cell2D frontView()
     {
-        return rotate(270, 90).defaultView();
+        return rotate(0, 0).defaultView();
     }
 
+    
     public Cell2D perspectiveView(double degreesAroundZ, double degreesAroundY)
     {
         return rotate(degreesAroundZ, degreesAroundY).defaultView();
     }
 
 
-
-
     private Cell2D defaultView()
     {
         return new Cell2D(this, this.comment);
     }
+    
 
     private Cell3D rotate(double degreesAroundZ, double degreesAroundY)
     {
@@ -65,7 +65,7 @@ public class Cell3D
         rotationM.rotateZ(degreesAroundZ * Math.PI / 180.0);
         rotationM.rotateY(degreesAroundY * Math.PI / 180.0);
 
-        Cell3D result = new Cell3D("Rotation z: "+degreesAroundZ+", rotation y: "+degreesAroundY+" of: "+comment);
+        Cell3D result = new Cell3D("Rot z: "+degreesAroundZ+", rot y: "+degreesAroundY+" of: "+comment);
 
         for(Line3D line : Lines)
         {
@@ -82,6 +82,7 @@ public class Cell3D
         return result;
     }
 
+    
     private ArrayList<Line3D> extractLines(Cell cell)
     {
         ArrayList<Line3D> result = new ArrayList<Line3D>();

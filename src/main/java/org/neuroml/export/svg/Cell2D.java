@@ -107,10 +107,10 @@ public class Cell2D implements Comparable<Cell2D>
 
             //Flatten by taking only X-Y coordinates
             line2D.x1 = line3D.proximal.getX();
-            line2D.y1 = line3D.proximal.getY();
+            line2D.y1 = -1*line3D.proximal.getY();
 
             line2D.x2 = line3D.distal.getX();
-            line2D.y2 = line3D.distal.getY();
+            line2D.y2 = -1*line3D.distal.getY();
 
 
             line2D.segmentId = line3D.segmentId;
