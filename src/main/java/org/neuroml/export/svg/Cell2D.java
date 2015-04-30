@@ -12,7 +12,7 @@ public class Cell2D implements Comparable<Cell2D>
     public double yMin;
     public double yMax;
 
-    public Cell2D(Cell3D source, String comment)
+    public Cell2D(Network3D source, String comment)
     {
         this.comment = comment;
         lines = new ArrayList<Line2D>(source.lines.size());
@@ -99,7 +99,7 @@ public class Cell2D implements Comparable<Cell2D>
         }
     }
 
-    private void flatten3DCell(Cell3D source)
+    private void flatten3DCell(Network3D source)
     {
         for(Line3D line3D : source.lines)
         {
@@ -113,8 +113,9 @@ public class Cell2D implements Comparable<Cell2D>
             line2D.y2 = -1*line3D.distal.getY();
 
 
-            line2D.segmentId = line3D.segmentId;
+            line2D.id = line3D.id;
             line2D.diameter = line3D.diameter;
+            line2D.color = line3D.color;
 
             lines.add(line2D);
         }

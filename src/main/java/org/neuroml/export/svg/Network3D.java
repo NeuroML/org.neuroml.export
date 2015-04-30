@@ -8,23 +8,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import org.neuroml.model.util.CellUtils;
 
-public class Cell3D
+public class Network3D
 {
     public ArrayList<Line3D> lines;
     public String comment;
-    public ArrayList<Integer> somaSegIds = new ArrayList<Integer>();
-    public ArrayList<Integer> dendSegIds = new ArrayList<Integer>();
-    public ArrayList<Integer> axonSegIds = new ArrayList<Integer>();
-    public ArrayList<Integer> apicalDendSegIds = new ArrayList<Integer>();
     
 
-    public Cell3D(String comment)
+    public Network3D(String comment)
     {
         this.comment = comment;
         lines = new ArrayList<Line3D>(100);
     }
 
-    public Cell3D(Cell cell)
+    public Network3D(Cell cell)
     {
         this.comment = "Cell: "+cell.getId();
         lines = extractLines(cell);
@@ -35,6 +31,18 @@ public class Cell3D
         lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ));
     }
 
+    public void addLine(int id, Vector3D a, Vector3D b, float diameter, String color) {
+        Line3D line = new Line3D();
+        line.proximal = a;
+        line.distal = b;
+        line.diameter = diameter;
+        
+        line.id = id;
+        line.color = color;
+        lines.add(line);
+    }
+      
+            
     public Cell2D topView()
     {
         return rotate(0,90).rotate(90,0).rotate(0,90).defaultView();
@@ -63,14 +71,14 @@ public class Cell3D
     }
     
 
-    private Cell3D rotate(double degreesAroundZ, double degreesAroundY)
+    private Network3D rotate(double degreesAroundZ, double degreesAroundY)
     {
         Matrix3D rotationM = new Matrix3D();
 
         rotationM.rotateZ(degreesAroundZ * Math.PI / 180.0);
         rotationM.rotateY(degreesAroundY * Math.PI / 180.0);
 
-        Cell3D result = new Cell3D("Rot z: "+degreesAroundZ+", rot y: "+degreesAroundY+" of: "+comment);
+        Network3D result = new Network3D("Rot z: "+degreesAroundZ+", rot y: "+degreesAroundY+" of: "+comment);
 
         for(Line3D line : lines)
         {
@@ -79,7 +87,8 @@ public class Cell3D
             newLine.distal = new Vector3D(line.distal.transform(rotationM));
             newLine.proximal = new Vector3D(line.proximal.transform(rotationM));
             newLine.diameter = line.diameter;
-            newLine.segmentId = line.segmentId;
+            newLine.id = line.id;
+            newLine.color = line.color;
 
             result.lines.add(newLine);
         }
@@ -92,6 +101,7 @@ public class Cell3D
     {
         return extractLines(cell, 0, 0, 0);
     }
+    
     
     private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ)
     {
@@ -107,18 +117,13 @@ public class Cell3D
         HashMap<Integer, Segment> segmentMap = new HashMap<Integer, Segment>();
 
 
-        LinkedHashMap<SegmentGroup, ArrayList<Integer>> segGrpsVsSegIds = CellUtils.getSegmentGroupsVsSegIds(cell);
+        //LinkedHashMap<SegmentGroup, ArrayList<Integer>> segGrpsVsSegIds = CellUtils.getSegmentGroupsVsSegIds(cell);
         
-        try{
-            somaSegIds = CellUtils.getSegmentIdsInGroup(cell, "soma_group");
-            dendSegIds = CellUtils.getSegmentIdsInGroup(cell, "dendrite_group");
-            axonSegIds = CellUtils.getSegmentIdsInGroup(cell, "axon_group");
-            apicalDendSegIds = CellUtils.getSegmentIdsInGroup(cell, "apical_dends");
-        }
-        catch (Exception e) {
-
-        }
-
+        ArrayList<Integer> somaSegIds = CellUtils.getSegmentIdsInGroup(cell, "soma_group");
+        ArrayList<Integer> dendSegIds = CellUtils.getSegmentIdsInGroup(cell, "dendrite_group");
+        ArrayList<Integer> axonSegIds = CellUtils.getSegmentIdsInGroup(cell, "axon_group");
+        ArrayList<Integer> apicalDendSegIds = CellUtils.getSegmentIdsInGroup(cell, "apical_dends");
+      
         for(Segment segment : segments)
         {
             //Get both ends of the segment
@@ -131,6 +136,25 @@ public class Cell3D
                 Segment parent = segmentMap.get(segment.getParent().getSegment());
                 proximal = parent.getDistal();
             }
+            //Gray is default
+            String color = "rgb(100,100,100)";
+            
+            if(somaSegIds.contains(segment.getId()))
+            {
+                color = "red";
+            }
+            else if(dendSegIds.contains(segment.getId()))
+            {
+                color = "green";
+            }
+            else if(axonSegIds.contains(segment.getId()))
+            {
+                color = "blue";
+            }
+            else if(apicalDendSegIds.contains(segment.getId()))
+            {
+                color = "black";
+            }
 
             //Parse the end coordinates into matrix transformable vectors
             Line3D line = new Line3D();
@@ -138,7 +162,8 @@ public class Cell3D
             line.proximal = new Vector3D(proximal.getX()+offsetX, proximal.getY()+offsetY, proximal.getZ()+offsetZ);
             line.diameter = (int) Math.round(0.49 + ((proximal.getDiameter() + distal.getDiameter()) / 2));
 
-            line.segmentId = segment.getId();
+            line.id = segment.getId();
+            line.color = color;
 
 
             result.add(line);

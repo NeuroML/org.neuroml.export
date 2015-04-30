@@ -59,6 +59,13 @@ public class SVGWriter extends ANeuroMLXMLWriter
         sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
+    
+    public void addAxes(Network3D net, float length) 
+    {
+        net.addLine(-1, new Vector3D(0,0,0), new Vector3D(length,0,0), 2, "green");
+        net.addLine(-2, new Vector3D(0,0,0), new Vector3D(0,length,0), 2, "yellow");
+        net.addLine(-3, new Vector3D(0,0,0), new Vector3D(0,0,length), 2, "red");
+    }
 
     public String getMainScript() throws GenerationException
     {
@@ -73,7 +80,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
             for(Cell cell : nmlDocument.getCell())
             {
                 //Extract 3d vectors from morphology
-                Cell3D cell3D = new Cell3D(cell);
+                Network3D cell3D = new Network3D(cell);
+                
+                addAxes(cell3D, 100);
 
                 renderCells(cell3D, result);
 
@@ -81,7 +90,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         }
         else 
         {
-            Cell3D net3D = new Cell3D("View of network");
+            Network3D net3D = new Network3D("View of network");
             for (Network net: nmlDocument.getNetwork()) 
             {
                 for (Population pop: net.getPopulation()) 
@@ -95,8 +104,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
                     }
                     if (cell==null) 
                     {
-                        E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId());
-                        E.warning("Using dummy cell with radius "+RADIUS_DUMMY_CELL);
+                        E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId()+"\n"
+                                +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
                         cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
                     }
                     for (Instance instance: pop.getInstance())
@@ -107,6 +116,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
                     
                 }
             }
+            
+            addAxes(net3D, 100);
             renderCells(net3D, result);
         }
 
@@ -146,7 +157,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return cell;
     }
     
-    private void renderCells(Cell3D cell3D, StringBuilder result) 
+    private void renderCells(Network3D cell3D, StringBuilder result) 
     {
         ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
 
@@ -174,49 +185,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
             ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+20, location.y+20);
 
             //Write SVG for each line
-            renderLines(result, lines, cell3D.somaSegIds, cell3D.dendSegIds, cell3D.axonSegIds, cell3D.apicalDendSegIds);
+            renderLines(result, lines);
         }
     }
 
     private void renderLines(StringBuilder result, 
-                             ArrayList<Line2D> lines,
-                             ArrayList<Integer> somaSegIds,
-                             ArrayList<Integer> dendSegIds,
-                             ArrayList<Integer> axonSegIds,
-                             ArrayList<Integer> apicalDendSegIds)
+                             ArrayList<Line2D> lines)
     {
         for(Line2D line : lines)
         {
-            //Gray is default
-            String color = "rgb(100,100,100)";
-
-            if(useColor)
-            {
-                if(somaSegIds.contains(line.segmentId))
-                {
-                    color = "red";
-                }
-                else if(dendSegIds.contains(line.segmentId))
-                {
-                    color = "green";
-                }
-                else if(axonSegIds.contains(line.segmentId))
-                {
-                    color = "blue";
-                }
-                else if(apicalDendSegIds.contains(line.segmentId))
-                {
-                    color = "black";
-                }
-            }
-
             if (line.x1 == line.x2 && line.y1 == line.y2) 
             {
-                addCircle(result, line.x1, line.y1, line.diameter, color);
+                addCircle(result, line.x1, line.y1, line.diameter, line.color);
             } 
             else 
             {
-                String style = "stroke:"+color+";stroke-width:" + line.diameter;
+                String style = "stroke:"+line.color+";stroke-width:" + line.diameter;
 
                 addLine(result, line.x1, line.y1, line.x2, line.y2, style);
             }
@@ -304,11 +288,12 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
         //String fileName = 
         ArrayList<String> fileNames = new ArrayList<String>();
+        fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
+        
         fileNames.add("src/test/resources/examples/L5PC.cell.nml");
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");
-        fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
-        //fileNames.add("src/test/resources/examples/MediumNet.net.nml");
+        fileNames.add("src/test/resources/examples/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
         fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
         
