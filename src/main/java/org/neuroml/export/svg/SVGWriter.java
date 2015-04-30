@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
@@ -16,9 +17,14 @@ import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Instance;
 import org.neuroml.model.Location;
+import org.neuroml.model.Member;
+import org.neuroml.model.Morphology;
 import org.neuroml.model.Network;
 import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.model.Point3DWithDiam;
 import org.neuroml.model.Population;
+import org.neuroml.model.Segment;
+import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -28,8 +34,11 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
     private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
     private final String SVG_VERSION = "1.1";
-    private int perspectiveMargin = 20;
+    private final int perspectiveMargin = 20;
+    
     private final String borderStyle = "fill:none;stroke:black;stroke-width:1;";
+    
+    private final float RADIUS_DUMMY_CELL = 5; // um
 
     public SVGWriter(NeuroMLDocument nmlDocument, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
@@ -86,7 +95,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
                     }
                     if (cell==null) 
                     {
-                        throw new GenerationException("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId());
+                        E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId());
+                        E.warning("Using dummy cell with radius "+RADIUS_DUMMY_CELL);
+                        cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
                     }
                     for (Instance instance: pop.getInstance())
                     {
@@ -102,6 +113,37 @@ public class SVGWriter extends ANeuroMLXMLWriter
         endElement(result, "svg");
 
         return result.toString();
+    }
+    
+    private Cell getDummySingleCompCell(String id, float radius)
+    {
+        Cell cell = new Cell();
+        cell.setId(id);
+        Morphology morph = new Morphology();
+        cell.setMorphology(morph);
+        
+        Segment soma = new Segment();
+        soma.setId(0);
+        soma.setName("soma");
+        Point3DWithDiam p = (new Point3DWithDiam());
+        p.setX(0);
+        p.setY(0);
+        p.setZ(0);
+        p.setDiameter(radius*2);
+        soma.setDistal(p);
+        soma.setProximal(p);
+        
+        morph.getSegment().add(soma);
+        SegmentGroup sg = new SegmentGroup();
+        sg.setId("soma_group");
+        sg.setNeuroLexId("sao864921383");
+        Member m = new Member();
+        m.setSegment(0);
+        sg.getMember().add(m);
+        
+        morph.getSegmentGroup().add(sg);
+        
+        return cell;
     }
     
     private void renderCells(Cell3D cell3D, StringBuilder result) 
@@ -268,6 +310,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
         //fileNames.add("src/test/resources/examples/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
+        fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
         
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
