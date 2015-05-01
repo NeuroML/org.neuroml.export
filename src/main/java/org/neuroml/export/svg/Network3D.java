@@ -145,7 +145,7 @@ public class Network3D
             }
             else if(dendSegIds.contains(segment.getId()))
             {
-                color = "green";
+                color = "grey";
             }
             else if(axonSegIds.contains(segment.getId()))
             {

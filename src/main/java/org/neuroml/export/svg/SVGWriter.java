@@ -296,6 +296,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
         fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
+        fileNames.add("../git/OlfactoryBulbMitralCell/neuroConstruct/generatedNeuroML2/Cell1.cell.nml");
         
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
@@ -304,7 +305,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
             boolean inclIncludes = fileName.indexOf("net.nml") >0;
             
-            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile, inclIncludes);
+            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile, inclIncludes, false);
 
             SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
 
