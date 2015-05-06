@@ -60,12 +60,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
     
-    public void addAxes(Network3D net, float length) 
-    {
-        net.addLine(-1, new Vector3D(0,0,0), new Vector3D(length,0,0), 2, "green");
-        net.addLine(-2, new Vector3D(0,0,0), new Vector3D(0,length,0), 2, "yellow");
-        net.addLine(-3, new Vector3D(0,0,0), new Vector3D(0,0,length), 2, "red");
-    }
+
 
     public String getMainScript() throws GenerationException
     {
@@ -82,9 +77,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 //Extract 3d vectors from morphology
                 Network3D cell3D = new Network3D(cell);
                 
-                addAxes(cell3D, 100);
-
-                renderCells(cell3D, result);
+                renderCells(result, cell3D);
 
             }
         }
@@ -117,8 +110,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 }
             }
             
-            addAxes(net3D, 100);
-            renderCells(net3D, result);
+            renderCells(result, net3D);
         }
 
         endElement(result, "svg");
@@ -157,15 +149,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return cell;
     }
     
-    private void renderCells(Network3D cell3D, StringBuilder result) 
+    private void renderCells(StringBuilder result, Network3D net3D) 
     {
         ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
 
         //Project 2D views from different perspectives
-        views.add(cell3D.topView());
-        views.add(cell3D.sideView());
-        views.add(cell3D.frontView());
-        views.add(cell3D.perspectiveView(-10, -20));
+        
+        net3D.addBoundingBox();
+        float offset = perspectiveMargin/2;
+        
+        views.add(net3D.perspectiveView(-10, -20));
+        
+        net3D.removeAllAxesIndicators();
+        net3D.addAxes(offset);
+        views.add(net3D.topView());
+        views.add(net3D.sideView());
+        views.add(net3D.frontView());
 
         //Pack views to minimize occupied area
         RectanglePacker<Cell2D> packer = packViews(views);
@@ -179,7 +178,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
             //Draw border around perspective
             addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, comment);
 
-            //addText(result, location.x+5, location.y+location.height-5, cellView.comment, "black");
+            //addText(result, location.x+5+perspectiveMargin, location.y+location.height-5-perspectiveMargin, 20, scalebar+" um", "black");
 
             //Translate coordinates for the view location
             ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+20, location.y+20);
@@ -276,9 +275,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
         startEndElement(main, "rect", "x=" + (x + xOffset), "y=" + (y + yOffset), "width=" + width, "height=" + height, "style=" + style);
     }
 
-    private void addText(StringBuilder main, double x, double y, String text, String color)
+    private void addText(StringBuilder main, double x, double y, int size, String text, String color)
     {
-        startElement(main, "text", "x=" + x, "y=" + y, "fill=" + color);
+        startElement(main, "text", "x=" + x, "y=" + y, "fill=" + color, "font-size="+size+"px");
         main.append(text);
         endElement(main, "text");
     }

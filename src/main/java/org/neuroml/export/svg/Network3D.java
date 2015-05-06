@@ -30,6 +30,111 @@ public class Network3D
     {
         lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ));
     }
+    
+    public float addAxes(float offset) 
+    {
+        float scalebar = 10;
+        int thickness = 1;
+        
+        Vector3D[] lims = getLimits();
+        if (lims[0].getX()-lims[1].getX() > 150 ||
+            lims[0].getY()-lims[1].getY() > 150 ||
+            lims[0].getZ()-lims[1].getZ() > 150 )
+        {
+            scalebar = 100;
+            thickness = 3;
+        }
+        Vector3D start = lims[1];
+        start = new Vector3D(start.getX()-offset, start.getY()-offset, start.getZ()-offset);
+        
+        addLine(-1, start, new Vector3D(start.getX()+scalebar, start.getY(), start.getZ()), thickness, "green");
+        addLine(-2, start, new Vector3D(start.getX(), start.getY()+scalebar, start.getZ()), thickness, "yellow");
+        addLine(-3, start, new Vector3D(start.getX(), start.getY(), start.getZ()+scalebar), thickness, "red");
+        
+        return scalebar;
+    }
+    
+    public void addBoundingBox() 
+    {
+        float thickness = 0.5f;
+        
+        Vector3D[] lims = getLimits();
+        
+        if (lims[0].getX()-lims[1].getX() > 150 ||
+            lims[0].getY()-lims[1].getY() > 150 ||
+            lims[0].getZ()-lims[1].getZ() > 150 )
+        {
+            thickness = 1;
+        }
+        Vector3D max = lims[0];
+        Vector3D min = lims[1];
+        
+        
+        addLine(-1, new Vector3D(min.getX(), min.getY(), min.getZ()), new Vector3D(max.getX(), min.getY(), min.getZ()), thickness, "green");
+        addLine(-2, new Vector3D(min.getX(), max.getY(), min.getZ()), new Vector3D(max.getX(), max.getY(), min.getZ()), thickness, "green");
+        addLine(-3, new Vector3D(min.getX(), max.getY(), max.getZ()), new Vector3D(max.getX(), max.getY(), max.getZ()), thickness, "green");
+        addLine(-4, new Vector3D(min.getX(), min.getY(), max.getZ()), new Vector3D(max.getX(), min.getY(), max.getZ()), thickness, "green");
+        
+        
+        addLine(-5, new Vector3D(min.getX(), min.getY(), min.getZ()), new Vector3D(min.getX(), max.getY(), min.getZ()), thickness, "yellow");
+        addLine(-6, new Vector3D(max.getX(), min.getY(), min.getZ()), new Vector3D(max.getX(), max.getY(), min.getZ()), thickness, "yellow");
+        addLine(-7, new Vector3D(min.getX(), min.getY(), max.getZ()), new Vector3D(min.getX(), max.getY(), max.getZ()), thickness, "yellow");
+        addLine(-8, new Vector3D(max.getX(), min.getY(), max.getZ()), new Vector3D(max.getX(), max.getY(), max.getZ()), thickness, "yellow");
+        
+        addLine(-9, new Vector3D(min.getX(), min.getY(), min.getZ()), new Vector3D(min.getX(), min.getY(), max.getZ()), thickness, "red");
+        addLine(-10, new Vector3D(max.getX(), min.getY(), min.getZ()), new Vector3D(max.getX(), min.getY(), max.getZ()), thickness, "red");
+        addLine(-11, new Vector3D(min.getX(), max.getY(), min.getZ()), new Vector3D(min.getX(), max.getY(), max.getZ()), thickness, "red");
+        addLine(-12, new Vector3D(max.getX(), max.getY(), min.getZ()), new Vector3D(max.getX(), max.getY(), max.getZ()), thickness, "red");
+        
+    }
+    
+    public void removeAllAxesIndicators() 
+    {
+        ArrayList<Line3D> toRemove = new ArrayList<Line3D>();
+        for(Line3D line : lines)
+        {
+            if (line.id<0) {
+                toRemove.add(line);
+            }
+        }
+        lines.removeAll(toRemove);
+        
+    }
+    
+    
+    public Vector3D[] getLimits() 
+    {
+        Vector3D max = new Vector3D(Float.NEGATIVE_INFINITY,
+                                    Float.NEGATIVE_INFINITY,
+                                    Float.NEGATIVE_INFINITY);
+    
+        Vector3D min = new Vector3D(Float.POSITIVE_INFINITY,
+                                    Float.POSITIVE_INFINITY,
+                                    Float.POSITIVE_INFINITY);
+        
+        for(Line3D line : lines)
+        {
+            if (line.distal.getX()+line.diameter/2 > max.getX()) max.set(0, line.distal.getX()+line.diameter/2);
+            if (line.proximal.getX()+line.diameter/2 > max.getX()) max.set(0, line.proximal.getX()+line.diameter/2);
+            if (line.distal.getX()-line.diameter/2 < min.getX()) min.set(0, line.distal.getX()-line.diameter/2);
+            if (line.proximal.getX()-line.diameter/2 < min.getX()) min.set(0, line.proximal.getX()-line.diameter/2);
+            
+            if (line.distal.getY()+line.diameter/2 > max.getY()) max.set(1, line.distal.getY()+line.diameter/2);
+            if (line.proximal.getY()+line.diameter/2 > max.getY()) max.set(1, line.proximal.getY()+line.diameter/2);
+            if (line.distal.getY()-line.diameter/2 < min.getY()) min.set(1, line.distal.getY()-line.diameter/2);
+            if (line.proximal.getY()-line.diameter/2 < min.getY()) min.set(1, line.proximal.getY()-line.diameter/2);
+            
+            if (line.distal.getZ()+line.diameter/2 > max.getZ()) max.set(2, line.distal.getZ()+line.diameter/2);
+            if (line.proximal.getZ()+line.diameter/2 > max.getZ()) max.set(2, line.proximal.getZ()+line.diameter/2);
+            if (line.distal.getZ()-line.diameter/2 < min.getZ()) min.set(2, line.distal.getZ()-line.diameter/2);
+            if (line.proximal.getZ()-line.diameter/2 < min.getZ()) min.set(2, line.proximal.getZ()-line.diameter/2);
+        }
+        
+        Vector3D[] limits = new Vector3D[]{max, min};
+        
+        return limits;
+        
+    }
 
     public void addLine(int id, Vector3D a, Vector3D b, float diameter, String color) {
         Line3D line = new Line3D();
