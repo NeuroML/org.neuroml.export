@@ -490,7 +490,16 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		{
 			if(oc.test.startsWith("v .gt."))
 			{
-				compInfo.conditionInfo.append(", threshold = '" + oc.test.replace(".gt.", ">") + "'");
+                String test = oc.test.replace(".gt.", ">");
+                test = test.replace(".lt.", "<");
+                test = test.replace(".leq.", "<=");
+                test = test.replace(".geq.", ">=");
+                test = test.replace(".eq.", "==");
+                test = test.replace(".neq.", "!=");
+                test = test.replace(".and.", "and");
+                test = test.replace(".or.", "or");
+                
+				compInfo.conditionInfo.append(", threshold = '" + test + "'");
 				for(StateAssignment sa : oc.stateAssignments)
 				{
 					if(sa.variable.equals("v"))
@@ -506,23 +515,40 @@ public class BrianWriter extends ANeuroMLBaseWriter
 	public static void main(String[] args) throws Exception
 	{
 
-		File exampleFile = new File("../lemspaper/tidyExamples/test/Fig_HH.xml");
-		exampleFile = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
-		// exampleFile = new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Syns.xml");
+		ArrayList<File> lemsFiles = new ArrayList<File>();
+        
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
 
-		Lems lems = Utils.readLemsNeuroMLFile(exampleFile).getLems();
-		System.out.println("Loaded: " + exampleFile.getAbsolutePath());
+        
+		for(File lemsFile : lemsFiles) {
+            
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            System.out.println("Loaded: " + lemsFile.getAbsolutePath());
 
-		BrianWriter bw = new BrianWriter(lems);
+            BrianWriter bw = new BrianWriter(lems);
 
-		bw.setBrian2(true);
+            bw.setBrian2(true);
 
-		String br = bw.getMainScript();
+            String br = bw.getMainScript();
 
-		File brFile = new File(exampleFile.getAbsolutePath().replaceAll(".xml", "_brian" + (bw.brian2 ? "2" : "") + ".py"));
-		System.out.println("Writing to: " + brFile.getAbsolutePath());
+            File brFile = new File(lemsFile.getAbsolutePath().replaceAll(".xml", "_brian" + (bw.brian2 ? "2" : "") + ".py"));
+            System.out.println("Writing to: " + brFile.getAbsolutePath());
 
-		FileUtil.writeStringToFile(br, brFile);
+            FileUtil.writeStringToFile(br, brFile);
+            
+            lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            bw = new BrianWriter(lems);
+            
+            bw.setBrian2(false);
+
+            br = bw.getMainScript();
+
+            brFile = new File(lemsFile.getAbsolutePath().replaceAll(".xml", "_brian" + (bw.brian2 ? "2" : "") + ".py"));
+            System.out.println("Writing to: " + brFile.getAbsolutePath());
+
+            FileUtil.writeStringToFile(br, brFile);
+        }
 
 	}
 
