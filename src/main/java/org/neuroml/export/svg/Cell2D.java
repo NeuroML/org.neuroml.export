@@ -36,6 +36,20 @@ public class Cell2D implements Comparable<Cell2D>
     {
         return width()*height();
     }
+    
+    
+    
+    //TODO: add more robust way to check for this...
+    public boolean hasBoundingBox()
+    {
+        for(Line2D line : lines)
+        {
+            if (line.id==-1) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     //Make all coordinates positive and translate them by the offsets
     public ArrayList<Line2D> getLinesForSVG(int offsetX, int offsetY)

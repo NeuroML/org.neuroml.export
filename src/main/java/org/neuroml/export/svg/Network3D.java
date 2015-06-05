@@ -4,7 +4,6 @@ import org.neuroml.model.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import org.neuroml.model.util.CellUtils;
 
@@ -47,9 +46,9 @@ public class Network3D
         Vector3D start = lims[1];
         start = new Vector3D(start.getX()-offset, start.getY()-offset, start.getZ()-offset);
         
-        addLine(-1, start, new Vector3D(start.getX()+scalebar, start.getY(), start.getZ()), thickness, "green");
-        addLine(-2, start, new Vector3D(start.getX(), start.getY()+scalebar, start.getZ()), thickness, "yellow");
-        addLine(-3, start, new Vector3D(start.getX(), start.getY(), start.getZ()+scalebar), thickness, "red");
+        addLine(-101, start, new Vector3D(start.getX()+scalebar, start.getY(), start.getZ()), thickness, "green");
+        addLine(-102, start, new Vector3D(start.getX(), start.getY()+scalebar, start.getZ()), thickness, "yellow");
+        addLine(-103, start, new Vector3D(start.getX(), start.getY(), start.getZ()+scalebar), thickness, "red");
         
         return scalebar;
     }

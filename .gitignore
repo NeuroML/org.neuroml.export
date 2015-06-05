@@ -1,3 +1,8 @@
+/src/test/resources/examples/L23PyrRS.png
+/src/test/resources/examples/L5PC.cell.png
+/src/test/resources/examples/MediumNet.net.png
+/src/test/resources/examples/ShapedCell.cell.png
+/src/test/resources/examples/TwoCell.net.png
 /src/test/resources/examples/*.svg
 
 /src/test/resources/*.svg
