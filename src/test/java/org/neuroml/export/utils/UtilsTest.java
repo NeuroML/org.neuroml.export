@@ -1,4 +1,4 @@
-package org.neuroml.export;
+package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,17 +60,11 @@ public class UtilsTest extends TestCase {
 		System.out.println("Testing: getMagnitudeInSI()");
 		
 		assertEquals(-0.06, Utils.getMagnitudeInSI("-60mV"), 1e-6);
-		
 		assertEquals(50.0, Utils.getMagnitudeInSI("50 Hz"), 1e-6);
-        
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.3 ohm_m"), 1e-6);
-        
 		assertEquals(0.3, Utils.getMagnitudeInSI("0.03 kohm_cm"), 1e-6);
-        
 		assertEquals(60, Utils.getMagnitudeInSI("1 min"), 1e-6);
-        
 		assertEquals(1f/3600, Utils.getMagnitudeInSI("1 per_hour"), 1e-6);
-        
 		assertEquals(1e-3, Utils.getMagnitudeInSI("1 litre"), 1e-6);
 	}
     
@@ -94,7 +88,11 @@ public class UtilsTest extends TestCase {
         Component comp = Utils.convertNeuroMLToComponent(iaf);
         System.out.println("Now: "+comp.details("    "));
         
+        assertEquals(comp.getStringValue("tau"), iaf.getTau());
+        assertEquals((float)comp.getParamValue("tau").getDoubleValue(), Utils.getMagnitudeInSI(iaf.getTau()));
+        
     }
+   
     
     public void testParseCellRefString() throws JAXBException, Exception {
         
@@ -130,7 +128,6 @@ public class UtilsTest extends TestCase {
     
     public static void checkConvertedFiles(List<File> files) 
     {
-        
 		assertTrue(files.size()>=1);
         
         for(File genFile : files)
@@ -138,7 +135,6 @@ public class UtilsTest extends TestCase {
             E.info("Checking generated file: " + genFile.getAbsolutePath());
 			assertTrue(genFile.exists());
 			assertTrue(genFile.length()>0);
-            
 		}
     }
     

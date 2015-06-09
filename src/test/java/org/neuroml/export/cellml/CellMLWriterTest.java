@@ -11,7 +11,7 @@ import org.neuroml.export.exceptions.ModelFeatureSupportException;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.neuroml.export.UtilsTest;
+import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class CellMLWriterTest extends TestCase

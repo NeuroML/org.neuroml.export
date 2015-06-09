@@ -16,7 +16,7 @@ import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.UtilsTest;
+import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.VelocityUtils;

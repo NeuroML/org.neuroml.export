@@ -12,7 +12,7 @@ import org.neuroml.export.utils.Utils;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.neuroml.export.UtilsTest;
+import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class XppWriterTest extends TestCase

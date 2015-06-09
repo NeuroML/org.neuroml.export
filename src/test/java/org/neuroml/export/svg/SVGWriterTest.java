@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
-import org.neuroml.export.UtilsTest;
+import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
