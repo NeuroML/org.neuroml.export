@@ -6,12 +6,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.model.IafTauCell;
 import org.neuroml.model.IonChannelHH;
@@ -118,8 +122,25 @@ public class UtilsTest extends TestCase
             if (s instanceof IonChannelHH)
             {
                 IonChannelHH ic = (IonChannelHH) s;
+                String conductance = "conductance";
+                
                 System.out.println("    Found IonChannelHH: " + ic.getId() + " (LEMS: " + comp.getID() + ")");
-                System.out.println("    Conductance: " + ic.getConductance() + " (LEMS: " + comp.getAttributeValue("conductance") + ")");
+                
+                ParamValue lemsParam = comp.getParamValue(conductance);
+                String siSymbol = Utils.getSIUnitInNeuroML(lemsParam.getFinalParam().getDimension()).getSymbol();
+                
+                System.out.println("    Conductance: " + ic.getConductance() + 
+                        " (LEMS: " + lemsParam.getDoubleValue()+ " " + siSymbol+")");
+                String newCond = "20pS";
+                ic.setConductance(newCond);
+                
+                DimensionalQuantity dq = QuantityReader.parseValue(newCond, lems.getUnits());
+                lemsParam.setDoubleValue(dq.getDoubleValue());
+                
+                System.out.println("    Conductance: " + ic.getConductance() + 
+                        " (LEMS: " + lemsParam.getDoubleValue()+ " " + siSymbol+")");
+                
+                System.out.println("       LEMS comp:"+comp.summary());
             }
 
         }
