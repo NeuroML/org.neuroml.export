@@ -2,14 +2,12 @@ package org.lemsml.export.c;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -23,9 +21,9 @@ public class CWriterTest extends TestCase
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		CWriter cw = new CWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".c"));
+		CWriter cw = new CWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".c"));
 
 		
 		UtilsTest.checkConvertedFiles(cw.convert());
@@ -43,7 +41,7 @@ public class CWriterTest extends TestCase
 		String exampleFilename = "BIOMD0000000185_LEMS.xml";
 		Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(new File(exampleFilepath + exampleFilename))).getLems();
 
-		CWriter cw = new CWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".c"));
+		CWriter cw = new CWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".c"));
 
 		UtilsTest.checkConvertedFiles(cw.convert());
 	}

@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -20,9 +19,9 @@ public class NestWriterTest extends TestCase
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		NestWriter nw = new NestWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nest.py"));
+		NestWriter nw = new NestWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nest.py"));
 
 		UtilsTest.checkConvertedFiles(nw.convert());
 	}

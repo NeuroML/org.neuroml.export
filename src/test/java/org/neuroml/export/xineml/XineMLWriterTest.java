@@ -1,14 +1,11 @@
 package org.neuroml.export.xineml;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -41,15 +38,15 @@ public class XineMLWriterTest extends TestCase
 	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
 
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		XineMLWriter nw = new XineMLWriter(lems, Format.NINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
+		XineMLWriter nw = new XineMLWriter(lems, Format.NINEML, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".9ml"));
 
 		UtilsTest.checkConvertedFiles(nw.convert());
 
 		// Refresh..
-		lems = AppTest.readLemsFileFromExamples(exampleFilename);
-		XineMLWriter sw = new XineMLWriter(lems, Format.SPINEML, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
+		lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
+		XineMLWriter sw = new XineMLWriter(lems, Format.SPINEML, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".spineml"));
 		
 		UtilsTest.checkConvertedFiles(nw.convert());
 	}

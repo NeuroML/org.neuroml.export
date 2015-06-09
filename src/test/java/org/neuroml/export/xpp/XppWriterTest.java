@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
@@ -22,9 +21,9 @@ public class XppWriterTest extends TestCase
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		XppWriter xppw = new XppWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "ode"));
+		XppWriter xppw = new XppWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll("xml", "ode"));
 		
 		UtilsTest.checkConvertedFiles(xppw.convert());
 	}
@@ -35,7 +34,7 @@ public class XppWriterTest extends TestCase
 		File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
 		Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(exampleSBML)).getLems();
 
-		XppWriter xppw = new XppWriter(lems, AppTest.getTempDir(), exampleSBML.getName().replaceAll("xml", "ode"));
+		XppWriter xppw = new XppWriter(lems, UtilsTest.getTempDir(), exampleSBML.getName().replaceAll("xml", "ode"));
 
 		UtilsTest.checkConvertedFiles(xppw.convert());
 

@@ -6,7 +6,6 @@ import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -32,9 +31,9 @@ public class PyNNWriterTest extends TestCase
 	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
 
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		PyNNWriter pw = new PyNNWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_pynn.py"));
+		PyNNWriter pw = new PyNNWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", "_pynn.py"));
 	
 		UtilsTest.checkConvertedFiles(pw.convert());
 

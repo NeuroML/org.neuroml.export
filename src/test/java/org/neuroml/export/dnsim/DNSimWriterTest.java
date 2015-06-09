@@ -8,7 +8,6 @@ import junit.framework.TestCase;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -22,8 +21,8 @@ public class DNSimWriterTest extends TestCase
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-		DNSimWriter dw = new DNSimWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".m"));
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
+		DNSimWriter dw = new DNSimWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".m"));
 		
 		UtilsTest.checkConvertedFiles(dw.convert());
 	}

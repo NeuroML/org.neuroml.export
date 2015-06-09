@@ -110,31 +110,5 @@ public class AppTest extends TestCase
     	
     }
 
-
-    public static Lems readLemsFileFromExamples(String exampleFilename) throws LEMSException
-    {
-    	NeuroML2Validator nmlv = new NeuroML2Validator();
-    	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.LEMS_EXAMPLES_RESOURCES_DIR + "/" + exampleFilename);
-		
-		return Utils.readLemsNeuroMLFile(content).getLems();
-    }
-    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws LEMSException
-    {
-    	NeuroML2Validator nmlv = new NeuroML2Validator();
-    	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+exampleFilename);
-		
-		return Utils.readLemsNeuroMLFile(content).getLems();
-    }
-    
-    public static File getTempDir()
-    {
-	    String tempDirName = System.getProperty("user.dir") + File.separator + "src/test/resources/tmp";
-	    File tempDir = new File(tempDirName);
-	    if (!tempDir.exists())
-	    	tempDir.mkdir();
-	    return tempDir;
-    }
     
 }

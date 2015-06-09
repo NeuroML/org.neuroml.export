@@ -1,11 +1,8 @@
 package org.neuroml.export.cellml;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 
@@ -20,9 +17,9 @@ public class CellMLWriterTest extends TestCase
 	public void testGetMainScript1() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		CellMLWriter cw = new CellMLWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll("xml", "cellml"));
+		CellMLWriter cw = new CellMLWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll("xml", "cellml"));
 
 		UtilsTest.checkConvertedFiles(cw.convert());
 	}

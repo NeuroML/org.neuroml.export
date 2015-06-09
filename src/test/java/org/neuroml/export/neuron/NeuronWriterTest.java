@@ -15,7 +15,6 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -95,7 +94,7 @@ public class NeuronWriterTest extends TestCase {
         String newName = "MOD_" + compId;
 
         modFile = modFile.replaceAll(origName, newName);
-        File newMechFile = new File(AppTest.getTempDir(), newName + ".mod");
+        File newMechFile = new File(UtilsTest.getTempDir(), newName + ".mod");
 
         FileUtil.writeStringToFile(modFile, newMechFile);
         E.info("Written to file: " + newMechFile);
@@ -111,7 +110,7 @@ public class NeuronWriterTest extends TestCase {
 
     	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
        
-        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
+        NeuronWriter nw = new NeuronWriter(lems, UtilsTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
         List<File> outputFiles = nw.convert();
 
         assertTrue(outputFiles.size() >= 2);
@@ -122,9 +121,9 @@ public class NeuronWriterTest extends TestCase {
     public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         MinimalMessageHandler.setVeryMinimal(true);
-        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+        Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-        NeuronWriter nw = new NeuronWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
+        NeuronWriter nw = new NeuronWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
         List<File> outputFiles = nw.convert();
 
         assertTrue(outputFiles.size() >= 2);

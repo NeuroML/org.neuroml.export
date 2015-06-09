@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -39,7 +38,7 @@ public class SVGWriterTest extends TestCase
         NeuroMLConverter nmlc = new NeuroMLConverter();
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
 
-        SVGWriter sw = new SVGWriter(nmlDocument, new File(AppTest.getTempDir(), "../"+Utils.NEUROML_EXAMPLES_RESOURCES_DIR), exampleFilename.replaceAll("nml", "svg"));
+        SVGWriter sw = new SVGWriter(nmlDocument, new File(UtilsTest.getTempDir(), "../"+Utils.NEUROML_EXAMPLES_RESOURCES_DIR), exampleFilename.replaceAll("nml", "svg"));
 
         UtilsTest.checkConvertedFiles(sw.convert());
 

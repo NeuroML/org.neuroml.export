@@ -4,24 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
-
 import junit.framework.TestCase;
 
-import org.lemsml.export.vhdl.VHDLWriter;
-import org.lemsml.export.vhdl.VHDLWriter.Method;
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
-import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.sim.Sim;
-import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.model.util.NeuroMLException;
 
 public class VHDLWriterTest extends TestCase {
@@ -49,7 +38,7 @@ public class VHDLWriterTest extends TestCase {
 	
 	public Map<String,String> generateMainScript(String exampleFilename, String modelToConvert, String outputDir) throws IOException, LEMSException, ModelFeatureSupportException, NeuroMLException {
 
-    	Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+    	Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
         
         System.out.println("Loaded: "+exampleFilename);
         
@@ -64,25 +53,25 @@ public class VHDLWriterTest extends TestCase {
 		//String defaultJSON = vw.getMainScript(Method.DEFAULTPARAMJSON);
 		//String defaultReadbackJSON = vw.getMainScript(Method.DEFAULTREADBACKJSON);
 
-		File theDir = new File(AppTest.getTempDir() + "/" + outputDir );
+		File theDir = new File(UtilsTest.getTempDir() + "/" + outputDir );
 		if (theDir.exists())
 		{
 			delete(theDir);		
 		}
 		theDir.mkdir();
 		for (Map.Entry<String, String> entry : componentScripts.entrySet()) {
-	        File mFile = new File(AppTest.getTempDir(),outputDir + "/" + entry.getKey() + ".vhdl");
+	        File mFile = new File(UtilsTest.getTempDir(),outputDir + "/" + entry.getKey() + ".vhdl");
 	        System.out.println("Writing to: "+mFile.getAbsolutePath());
 	        FileUtil.writeStringToFile(entry.getValue(), mFile);
 	        assertTrue(mFile.exists());	        			
 		}
-		File mFile = new File(AppTest.getTempDir(),outputDir + "/testbench.vhdl");
+		File mFile = new File(UtilsTest.getTempDir(),outputDir + "/testbench.vhdl");
         FileUtil.writeStringToFile(testbenchScript, mFile);
         assertTrue(mFile.exists());	        
-        mFile = new File(AppTest.getTempDir(),outputDir + "/isim.cmd");
+        mFile = new File(UtilsTest.getTempDir(),outputDir + "/isim.cmd");
         FileUtil.writeStringToFile(tclScript, mFile);
         assertTrue(mFile.exists());	        
-        mFile = new File(AppTest.getTempDir(),outputDir + "/testbench.prj");
+        mFile = new File(UtilsTest.getTempDir(),outputDir + "/testbench.prj");
         FileUtil.writeStringToFile(prjScript, mFile);
         assertTrue(mFile.exists());	        
         //mFile = new File(AppTest.getTempDir(),outputDir + "/defaultJSON.json");

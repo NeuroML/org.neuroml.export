@@ -1,21 +1,17 @@
 package org.lemsml.export.dlems;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.utils.UtilsTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -48,9 +44,9 @@ public class DLemsWriterTest extends TestCase
 	public void generateMainScript(String lemsFilename) throws LEMSException, GenerationException, IOException, ModelFeatureSupportException, NeuroMLException
 	{
 		String exampleFilename = lemsFilename.substring(lemsFilename.lastIndexOf('/') + 1);
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-		DLemsWriter sw = new DLemsWriter(lems, AppTest.getTempDir(), exampleFilename.replaceAll(".xml", ".json"), null, false);
+		DLemsWriter sw = new DLemsWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".json"), null, false);
 
 		UtilsTest.checkConvertedFiles(sw.convert());
 	}

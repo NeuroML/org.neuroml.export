@@ -8,7 +8,6 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.AppTest;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.model.util.NeuroML2Validator;
@@ -28,7 +27,7 @@ public class SBMLWriterTest extends TestCase
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
-		Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 		generateSBMLAndTestScript(lems, exampleFilename);
 
 	}/*
@@ -51,14 +50,14 @@ public class SBMLWriterTest extends TestCase
 	public void generateSBMLAndTestScript(Lems lems, String exampleFileName) throws LEMSException, IOException, GenerationException, SAXException, ModelFeatureSupportException, NeuroMLException
 	{
 
-		SBMLWriter sbmlw = new SBMLWriter(lems, AppTest.getTempDir(), exampleFileName.replaceAll("xml", "sbml"));
+		SBMLWriter sbmlw = new SBMLWriter(lems, UtilsTest.getTempDir(), exampleFileName.replaceAll("xml", "sbml"));
 		List<File> outputFiles = sbmlw.convert();
         
 		UtilsTest.checkConvertedFiles(outputFiles);
 
 		NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
 
-		File testSbmlFile = new File(AppTest.getTempDir(), exampleFileName.replaceAll("xml", "sh"));
+		File testSbmlFile = new File(UtilsTest.getTempDir(), exampleFileName.replaceAll("xml", "sh"));
 
 		Target target = lems.getTarget();
 		Component simCpt = target.getComponent();

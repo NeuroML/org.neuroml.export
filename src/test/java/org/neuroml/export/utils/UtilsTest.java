@@ -2,27 +2,20 @@ package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
-import org.lemsml.jlems.core.expression.ParseError;
-import org.lemsml.jlems.core.run.ConnectionError;
-import org.lemsml.jlems.core.run.RuntimeError;
 import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.core.sim.ParseException;
-import org.lemsml.jlems.core.sim.Sim;
-import org.lemsml.jlems.core.type.BuildException;
-import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.utils.Utils;
-import org.neuroml.model.util.NeuroML2Validator;
-import org.neuroml.model.util.NeuroMLConverter;
 
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.export.AppTest;
 import org.neuroml.model.IafTauCell;
+import org.neuroml.model.util.NeuroML2Validator;
 import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
@@ -54,6 +47,33 @@ public class UtilsTest extends TestCase {
 		}
 	}*/
     
+    
+
+    public static Lems readLemsFileFromExamples(String exampleFilename) throws LEMSException
+    {
+    	NeuroML2Validator nmlv = new NeuroML2Validator();
+    	
+		String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.LEMS_EXAMPLES_RESOURCES_DIR + "/" + exampleFilename);
+		
+		return Utils.readLemsNeuroMLFile(content).getLems();
+    }
+    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws LEMSException
+    {
+    	NeuroML2Validator nmlv = new NeuroML2Validator();
+    	
+		String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+exampleFilename);
+		
+		return Utils.readLemsNeuroMLFile(content).getLems();
+    }
+    
+    public static File getTempDir()
+    {
+	    String tempDirName = System.getProperty("user.dir") + File.separator + "src/test/resources/tmp";
+	    File tempDir = new File(tempDirName);
+	    if (!tempDir.exists())
+	    	tempDir.mkdir();
+	    return tempDir;
+    }
     
 	
 	public void testGetMagnitudeInSI() throws NeuroMLException {
@@ -91,6 +111,12 @@ public class UtilsTest extends TestCase {
         assertEquals(comp.getStringValue("tau"), iaf.getTau());
         assertEquals((float)comp.getParamValue("tau").getDoubleValue(), Utils.getMagnitudeInSI(iaf.getTau()));
         
+    }
+    
+    
+    public void testInteractionLemsNeuroMLModels() {
+        
+		//Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
     }
    
     
