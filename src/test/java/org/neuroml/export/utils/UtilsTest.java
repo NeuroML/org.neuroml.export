@@ -2,20 +2,27 @@ package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.xml.bind.JAXBException;
 import static junit.framework.Assert.assertEquals;
-import org.lemsml.jlems.core.sim.ContentError;
-import org.lemsml.jlems.io.util.JUtil;
-
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.io.util.JUtil;
 import org.neuroml.export.AppTest;
+import org.neuroml.model.Cell;
 import org.neuroml.model.IafTauCell;
+import org.neuroml.model.IonChannelHH;
+import org.neuroml.model.NeuroMLDocument;
+import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroML2Validator;
+import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
 public class UtilsTest extends TestCase {
@@ -57,13 +64,14 @@ public class UtilsTest extends TestCase {
 		
 		return Utils.readLemsNeuroMLFile(content).getLems();
     }
+    
     public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws LEMSException
     {
     	NeuroML2Validator nmlv = new NeuroML2Validator();
     	
 		String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+exampleFilename);
 		
-		return Utils.readLemsNeuroMLFile(content).getLems();
+		return Utils.readNeuroMLFile(content).getLems();
     }
     
     public static File getTempDir()
@@ -114,9 +122,36 @@ public class UtilsTest extends TestCase {
     }
     
     
-    public void testInteractionLemsNeuroMLModels() {
+    public void testInteractionLemsNeuroMLModels() throws LEMSException, NeuroMLException {
         
-		//Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
+		String exampleFilename = "NML2_SingleCompHHCell.nml";
+		Lems lems = UtilsTest.readNeuroMLFileFromExamples(exampleFilename);
+        
+        NeuroMLConverter nc = new NeuroMLConverter();
+        
+		String content = JUtil.getRelativeResource(nc.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+exampleFilename);
+        NeuroMLDocument nmlDoc = nc.loadNeuroML(content);
+        
+        LinkedHashMap<String,Standalone> stands = NeuroMLConverter.getAllStandaloneElements(nmlDoc);
+        
+        
+        System.out.println("Comparing contents of LEMS (CTs: "+lems.getComponentTypes().size()+"; Cs: "+lems.getComponents().size()
+                +") and "+nmlDoc.getId()+" (standalones: "+stands.size()+")");
+        
+        for (String id: stands.keySet()) {
+            System.out.println("-- NeuroML element: "+id);
+            Standalone s = stands.get(id);
+            System.out.println("    NML Element: "+s.getId());
+            Component comp = lems.getComponent(id);
+            System.out.println("    LEMS comp: "+comp.getID());
+            
+            if (s instanceof IonChannelHH) {
+                IonChannelHH ic = (IonChannelHH)s;
+                System.out.println("    Found IonChannelHH: "+ic.getId()+" (LEMS: "+comp.getID()+")");
+                System.out.println("    Conductance: "+ic.getConductance()+" (LEMS: "+comp.getAttributeValue("conductance")+")");
+            }
+            
+        }
     }
    
     

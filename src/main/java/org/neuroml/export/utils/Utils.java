@@ -195,7 +195,21 @@ public class Utils
 
 		sim.readModel();
 		return sim;
+	}
+    
+	public static Sim readNeuroMLFile(String contents) throws LEMSException
+	{
 
+		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+
+		String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(contents);
+
+		JarResourceInclusionReader jrir = new JarResourceInclusionReader(nmlLems);
+
+		Sim sim = new Sim(jrir.read());
+
+		sim.readModel();
+		return sim;
 	}
 
 	public static Sim readLemsNeuroMLFile(File f) throws LEMSException
