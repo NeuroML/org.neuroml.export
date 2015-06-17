@@ -118,15 +118,23 @@ public class SVGWriter extends ANeuroMLXMLWriter
                                 +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
                         cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
                     }
-                    for (Instance instance: pop.getInstance())
+                    if (pop.getInstance().isEmpty())
                     {
-                        Location loc = instance.getLocation();
-                        net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ());
+                        for (int i= 0; i<pop.getSize().intValue(); i++) {
+                            net3D.addCell(cell, 0, 0, 0);
+                        }
+                    } 
+                    else 
+                    {
+                        for (Instance instance: pop.getInstance())
+                        {
+                            Location loc = instance.getLocation();
+                            net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ());
+                        }
                     }
 
                 }
             }
-
             renderCells(result, net3D, png);
         }
     }
