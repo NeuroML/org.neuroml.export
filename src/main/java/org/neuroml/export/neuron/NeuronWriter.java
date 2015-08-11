@@ -202,6 +202,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
             main.append("\nimport neuron\n");
+            main.append("\nimport time\n");
             main.append("h = neuron.h\n");
 
             if(nogui)
@@ -326,6 +327,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String fileName = cellName + ".hoc";
                     File cellFile = new File(getOutputFolder(), fileName);
                     E.info("Writing to: " + cellFile);
+                    
+                    for (Species species: cell.getBiophysicalProperties().getIntracellularProperties().getSpecies()) {
+                        
+                        float internal = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialConcentration()), "concentration");
+                        float external = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialExtConcentration()), "concentration");
+                        main.append("print(\"Setting the default initial concentrations for " + species.getIon() + " (used in "+cellName
+                                +") to "+internal+" mM (internal), "+external+" mM (external)\")\n");
+                        
+                        main.append("h(\"" + species.getIon() + "i0_" + species.getIon() + "_ion = " + internal + "\")\n");
+                        main.append("h(\"" + species.getIon() + "o0_" + species.getIon() + "_ion = " + external + "\")\n\n");
+
+                    }
 
                     main.append("h.load_file(\"" + fileName + "\")\n");
 
@@ -334,7 +347,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append("h(\"n_" + popName + " = " + number + "\")\n");
 
                     main.append("h(\"objectvar a_" + popName + "[n_" + popName + "]\")\n");
-
+                    
                     main.append("for i in range(int(h.n_" + popName + ")):\n");
                     // main.append("    cell = h."+cellName+"()\n");
                     main.append("    h(\"a_" + popName + "[%i] = new " + cellName + "()\"%i)\n");
@@ -985,7 +998,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         columnsPost.put(outfileId, new ArrayList<String>());
                     }
 
-                    columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%f\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0)) # Time in first column, save in SI units...");
+                    columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%e\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0)) # Time in first column, save in SI units...");
 
                     ArrayList<String> colIds = new ArrayList<String>();
 
@@ -1015,7 +1028,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
                             String factor = (conv == 1) ? "" : " / " + conv;
                             columnsPost.get(outfileId).add(
-                                    "    f_" + outfileId + "_f2.write('%f\\t'%(float(h.v_" + colId + ".get(i))" + factor + ")) # Saving as SI, variable has dim: " + lqp.getDimension().getName());
+                                    "    f_" + outfileId + "_f2.write('%e\\t'%(float(h.v_" + colId + ".get(i))" + factor + ")) # Saving as SI, variable has dim: " + lqp.getDimension().getName());
 
                         }
                     }
@@ -1041,9 +1054,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append("h.nrncontrolmenu()\n");
             }
 
+            main.append("sim_start = time.time()\n");
             main.append("print(\"Running a simulation of %sms (dt = %sms)\" % (h.tstop, h.dt))\n\n");
             main.append("h.run()\n\n");
-            main.append("print(\"Finished simulation, saving results...\")\n\n");
+            main.append("sim_end = time.time()\n");
+            main.append("sim_time = sim_end - sim_start\n");
+            main.append("print(\"Finished simulation in %f seconds (%f mins), saving results...\"%(sim_time, sim_time/60.0))\n\n");
 
             // main.append("objref SampleGraph\n");
             for(String dg : displayGraphs)
@@ -1073,6 +1089,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append("\n");
             }
 
+            main.append("save_end = time.time()\n");
+            main.append("save_time = save_end - sim_end\n");
+            main.append("print(\"Finished saving results in %f seconds\"%(save_time))\n\n");
             main.append("print(\"Done\")\n\n");
             if(nogui)
             {
@@ -2519,8 +2538,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
+
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
+
         
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
@@ -2557,8 +2581,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
 
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
-
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
 
@@ -2570,7 +2592,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Syns.xml")); 
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Social.xml"));
-        /* */
+         */
         String testScript = "set -e\n";
 
         NeuronWriter nw;
