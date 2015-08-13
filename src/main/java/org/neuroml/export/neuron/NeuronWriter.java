@@ -1389,11 +1389,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             blockAssigned.append("area (um2)\n");
 
-            blockParameter.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " (um2)\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " (cm2)\n");
             blockParameter.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " (nA)\n");
 
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = area\n\n");
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " = -1 * (0.01) * ica * " + NeuroMLElements.CONC_MODEL_SURF_AREA + " : To correct units...\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = (1e-8) * area : "+NeuroMLElements.CONC_MODEL_SURF_AREA+" is in cm^2 to match area units in cond densities (area is in um^2)\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " = -1 * (0.01)*(1e8) * ica * " + NeuroMLElements.CONC_MODEL_SURF_AREA + " : To correct units...\n\n");
 
             // locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
             // locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
@@ -2250,9 +2250,20 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 String rateExpr = rateNameVsRateExpr.get(rateName);
                 // ratesMethod.insert(0,rateName + " = " + rateExpr + " \n");
-                if(rateName.equals("rate_concentration") && rateExpr.contains("Faraday"))
+                if(rateName.equals("rate_concentration") )
                 {
-                    ratesMethod.append(rateName + " = (1e6) * " + rateExpr + " ? To correct units...\n");
+                    if (rateExpr.toLowerCase().contains("faraday") && rateExpr.contains("surfaceArea"))
+                    {
+                        ratesMethod.append(rateName + " = (1e-2) * " + rateExpr + " ? To correct units...\n");
+                    }
+                    else if (rateExpr.contains("Faraday"))
+                    {
+                        ratesMethod.append(rateName + " = (1e6) * " + rateExpr + " ? To correct units...\n");
+                    }
+                    else if (rateExpr.contains("surfaceArea"))
+                    {
+                        ratesMethod.append(rateName + " = (1e-8) * " + rateExpr + " ? To correct units...\n");
+                    }
                 }
                 else
                 {
@@ -2538,10 +2549,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell_LowDt.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
-
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/IL/LEMS_IL.nonernst.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
         /*

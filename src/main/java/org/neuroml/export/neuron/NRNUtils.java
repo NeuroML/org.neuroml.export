@@ -188,7 +188,7 @@ public class NRNUtils
 		}
 		else if(dimensionName.equals("area"))
 		{
-			return "(um2)";
+			return "(cm2)";
 		}
 		else if(dimensionName.equals("volume"))
 		{
@@ -277,7 +277,7 @@ public class NRNUtils
 		}
 		else if(dimensionName.equals("area"))
 		{
-			return 1e12f;
+			return 1e4f;
 		}
 		else if(dimensionName.equals("volume"))
 		{
