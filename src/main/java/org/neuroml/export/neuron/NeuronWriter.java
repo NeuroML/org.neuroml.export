@@ -1382,25 +1382,26 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             blockAssigned.append("cai (mM)\n");
             blockAssigned.append("cao (mM)\n");
-
             blockAssigned.append("ica (mA/cm2)\n");
-
             blockAssigned.append("diam (um)\n");
-
             blockAssigned.append("area (um2)\n");
 
-            blockParameter.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " (cm2)\n");
-            blockParameter.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " (nA)\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " "+NRNUtils.getNeuronUnit("area")+"\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " "+NRNUtils.getNeuronUnit("current")+"\n");
 
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = (1e-8) * area : "+NeuroMLElements.CONC_MODEL_SURF_AREA+" is in cm^2 to match area units in cond densities (area is in um^2)\n\n");
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " = -1 * (0.01)*(1e8) * ica * " + NeuroMLElements.CONC_MODEL_SURF_AREA + " : To correct units...\n\n");
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = area   : "
+                               +NeuroMLElements.CONC_MODEL_SURF_AREA+" has units "+NRNUtils.getNeuronUnit("area")
+                               +", area (built in to NEURON) is in um^2...\n\n");
+            
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_CA_TOT_CURR + " = -1 * (0.01) * ica * " + NeuroMLElements.CONC_MODEL_SURF_AREA 
+                    + " :   "+NeuroMLElements.CONC_MODEL_CA_TOT_CURR+" has units "+NRNUtils.getNeuronUnit("current")+" ; ica (built in to NEURON) has units (mA/cm2)...\n\n");
 
             // locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
             // locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_CONC + "\n");
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + "\n");
-            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_CONC + " (mM)\n");
-            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + " (mM)\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_CONC + " "+NRNUtils.getNeuronUnit("concentration")+"\n");
+            blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + " "+NRNUtils.getNeuronUnit("concentration")+"\n");
 
             blockInitial.append(NeuroMLElements.CONC_MODEL_INIT_CONC + " = cai" + "\n");
             blockInitial.append(NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + " = cao" + "\n");
@@ -2249,26 +2250,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             for(String rateName : rateNameVsRateExpr.keySet())
             {
                 String rateExpr = rateNameVsRateExpr.get(rateName);
-                // ratesMethod.insert(0,rateName + " = " + rateExpr + " \n");
-                if(rateName.equals("rate_concentration") )
-                {
-                    if (rateExpr.toLowerCase().contains("faraday") && rateExpr.contains("surfaceArea"))
-                    {
-                        ratesMethod.append(rateName + " = (1e-2) * " + rateExpr + " ? To correct units...\n");
-                    }
-                    else if (rateExpr.contains("Faraday"))
-                    {
-                        ratesMethod.append(rateName + " = (1e6) * " + rateExpr + " ? To correct units...\n");
-                    }
-                    else if (rateExpr.contains("surfaceArea"))
-                    {
-                        ratesMethod.append(rateName + " = (1e-8) * " + rateExpr + " ? To correct units...\n");
-                    }
-                }
-                else
-                {
-                    ratesMethod.append(rateName + " = " + rateExpr + " \n");
-                }
+                    
+                ratesMethod.append(rateName + " = " + rateExpr + " ? Note units of all quantities used here need to be consistent!\n");
+           
             }
 
             ratesMethod.append("\n" + ratesMethodFinal + " \n");
@@ -2549,13 +2533,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/IL/LEMS_IL.nonernst.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
-        /*
+        
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
@@ -2583,7 +2568,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/LEMS_nc_superdeep.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml"));
-        lemsFiles.add(new File("../git/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
 
@@ -2591,19 +2575,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../git/BlueBrainProjectShowcase/ChannelTest/LEMS_TestVClamp.xml"));
 
 
-
-
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
-
-
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml")); 
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_Single.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A_Pharyngeal.xml")); 
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Syns.xml")); 
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Syns.xml")); 
 
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_B_Social.xml"));
-         */
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Social.xml"));
+         //* */
         String testScript = "set -e\n";
 
         NeuronWriter nw;
