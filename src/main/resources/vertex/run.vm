@@ -1,0 +1,46 @@
+
+% Main VERTEX script for: $name
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+%    PLEASE NOTE: This export is still in development
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Load in network structure from NeuroML network...
+
+%% TODO
+
+% Set simulation parameters
+
+RecordingSettings.maxRecTime = {$t_end};
+
+% initialize 
+
+[params, connections, electrodes] =initNetwork(TissueParams, NeuronParams,ConnectionParams,RecordingSettings, SimulationSettings);
+
+
+% run simulation
+
+runSimulation(params,connections,electrodes);
+
+
+
+% load Results which later will be visualized
+
+
+#foreach ($d in $display)
+
+subplot(1,2,2)
+#foreach ($curve in $d.curves)
+
+plot(Results.${curve.ordinate}(1, :), 'LineWidth', 2,'Color','b') 
+set(gcf,'color','w');
+set(gca,'FontSize',16)
+title('${curve.ordinate} for $(name)', 'FontSize', 16)
+xlabel('Time (ms)', 'FontSize', 16)
+ylabel('${curve.ordinate}', 'FontSize', 16)
+
+#end
+#end

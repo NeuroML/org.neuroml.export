@@ -1,0 +1,70 @@
+
+% VERTEX file for Component: $name
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+%    PLEASE NOTE: This export is still in development
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+classdef PointNeuronModel_${name} < PointNeuronModel
+
+  %PointNeuronModel_${name} equivalent to the ${name} in LEMS
+#foreach ($par in $parameters.keySet())
+  %  - $par 
+#end
+  
+  properties (SetAccess = private)
+#foreach ($s in $state.keySet())
+    $s 
+#end
+    spikes
+  end
+  
+  methods
+    function NM = PointNeuronModel_${name}(Neuron, number)
+      NM = NM@PointNeuronModel(Neuron, number);
+#foreach ($s in $state.keySet())
+      NM.$s = Neuron.$state.get($s).* ones(number, 1);
+#end
+      NM.spikes = [];
+    end
+    
+    function [NM] = updateNeurons(NM, IM, N, SM, dt)
+      I_syn = PointNeuronModel.sumSynapticCurrents(SM);
+      I_input = PointNeuronModel.sumInputCurrents(IM);
+
+#foreach ($sf in $state_functions.keySet())
+        $sf = $state_functions.get($sf);   
+#end
+#foreach ($d in $dynamics.keySet())
+        der($d) = $dynamics.get($d);   
+#end
+
+    end
+    
+    function spikes = get.spikes(NM)
+      spikes = NM.spikes;
+    end
+    
+    function NM = randomInit(NM, N)
+      %%NM.v = N.v_reset - (rand(size(NM.v)) .* 5);
+      %%NM.U = rand(size(NM.U)) .* N.d/3;
+    end
+  end % methods
+  
+
+  methods(Static)
+    
+    function params = getRequiredParams()
+      params = [getRequiredParams@PointNeuronModel, ...
+                {#foreach ($par in $parameters.keySet())'$par',#end}];
+    end
+    
+  end
+end % classdef
+
+
+
+

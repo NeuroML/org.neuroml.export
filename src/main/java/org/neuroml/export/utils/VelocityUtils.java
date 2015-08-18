@@ -32,6 +32,9 @@ public class VelocityUtils
 	
 	public static final String dnsimMainFile = "/dnsim/dnsim.m.vm";
 	public static final String dnsimModuleFile = "/dnsim/dnsim.txt.vm";
+    
+	public static final String vertexRunTemplateFile = "/vertex/run.vm";
+	public static final String vertexCellTemplateFile = "/vertex/cell.vm";
 	
 	public static final String xppTemplateFile = "/xpp/xpp.vm";
 	

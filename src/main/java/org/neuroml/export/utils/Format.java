@@ -26,7 +26,8 @@ public enum Format
 	VHDL("VHDL", "vhdl"),
 	XINEML("Xineml", ""),
 	XPP("Xpp", "ode"),
-	PNG("PNG", "png");
+	PNG("PNG", "png"),
+	VERTEX("VERTEX", "m");
 	
 	private final String label;
 	private final String extension;
