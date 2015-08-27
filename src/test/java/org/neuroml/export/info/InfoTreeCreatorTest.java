@@ -92,7 +92,7 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    ID: SpikingCell\n"
             + "    Description: A Simple Spiking cell for testing purposes\n"
             + "    Number of segments: 4\n"
-            + "    Number of segment groups: 4\n"
+            + "    Number of segment groups: 3\n"
             + "    Channel density: pasChans:\n"
             + "        ID: pasChans\n"
             + "        IonChannel: pas\n"
