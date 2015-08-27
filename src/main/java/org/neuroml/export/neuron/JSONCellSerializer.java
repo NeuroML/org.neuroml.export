@@ -31,6 +31,7 @@ import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
+import org.neuroml.model.Property;
 import org.neuroml.model.Resistivity;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
@@ -196,6 +197,13 @@ public class JSONCellSerializer
                         g.writeStringField("parent", parentSection);
 
                         g.writeNumberField("fractionAlong", fract);
+                    }
+                    
+                    for(Property prop: grp.getProperty()){
+                        if (prop.getTag().equals("numberInternalDivisions")) 
+                        {
+                            g.writeNumberField("numberInternalDivisions", Integer.parseInt(prop.getValue()));
+                        }
                     }
 
                     // TODO: make this a more generic function & use string fields

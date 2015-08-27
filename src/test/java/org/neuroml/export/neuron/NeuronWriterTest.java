@@ -53,7 +53,7 @@ public class NeuronWriterTest extends TestCase {
     
     public void testChannel() throws LEMSException, IOException, GenerationException {
 
-        testComponentToMod("NML2_SimpleIonChannel.nml", "na");
+        testComponentToMod("NML2_SimpleIonChannel.nml", "NaConductance");
     }
 
     public void testSynapse() throws LEMSException, IOException, GenerationException {

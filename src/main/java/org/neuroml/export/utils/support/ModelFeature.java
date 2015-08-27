@@ -37,6 +37,8 @@ public enum ModelFeature
     ABSTRACT_CELL_MODEL("Model with abstract (non conductance based) cell(s)"), 
     COND_BASED_CELL_MODEL("Model with conductance based cell(s)"), 
     MULTICOMPARTMENTAL_CELL_MODEL("Model with multicompartmental cell(s)"), 
+    CHANNEL_POPULATIONS_CELL_MODEL("Model with channel populations"), 
+    CHANNEL_DENSITY_ON_SEGMENT("Model with channel density specified per segment (aot segmentGroup)"), 
     HH_CHANNEL_MODEL("Model with HH based ion channel(s)"), 
     KS_CHANNEL_MODEL("Model with kinetic scheme based ion channel(s)"), 
     ALL("ALL");
@@ -116,18 +118,24 @@ public enum ModelFeature
                         for(ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity())
                         {
                             checkForChannels(cd.getIonChannel(), mfs, lems);
+                            if (cd.getSegment()!=null)
+                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(ChannelDensityNernst cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
                         {
                             checkForChannels(cd.getIonChannel(), mfs, lems);
+                            if (cd.getSegment()!=null)
+                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(ChannelDensityGHK cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
                         {
                             checkForChannels(cd.getIonChannel(), mfs, lems);
+                            if (cd.getSegment()!=null)
+                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(ChannelPopulation cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelPopulation())
                         {
-                            System.out.println("cp");
+                            addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
                             checkForChannels(cd.getIonChannel(), mfs, lems);
                         }
                     }
@@ -262,13 +270,13 @@ public enum ModelFeature
         for(File f : exFileDir.listFiles())
         {
             ArrayList<String> ignores = new ArrayList<String>();
-            Collections.addAll(ignores, "NML2_NestedNetworks.nml", "NML2_CellVariableParams.nml", "NML2_SimpleNetwork3D.nml", "NML2_SimpleNetwork.nml", "NML2_InhomogeneousParams.nml",
-                    "NML2_FullCell.nml");
+            //Collections.addAll(ignores, "NML2_NestedNetworks.nml", "NML2_CellVariableParams.nml", "NML2_SimpleNetwork3D.nml", "NML2_SimpleNetwork.nml", "NML2_InhomogeneousParams.nml",
+             //       "NML2_FullCell.nml");
             try
             {
                 if(f.getName().startsWith("NML2") && f.getName().endsWith(".nml") && !ignores.contains(f.getName()))
                 {
-                    System.out.println("----------------------------------");
+                    System.out.println("\n----------------------------------");
                     Lems lems = Utils.readNeuroMLFile(f).getLems();
                     ArrayList<ModelFeature> mfs = analyseModelFeatures(lems);
                     for(ModelFeature mf : mfs)

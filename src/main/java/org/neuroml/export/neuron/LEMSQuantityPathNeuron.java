@@ -175,7 +175,6 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 
 	public String getNeuronVariableReference() throws ContentError, NeuroMLException
 	{
-		// System.out.println("getNeuronVariableReference in "+getQuantity());
 
 		if(myType == Type.VAR_IN_SINGLE_COMP)
 		{
@@ -201,8 +200,16 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 					String varInst = nh.getNrnSectionName(segment);
 
 					float fract;
-					if(cell.getMorphology().getSegment().size() == 1) fract = 0.5f;
-					else fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
+					if(cell.getMorphology().getSegment().size() == 1) {
+                        fract = 0.5f;
+                    }
+                    else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst)) {
+                        // No real segment group, segment ids being used for sections...
+                        fract = 0.5f;
+                    } else {
+                        fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
+                    }
+                    
 					String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
 					return varRef;
 				}

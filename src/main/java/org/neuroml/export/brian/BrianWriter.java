@@ -283,6 +283,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 			String len = simCpt.getStringValue("length");
 			String dt = simCpt.getStringValue("step");
+			sb.append("print(\"Running simulation for "+len+" (dt = "+dt+")\")\n");
 
 			len = len.replaceAll("ms", "*msecond");
 			len = len.replaceAll("0s", "0*second"); // TODO: Fix!!!
@@ -518,7 +519,10 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		ArrayList<File> lemsFiles = new ArrayList<File>();
         
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
+		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
+		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+		//lemsFiles.add(new File("../git/PinskyRinzelModel/NeuroML2/LEMS_Figure3.xml"));
 
         
 		for(File lemsFile : lemsFiles) {

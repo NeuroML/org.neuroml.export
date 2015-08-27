@@ -85,11 +85,14 @@ public class InfoTreeCreatorTest extends TestCase {
     }
 
     public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception {
-        String expected = "Cell SpikingCell:\n"
+        String expected = "Ion Channel pas:\n"
+            + "    ID: pas\n"
+            + "    Gates:\n"
+            + "Cell SpikingCell:\n"
             + "    ID: SpikingCell\n"
             + "    Description: A Simple Spiking cell for testing purposes\n"
             + "    Number of segments: 4\n"
-            + "    Number of segment groups: 3\n"
+            + "    Number of segment groups: 4\n"
             + "    Channel density: pasChans:\n"
             + "        ID: pasChans\n"
             + "        IonChannel: pas\n"
@@ -118,8 +121,8 @@ public class InfoTreeCreatorTest extends TestCase {
     }
 
     public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception {
-        String expected = "Ion Channel na:\n"
-            + "    ID: na\n"
+        String expected = "Ion Channel NaConductance:\n"
+            + "    ID: NaConductance\n"
             + "    Gates:\n"
             + "        gate m:\n"
             + "            instances: 3\n"
@@ -167,7 +170,7 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    Population iafCells:\n"
             + "        ID: iafCells\n"
             + "        Component: iaf\n"
-            + "        Size (number of instances): 3\n"
+            + "        Size: 3\n"
             + "    Number of projections: 2\n"
             + "    Projection internal1:\n"
             + "        ID: internal1\n"
