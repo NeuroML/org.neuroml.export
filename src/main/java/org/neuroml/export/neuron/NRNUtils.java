@@ -244,13 +244,17 @@ public class NRNUtils
 		{
 			return "(mM m2 /A /s)";
 		}
+		else if(dimensionName.equals("conductance_per_voltage"))
+		{
+			return "(uS / mV)";
+		}
 		else if(dimensionName.equals(Dimension.NO_DIMENSION))
 		{
 			return "";
 		}
 		else
 		{
-			return "? Don't know units for : (" + dimensionName + ")";
+			return "Don't know units for : (" + dimensionName + ")";
 		}
 	}
 
@@ -269,7 +273,11 @@ public class NRNUtils
 	protected static float getNeuronUnitFactor(String dimensionName)
 	{
 
-		if(dimensionName.equals("voltage"))
+		if(dimensionName.equals("none"))
+		{
+			return 1f;
+		}
+        else if(dimensionName.equals("voltage"))
 		{
 			return 1000f;
 		}
@@ -333,7 +341,17 @@ public class NRNUtils
 		{
 			return 1f;
 		}
-		return 1f;
+		else if(dimensionName.equals("conductance_per_voltage"))
+		{
+			return 1000f;
+		}
+		else if(dimensionName.equals("temperature"))
+		{
+			return 1f;
+		}
+        else {
+            return Float.NaN;
+        }
 	}
 
 	protected static String getDerivativeUnit(String dimensionName)
