@@ -64,6 +64,18 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    c: -50.0\n"
             + "    d: 2.0\n"
             + "    thresh: 30mV (0.03 V)\n"
+            + "Element iz2007RS:\n"
+            + "    ID: iz2007RS\n"
+            + "    v0: -60mV (-0.06 V)\n"
+            + "    k: 0.7 nS_per_mV (7.0E-7 S_per_V)\n"
+            + "    vr: -60 mV (-0.06 V)\n"
+            + "    vt: -40 mV (-0.04 V)\n"
+            + "    vpeak: 35 mV (0.035 V)\n"
+            + "    a: 0.03 per_ms (30.0 per_s)\n"
+            + "    b: -2 nS (-2.0E-9 S)\n"
+            + "    c: -50 mV (-0.05 V)\n"
+            + "    d: 100 pA (1.0E-10 A)\n"
+            + "    C: 100 pF (1.0E-10 F)\n"
             + "Element adExBurst:\n"
             + "    ID: adExBurst\n"
             + "    gL: 30nS (3.0E-8 S)\n"
@@ -79,7 +91,15 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    C: 281pF (2.81E-10 F)\n"
             + "Element fn1:\n"
             + "    ID: fn1\n"
-            + "    I: 0.8";
+            + "    I: 0.8\n"
+            + "Element fn1969:\n"
+            + "    ID: fn1969\n"
+            + "    a: 0.7\n"
+            + "    b: 0.08\n"
+            + "    I: 1.0\n"
+            + "    phi: 0.08\n"
+            + "    V0: 0.0\n"
+            + "    W0: 0.0";
         String tree = getInfoTreeAsString("NML2_AbstractCells.nml");
         compare(expected, tree);
     }
