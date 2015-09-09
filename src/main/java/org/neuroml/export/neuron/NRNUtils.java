@@ -305,6 +305,10 @@ public class NRNUtils
 		{
 			return 1e-3f;
 		}
+		else if(dimensionName.equals("conductanceDensity"))
+		{
+			return 1e-4f;
+		}
 		else if(dimensionName.equals("time"))
 		{
 			return 1000f;
