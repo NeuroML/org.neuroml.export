@@ -20,7 +20,7 @@ public class VertexWriterTest extends TestCase
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
 
-        VertexWriter vw = new VertexWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", ".run.m"));
+        VertexWriter vw = new VertexWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", "_run.m"));
 
         UtilsTest.checkConvertedFiles(vw.convert());
     }

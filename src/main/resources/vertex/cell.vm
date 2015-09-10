@@ -12,34 +12,187 @@ classdef PointNeuronModel_${name} < PointNeuronModel
 
   %PointNeuronModel_${name} equivalent to the ${name} in LEMS
 #foreach ($par in $parameters.keySet())
-  %  - $par 
+  %  - $par .. 
 #end
   
   properties (SetAccess = private)
 #foreach ($s in $state.keySet())
-    $s 
+    #if (($s != "V") && ($s != "v"))
+      $s 
+    #end
 #end
-    spikes
+      spikes
   end
   
   methods
     function NM = PointNeuronModel_${name}(Neuron, number)
       NM = NM@PointNeuronModel(Neuron, number);
 #foreach ($s in $state.keySet())
-      NM.$s = Neuron.$state.get($s).* ones(number, 1);
+   #if (($s == "V") || ( $s == "v" ))
+      #if ( $state.get($s)==0)
+         NM.v = $state.get($s).* ones(number, 1);
+      #else
+         NM.v=Neuron.$state.get($s).*ones(number,1);
+      #end
+   #else
+      #if ( $state.get($s)==0)
+         NM.$s = $state.get($s).*ones(number,1);
+      #else 
+         NM.$s = Neuron.$state.get($s).*ones(number,1);
+      #end
+   #end
 #end
-      NM.spikes = [];
+         NM.spikes = [];
     end
     
     function [NM] = updateNeurons(NM, IM, N, SM, dt)
       I_syn = PointNeuronModel.sumSynapticCurrents(SM);
       I_input = PointNeuronModel.sumInputCurrents(IM);
 
-#foreach ($sf in $state_functions.keySet())
-        $sf = $state_functions.get($sf);   
+
+#foreach ($d in $dynamics.keySet())
+   #set( $variable = $dynamics.get($d) )
+   #if (( $d == "V" ) || ($d == "v") )
+       #foreach ($s in $state.keySet())
+          #if (($s == "V") || ($s == "v") )
+            #set( $variable = $variable.replace("$s","NM.v") )
+          #else
+            #set( $variable = $variable.replace("$s","NM.$s") )
+          #end 
+       #end
+       #foreach ($par in $parameters.keySet() )
+          #set( $variable = $variable.replace("$par","N.$par") )
+       #end
+       #foreach ($sf in $state_functions.keySet())
+            #set( $variable_in=$state_functions.get($sf) )
+                #foreach ($s in $state.keySet())
+                   #if (($s == "V") || ($s == "v") )
+                     #set( $variable_in = $variable_in.replace("$s","NM.v") )
+                   #else
+                     #set( $variable_in = $variable_in.replace("$s","NM.$s") )
+                   #end 
+                #end
+                #foreach ($par in $parameters.keySet() )
+                    #set( $variable_in = $variable_in.replace("$par","N.$par") )
+                #end
+            #set( $variable = $variable.replace("$sf","$variable_in") )
+       #end
+       kv=$variable;
+   #else
+       #foreach ($s in $state.keySet())
+          #if (($s == "V") || ($s == "v") )
+            #set( $variable = $variable.replace("$s","NM.v") )
+          #else
+            #set( $variable = $variable.replace("$s","NM.$s") )
+          #end 
+       #end
+       #foreach ($par in $parameters.keySet() )
+          #set( $variable = $variable.replace("$par","N.$par") )
+       #end
+       #foreach ($st in $state_functions.keySet())
+          #set( $variable_in=$state_functions.get($sf) )
+            #foreach ($s in $state.keySet())
+              #if (($s == "V") || ($s == "v") )
+                #set( $variable_in = $variable_in.replace("$s","NM.v") )
+              #else
+                #set( $variable_in = $variable_in.replace("$s","NM.$s") )
+              #end 
+            #end
+            #foreach ($par in $parameters.keySet() )
+              #set( $variable_in = $variable_in.replace("$par","N.$par") )
+            #end
+          #set( $variable = $variable.replace("$sf","$variable_in") )
+       #end
+       k$d=$variable;
+   #end
+#end
+      
+      
+#foreach ($s in $state.keySet())
+   #if (($s == "V" ) || ($s == "v"))
+      k2v = NM.v + 0.5 .* dt .* kv;
+   #else
+      k2$s=NM.$s + 0.5.*dt.*k$s;
+   #end
+
+#end
+
+#foreach ($d in $dynamics.keySet())
+   #set( $variable = $dynamics.get($d) )
+   #if (( $d == "V" ) || ($d == "v") )
+       #foreach ($s in $state.keySet())
+          #if (($s == "V") || ($s == "v"))
+            #set( $variable = $variable.replace("$s","k2v") )
+          #else
+             #set( $variable = $variable.replace("$s","NM.$s") )
+          #end 
+       #end
+       #foreach ($par in $parameters.keySet() )
+          #set( $variable = $variable.replace("$par","N.$par") )
+       #end
+       #foreach ($sf in $state_functions.keySet())
+            #set( $variable_in=$state_functions.get($sf) )
+                #foreach ($s in $state.keySet())
+                   #if (($s == "V") || ($s == "v") )
+                     #set( $variable_in = $variable_in.replace("$s","k2v") )
+                   #else
+                     #set( $variable_in = $variable_in.replace("$s","NM.$s") )
+                   #end 
+                #end
+                #foreach ($par in $parameters.keySet() )
+                    #set( $variable_in = $variable_in.replace("$par","N.$par") )
+                #end
+            #set( $variable = $variable.replace("$sf","$variable_in") )
+       #end
+       
+      kv=$variable;
+   #else
+       #foreach ($s in $state.keySet())
+          #if (($s == "V") || ($s == "v") )
+            #set( $variable = $variable.replace("$s","NM.v") )
+          #elseif ($s == $d)
+            #set( $variable = $variable.replace("$s","k2$s") )
+          #else
+            #set( $variable = $variable.replace("$s","NM.$s") )
+          #end 
+       #end
+       #foreach ($par in $parameters.keySet() )
+          #set( $variable = $variable.replace("$par","N.$par") )
+       #end
+       #foreach ($st in $state_functions.keySet())
+          #set( $variable_in=$state_functions.get($sf) )
+            #foreach ($s in $state.keySet())
+             #if (($s == "V") || ($s == "v") )
+                #set( $variable_n = $variable_in.replace("$s","NM.v") )
+             #elseif ($s == $d)
+                #set( $variable_in = $variable_in.replace("$s","k2$s") )
+             #else
+                #set( $variable_in = $variable_in.replace("$s","NM.$s") )
+             #end 
+            #end
+            #foreach ($par in $parameters.keySet() )
+              #set( $variable_in = $variable_in.replace("$par","N.$par") )
+            #end
+          #set( $variable = $variable.replace("$sf","$variable_in") )
+       #end
+       k$d=$variable;
+   #end
 #end
 #foreach ($d in $dynamics.keySet())
-        der($d) = $dynamics.get($d);   
+   #if (($d == "V" ) || ($d == "v"))
+      NM.v = NM.v + dt .* kv;
+   #else
+      NM.$d=NM.$d + dt.*k$d;
+   #end
+
+#end
+   
+#foreach ($E in $events.keySet() )
+   #if ( $events.get($E) != []  )
+       %% things to do 
+
+   #end
+
 #end
 
     end
@@ -49,17 +202,17 @@ classdef PointNeuronModel_${name} < PointNeuronModel
     end
     
     function NM = randomInit(NM, N)
-      %%NM.v = N.v_reset - (rand(size(NM.v)) .* 5);
-      %%NM.U = rand(size(NM.U)) .* N.d/3;
+      %%
+      %%
     end
   end % methods
   
 
   methods(Static)
-    
+    #set($counter=1)
     function params = getRequiredParams()
       params = [getRequiredParams@PointNeuronModel, ...
-                {#foreach ($par in $parameters.keySet())'$par',#end}];
+                {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end}];
     end
     
   end
