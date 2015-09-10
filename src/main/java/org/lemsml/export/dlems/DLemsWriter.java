@@ -51,6 +51,14 @@ public class DLemsWriter extends ABaseWriter
 	static String DEFAULT_POP = "OneComponentPop";
 
 	CommonLangWriter writer;
+    
+    boolean populationMode = false; // quick & dirty hack for multi component export
+    
+    private final List<File> outputFiles = new ArrayList<File>();
+    
+    public void setPopulationMode(boolean mode) {
+        populationMode = mode;
+    }
 
 	public DLemsWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
@@ -157,14 +165,70 @@ public class DLemsWriter extends ABaseWriter
 
 		if(pops.size() > 0)
 		{
-			Component pop = pops.get(0);
-			String compRef = pop.getStringValue("component");
-			Component popComp = lems.getComponent(compRef);
+            ArrayList<String> written = new ArrayList<String>();
+            ArrayList<String> writtenTypes = new ArrayList<String>();
+            
+            if (populationMode) {
 
-			createFlattenedCompType(popComp);
-			Component cpFlat = createFlattenedComp(popComp);
+                g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
+            }
+            for (Component pop: pops) {
 
-			writeDLemsForComponent(g, cpFlat);
+                String compRef = pop.getStringValue("component");
+                String popName = pop.getID();
+                
+                if (!written.contains(compRef)) {
+                    System.out.println("---------       Adding "+compRef);
+                    Component popComp = lems.getComponent(compRef);
+
+                    if (!writtenTypes.contains(popComp.getTypeName())) {
+                        createFlattenedCompType(popComp);
+                        writtenTypes.add(popComp.getTypeName());
+                    }
+                    
+                    Component cpFlat = createFlattenedComp(popComp);
+                    if (populationMode) {
+                        StringWriter swComp = new StringWriter();
+                        JsonGenerator gComp = f.createJsonGenerator(swComp);
+                        gComp.useDefaultPrettyPrinter();
+                        gComp.writeStartObject();
+                        
+                        writeDLemsForComponent(gComp, cpFlat);
+                        
+                        gComp.writeEndObject();
+                        gComp.close();
+                        
+                        File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".json");
+                        FileUtil.writeStringToFile(swComp.toString(), compFile);
+                        outputFiles.add(compFile);
+                        
+                        //g.writeStartObject();
+                        //g.writeStringField(DLemsKeywords.NAME.get(), popName);
+                        
+                        g.writeObjectFieldStart(popName);
+                        
+                        g.writeStringField(DLemsKeywords.SIZE.get(), pop.getStringValue("size"));
+                        
+                        g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
+                        writeDLemsForComponent(g, cpFlat);
+                        g.writeEndObject();
+				//g.writeEndObject();
+                        
+                        g.writeEndObject();
+
+                        
+                    } else {
+                        writeDLemsForComponent(g, cpFlat);
+                    }
+                    
+                    written.add(compRef);
+                }
+            }
+            
+            if (populationMode) {
+
+                g.writeEndObject();
+            }
 		}
 		else
 		{
@@ -422,7 +486,7 @@ public class DLemsWriter extends ABaseWriter
 			comp = cf.getFlatComponent();
 			lems.addComponent(comp);
 			String compOut = XMLSerializer.serialize(comp);
-			// E.info("Flat component: \n" + compOut);
+			//E.info("Flat component: \n" + compOut.ge);
 			lems.resolve(comp);
 		}
 		catch(ConnectionError e)
@@ -436,17 +500,19 @@ public class DLemsWriter extends ABaseWriter
 	{
 
 		ArrayList<File> lemsFiles = new ArrayList<File>();
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-		// lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex3_Net.xml"));
-		// lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 
 		for(File lemsFile : lemsFiles)
 		{
 			Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-			DLemsWriter dw = new DLemsWriter(lems, null);
-			String ff = dw.getMainScript();
-			System.out.println("Output from " + lemsFile + ": ------------\n" + ff);
+			DLemsWriter dw = new DLemsWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".json"), null, false);
+            dw.setPopulationMode(true);
+            List<File> files = dw.convert(); 
+            for (File f: files) {
+                System.out.println("Have created: "+f.getAbsolutePath());
+            }
 
 		}
 	}
@@ -454,12 +520,9 @@ public class DLemsWriter extends ABaseWriter
 	@Override
 	public List<File> convert() throws GenerationException, IOException
 	{
-		List<File> outputFiles = new ArrayList<File>();
-
 		try
 		{
 			String code = this.getMainScript();
-
 			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
 			FileUtil.writeStringToFile(code, outputFile);
 			outputFiles.add(outputFile);
