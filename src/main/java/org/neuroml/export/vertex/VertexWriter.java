@@ -115,7 +115,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
             E.info("Writing " + format + " files to: " + this.getOutputFolder());
             String name = (String) context.internalGet(DLemsKeywords.NAME.get());
 
-            File cellScriptFile = new File(this.getOutputFolder(), name + ".m");
+            File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name + ".m");
 
 
             FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
