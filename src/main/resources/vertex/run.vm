@@ -7,40 +7,51 @@
 %    PLEASE NOTE: This export is still in development
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% get NeuronParams from LEMS; at the moment only one cell class with the population of one cell is tested
 
-% Load in network structure from NeuroML network...
+NeuronParams(1).neuronModel='$name';
+#foreach ($par in $parameters.keySet())
+     #if ($par=="TS")   % other dimensionless parameters should be dealt similarly 
+       NeuronParams(1).$par=1;
+     #else
+       NeuronParams(1).$par=$parameters.get($par);
+     #end
 
-%% TODO
+#end
 
-% Set simulation parameters
 
-RecordingSettings.maxRecTime = {$t_end};
+% Load in network structure from NeuroML/LEMS network...
 
-% initialize 
+[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams);
 
+[import_connections,positions,TissueParams, NeuronParams,ConnectionParams, ...
+ RecordingSettings, SimulationSettings]=neuroml_import_to_VERTEX(mfilename,...
+    import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries);
+% in this example no cell positions are specified, therefore VERTEX will
+% establish cell locations putting a typical soma position array inside
+% params.
 [params, connections, electrodes] =initNetwork(TissueParams, NeuronParams,ConnectionParams,RecordingSettings, SimulationSettings);
-
 
 % run simulation
 
-runSimulation(params,connections,electrodes);
+runSimulation(params,import_connections,electrodes);
 
 
 
 % load Results which later will be visualized
 
 
-#foreach ($d in $display)
+Results=loadResults(RecordingSettings.saveDir);
+num_label=0:50:SimulationSettings.simulationTime;
+label_array=cell(1,length(num_label));
 
-subplot(1,2,2)
-#foreach ($curve in $d.curves)
-
-plot(Results.${curve.ordinate}(1, :), 'LineWidth', 2,'Color','b') 
+for i=1:length(num_label)
+    label_array{i}=num2str(num_label(i));
+end
+plot(Results.v_m(1, :), 'LineWidth', 2,'Color','b')
 set(gcf,'color','w');
+set(gca,'XTickLabel',label_array)
 set(gca,'FontSize',16)
-title('${curve.ordinate} for $(name)', 'FontSize', 16)
+title('Membrane potential trace of the $name', 'FontSize', 16)
 xlabel('Time (ms)', 'FontSize', 16)
-ylabel('${curve.ordinate}', 'FontSize', 16)
-
-#end
-#end
+ylabel('Membrane potential (mV)', 'FontSize', 16)
