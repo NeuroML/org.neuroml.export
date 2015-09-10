@@ -29,13 +29,13 @@ classdef PointNeuronModel_${name} < PointNeuronModel
       NM = NM@PointNeuronModel(Neuron, number);
 #foreach ($s in $state.keySet())
    #if (($s == "V") || ( $s == "v" ))
-      #if ( $state.get($s)==0)
+      #if ( $state.get($s)=="0.0")
          NM.v = $state.get($s).* ones(number, 1);
       #else
          NM.v=Neuron.$state.get($s).*ones(number,1);
       #end
    #else
-      #if ( $state.get($s)==0)
+      #if ($state.get($s)=="0.0")
          NM.$s = $state.get($s).*ones(number,1);
       #else 
          NM.$s = Neuron.$state.get($s).*ones(number,1);
