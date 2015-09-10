@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
@@ -20,6 +19,7 @@ import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -40,14 +40,14 @@ public class VertexWriter extends ANeuroMLBaseWriter
     public VertexWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
         super(lems, Format.VERTEX);
-        dlemsw = new DLemsWriter(lems, null);
+        dlemsw = new DLemsWriter(lems, null, false);
         initializeWriter();
     }
 
     public VertexWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
         super(lems, Format.VERTEX, outputFolder, outputFileName);
-        dlemsw = new DLemsWriter(lems, null);
+        dlemsw = new DLemsWriter(lems, null, false);
         initializeWriter();
     }
 
@@ -149,6 +149,28 @@ public class VertexWriter extends ANeuroMLBaseWriter
         outputFiles.add(outputFile);
 
         return this.outputFiles;
+    }
+    
+    
+	public static void main(String[] args) throws Exception
+	{
+
+		ArrayList<File> lemsFiles = new ArrayList<File>();
+        
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        
+		for(File lemsFile : lemsFiles) {
+            
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            System.out.println("Loaded: " + lemsFile.getAbsolutePath());
+            
+            VertexWriter nw = new VertexWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_run.m"));
+            List<File> files = nw.convert(); 
+            for (File f: files) {
+                System.out.println("Have created: "+f.getAbsolutePath());
+            }
+        }
     }
 
 }
