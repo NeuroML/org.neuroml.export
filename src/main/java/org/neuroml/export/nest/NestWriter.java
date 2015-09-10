@@ -20,6 +20,7 @@ import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -39,14 +40,14 @@ public class NestWriter extends ANeuroMLBaseWriter
 	public NestWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.NEST);
-        dlemsw = new DLemsWriter(lems, null);
+        dlemsw = new DLemsWriter(lems, null, false);
 		initializeWriter();
 	}
 
 	public NestWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
 	{
 		super(lems, Format.NEST, outputFolder, outputFileName);
-        dlemsw = new DLemsWriter(lems, null);
+        dlemsw = new DLemsWriter(lems, null, false);
 		initializeWriter();
 	}
 
@@ -64,7 +65,7 @@ public class NestWriter extends ANeuroMLBaseWriter
 		sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
-		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
 		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
 		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
@@ -75,7 +76,7 @@ public class NestWriter extends ANeuroMLBaseWriter
 	protected void addComment(StringBuilder sb, String comment)
 	{
 
-		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
+		if(!comment.contains("\n")) sb.append(comm + comment + "\n");
 		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
 
@@ -109,10 +110,9 @@ public class NestWriter extends ANeuroMLBaseWriter
 
 			E.info("Writing " + format + " files to: " + this.getOutputFolder());
 			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_nest.py");
+            
 			File cellScriptFile = new File(this.getOutputFolder(), name + ".nestml");
-			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-			outputFiles.add(mainScriptFile);
+            
 			FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
 			outputFiles.add(cellScriptFile);
 
@@ -145,5 +145,27 @@ public class NestWriter extends ANeuroMLBaseWriter
 		
 		return this.outputFiles;
 	}
+    
+	public static void main(String[] args) throws Exception
+	{
+
+		ArrayList<File> lemsFiles = new ArrayList<File>();
+        
+		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRose.xml"));
+        
+		for(File lemsFile : lemsFiles) {
+            
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            System.out.println("Loaded: " + lemsFile.getAbsolutePath());
+            
+            NestWriter nw = new NestWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nest.py"));
+            List<File> files = nw.convert(); 
+            for (File f: files) {
+                System.out.println("Have created: "+f.getAbsolutePath());
+            }
+        }
+    }
 
 }
