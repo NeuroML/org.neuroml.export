@@ -36,18 +36,24 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
     private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
+    
+    private String mainDlemsFile = null;
 
+    /*
     public VertexWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
         super(lems, Format.VERTEX);
         dlemsw = new DLemsWriter(lems, null, false);
+        dlemsw.setPopulationMode(true);
         initializeWriter();
-    }
+    }*/
 
     public VertexWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
         super(lems, Format.VERTEX, outputFolder, outputFileName);
-        dlemsw = new DLemsWriter(lems, null, false);
+        mainDlemsFile = outputFileName+"_main.json";
+        dlemsw = new DLemsWriter(lems, outputFolder, mainDlemsFile, null, false);
+        dlemsw.setPopulationMode(true);
         initializeWriter();
     }
 
@@ -70,6 +76,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
         sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
         sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
     }
 
     @Override
@@ -95,31 +102,41 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
         try
         {
-            String dlems = dlemsw.getMainScript();
+            List<File> files = dlemsw.convert();
+            
+            for (File file: files) {
+                
+                String dlems = FileUtil.readStringFromFile(file);
+                
+                DLemsWriter.putIntoVelocityContext(dlems, context);
+                VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                
+                E.info("Writing " + format + " files to: " + this.getOutputFolder());
+                if (file.getName().equals(mainDlemsFile)) {
 
-            DLemsWriter.putIntoVelocityContext(dlems, context);
+                    addComment(mainRunScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
 
-            addComment(mainRunScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
+                    StringWriter sw1 = new StringWriter();
+                    boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexRunTemplateFile));
+                    mainRunScript.append(sw1);
+                }
+                else {
+                    StringWriter sw2 = new StringWriter();
+                    boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexCellTemplateFile));
 
-            VelocityEngine ve = VelocityUtils.getVelocityEngine();
-            StringWriter sw1 = new StringWriter();
-            boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexRunTemplateFile));
-            mainRunScript.append(sw1);
+                    addComment(cellScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
+                    cellScript.append(sw2);
 
-            StringWriter sw2 = new StringWriter();
-            boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexCellTemplateFile));
+                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
 
-            addComment(cellScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
-            cellScript.append(sw2);
+                    File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name + ".m");
 
-            E.info("Writing " + format + " files to: " + this.getOutputFolder());
-            String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                    FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
+                    outputFiles.add(cellScriptFile);
+                    
+                }
 
-            File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name + ".m");
-
-
-            FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
-            outputFiles.add(cellScriptFile);
+            }
 
         }
         catch(IOException e1)
@@ -129,10 +146,6 @@ public class VertexWriter extends ANeuroMLBaseWriter
         catch(VelocityException e)
         {
             throw new GenerationException("Problem using Velocity template", e);
-        }
-        catch(LEMSException e)
-        {
-            throw new GenerationException("Problem generating the files", e);
         }
 
         return mainRunScript.toString();
@@ -159,6 +172,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
         
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
 		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         
 		for(File lemsFile : lemsFiles) {
             
