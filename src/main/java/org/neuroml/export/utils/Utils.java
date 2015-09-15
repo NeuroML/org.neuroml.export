@@ -338,9 +338,29 @@ public class Utils
 
 	public static void loadLemsFile(File f, boolean run) throws LEMSException, ModelFeatureSupportException, NeuroMLException
 	{
+		ControlPanel cp = new ControlPanel() {
 
-		Sim sim = Utils.readLemsNeuroMLFile(f);
-		sim.build();
+			@Override
+			public Sim importFile(File simFile) {
+				Sim sim;
+				try {
+					sim = Utils.readLemsNeuroMLFile(simFile);
+					sim.build();
+					
+					return sim;
+				} catch (LEMSException e) {
+					return null;
+				}              
+			}
+        	
+        };
+        
+        Sim sim = cp.initialise(f);
+        
+        if(sim == null) {
+        	E.info(String.format("Control Panel Initialisation : Failed to read and build simulation from file %s", f.getName()));
+        	return;
+        }
 
 		if(run)
 		{
