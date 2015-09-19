@@ -218,14 +218,90 @@ classdef PointNeuronModel_${name} < PointNeuronModel
    #end
 
 #end
-   
-#foreach ($E in $events.keySet() )
-   #if ( $events.get($E) != []  )
-       %% things to do 
 
+#if ($events !=[])   
+   #foreach ($event in $events )
+     #foreach ($field in $event.keySet() )
+       #if ($field=="name")
+        #set( $condition=$event.get($field))
+         #if ($condition.contains("__geq__") )
+            #set( $condition=$condition.replaceAll("__geq__",">=") )
+         #elseif ($condition.contains("__leq__") )
+            #set ($condition=$condition.replaceAll("__leq__","<=") )
+         #elseif ($condition.contains("__lt__") )
+            #set ($condition=$condition.replaceAll("__lt__","<") )
+         #elseif ($condition.contains("__gt__") )
+            #set ($condition=$condition.replaceAll("__gt__",">") )
+         #else
+            #set ($condition=$condition.replaceAll("__eq__","==") )
+         #end
+         #foreach ($d in $dynamics.keySet() )
+            #if ($condition.contains("$d") )
+               #if (($d=="v") || ($d=="V"))
+                   #set ($condition=$condition.replaceFirst("$d","NM.v(:,1)"))
+               #else
+                  #set ($condition=$condition.replaceFirst("$d","NM.$d(:,1)") )
+               #end
+
+            #end
+         #end
+         #foreach ($par in $parameters.keySet() )
+           #if ($condition.contains($par) )
+              #set ($condition=$condition.replaceAll("$par","N.$par"))
+
+           #end
+         #end
+       #end
+     #end
+     NM.spikes=$condition;
    #end
-
 #end
+
+#if ($events !=[])   
+   #foreach ($event in $events )
+     #foreach ($field in $event.keySet() )
+       #if ($field=="effect")
+         #set($effect_element=$event.get($field) )
+        #foreach ($item in $effect_element.keySet() )
+          #if ($item=="state")
+              #set($state_element=$effect_element.get($item))
+            #foreach ($variable in $state_element.keySet())
+              #if (($variable=="v") || ($variable=="V"))
+                #set ($state_change=$state_element.get($variable))
+                #foreach ($s in $state.keySet())
+                  #if (($s=="v") || ($s=="V"))
+                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v(NM.spikes,1)"))
+                  #else
+                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s"))
+                  #end
+                #end
+                #foreach($par in $parameters.keySet())
+                   #set( $state_change = $state_change.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
+                #end
+                NM.v(NM.spikes, 1)=$state_change;
+              #else
+                #set ($state_change=$state_element.get($variable))
+                #foreach ($s in $state.keySet())
+                  #if (($s=="v") || ($s=="V"))
+                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v"))
+                  #else
+                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s(NM.spikes,1)"))
+                  #end
+                #end
+                #foreach($par in $parameters.keySet())
+                   #set( $state_change = $state_change.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
+                #end
+                NM.$variable(NM.spikes,1)=$state_change;
+             #end
+            #end
+          #end
+        #end
+       #end
+     #end
+   #end
+#end
+
+
 
     end
     
