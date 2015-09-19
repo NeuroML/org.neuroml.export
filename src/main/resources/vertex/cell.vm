@@ -8,7 +8,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef PointNeuronModel_${name} < PointNeuronModel
+classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
 
   %PointNeuronModel_${name} equivalent to the ${name} in LEMS
 #foreach ($par in $parameters.keySet())
@@ -25,7 +25,7 @@ classdef PointNeuronModel_${name} < PointNeuronModel
   end
   
   methods
-    function NM = PointNeuronModel_${name}(Neuron, number)
+    function NM = PointNeuronModel_$name.toLowerCase()(Neuron, number)
       NM = NM@PointNeuronModel(Neuron, number);
 #foreach ($s in $state.keySet())
    #if (($s == "V") || ( $s == "v" ))
