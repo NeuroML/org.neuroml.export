@@ -169,7 +169,6 @@ public class DLemsWriter extends ABaseWriter
             ArrayList<String> writtenTypes = new ArrayList<String>();
             
             if (populationMode) {
-
                 g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
             }
             for (Component pop: pops) {
@@ -202,9 +201,6 @@ public class DLemsWriter extends ABaseWriter
                         FileUtil.writeStringToFile(swComp.toString(), compFile);
                         outputFiles.add(compFile);
                         
-                        //g.writeStartObject();
-                        //g.writeStringField(DLemsKeywords.NAME.get(), popName);
-                        
                         g.writeObjectFieldStart(popName);
                         
                         g.writeStringField(DLemsKeywords.SIZE.get(), pop.getStringValue("size"));
@@ -212,7 +208,6 @@ public class DLemsWriter extends ABaseWriter
                         g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
                         writeDLemsForComponent(g, cpFlat);
                         g.writeEndObject();
-				//g.writeEndObject();
                         
                         g.writeEndObject();
 
@@ -228,8 +223,36 @@ public class DLemsWriter extends ABaseWriter
             if (populationMode) {
 
                 g.writeEndObject();
+            
+
+                ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
+                for (Component proj: projs){
+                    String synRef = proj.getStringValue("synapse");
+                    System.out.println("-             Adding "+synRef);
+                    Component synComp = lems.getComponent(synRef);
+                    if (!writtenTypes.contains(synComp.getTypeName())) {
+                        createFlattenedCompType(synComp);
+                        writtenTypes.add(synComp.getTypeName());
+                    }
+                    Component cpFlat = createFlattenedComp(synComp);
+                    StringWriter swComp = new StringWriter();
+                    JsonGenerator gComp = f.createJsonGenerator(swComp);
+                    gComp.useDefaultPrettyPrinter();
+                    gComp.writeStartObject();
+
+                    writeDLemsForComponent(gComp, cpFlat);
+
+                    gComp.writeEndObject();
+                    gComp.close();
+
+                    File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".json");
+                    FileUtil.writeStringToFile(swComp.toString(), synFile);
+                    outputFiles.add(synFile);
+
+                }
             }
-		}
+
+        }
 		else
 		{
 
@@ -501,7 +524,8 @@ public class DLemsWriter extends ABaseWriter
 
 		ArrayList<File> lemsFiles = new ArrayList<File>();
 		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 
 		for(File lemsFile : lemsFiles)
