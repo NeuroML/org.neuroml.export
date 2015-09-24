@@ -8,21 +8,33 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get NeuronParams from LEMS; at the moment only one cell class with the population of one cell is tested
-
-NeuronParams(1).neuronModel='$name';
-#foreach ($par in $parameters.keySet())
-     #if ($par=="TS")   % other dimensionless parameters should be dealt similarly 
-       NeuronParams(1).$par=1;
-     #else
-       NeuronParams(1).$par=$parameters.get($par);
-     #end
-
+#set ($counter=1)
+#foreach ($pop in $populations.keySet() )
+   #set ($pop_array=$populations.get($pop))
+   
+   #foreach ($pop_element in $pop_array.keySet())
+    #if ($pop_element=="component")
+     #set($component_array=$pop_array.get($pop_element))
+      #foreach ($component_element in $component_array.keySet())
+        #if ($component_element=="parameters")
+         #set($parameters_array=$component_array.get($component_element))
+         #foreach($parameter in $parameters_array.keySet())
+          %NeuronParams($counter).$parameter=$parameters_array.get($parameter);
+         #end
+        #end
+        #if ($component_element=="name")
+           %NeuronParams($counter).neuronModel='$component_array.get($component_element)';
+        #end
+      #end
+    #end
+   #end
+   #set($counter=$counter+1)
 #end
 
 
-% Load in network structure from NeuroML/LEMS network...
+% Load in network structure from NeuroML/LEMS network...x
 
-[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams);
+[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename);
 
 [import_connections,positions,TissueParams, NeuronParams,ConnectionParams, ...
  RecordingSettings, SimulationSettings]=neuroml_import_to_VERTEX(mfilename,...

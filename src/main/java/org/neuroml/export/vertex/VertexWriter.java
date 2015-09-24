@@ -129,7 +129,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
 
-                    File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name + ".m");
+                    File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name.toLowerCase() + ".m");
 
                     FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
                     outputFiles.add(cellScriptFile);
@@ -171,9 +171,8 @@ public class VertexWriter extends ANeuroMLBaseWriter
 		ArrayList<File> lemsFiles = new ArrayList<File>();
         
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        
+
+                
 		for(File lemsFile : lemsFiles) {
             
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
