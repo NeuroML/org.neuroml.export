@@ -36,7 +36,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
     private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
-    
+
     private String mainDlemsFile = null;
 
     /*
@@ -90,29 +90,26 @@ public class VertexWriter extends ANeuroMLBaseWriter
     public String getMainScript() throws GenerationException, IOException
     {
         StringBuilder mainRunScript = new StringBuilder();
-        StringBuilder cellScript = new StringBuilder();
 
         addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-        addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-        VelocityUtils.initializeVelocity();
-
-        VelocityContext context = new VelocityContext();
 
         try
         {
             List<File> files = dlemsw.convert();
-            
+
             for (File file: files) {
-                
-                String dlems = FileUtil.readStringFromFile(file);
-                
-                DLemsWriter.putIntoVelocityContext(dlems, context);
-                VelocityEngine ve = VelocityUtils.getVelocityEngine();
-                
+
+
                 E.info("Writing " + format + " files to: " + this.getOutputFolder());
                 if (file.getName().equals(mainDlemsFile)) {
+
+                    VelocityUtils.initializeVelocity();
+                    VelocityContext context = new VelocityContext();
+                    VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                    String dlems = FileUtil.readStringFromFile(file);
+                    DLemsWriter.putIntoVelocityContext(dlems, context);
 
                     addComment(mainRunScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
 
@@ -121,6 +118,17 @@ public class VertexWriter extends ANeuroMLBaseWriter
                     mainRunScript.append(sw1);
                 }
                 else {
+
+                    StringBuilder cellScript = new StringBuilder();
+                    addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+                    E.info(" ====  Handling DLEMS file: " + file.getAbsolutePath());
+
+                    VelocityUtils.initializeVelocity();
+                    VelocityContext context = new VelocityContext();
+                    VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                    String dlems = FileUtil.readStringFromFile(file);
+                    DLemsWriter.putIntoVelocityContext(dlems, context);
+
                     StringWriter sw2 = new StringWriter();
                     boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexCellTemplateFile));
 
@@ -128,12 +136,13 @@ public class VertexWriter extends ANeuroMLBaseWriter
                     cellScript.append(sw2);
 
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                    E.info("Name: "+name);
 
                     File cellScriptFile = new File(this.getOutputFolder(),"PointNeuronModel_" + name.toLowerCase() + ".m");
 
                     FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
                     outputFiles.add(cellScriptFile);
-                    
+
                 }
 
             }
@@ -163,21 +172,22 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
         return this.outputFiles;
     }
-    
-    
-	public static void main(String[] args) throws Exception
-	{
 
-		ArrayList<File> lemsFiles = new ArrayList<File>();
-        
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
 
-                
-		for(File lemsFile : lemsFiles) {
-            
+    public static void main(String[] args) throws Exception
+    {
+
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../git/VERTEXShowcase/test_LEMS/Adex2pop_1comp_test2.xml"));
+
+
+        for(File lemsFile : lemsFiles) {
+
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             System.out.println("Loaded: " + lemsFile.getAbsolutePath());
-            
+
             VertexWriter nw = new VertexWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_run.m"));
             List<File> files = nw.convert(); 
             for (File f: files) {
