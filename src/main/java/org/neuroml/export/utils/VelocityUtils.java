@@ -35,6 +35,7 @@ public class VelocityUtils
     
 	public static final String vertexRunTemplateFile = "/vertex/run.vm";
 	public static final String vertexCellTemplateFile = "/vertex/cell.vm";
+	public static final String vertexSynapseTemplateFile = "/vertex/synapse.vm";
 	
 	public static final String xppTemplateFile = "/xpp/xpp.vm";
 	

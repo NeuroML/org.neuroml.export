@@ -117,6 +117,33 @@ public class VertexWriter extends ANeuroMLBaseWriter
                     boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexRunTemplateFile));
                     mainRunScript.append(sw1);
                 }
+                else if (file.getName().indexOf(".synapse.")>0) {
+
+                    StringBuilder synapseScript = new StringBuilder();
+                    addComment(synapseScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+                    E.info(" ====  Handling DLEMS file: " + file.getAbsolutePath());
+
+                    VelocityUtils.initializeVelocity();
+                    VelocityContext context = new VelocityContext();
+                    VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                    String dlems = FileUtil.readStringFromFile(file);
+                    DLemsWriter.putIntoVelocityContext(dlems, context);
+
+                    StringWriter sw2 = new StringWriter();
+                    boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.vertexSynapseTemplateFile));
+
+                    addComment(synapseScript, "Using the following distilled version of the LEMS model description for the script below:\n\n"+dlems);
+                    synapseScript.append(sw2);
+
+                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                    E.info("Name: "+name);
+
+                    File synapseScriptFile = new File(this.getOutputFolder(),"SynapseModel_" + name.toLowerCase() + ".m");
+
+                    FileUtil.writeStringToFile(synapseScript.toString(), synapseScriptFile);
+                    outputFiles.add(synapseScriptFile);
+
+                }
                 else {
 
                     StringBuilder cellScript = new StringBuilder();
@@ -181,6 +208,7 @@ public class VertexWriter extends ANeuroMLBaseWriter
 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../git/VERTEXShowcase/test_LEMS/Adex2pop_1comp_test2.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
 
 
         for(File lemsFile : lemsFiles) {

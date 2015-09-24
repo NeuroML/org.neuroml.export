@@ -245,7 +245,7 @@ public class DLemsWriter extends ABaseWriter
                     gComp.writeEndObject();
                     gComp.close();
 
-                    File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".json");
+                    File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".synapse.json");
                     FileUtil.writeStringToFile(swComp.toString(), synFile);
                     outputFiles.add(synFile);
 
