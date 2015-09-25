@@ -226,6 +226,8 @@ public class DLemsWriter extends ABaseWriter
             
 
                 ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
+                projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
+                
                 for (Component proj: projs){
                     String synRef = proj.getStringValue("synapse");
                     System.out.println("-             Adding "+synRef);
