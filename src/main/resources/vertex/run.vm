@@ -19,11 +19,11 @@
         #if ($component_element=="parameters")
          #set($parameters_array=$component_array.get($component_element))
          #foreach($parameter in $parameters_array.keySet())
-          %NeuronParams($counter).$parameter=$parameters_array.get($parameter);
+          NeuronParams($counter).$parameter=$parameters_array.get($parameter);
          #end
         #end
         #if ($component_element=="name")
-           %NeuronParams($counter).neuronModel='$component_array.get($component_element)';
+           NeuronParams($counter).neuronModel='$component_array.get($component_element)';
         #end
       #end
     #end
@@ -34,7 +34,7 @@
 
 % Load in network structure from NeuroML/LEMS network...x
 
-[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename);
+[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams);
 
 [import_connections,positions,TissueParams, NeuronParams,ConnectionParams, ...
  RecordingSettings, SimulationSettings]=neuroml_import_to_VERTEX(mfilename,...
