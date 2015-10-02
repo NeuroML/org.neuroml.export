@@ -162,6 +162,9 @@ public class DLemsWriter extends ABaseWriter
 		Component tgtComp = lems.getComponent(targetId);
 
 		ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
+                
+                ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
+                projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
 
 		if(pops.size() > 0)
 		{
@@ -169,6 +172,43 @@ public class DLemsWriter extends ABaseWriter
             ArrayList<String> writtenTypes = new ArrayList<String>();
             
             if (populationMode) {
+                g.writeObjectFieldStart(DLemsKeywords.SYNAPSES.get());
+                
+            }
+            for (Component proj: projs){
+                    String synRef = proj.getStringValue("synapse");
+                    String synName = proj.getStringValue("synapse");
+                    
+                    if (!written.contains(synRef)){
+                    System.out.println("-             Adding "+synRef);
+                    Component synComp = lems.getComponent(synRef);
+                    
+                    
+                    if (!writtenTypes.contains(synComp.getTypeName())) {
+                        createFlattenedCompType(synComp);
+                        writtenTypes.add(synComp.getTypeName());
+                    }
+                    Component cpFlat = createFlattenedComp(synComp);
+                    if (populationMode) {
+                        
+                        g.writeObjectFieldStart(synName);
+                        
+                        
+                        g.writeObjectFieldStart(DLemsKeywords.SYNAPSE.get());
+                        writeDLemsForComponent(g, cpFlat);
+                        g.writeEndObject();
+                        
+                        g.writeEndObject();
+
+                        
+                    } 
+
+                    }
+
+                }
+            
+            if (populationMode) {
+                g.writeEndObject();
                 g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
             }
             for (Component pop: pops) {
@@ -225,8 +265,7 @@ public class DLemsWriter extends ABaseWriter
                 g.writeEndObject();
             
 
-                ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
-                projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
+                
                 
                 for (Component proj: projs){
                     String synRef = proj.getStringValue("synapse");
@@ -253,6 +292,7 @@ public class DLemsWriter extends ABaseWriter
 
                 }
             }
+            
 
         }
 		else
