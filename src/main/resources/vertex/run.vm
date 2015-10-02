@@ -31,10 +31,34 @@
    #set($counter=$counter+1)
 #end
 
+#set ($counter=1)
+
+#foreach ($syn in $synapses.keySet() )
+   #set ($syn_array=$synapses.get($syn))
+   
+   #foreach ($syn_element in $syn_array.keySet())
+    #if ($syn_element=="synapse")
+     #set($synapse_array=$syn_array.get($syn_element))
+      #foreach ($synapse_element in $synapse_array.keySet())
+        #if ($synapse_element=="parameters")
+         #set($parameters_array=$synapse_array.get($synapse_element))
+         #foreach($parameter in $parameters_array.keySet())
+          SynapseParams($counter).$parameter=$parameters_array.get($parameter);
+         #end
+        #end
+        #if ($synapse_element=="name")
+           SynapseParams($counter).synapseType='$synapse_array.get($synapse_element)';
+        #end
+      #end
+    #end
+   #end
+   #set($counter=$counter+1)
+#end
+
 
 % Load in network structure from NeuroML/LEMS network...x
 
-[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams);
+[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams,SynapseParams);
 
 [import_connections,positions,TissueParams, NeuronParams,ConnectionParams, ...
  RecordingSettings, SimulationSettings]=neuroml_import_to_VERTEX(mfilename,...
