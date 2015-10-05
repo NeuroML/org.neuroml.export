@@ -44,7 +44,7 @@ classdef SynapseModel_$name.toLowerCase() < SynapseModel
       numComparts = Neuron.numCompartments;
       #foreach ($s in $state.keySet() )
         SM.$s = zeros(number, numComparts);
-        SM.${s}expEventBuffer = zeros(number, numComparts, maxDelaySteps);
+        SM.${s}EventBuffer = zeros(number, numComparts, maxDelaySteps);
       #end
       SM.bufferMax = maxDelaySteps;
     end
@@ -199,8 +199,7 @@ classdef SynapseModel_$name.toLowerCase() < SynapseModel
   methods(Static)
     #set($counter=1)
     function params = getRequiredParams()
-      params = [getRequiredParams@PointNeuronModel, ...
-                {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end}];
+      params = {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end};
     end
     
   end
