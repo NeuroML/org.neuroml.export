@@ -84,10 +84,14 @@ label_array=cell(1,length(num_label));
 for i=1:length(num_label)
     label_array{i}=num2str(num_label(i));
 end
-plot(Results.v_m(1, :), 'LineWidth', 2,'Color','b')
+[r,c]=size(Results.v_m);
+for i=1:r
+   plot(Results.v_m(i, :), 'LineWidth',2)
+   hold on
+end
 set(gcf,'color','w');
 set(gca,'XTickLabel',label_array)
 set(gca,'FontSize',16)
-title('Membrane potential trace of the $name', 'FontSize', 16)
+title('Membrane potential traces of the imported cells', 'FontSize', 16)
 xlabel('Time (ms)', 'FontSize', 16)
 ylabel('Membrane potential (mV)', 'FontSize', 16)
