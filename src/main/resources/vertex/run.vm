@@ -19,11 +19,35 @@
         #if ($component_element=="parameters")
          #set($parameters_array=$component_array.get($component_element))
          #foreach($parameter in $parameters_array.keySet())
-          %NeuronParams($counter).$parameter=$parameters_array.get($parameter);
+          NeuronParams($counter).$parameter=$parameters_array.get($parameter);
          #end
         #end
         #if ($component_element=="name")
-           %NeuronParams($counter).neuronModel='$component_array.get($component_element)';
+           NeuronParams($counter).neuronModel='$component_array.get($component_element)';
+        #end
+      #end
+    #end
+   #end
+   #set($counter=$counter+1)
+#end
+
+#set ($counter=1)
+
+#foreach ($syn in $synapses.keySet() )
+   #set ($syn_array=$synapses.get($syn))
+   
+   #foreach ($syn_element in $syn_array.keySet())
+    #if ($syn_element=="synapse")
+     #set($synapse_array=$syn_array.get($syn_element))
+      #foreach ($synapse_element in $synapse_array.keySet())
+        #if ($synapse_element=="parameters")
+         #set($parameters_array=$synapse_array.get($synapse_element))
+         #foreach($parameter in $parameters_array.keySet())
+          SynapseParams($counter).$parameter=$parameters_array.get($parameter);
+         #end
+        #end
+        #if ($synapse_element=="name")
+           SynapseParams($counter).synapseType='$synapse_array.get($synapse_element)';
         #end
       #end
     #end
@@ -34,7 +58,7 @@
 
 % Load in network structure from NeuroML/LEMS network...x
 
-[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename);
+[import_connections,positions,params,populations_ids_sizes_components,population_size_boundaries]=lems_import_to_VERTEX(mfilename,NeuronParams,SynapseParams);
 
 [import_connections,positions,TissueParams, NeuronParams,ConnectionParams, ...
  RecordingSettings, SimulationSettings]=neuroml_import_to_VERTEX(mfilename,...
@@ -60,10 +84,14 @@ label_array=cell(1,length(num_label));
 for i=1:length(num_label)
     label_array{i}=num2str(num_label(i));
 end
-plot(Results.v_m(1, :), 'LineWidth', 2,'Color','b')
+[r,c]=size(Results.v_m);
+for i=1:r
+   plot(Results.v_m(i, :), 'LineWidth',2)
+   hold on
+end
 set(gcf,'color','w');
 set(gca,'XTickLabel',label_array)
 set(gca,'FontSize',16)
-title('Membrane potential trace of the $name', 'FontSize', 16)
+title('Membrane potential traces of the imported cells', 'FontSize', 16)
 xlabel('Time (ms)', 'FontSize', 16)
 ylabel('Membrane potential (mV)', 'FontSize', 16)

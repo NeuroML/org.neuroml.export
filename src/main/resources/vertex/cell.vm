@@ -65,7 +65,7 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
        #foreach ($sf in $state_functions.keySet())
           #set( $variable_in=$state_functions.get($sf) )
             #if ( ($sf=="iSyn") || ($sf=="ISyn") )
-                  #set ($variable= $variable.replaceAll("$sf","I_syn+I_input") )
+                  #set ($variable= $variable.replaceAll("(?<![a-zA-Z_0-9])($sf)(?![a-zA-Z_0-9])","I_syn+I_input") )
             #else
                 #foreach ($s in $state.keySet())
                    #if (($s == "V") || ($s == "v") )
@@ -79,10 +79,10 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
                 #end
                 #foreach ($sf_in in $state_functions.keySet() )
                    #if (( $sf_in=="iSyn") || ($sf_in=="ISyn"))
-                     #set( $variable_in=$variable_in.replaceAll("$sf_in","I_syn+I_input") )
+                     #set( $variable_in=$variable_in.replaceAll("(?<![a-zA-Z_0-9])($sf_in)(?![a-zA-Z_0-9])","I_syn+I_input") )
                    #end
                 #end
-                  #set( $variable = $variable.replaceAll("$sf","$variable_in") )
+                  #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($sf)(?![a-zA-Z_0-9])","$variable_in") )
             #end
        #end
        kv=$variable;
@@ -100,7 +100,7 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
        #foreach ($st in $state_functions.keySet())
          #set( $variable_in=$state_functions.get($st) )
           #if ( ($st=="iSyn") || ($st=="ISyn") )
-             #set($variable=$variable.replaceAll("$st","I_syn+I_input") )
+             #set($variable=$variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","I_syn+I_input") )
           #else
             #foreach ($s in $state.keySet())
               #if (($s == "V") || ($s == "v") )
@@ -114,10 +114,10 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
             #end
             #foreach ($st_in in $state_functions.keySet() )
               #if (( $st_in=="iSyn") || ($st_in=="ISyn"))
-                #set( $variable_in=$variable_in.replaceAll("$st_in","I_syn+I_input") )
+                #set( $variable_in=$variable_in.replaceAll("(?<![a-zA-Z_0-9])($st_in)(?![a-zA-Z_0-9])","I_syn+I_input") )
               #end
             #end
-            #set( $variable = $variable.replaceAll("$st","$variable_in") )
+            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","$variable_in") )
           #end
        #end
        k$d=$variable;
@@ -150,7 +150,7 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
        #foreach ($sf in $state_functions.keySet())
           #set( $variable_in=$state_functions.get($sf) )
             #if ( ($sf=="iSyn") || ($sf=="ISyn") )
-                  #set ($variable= $variable.replaceAll("$sf","I_syn+I_input") )
+                  #set ($variable= $variable.replaceAll("(?<![a-zA-Z_0-9])($sf)(?![a-zA-Z_0-9])","I_syn+I_input") )
             #else
                 #foreach ($s in $state.keySet())
                    #if (($s == "V") || ($s == "v") )
@@ -164,10 +164,10 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
                 #end
                 #foreach ($sf_in in $state_functions.keySet() )
                    #if (( $sf_in=="iSyn") || ($sf_in=="ISyn"))
-                     #set( $variable_in=$variable_in.replaceAll("$sf_in","I_syn+I_input") )
+                     #set( $variable_in=$variable_in.replaceAll("(?<![a-zA-Z_0-9])($sf_in)(?![a-zA-Z_0-9])","I_syn+I_input") )
                    #end
                 #end
-                  #set( $variable = $variable.replaceAll("$sf","$variable_in") )
+                  #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($sf)(?![a-zA-Z_0-9])","$variable_in") )
             #end
        #end
        kv=$variable;
@@ -199,10 +199,10 @@ classdef PointNeuronModel_$name.toLowerCase() < PointNeuronModel
             #end
             #foreach ($st_in in $state_functions.keySet() )
               #if (( $st_in=="iSyn") || ($st_in=="ISyn"))
-                #set( $variable_in=$variable_in.replaceAll("$st_in","I_syn+I_input") )
+                #set( $variable_in=$variable_in.replaceAll("(?<![a-zA-Z_0-9])($st_in)(?![a-zA-Z_0-9])","I_syn+I_input") )
               #end
             #end
-            #set( $variable = $variable.replaceAll("$st","$variable_in") )
+            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","$variable_in") )
           #end
        #end
        k$d=$variable;

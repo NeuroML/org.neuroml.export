@@ -30,7 +30,11 @@ public enum DLemsKeywords
     COLOUR, 
     POPULATIONS, 
     SIZE, 
+    SYNAPSES,
+    SYNAPSE,
     COMPONENT;
+    
+    
 
 	public String get()
 	{

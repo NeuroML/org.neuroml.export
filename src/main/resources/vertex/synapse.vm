@@ -15,298 +15,178 @@ classdef SynapseModel_$name.toLowerCase() < SynapseModel
   %  - $par .. 
 #end
   
-  properties (SetAccess = private)
+  properties (SetAccess = protected)
 #foreach ($s in $state.keySet())
-    #if (($s != "V") && ($s != "v"))
+    
       $s 
-    #end
 #end
-      spikes
+#foreach ($par in $parameters.keySet() )
+
+     $par
+#end
+  #foreach ($s in $state.keySet() )
+    ${s}EventBuffer
+  #end
+  bufferCount
+  bufferMax
   end
   
   methods
-    function NM = PointNeuronModel_$name.toLowerCase()(Neuron, number)
-      NM = NM@PointNeuronModel(Neuron, number);
-#foreach ($s in $state.keySet())
-   #if (($s == "V") || ( $s == "v" ))
-      #if ( $state.get($s)=="0.0")
-         NM.v = $state.get($s).* ones(number, 1);
-      #else
-         NM.v=Neuron.$state.get($s).*ones(number,1);
+    function SM = SynapseModel_${name}(Neuron, CP, SimulationSettings, ...
+                                     postID, number)
+      SM = SM@SynapseModel(Neuron, number);
+      #foreach ($par in $parameters.keySet() )
+         SM.$par = CP.${par}{postID};
+         
       #end
-   #else
-      #if ($state.get($s)=="0.0")
-         NM.$s = $state.get($s).*ones(number,1);
-      #else 
-         NM.$s = Neuron.$state.get($s).*ones(number,1);
+      SM.bufferCount = 1;
+      maxDelaySteps = SimulationSettings.maxDelaySteps;
+      numComparts = Neuron.numCompartments;
+      #foreach ($s in $state.keySet() )
+        SM.$s = zeros(number, numComparts);
+        SM.${s}EventBuffer = zeros(number, numComparts, maxDelaySteps);
       #end
-   #end
-#end
-         NM.spikes = [];
+      SM.bufferMax = maxDelaySteps;
     end
     
-    function [NM] = updateNeurons(NM, IM, N, SM, dt)
-      I_syn = PointNeuronModel.sumSynapticCurrents(SM);
-      I_input = PointNeuronModel.sumInputCurrents(IM);
+    function SM = updateBuffer(SM)
+     #foreach ($s in $state.keySet() )
+      SM.$s = SM.$s + SM.${s}EventBuffer(:, :, SM.bufferCount);
+          
+      SM.${s}EventBuffer(:, :, SM.bufferCount) = 0;
+      
+      
+     #end
+      SM.bufferCount = SM.bufferCount + 1;
+      if SM.bufferCount > SM.bufferMax
+        SM.bufferCount = 1;
+      end
+    end
+    
+    function SM = updateSynapses(SM, NM, dt)
 
-#foreach ($d in $dynamics.keySet())
-   #set( $variable = $dynamics.get($d) )
-   #if (( $d == "V" ) || ($d == "v") )
-       #foreach ($s in $state.keySet())
-          #if (($s == "V") || ($s == "v") )
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v") )
-          #else
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s") )
-          #end 
-       #end
-       #foreach ($par in $parameters.keySet() )
-          #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-       #end
-       #foreach ($sf in $state_functions.keySet())
-          #set( $variable_in=$state_functions.get($sf) )
-            #if ( ($sf=="iSyn") || ($sf=="ISyn") )
-                  #set ($variable= $variable.replaceAll("$sf","I_syn+I_input") )
-            #else
-                #foreach ($s in $state.keySet())
-                   #if (($s == "V") || ($s == "v") )
-                     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v") )
-                   #else
-                     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s") )
-                   #end 
-                #end
-                #foreach ($par in $parameters.keySet() )
-                    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-                #end
-                #foreach ($sf_in in $state_functions.keySet() )
-                   #if (( $sf_in=="iSyn") || ($sf_in=="ISyn"))
-                     #set( $variable_in=$variable_in.replaceAll("$sf_in","I_syn+I_input") )
-                   #end
-                #end
-                  #set( $variable = $variable.replaceAll("$sf","$variable_in") )
-            #end
-       #end
-       kv=$variable;
-   #else
-       #foreach ($s in $state.keySet())
-          #if (($s == "V") || ($s == "v") )
-            #set( $variable = $variable.replaceAll("$s","NM.v") )
-          #else
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s" ) )
-          #end 
-       #end
-       #foreach ($par in $parameters.keySet() )
-          #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-       #end
-       #foreach ($st in $state_functions.keySet())
-         #set( $variable_in=$state_functions.get($st) )
-          #if ( ($st=="iSyn") || ($st=="ISyn") )
-             #set($variable=$variable.replaceAll("$st","I_syn+I_input") )
-          #else
-            #foreach ($s in $state.keySet())
-              #if (($s == "V") || ($s == "v") )
-                #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v") )
-              #else
-                #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s") )
-              #end 
-            #end
-            #foreach ($par in $parameters.keySet() )
-              #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-            #end
-            #foreach ($st_in in $state_functions.keySet() )
-              #if (( $st_in=="iSyn") || ($st_in=="ISyn"))
-                #set( $variable_in=$variable_in.replaceAll("$st_in","I_syn+I_input") )
-              #end
-            #end
-            #set( $variable = $variable.replaceAll("$st","$variable_in") )
-          #end
-       #end
-       k$d=$variable;
-   #end
-#end
-      
-      
-#foreach ($s in $state.keySet())
-   #if (($s == "V" ) || ($s == "v"))
-      k2v = NM.v + 0.5 .* dt .* kv;
-   #else
-      k2$s=NM.$s + 0.5.*dt.*k$s;
-   #end
+#foreach ($s in $state_functions.keySet() )
+    #if ($s == "i")
+     #set ($variable=$state_functions.get($s))
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v()") )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v()") )
+     #foreach ($st in $state.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","SM.$st") )
+     #end
+     #foreach ($par in $parameters.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+
+     #end
+
+     SM.I_syn=$variable;
+    #else
+     #set ($variable=$state_functions.get($s))
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v()") )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v()") )
+     #foreach ($st in $state.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","SM.$st") )
+     #end
+     #foreach ($par in $parameters.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+     #end
+
+     SM.$s=$variable;
+
+
+    #end
 
 #end
 
 #foreach ($d in $dynamics.keySet())
    #set( $variable = $dynamics.get($d) )
-   #if (( $d == "V" ) || ($d == "v") )
-       #foreach ($s in $state.keySet())
-          #if (($s == "V") || ($s == "v") )
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","k2v") )
-          #else
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s") )
-          #end 
-       #end
-       #foreach ($par in $parameters.keySet() )
-          #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-       #end
-       #foreach ($sf in $state_functions.keySet())
-          #set( $variable_in=$state_functions.get($sf) )
-            #if ( ($sf=="iSyn") || ($sf=="ISyn") )
-                  #set ($variable= $variable.replaceAll("$sf","I_syn+I_input") )
-            #else
-                #foreach ($s in $state.keySet())
-                   #if (($s == "V") || ($s == "v") )
-                     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","k2v") )
-                   #else
-                     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s") )
-                   #end 
-                #end
-                #foreach ($par in $parameters.keySet() )
-                    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-                #end
-                #foreach ($sf_in in $state_functions.keySet() )
-                   #if (( $sf_in=="iSyn") || ($sf_in=="ISyn"))
-                     #set( $variable_in=$variable_in.replaceAll("$sf_in","I_syn+I_input") )
-                   #end
-                #end
-                  #set( $variable = $variable.replaceAll("$sf","$variable_in") )
-            #end
-       #end
-       kv=$variable;
-   #else
-       #foreach ($s in $state.keySet())
-          #if (($s == "V") || ($s == "v") )
-            #set( $variable = $variable.replaceAll("$s","NM.v") )
-          #else
-            #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","k2$s" ) )
-          #end 
-       #end
-       #foreach ($par in $parameters.keySet() )
-          #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-       #end
-       #foreach ($st in $state_functions.keySet())
-         #set( $variable_in=$state_functions.get($st) )
-          #if ( ($st=="iSyn") || ($st=="ISyn") )
-             #set($variable=$variable.replaceAll("$st","I_syn+I_input") )
-          #else
-            #foreach ($s in $state.keySet())
-              #if (($s == "V") || ($s == "v") )
-                #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v") )
-              #else
-                #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","k2$s") )
-              #end 
-            #end
-            #foreach ($par in $parameters.keySet() )
-              #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-            #end
-            #foreach ($st_in in $state_functions.keySet() )
-              #if (( $st_in=="iSyn") || ($st_in=="ISyn"))
-                #set( $variable_in=$variable_in.replaceAll("$st_in","I_syn+I_input") )
-              #end
-            #end
-            #set( $variable = $variable.replaceAll("$st","$variable_in") )
-          #end
-       #end
-       k$d=$variable;
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") )
+   #foreach ($s in $state.keySet())
+      #if ($s != $d)
+       #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+      #end
    #end
+   
+   #foreach ($par in $parameters.keySet() )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+   #end
+
+   #foreach ($stf in $state_functions.keySet())
+    #set( $variable_in=$state_functions.get($stf) )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") ) 
+    #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+     #end
+    #end
+    #foreach ($par in $parameters.keySet() )
+     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+    #end
+    
+    #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($stf)(?![a-zA-Z_0-9])","$variable_in") )
+   #end
+   
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($d)(?![a-zA-Z_0-9])","SM.$d" ) )
+   k$d=$variable;
 #end
-
-
+      
 #foreach ($d in $dynamics.keySet())
-   #if (($d == "V" ) || ($d == "v"))
-      NM.v = NM.v + dt .* kv;
-   #else
-      NM.$d=NM.$d + dt.*k$d;
-   #end
+   
+ k2$d=SM.$d + 0.5.*dt.*k$d;
+ 
 
 #end
 
-#if ($events !=[])   
-   #foreach ($event in $events )
-     #foreach ($field in $event.keySet() )
-       #if ($field=="name")
-        #set( $condition=$event.get($field))
-         #if ($condition.contains("__geq__") )
-            #set( $condition=$condition.replaceAll("__geq__",">=") )
-         #elseif ($condition.contains("__leq__") )
-            #set ($condition=$condition.replaceAll("__leq__","<=") )
-         #elseif ($condition.contains("__lt__") )
-            #set ($condition=$condition.replaceAll("__lt__","<") )
-         #elseif ($condition.contains("__gt__") )
-            #set ($condition=$condition.replaceAll("__gt__",">") )
-         #else
-            #set ($condition=$condition.replaceAll("__eq__","==") )
-         #end
-         #foreach ($d in $dynamics.keySet() )
-            #if ($condition.contains("$d") )
-               #if (($d=="v") || ($d=="V"))
-                   #set ($condition=$condition.replaceFirst("$d","NM.v(:,1)"))
-               #else
-                  #set ($condition=$condition.replaceFirst("$d","NM.$d(:,1)") )
-               #end
-
-            #end
-         #end
-         #foreach ($par in $parameters.keySet() )
-           #if ($condition.contains($par) )
-              #set ($condition=$condition.replaceAll("$par","N.$par"))
-
-           #end
-         #end
-       #end
-     #end
-     NM.spikes=$condition;
-   #end
-#end
-
-#if ($events !=[])   
-   #foreach ($event in $events )
-     #foreach ($field in $event.keySet() )
-       #if ($field=="effect")
-         #set($effect_element=$event.get($field) )
-        #foreach ($item in $effect_element.keySet() )
-          #if ($item=="state")
-              #set($state_element=$effect_element.get($item))
-            #foreach ($variable in $state_element.keySet())
-              #if (($variable=="v") || ($variable=="V"))
-                #set ($state_change=$state_element.get($variable))
-                #foreach ($s in $state.keySet())
-                  #if (($s=="v") || ($s=="V"))
-                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v(NM.spikes,1)"))
-                  #else
-                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s"))
-                  #end
-                #end
-                #foreach($par in $parameters.keySet())
-                   #set( $state_change = $state_change.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-                #end
-                NM.v(NM.spikes, 1)=$state_change;
-              #else
-                #set ($state_change=$state_element.get($variable))
-                #foreach ($s in $state.keySet())
-                  #if (($s=="v") || ($s=="V"))
-                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.v"))
-                  #else
-                    #set( $state_change=$state_change.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","NM.$s(NM.spikes,1)"))
-                  #end
-                #end
-                #foreach($par in $parameters.keySet())
-                   #set( $state_change = $state_change.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","N.$par") )
-                #end
-                NM.$variable(NM.spikes,1)=$state_change;
-             #end
-            #end
-          #end
-        #end
-       #end
+#foreach ($d in $dynamics.keySet() )
+ #set( $variable = $dynamics.get($d) )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") )
+   #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
      #end
    #end
+   #foreach ($par in $parameters.keySet() )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+   #end
+   #foreach ($stf in $state_functions.keySet())
+    #set( $variable_in=$state_functions.get($stf) )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") ) 
+    #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+     #end
+    #end
+    #foreach ($par in $parameters.keySet() )
+     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+    #end
+    
+    #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($stf)(?![a-zA-Z_0-9])","$variable_in") )
+   #end
+   #set ($variable=$variable.replaceAll("(?<![a-zA-Z_0-9])($d)(?![a-zA-Z_0-9])","k2$d") )
+   k$d=$variable;
+
 #end
 
+
+
+
+#foreach ($d in $dynamics.keySet() )
+  SM.$d=SM.$d + dt.*k$d;
+#end
 
 
     end
     
-    function spikes = get.spikes(NM)
-      spikes = NM.spikes;
+    function SM = bufferIncomingSpikes(SM, synIndeces, weightsToAdd)
+     #foreach ($s in $state.keySet())
+
+      SM.${s}EventBuffer(synIndeces) = ...
+                            SM.${s}EventBuffer(synIndeces) + weightsToAdd;
+    #end
     end
     
     function NM = randomInit(NM, N)
@@ -319,8 +199,7 @@ classdef SynapseModel_$name.toLowerCase() < SynapseModel
   methods(Static)
     #set($counter=1)
     function params = getRequiredParams()
-      params = [getRequiredParams@PointNeuronModel, ...
-                {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end}];
+      params = {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end};
     end
     
   end
