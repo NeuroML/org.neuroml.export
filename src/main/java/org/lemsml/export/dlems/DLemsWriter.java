@@ -23,6 +23,7 @@ import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
+import org.lemsml.jlems.core.type.DerivedParameter;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
@@ -419,6 +420,11 @@ public class DLemsWriter extends ABaseWriter
 	private void writeStateFunctions(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
 	{
 		ComponentType ct = comp.getComponentType();
+        
+		for(DerivedParameter dp : ct.getDerivedParameters())
+		{
+			g.writeStringField(dp.getName(), visitExpression(dp));
+		}
 
 		for(DerivedVariable dv : ct.getDynamics().getDerivedVariables())
 		{
