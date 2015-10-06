@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
@@ -31,6 +30,7 @@ import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.IVisitable;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
+import org.lemsml.jlems.core.type.dynamics.OnEvent;
 import org.lemsml.jlems.core.type.dynamics.OnStart;
 import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
@@ -462,10 +462,6 @@ public class DLemsWriter extends ABaseWriter
 	{
 		ComponentType ct = comp.getComponentType();
 
-		// E.info("---- getOnConditions: "+ct.getDynamics().getOnConditions()+"");
-
-		// g.writeStartArray();
-
 		for(OnCondition oc : ct.getDynamics().getOnConditions())
 		{
 			g.writeStartObject();
@@ -480,18 +476,39 @@ public class DLemsWriter extends ABaseWriter
 
 			for(StateAssignment sa : oc.getStateAssignments())
 			{
-				// g.writeStringField(sa.getVariable(), sa.getValueExpression());
 				g.writeStringField(sa.getVariable(), visitExpression(sa));
 			}
 
 			g.writeEndObject();
 			g.writeEndObject();
-
 			g.writeEndObject();
 
 		}
+        
+		for(OnEvent oe : ct.getDynamics().getOnEvents())
+		{
+			g.writeStartObject();
 
-		// g.writeEndArray();
+			g.writeStringField(DLemsKeywords.NAME.get(), oe.port);
+			g.writeStringField(DLemsKeywords.CONDITION.get(), "EVENT_ON_PORT__"+oe.port);
+
+			g.writeObjectFieldStart(DLemsKeywords.EFFECT.get());
+
+			g.writeObjectFieldStart(DLemsKeywords.STATE.get());
+            System.out.println("..................oe "+oe);
+
+			for(StateAssignment sa : oe.getStateAssignments())
+			{
+                System.out.println(".......................sa "+sa);
+				g.writeStringField(sa.getVariable(), visitExpression(sa));
+			}
+
+			g.writeEndObject();
+			g.writeEndObject();
+			g.writeEndObject();
+
+		}
+        
 
 	}
 
