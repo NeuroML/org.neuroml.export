@@ -332,14 +332,14 @@ public class Utils
 		return list;
 	}
 
-	public static void runLemsFile(File f) throws LEMSException, ModelFeatureSupportException, NeuroMLException
+	public static void runLemsFile(File f, boolean showGui) throws LEMSException, ModelFeatureSupportException, NeuroMLException
 	{
-		loadLemsFile(f, true);
+		loadLemsFile(f, true, showGui);
 	}
 
-	public static void loadLemsFile(File f, boolean run) throws LEMSException, ModelFeatureSupportException, NeuroMLException
+	public static void loadLemsFile(File f, boolean run, boolean showGui) throws LEMSException, ModelFeatureSupportException, NeuroMLException
 	{
-		ControlPanel cp = new ControlPanel() {
+		ControlPanel cp = new ControlPanel("jNeuroML", showGui) {
 
 			@Override
 			public Sim importFile(File simFile) {
