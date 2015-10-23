@@ -342,18 +342,12 @@ public class Utils
 		ControlPanel cp = new ControlPanel("jNeuroML", showGui) {
 
 			@Override
-			public Sim importFile(File simFile) {
+			public Sim importFile(File simFile) throws LEMSException {
 				Sim sim;
-				try {
-					sim = Utils.readLemsNeuroMLFile(simFile);
-					sim.build();
-					
-					return sim;
-				} catch (LEMSException e) {
-					return null;
-				}              
-			}
-        	
+                sim = Utils.readLemsNeuroMLFile(simFile);
+                sim.build();
+                return sim;       
+            }
         };
         
         Sim sim = cp.initialise(f);
