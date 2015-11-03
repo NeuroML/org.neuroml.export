@@ -1856,6 +1856,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
 
         writeModBlock(mod, "PROCEDURE rates()", ratesMethod.toString());
+        
+        if (blockInitial.indexOf("random")>0 || 
+            blockNetReceive.indexOf("random")>0 || 
+            ratesMethod.indexOf("random")>0) 
+        {
+            
+            blockFunctions.append(NRNUtils.randomFunctionDefs);
+        }
 
         if(blockFunctions.length() > 0)
         {
@@ -2540,8 +2548,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
+        /*lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
@@ -2590,7 +2599,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Syns.xml")); 
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Social.xml"));
-         //* */
+         / */
         String testScript = "set -e\n";
 
         NeuronWriter nw;

@@ -68,6 +68,12 @@ public class NRNUtils
                                             + "        }else{\n"
                                             + "                efun = z/(exp(z) - 1)\n" 
                                             + "        }\n" + "}\n";
+    
+	static final String randomFunctionDefs = "\n: Returns a float between 0 and max\nFUNCTION random_float(max) {\n" +
+                                            "    \n" +
+                                            "    random_float = scop_random()*max\n" +
+                                            "    \n" +
+                                            "}\n\n";
 
 	// TODO Add more keywords / builtin mechanisms
 	static final Set<String> NRNKeywords = new HashSet<String>()
@@ -131,7 +137,7 @@ public class NRNUtils
 		newExpr = newExpr.replaceAll("\\.and.", "&&");
 
 		newExpr = newExpr.replaceAll(" ln\\(", " log(");
-		newExpr = newExpr.replaceAll(" random\\(", " scop_random(");
+		newExpr = newExpr.replaceAll(" random\\(", " random_float(");
 
 		HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 
