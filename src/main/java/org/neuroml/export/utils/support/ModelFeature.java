@@ -34,6 +34,7 @@ public enum ModelFeature
     NETWORK_WITH_INPUTS_MODEL("Network model with external inputs to cells"), 
     NETWORK_WITH_PROJECTIONS_MODEL("Network model with projections between populations"), 
     NETWORK_WITH_GAP_JUNCTIONS_MODEL("Network model with gap junctions/electrical connections between cells"),
+    NETWORK_WITH_ANALOG_CONNS_MODEL("Network model with analog/continuously communicating connections between cells"),
     ABSTRACT_CELL_MODEL("Model with abstract (non conductance based) cell(s)"), 
     COND_BASED_CELL_MODEL("Model with conductance based cell(s)"), 
     MULTICOMPARTMENTAL_CELL_MODEL("Model with multicompartmental cell(s)"), 
@@ -215,6 +216,11 @@ public enum ModelFeature
             if(component.getChildrenAL("electricalProjection").size() > 0)
             {
                 addIfNotPresent(mfs, NETWORK_WITH_GAP_JUNCTIONS_MODEL);
+            }
+
+            if(component.getChildrenAL("continuousProjection").size() > 0)
+            {
+                addIfNotPresent(mfs, NETWORK_WITH_ANALOG_CONNS_MODEL);
             }
         }
     }

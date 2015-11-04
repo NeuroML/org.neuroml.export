@@ -100,6 +100,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_GAP_JUNCTIONS_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_ANALOG_CONNS_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
@@ -776,8 +777,106 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         index++;
                     }
                 }
-
             }
+                
+            ArrayList<Component> continuousProjections = targetComp.getChildrenAL(NeuroMLElements.CONTINUOUS_PROJECTION);
+
+            for(Component ep : continuousProjections)
+            {
+
+                String id = ep.getID();
+                String prePop = ep.getStringValue("presynapticPopulation");
+                String postPop = ep.getStringValue("postsynapticPopulation");
+                Cell preCell = compIdsVsCells.get(popIdsVsCellIds.get(prePop));
+                Cell postCell = compIdsVsCells.get(popIdsVsCellIds.get(postPop));
+                int number = 0;
+                for(Component comp : ep.getAllChildren())
+                {
+
+                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    {
+                        number++;
+                    }
+                }
+
+                String info0 = String.format("Adding projection: %s\nFrom %s to %s %d connection(s)", id, prePop, postPop, number);
+                // System.out.println(info0);
+                addComment(main, info0);
+
+                String pre = ep.getChildrenAL("connections").get(0).getStringValue("preComponent");
+                String post = ep.getChildrenAL("connections").get(0).getStringValue("postComponent");
+
+                Component preComponent = lems.getComponent(pre);
+                Component postComponent = lems.getComponent(post);
+
+                String preMod = generateModFile(preComponent);
+                dumpModToFile(preComponent, preMod);
+                String postMod = generateModFile(postComponent);
+                dumpModToFile(postComponent, postMod);
+
+                String preCompObjName = String.format("syn_%s_%s_pre", id, pre);
+                String postCompObjName = String.format("syn_%s_%s_post", id, post);
+
+                main.append(String.format("h(\"objectvar %s[%d]\")\n\n", preCompObjName, number));
+                main.append(String.format("h(\"objectvar %s[%d]\")\n\n", postCompObjName, number));
+
+                int index = 0;
+                for(Component ec : ep.getChildrenAL("connections"))
+                {
+
+                    if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    {
+                        int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
+                        int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
+
+                        int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
+                        int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
+
+                        float preFractionAlong = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
+
+                        // System.out.println("preCellId: "+preCellId+", preSegmentId: "+preSegmentId+", preFractionAlong: "+preFractionAlong);
+
+                        String preSecName;
+
+                        if(preCell != null)
+                        {
+                            NamingHelper nhPre = new NamingHelper(preCell);
+                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegmentId)));
+                        }
+                        else
+                        {
+                            preSecName = prePop + "[" + preCellId + "]";
+                        }
+
+                        String postSecName;
+                        if(postCell != null)
+                        {
+                            NamingHelper nhPost = new NamingHelper(postCell);
+                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegmentId)));
+                        }
+                        else
+                        {
+                            postSecName = postPop + "[" + postCellId + "]";
+                        }
+
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, pre, preFractionAlong));
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, post, postFractionAlong));
+
+                        // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
+
+                        /*
+                         * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
+                         */
+                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFractionAlong));
+                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", postCompObjName, index, preSecName, preFractionAlong));
+
+                        index++;
+                    }
+                }
+            }
+
+            
 
             ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
 
@@ -2548,8 +2647,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        
         /*lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 

@@ -16,7 +16,7 @@ import org.neuroml.model.util.NeuroMLException;
 public class SupportLevelInfo
 {
 
-    private HashMap<Format, HashMap<ModelFeature, Level>> support = new HashMap<Format, HashMap<ModelFeature, Level>>();
+    private final HashMap<Format, HashMap<ModelFeature, Level>> support = new HashMap<Format, HashMap<ModelFeature, Level>>();
 
     private static SupportLevelInfo myInstance = null;
 
@@ -46,6 +46,7 @@ public class SupportLevelInfo
         addSupportInfo(Format.LEMS, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_ANALOG_CONNS_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_GAP_JUNCTIONS_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
