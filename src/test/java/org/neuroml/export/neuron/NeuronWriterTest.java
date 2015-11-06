@@ -51,17 +51,17 @@ public class NeuronWriterTest extends TestCase {
      }
        
     
-    public void testChannel() throws LEMSException, IOException, GenerationException {
+    public void testChannel() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         testComponentToMod("NML2_SimpleIonChannel.nml", "NaConductance");
     }
 
-    public void testSynapse() throws LEMSException, IOException, GenerationException {
+    public void testSynapse() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         testComponentToMod("NML2_SynapseTypes.nml", "blockStpSynDepFac");
     }
 
-    public void testIaFCells() throws LEMSException, IOException, GenerationException {
+    public void testIaFCells() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         testComponentToMod("NML2_AbstractCells.nml", "iafTau");
         testComponentToMod("NML2_AbstractCells.nml", "iafTauRef");
@@ -69,7 +69,7 @@ public class NeuronWriterTest extends TestCase {
         testComponentToMod("NML2_AbstractCells.nml", "iafRef");
     }
     
-    public void testInputs() throws LEMSException, IOException, GenerationException {
+    public void testInputs() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
         testComponentToMod("NML2_Inputs.nml", "pulseGen");
         testComponentToMod("NML2_Inputs.nml", "sineGen");
@@ -77,7 +77,7 @@ public class NeuronWriterTest extends TestCase {
         testComponentToMod("NML2_Inputs.nml", "vClamp");
     }
 
-    public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException {
+    public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException {
         E.info("Loading: " + nmlFilename);
         
 		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
@@ -88,7 +88,8 @@ public class NeuronWriterTest extends TestCase {
         Component comp = lems.getComponent(compId);
         E.info("Found component: " + comp);
 
-        String modFile = NeuronWriter.generateModFile(comp);
+        NeuronWriter nw = new NeuronWriter(lems);
+        String modFile = nw.generateModFile(comp);
 
         String origName = comp.getComponentType().getName();
         String newName = "MOD_" + compId;

@@ -1206,12 +1206,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private void writeModFile(String compName) throws ContentError
+    private void writeModFile(String compName) throws LEMSException
     {
         writeModFile(compName, null);
     }
 
-    private void writeModFile(String compName, ChannelConductanceOption option) throws ContentError
+    private void writeModFile(String compName, ChannelConductanceOption option) throws LEMSException
     {
         if(!generatedModComponents.contains(compName))
         {
@@ -1308,12 +1308,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return num + "";// +formatter.format(num);
     }
 
-    public static String generateModFile(Component comp) throws ContentError
+    public String generateModFile(Component comp) throws LEMSException
     {
         return generateModFile(comp, null);
     }
 
-    public static String generateModFile(Component comp, ChannelConductanceOption condOption) throws ContentError
+    public String generateModFile(Component comp, ChannelConductanceOption condOption) throws LEMSException
     {
         StringBuilder mod = new StringBuilder();
 
@@ -1758,7 +1758,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         blockInitial.append("rates()\n");
         blockInitial.append("rates() ? To ensure correct initialisation.\n");
 
-        parseOnStart(comp, prefix, blockInitial, blockInitial_v, paramMappings);
+        parseOnStart(comp, prefix, blockInitial, blockInitial_v, blockNetReceive, paramMappings, lems);
 
         /*
          * for (OnStart os : comp.getComponentClass().getDynamics().getOnStarts()) { for (StateAssignment sa : os.getStateAssignments()) { blockInitial.append("\n" +
@@ -1766,76 +1766,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
          */
         int conditionFlag = 1000;
         Dynamics dyn = comp.getComponentType().getDynamics();
-        if(dyn != null)
-        {
-
-            for(OnCondition oc : dyn.getOnConditions())
-            {
-                String cond = NRNUtils.checkForBinaryOperators(oc.test);
-
-                boolean resetVoltage = false;
-                for(StateAssignment sa : oc.getStateAssignments())
-                {
-                    resetVoltage = resetVoltage || sa.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE);
-                }
-
-                if(!resetVoltage)  // A "normal" OnCondition
-                {
-                    if (! (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) ||
-                           comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))) 
-                    {
-                        blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
-                        for(StateAssignment sa : oc.getStateAssignments())
-                        {
-                            blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = "
-                                    + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ? standard OnCondition\n");
-                        }
-                        blockBreakpoint.append("}\n\n");
-                    }
-                    else 
-                    {
-                        blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
-                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
-
-                        blockNetReceive.append("}\n");
-                        blockNetReceive.append("if (flag == " + conditionFlag + ") {\n");
-                        if(debug)
-                        {
-                            blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
-                                    + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
-                        }
-                        for(StateAssignment sa : oc.getStateAssignments())
-                        {
-                            blockNetReceive.append("\n    " + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
-                        }
-                        blockNetReceive.append("    net_event(t)\n");
-                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
-                        blockNetReceive.append("\n}\n");
-                        
-                    }
-                }
-                else
-                {
-                    blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
-                    blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
-
-                    blockNetReceive.append("}\n");
-                    blockNetReceive.append("if (flag == " + conditionFlag + ") {\n");
-                    if(debug)
-                    {
-                        blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
-                                + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
-                    }
-                    for(StateAssignment sa : oc.getStateAssignments())
-                    {
-                        blockNetReceive.append("\n    " + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
-                    }
-                    blockNetReceive.append("}\n");
-
-                }
-                conditionFlag++;
-            }
-        }
+        
+        parseOnCondition(comp, prefix, blockBreakpoint, blockNetReceive, paramMappings, conditionFlag);
 
         parseOnEvent(comp, blockNetReceive, paramMappings);
 
@@ -1972,8 +1904,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return mod.toString();
     }
 
-    private static void parseOnStart(Component comp, String prefix, StringBuilder blockInitial, StringBuilder blockInitial_v, HashMap<String, HashMap<String, String>> paramMappings)
-            throws ContentError
+    private void parseOnStart(Component comp, String prefix, StringBuilder blockInitial, StringBuilder blockInitial_v, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, Lems lems)
+            throws LEMSException
     {
 
         HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
@@ -1994,7 +1926,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
 
             }
-
+            String addAfterwards = "";
             for(OnStart os : comp.getComponentType().getDynamics().getOnStarts())
             {
                 for(StateAssignment sa : os.getStateAssignments())
@@ -2023,18 +1955,126 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) || 
                    comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))
                 {
-                    blockInitial.append("\nnet_send(0, 1) : go to NET_RECEIVE block, flag 1, for initial state\n");
+                    addAfterwards += "\nnet_send(0, 1) : go to NET_RECEIVE block, flag 1, for initial state\n";
                 }
             }
+            blockInitial.append(addAfterwards);
         }
+        
+        int flag = 1;
         for(Component childComp : comp.getAllChildren())
         {
 
             String prefixNew = getPrefix(childComp, prefix);
 
-            parseOnStart(childComp, prefixNew, blockInitial, blockInitial_v, paramMappings);
+            if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see below
+                parseOnStart(childComp, prefixNew, blockInitial, blockInitial_v, blockNetReceive, paramMappings, lems);
+            } else {
+                
+                float time = NRNUtils.convertToNeuronUnits(childComp.getAttributeValue("time"), lems);
+       
+                blockNetReceive.append(": Adding watch for spike "+comp.id+" at "+time+"\n");
+                blockNetReceive.append("if (flag == "+flag+") { \n");
+                if (flag>1) {
+                    blockNetReceive.append("    tsince = 0\n");
+                    blockNetReceive.append("    net_event(t)\n");
+                }
+                flag += 1;
+                blockNetReceive.append("    WATCH ( t > "+time+") " + flag + "\n");
+                blockNetReceive.append("}\n\n");
+                    
+            }
+        }
+        
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) {
+            blockNetReceive.append("if (flag == "+flag+") { \n");
+            blockNetReceive.append("    tsince = 0\n");
+            blockNetReceive.append("    net_event(t)\n");
+            blockNetReceive.append("}\n\n");
         }
 
+    }
+
+    private static void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
+    {
+        System.out.println("cc "+comp.id+" pre["+prefix+"]");
+        if(comp.getComponentType().getDynamics() != null)
+        {
+            for(OnCondition oc : comp.getComponentType().getDynamics().getOnConditions())
+            {
+                String cond = NRNUtils.checkForBinaryOperators(oc.test);
+
+                boolean resetVoltage = false;
+                for(StateAssignment sa : oc.getStateAssignments())
+                {
+                    resetVoltage = resetVoltage || sa.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE);
+                }
+
+                if(!resetVoltage)  // A "normal" OnCondition
+                {
+                    if (! (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) ||
+                           comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))) 
+                    {
+                        blockBreakpoint.append("if (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") {");
+                        for(StateAssignment sa : oc.getStateAssignments())
+                        {
+                            blockBreakpoint.append("\n    " + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = "
+                                    + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " ? standard OnCondition\n");
+                        }
+                        blockBreakpoint.append("}\n\n");
+                    }
+                    else 
+                    {
+                        blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
+                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+
+                        blockNetReceive.append("}\n");
+                        blockNetReceive.append("if (flag == " + conditionFlag + ") {\n");
+                        if(debug)
+                        {
+                            blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
+                                    + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
+                        }
+                        for(StateAssignment sa : oc.getStateAssignments())
+                        {
+                            blockNetReceive.append("\n    " + prefix + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) +"\n");
+                        }
+                        blockNetReceive.append("    net_event(t)\n");
+                        blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+                        blockNetReceive.append("\n}\n");
+                        
+                    }
+                }
+                else
+                {
+                    blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
+                    blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
+
+                    blockNetReceive.append("}\n");
+                    blockNetReceive.append("if (flag == " + conditionFlag + ") {\n");
+                    if(debug)
+                    {
+                        blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
+                                + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
+                    }
+                    for(StateAssignment sa : oc.getStateAssignments())
+                    {
+                        blockNetReceive.append("\n    " + prefix + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
+                    }
+                    blockNetReceive.append("}\n");
+
+                }
+                conditionFlag++;
+            }
+        }
+        /*
+        for(Component childComp : comp.getAllChildren())
+        {
+            
+            String prefixNew = getPrefix(childComp, prefix);
+            System.out.println("pp "+prefixNew);
+            parseOnCondition(childComp, prefixNew, blockBreakpoint, blockNetReceive, paramMappings, conditionFlag);
+        }*/
     }
 
     private static void parseOnEvent(Component comp, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings) throws ContentError
@@ -2052,7 +2092,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     for(StateAssignment sa : oe.getStateAssignments())
                     {
                         blockNetReceive.append("state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "
-                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + ")\n");
+                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + ") : From "+comp.id+"\n");
                     }
                 }
             }
@@ -2139,7 +2179,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             String prefixNew = getPrefix(childComp, prefix);
 
-            parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
+            if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see parseOnStart
+                parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
+            }
 
         }
 
@@ -2208,7 +2250,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             String prefixNew = getPrefix(childComp, prefix);
 
-            parseStateVars(childComp, prefixNew, rangeVars, stateVars, blockNeuron, blockParameter, blockAssigned, blockState, paramMappings);
+            if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see parseOnStart
+                parseStateVars(childComp, prefixNew, rangeVars, stateVars, blockNeuron, blockParameter, blockAssigned, blockState, paramMappings);
+            }
         }
     }
 
@@ -2376,7 +2420,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             String prefixNew = getPrefix(childComp, prefix);
 
-            parseTimeDerivs(childComp, prefixNew, locals, blockDerivative, blockBreakpoint, blockAssigned, ratesMethod, paramMappings);
+            if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see parseOnStart
+                parseTimeDerivs(childComp, prefixNew, locals, blockDerivative, blockBreakpoint, blockAssigned, ratesMethod, paramMappings);
+            }
         }
     }
 
@@ -2647,12 +2693,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         
-        /*lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
@@ -2701,7 +2747,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Syns.xml")); 
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Social.xml"));
-         / */
+         /* */
         String testScript = "set -e\n";
 
         NeuronWriter nw;

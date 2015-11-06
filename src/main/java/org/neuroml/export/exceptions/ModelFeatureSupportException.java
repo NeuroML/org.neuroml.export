@@ -1,10 +1,12 @@
 package org.neuroml.export.exceptions;
 
+import org.neuroml.model.util.NeuroMLException;
+
 /**
  * 
  * @author padraig
  */
-public class ModelFeatureSupportException extends Exception
+public class ModelFeatureSupportException extends NeuroMLException
 {
 
 	/**
