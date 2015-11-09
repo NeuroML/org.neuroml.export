@@ -1294,7 +1294,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         public float voltageFactor;
         @SuppressWarnings("unused")
-        private float lengthFactor;
+        public float lengthFactor;
         public float specCapFactor;
         public float resistivityFactor;
         public float condDensFactor;
@@ -1634,7 +1634,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockBreakpoint.insert(0, "SOLVE states METHOD cnexp\n\n");
         }
 
-        ArrayList<String> regimeNames = new ArrayList<String>();
+        //ArrayList<String> regimeNames = new ArrayList<String>();
         HashMap<String, Integer> flagsVsRegimes = new HashMap<String, Integer>();
 
         if(comp.getComponentType().hasDynamics())
@@ -1651,7 +1651,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             for(Regime regime : comp.getComponentType().getDynamics().getRegimes())
             {
                 String regimeStateName = NRNUtils.REGIME_PREFIX + regime.name;
-                regimeNames.add(regimeStateName);
+                //regimeNames.add(regimeStateName);
 
                 // StringBuilder test = new
                 // StringBuilder(": Testing for "+regimeStateName+ "\n");
@@ -2039,7 +2039,23 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             blockNetReceive.append("\n    " + prefix + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) +"\n");
                         }
-                        blockNetReceive.append("    net_event(t)\n");
+                        for(Component childComp : comp.getAllChildren())
+                        {
+                            blockNetReceive.append("\n    : Child: "+childComp+"\n");
+                            for(OnEvent oe : childComp.getComponentType().getDynamics().getOnEvents())
+                            {
+                                if(oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
+                                {
+                                    for(StateAssignment sa : oe.getStateAssignments())
+                                    {
+                                        blockNetReceive.append("\n    : paramMappings: "+paramMappings+"\n");
+                                        blockNetReceive.append("    state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + ", "
+                                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp, paramMappings) + ")\n");
+                                    }
+                                }
+                            }
+                        }
+                        blockNetReceive.append("\n    net_event(t)\n");
                         blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
                         blockNetReceive.append("\n}\n");
                         
@@ -2499,7 +2515,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String rate = NRNUtils.checkForStateVarsAndNested(dv.getValueExpression(), comp, paramMappings);
 
                     String synFactor = "";
-                    if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) && dv.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
+                    if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE) && 
+                       dv.getName().equals(NeuroMLElements.POINT_CURR_CURRENT) 
+                       && prefix.length()==0)  /* to ensure it's not a child synapse on a point process/spiker */
                     {
                         // since synapse currents differ in sign from NEURON
                         synFactor = "-1 * ";
@@ -2699,7 +2717,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        /*
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
+        
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
@@ -2712,7 +2731,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/neuroConstruct/generatedNeuroML2/LEMS_Cerebellum3DDemo.xml")); 
         
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml")); 
