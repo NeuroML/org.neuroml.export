@@ -2568,7 +2568,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         String localVar = dv.getPath().replaceAll("/", "_");
                         String globalVar = prefix + dv.getPath().replaceAll("/", "_");
-                        // String var0 = var;
+                        
+                        //TODO: replacewith more thorough check...
+                        if (globalVar.startsWith("synapse_")) 
+                        {
+                            globalVar = globalVar.replaceFirst("synapse_", comp.getChild("synapse").getID()+"_");
+                        }
 
                         String eqn = globalVar;
                         if(globalVar.contains("[*]") && globalVar.contains("syn"))
@@ -2694,6 +2699,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
