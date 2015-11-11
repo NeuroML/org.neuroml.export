@@ -120,10 +120,10 @@ public class Utils
 	 */
 	public static String parseCellRefStringForPopulation(String cellRef)
 	{
-		System.out.println("Parsing for population: " + cellRef);
+		//System.out.println("Parsing for population: " + cellRef);
 		int loc = cellRef.startsWith("../") ? 1 : 0;
-		String ref = cellRef.indexOf("/") >= 0 ? cellRef.split("/")[loc] : cellRef;
-		if(ref.indexOf("[") >= 0) return ref.substring(0, ref.indexOf("["));
+		String ref = cellRef.contains("/") ? cellRef.split("/")[loc] : cellRef;
+		if(ref.contains("[")) return ref.substring(0, ref.indexOf("["));
 		else return ref;
 	}
 
@@ -133,7 +133,7 @@ public class Utils
 	public static int parseCellRefStringForCellNum(String cellRef)
 	{
 		// System.out.println("Parsing for cell num: "+cellRef);
-		if(cellRef.indexOf("[") >= 0)
+		if(cellRef.contains("["))
 		{
 			return Integer.parseInt(cellRef.substring(cellRef.indexOf("[") + 1, cellRef.indexOf("]")));
 		}
@@ -381,7 +381,7 @@ public class Utils
 	{
 		// /if (true) return false;
 		/** @todo See if this is general enough */
-		return System.getProperty("os.name").toLowerCase().indexOf("nix") >= 0 || System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0;
+		return System.getProperty("os.name").toLowerCase().contains("nix") || System.getProperty("os.name").toLowerCase().contains("linux");
 	}
 
 	public static boolean isMacBasedPlatform()
@@ -391,7 +391,7 @@ public class Utils
 		if(isWindowsBasedPlatform()) return false;
 		if(isLinuxBasedPlatform()) return false;
 
-		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+		return System.getProperty("os.name").toLowerCase().contains("mac");
 	}
 
 	/**
@@ -400,15 +400,15 @@ public class Utils
 	 */
 	public static String getArchSpecificDir()
 	{
-		if(!isMacBasedPlatform() && (System.getProperty("os.arch").equals(ARCH_64BIT) || System.getProperty("os.arch").indexOf("64") >= 0))
+		if(!isMacBasedPlatform() && (System.getProperty("os.arch").equals(ARCH_64BIT) || System.getProperty("os.arch").contains("64")))
 		{
 			return DIR_64BIT;
 		}
-		else if(isMacBasedPlatform() && System.getProperty("os.arch").indexOf(ARCH_POWERPC) >= 0)
+		else if(isMacBasedPlatform() && System.getProperty("os.arch").contains(ARCH_POWERPC))
 		{
 			return DIR_POWERPC;
 		}
-		else if(isMacBasedPlatform() && System.getProperty("os.arch").indexOf(ARCH_I386) >= 0)
+		else if(isMacBasedPlatform() && System.getProperty("os.arch").contains(ARCH_I386))
 		{
 			return DIR_I686;
 		}
@@ -420,7 +420,7 @@ public class Utils
 
 	public static boolean is64bitPlatform()
 	{
-		return System.getProperty("os.arch").indexOf("64") >= 0; // should be
+		return System.getProperty("os.arch").contains("64"); // should be
 																	// enough in
 																	// most
 																	// cases

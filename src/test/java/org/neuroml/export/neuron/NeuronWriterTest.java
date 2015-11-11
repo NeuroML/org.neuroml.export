@@ -71,10 +71,10 @@ public class NeuronWriterTest extends TestCase {
     
     public void testInputs() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
-        testComponentToMod("NML2_Inputs.nml", "pulseGen");
-        testComponentToMod("NML2_Inputs.nml", "sineGen");
-        testComponentToMod("NML2_Inputs.nml", "rampGen");
-        testComponentToMod("NML2_Inputs.nml", "vClamp");
+        testComponentToMod("NML2_Inputs.nml", "pulseGen0");
+        testComponentToMod("NML2_Inputs.nml", "sg0");
+        testComponentToMod("NML2_Inputs.nml", "rg0");
+        testComponentToMod("NML2_Inputs.nml", "vClamp0");
     }
 
     public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException {

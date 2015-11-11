@@ -327,7 +327,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     String fileName = cellName + ".hoc";
                     File cellFile = new File(getOutputFolder(), fileName);
-                    E.info("Writing to: " + cellFile);
+                    E.info("-- Writing to: " + cellFile);
                     
                     for (Species species: cell.getBiophysicalProperties().getIntracellularProperties().getSpecies()) {
                         
@@ -659,7 +659,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     if(toCell != null)
                     {
-                        main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(&v(%f), %s[%d], 0, %f, %f))\")\n\n", fromSecName, toPop, toCellId, 0.5, synArrayName, i, delay, weight));
+                        Component fromComp = popIdsVsComps.get(fromPop);
+                        float fract = 0.5f;
+                        String sourceVarToListenFor = "&v("+fract+")";
+                        
+                        if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
+                        {
+                            String hocMechName = NRNUtils.getMechanismName(fromComp, fromPop) + "["+fromCellId+"]";
+                            sourceVarToListenFor = hocMechName;
+                        }
+                        
+                        main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], 0, %f, %f))\") # ...\n\n", fromSecName, toPop, toCellId, sourceVarToListenFor, synArrayName, i, delay, weight));
                     }
                     else
                     {
@@ -680,7 +690,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             sourceVarToListenFor = hocMechName;
                         }
                         main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synArrayName, i));
-                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %f, %f)\")  \n\n", fromSecName, synArrayName, i, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
+                        main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %f, %f)\")  # ,,,\n\n", fromSecName, synArrayName, i, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
                     }
 
                 }
@@ -1997,7 +2007,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     private static void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
     {
-        System.out.println("cc "+comp.id+" pre["+prefix+"]");
         if(comp.getComponentType().getDynamics() != null)
         {
             for(OnCondition oc : comp.getComponentType().getDynamics().getOnConditions())
@@ -2172,7 +2181,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 blockNeuron.append(range + " : exposure\n");
 
-                if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) && exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT))
+                if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE) && 
+                   exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT) && 
+                   prefix.length()==0)
                 {
                     blockNeuron.append("\n\nNONSPECIFIC_CURRENT " + NeuroMLElements.POINT_CURR_CURRENT + " \n");
                 }
