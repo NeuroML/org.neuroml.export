@@ -234,7 +234,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             ArrayList<Component> popsOrComponents = targetComp.getChildrenAL("populations");
 
-            E.info("popsOrComponents: " + popsOrComponents);
+            //E.info("popsOrComponents: " + popsOrComponents);
 
             HashMap<String, Integer> compMechsCreated = new HashMap<String, Integer>();
             HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
