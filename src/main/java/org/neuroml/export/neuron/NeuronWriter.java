@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.export.dlems.DLemsWriter;
@@ -1078,6 +1079,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             HashMap<String, String> outfiles = new HashMap<String, String>();
             HashMap<String, ArrayList<String>> columnsPre = new HashMap<String, ArrayList<String>>();
+            HashMap<String, ArrayList<String>> columnsPost0 = new HashMap<String, ArrayList<String>>();
             HashMap<String, ArrayList<String>> columnsPost = new HashMap<String, ArrayList<String>>();
 
             String timeRef = "time";
@@ -1085,6 +1087,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             outfiles.put(timeRef, timefileName);
 
             columnsPre.put(timeRef, new ArrayList<String>());
+            columnsPost0.put(timeRef, new ArrayList<String>());
             columnsPost.put(timeRef, new ArrayList<String>());
 
             columnsPre.get(timeRef).add("# Column: " + timeRef);
@@ -1092,7 +1095,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             columnsPre.get(timeRef).add("h(' { v_" + timeRef + " = new Vector() } ')");
             columnsPre.get(timeRef).add("h(' v_" + timeRef + ".record(&t) ')");
             columnsPre.get(timeRef).add("h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
-            columnsPost.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% (float(h.v_" + timeRef + ".get(i))/1000.0))  # Save in SI units...");
+            
+            columnsPost0.get(timeRef).add("py_v_" + timeRef + " = [ t/1000 for t in h.v_" + timeRef + ".to_python() ]  # Convert to Python list for speed...");
+            
+            columnsPost.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% py_v_" + timeRef + "[i])  # Save in SI units...");
 
             for(Component ofComp : simCpt.getAllChildren())
             {
@@ -1109,8 +1115,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         columnsPost.put(outfileId, new ArrayList<String>());
                     }
+                    if(columnsPost0.get(outfileId) == null)
+                    {
+                        columnsPost0.put(outfileId, new ArrayList<String>());
+                    }
 
-                    columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%e\\t'% (float(h.v_" + timeRef + ".get(i))/1000.0)) # Time in first column, save in SI units...");
+                    columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
 
                     ArrayList<String> colIds = new ArrayList<String>();
 
@@ -1139,8 +1149,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                             float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
                             String factor = (conv == 1) ? "" : " / " + conv;
+                            
+                            columnsPost0.get(outfileId).add(
+                                    "py_v_" + colId + " = [ float(x " + factor + ") for x in h.v_" + colId + ".to_python() ]  # Convert to Python list for speed, variable has dim: " + lqp.getDimension().getName());
+
                             columnsPost.get(outfileId).add(
-                                    "    f_" + outfileId + "_f2.write('%e\\t'%(float(h.v_" + colId + ".get(i))" + factor + ")) # Saving as SI, variable has dim: " + lqp.getDimension().getName());
+                                    " + '%e\\t'%(py_v_" + colId + "[i]) ");
 
                         }
                     }
@@ -1180,19 +1194,30 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
             main.append("\n");
 
-            for(String f : outfiles.keySet())
+            // Ensure time gets handled first
+            Set<String> refs = outfiles.keySet();
+            ArrayList<String> refList = new ArrayList(refs);
+            refList.remove(timeRef);
+            refList.add(0, timeRef);
+            
+            for(String f : refList)
             {
                 addComment(main, "File to save: " + f);
                 // String contents = "f_" + f + "_contents";
                 // main.append(contents+" = ''\n");
+                for(String col : columnsPost0.get(f))
+                {
+                    main.append(col + "\n");
+                }
+                main.append("\n");
 
                 main.append("f_" + f + "_f2 = open('" + outfiles.get(f) + "', 'w')\n");
                 main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
                 for(String col : columnsPost.get(f))
                 {
-                    main.append(col + "\n");
+                    main.append(col);
                 }
-                main.append("    f_" + f + "_f2.write(\"\\n\")\n");
+                main.append("+ '\\n\')\n");
 
                 // main.append("f_" + f + "_f2.write(f_" + f + "_contents)\n");
                 main.append("f_" + f + "_f2.close()\n");
@@ -1248,7 +1273,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         try
         {
-            FileUtil.writeStringToFile(mod, modFile);
+            FileUtil.writeStringToFile(mod, modFile, true);
             this.outputFiles.add(modFile);
             modWritten.put(comp.getID(), mod);
         }
@@ -2727,13 +2752,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
-        
-                
-        /*
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
+       
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml")); 
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
@@ -2796,7 +2820,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
             nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
-            // nw.setNoGui(true);
 
             List<File> ff = nw.generateAndRun(false, false);
             for(File f : ff)
