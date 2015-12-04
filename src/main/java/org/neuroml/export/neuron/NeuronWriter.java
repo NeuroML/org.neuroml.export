@@ -659,7 +659,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synType, 0.5));
 
                     float delay = connection.hasParam("delay") ? (float) connection.getParamValue("delay").getDoubleValue() * 1000 : 0.0f;
-                    float weight = connection.hasParam("weight") ? (float) connection.getParamValue("weight").getDoubleValue() : 1.0f;
+                    float weight = connection.hasParam("weight") ? (float) NRNUtils.convertToNeuronUnits(connection.getAttributeValue("weight") , lems) : 1.0f;
 
                     if(toCell != null)
                     {
@@ -1196,7 +1196,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             // Ensure time gets handled first
             Set<String> refs = outfiles.keySet();
-            ArrayList<String> refList = new ArrayList(refs);
+            List<String> refList = new ArrayList<String>(refs);
             refList.remove(timeRef);
             refList.add(0, timeRef);
 
@@ -1374,7 +1374,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         StringBuilder blockNetReceive = new StringBuilder();
         StringBuilder blockFunctions = new StringBuilder();
 
-        String blockNetReceiveParams;
+        String blockNetReceiveParams = "";
         StringBuilder ratesMethod = new StringBuilder("\n");
 
         HashMap<String, HashMap<String, String>> paramMappings = new HashMap<String, HashMap<String, String>>();
