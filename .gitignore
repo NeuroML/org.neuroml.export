@@ -32,3 +32,6 @@ src/test/resources/examples/*.mod
 src/test/resources/examples/*.dat
 src/test/resources/examples/*.hoc
 src/test/resources/examples/*nrn.py
+
+.DS_Store
+
