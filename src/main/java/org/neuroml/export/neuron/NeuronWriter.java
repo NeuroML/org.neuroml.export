@@ -1574,11 +1574,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
-            blockNetReceiveParams = "weight (uS)";
             blockAssigned.append("? Standard Assigned variables with baseSynapse\n");
             blockAssigned.append("v (mV)\n");
             blockAssigned.append(NRNUtils.NEURON_TEMP + " (degC)\n");
             blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
+            if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_COND_SYNAPSE_COMP_TYPE))
+            {
+            	blockNetReceiveParams = "weight (uS)"; //TODO: arbitrary unit here?
+            }
+            else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CURR_SYNAPSE_COMP_TYPE))
+            {
+            	blockNetReceiveParams = "weight (nA)"; //TODO: arbitrary unit here?
+            }
         }
         else
         {
