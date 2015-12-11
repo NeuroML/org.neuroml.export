@@ -659,6 +659,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synType, 0.5));
 
                     float delay = connection.hasParam("delay") ? (float) connection.getParamValue("delay").getDoubleValue() * 1000 : 0.0f;
+                    //this also accounts for dimensional weights, if we ever want to support that.
                     float weight = connection.hasParam("weight") ? (float) NRNUtils.convertToNeuronUnits(connection.getAttributeValue("weight") , lems) : 1.0f;
 
                     if(toCell != null)
@@ -1578,14 +1579,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockAssigned.append("v (mV)\n");
             blockAssigned.append(NRNUtils.NEURON_TEMP + " (degC)\n");
             blockAssigned.append(NeuroMLElements.TEMPERATURE + " (K)\n");
-            if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_COND_SYNAPSE_COMP_TYPE))
-            {
-            	blockNetReceiveParams = "weight (uS)"; //TODO: arbitrary unit here?
-            }
-            else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CURR_SYNAPSE_COMP_TYPE))
-            {
-            	blockNetReceiveParams = "weight (nA)"; //TODO: arbitrary unit here?
-            }
+            blockNetReceiveParams = "weight"; //dimensionless!
         }
         else
         {
