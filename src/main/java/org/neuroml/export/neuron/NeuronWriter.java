@@ -2087,8 +2087,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                     for(StateAssignment sa : oe.getStateAssignments())
                                     {
                                         blockNetReceive.append("\n    : paramMappings: "+paramMappings+"\n");
-                                        blockNetReceive.append("    state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + ", "
+                                        blockNetReceive.append("?    state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + ", "
                                                 + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp, paramMappings) + ")\n");
+                                        blockNetReceive.append("    " + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + " = "
+                                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp, paramMappings) + "\n");
                                     }
                                 }
                             }
@@ -2145,8 +2147,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     for(StateAssignment sa : oe.getStateAssignments())
                     {
-                        blockNetReceive.append("state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "
+                        blockNetReceive.append("?state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "
                                 + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + ") : From "+comp.id+"\n");
+                        blockNetReceive.append("" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + " = "
+                                + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " : From "+comp.id+"\n");
                     }
                 }
             }
@@ -2634,6 +2638,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         }
 
                         String eqn = globalVar;
+                        String comment = "";
                         if(globalVar.contains("[*]") && globalVar.contains("syn"))
                         {
                             eqn = "0 ? Was: " + localVar + " but insertion of currents from external attachments not yet supported";
@@ -2663,8 +2668,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 }
                                 eqn = eqn + getPrefix(childComp, prefix) + path;
                             }
-                            eqn = eqn + " ? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren()
+                            comment = "? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren()
                                     + ")";
+                        }
+                        if (comment.length()>0) {
+                            block.append(NRNUtils.checkCommentLineLength(comment)+"\n");
                         }
                         block.append(prefix + dv.getName() + " = " + eqn + " ? path based\n\n");
                     }
@@ -2757,11 +2765,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
-//        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex21_CurrentBasedSynapses.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
 
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_NaV.xml"));
+        
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
