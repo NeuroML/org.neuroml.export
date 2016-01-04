@@ -116,28 +116,32 @@ public enum ModelFeature
 
                     if(cell.getBiophysicalProperties() != null)
                     {
-                        for(ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity())
+                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities"))
                         {
-                            checkForChannels(cd.getIonChannel(), mfs, lems);
-                            if (cd.getSegment()!=null)
+                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                            if (channelDensity.hasAttribute("segment"))
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
-                        for(ChannelDensityNernst cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
+                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
+                        //for(ChannelDensityNernst cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
                         {
-                            checkForChannels(cd.getIonChannel(), mfs, lems);
-                            if (cd.getSegment()!=null)
+                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                            if (channelDensity.hasAttribute("segment"))
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
-                        for(ChannelDensityGHK cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
+                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
+                        //for(ChannelDensityGHK cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
                         {
-                            checkForChannels(cd.getIonChannel(), mfs, lems);
-                            if (cd.getSegment()!=null)
+                        	checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                        	if (channelDensity.hasAttribute("segment"))
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
-                        for(ChannelPopulation cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelPopulation())
+                        for(Component population : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("populations"))
+                        //for(ChannelPopulation cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelPopulation())
                         {
-                            addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
-                            checkForChannels(cd.getIonChannel(), mfs, lems);
+                        	addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
+                            System.out.println("cp");
+                            checkForChannels(population.getRefHM().get("ionChannel"), mfs, lems);
                         }
                     }
                 }
@@ -197,8 +201,10 @@ public enum ModelFeature
 
                 if(pop.getComponentType().getName().equals(NeuroMLElements.POPULATION) || pop.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST))
                 {
-                    String compReference = pop.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
-                    Component popComp = lems.getComponent(compReference);
+                	Component popComp = pop.getRefComponents().get("component");
+                	
+                    //String compReference = pop.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
+                    //Component popComp = lems.getComponent(compReference);
                     analyseSingleComponent(popComp, mfs, lems);
                 }
             }
@@ -222,6 +228,18 @@ public enum ModelFeature
             {
                 addIfNotPresent(mfs, NETWORK_WITH_ANALOG_CONNS_MODEL);
             }
+        }
+    }
+
+    private static void checkForChannels(Component ionChannel, ArrayList<ModelFeature> mfs, Lems lems) throws ContentError
+    {
+        if(ionChannel.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_HH_COMP_TYPE))
+        {
+            addIfNotPresent(mfs, HH_CHANNEL_MODEL);
+        }
+        if(ionChannel.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
+        {
+            addIfNotPresent(mfs, KS_CHANNEL_MODEL);
         }
     }
 

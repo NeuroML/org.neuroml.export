@@ -26,6 +26,10 @@ public abstract class ABaseWriter implements IBaseWriter
     
 	public ABaseWriter(Lems lems, Format format, boolean checkSupportedFeatures) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
+		lems.setResolveModeLoose();
+		lems.deduplicate();
+		lems.resolve();
+		lems.evaluateStatic();
 		this.lems = lems;
 		this.format = format;
 		setSupportedFeatures();

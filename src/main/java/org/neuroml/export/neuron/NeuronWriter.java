@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.export.dlems.DLemsWriter;
@@ -282,7 +283,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 else if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST))
                 {
                     compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
-                    popComp = lems.getComponent(compReference);
+                    popComp = popsOrComponent.getRefComponents().get("component");
+                    //popComp = lems.getComponent(compReference);
                     number = 0;
                     for(Component instance : popsOrComponent.getAllChildren())
                     {
@@ -377,41 +379,57 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
                     }
 
-                    for(ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity())
+                     //for(ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity())
+                    for(Component channelDensity : popComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities"))
                     {
-                        String ionChannel = cd.getIonChannel();
-                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-                        option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
-                        writeModFile(ionChannel, option);
+                    	if (channelDensity.getTypeName().equals("channelDensity") || channelDensity.getTypeName().equals("channelDensityNoUniform")){
+                    		//String ionChannel = cd.getIonChannel();
+                            ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+                            //option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
+                            option.erev = NRNUtils.convertToNeuronUnits((float)channelDensity.getParamValue("erev").getDoubleValue(), "voltage");
+                            
+                            writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    	}
+                    	else {
+                    		//String ionChannel = cdn.getIonChannel();
+                            ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
+                            writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    	}
+                        
                     }
 
-                    for(ChannelDensityNonUniform cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNonUniform())
-                    {
-                        String ionChannel = cd.getIonChannel();
-                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-                        option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
-                        writeModFile(ionChannel, option);
-                    }
+//                    for(ChannelDensityNonUniform cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNonUniform())
+//                    {
+//                        String ionChannel = cd.getIonChannel();
+//                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+//                        option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
+//                        writeModFile(ionChannel, option);
+//                    }
 
-                    for(ChannelDensityNernst cdn : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
-                    {
-                        String ionChannel = cdn.getIonChannel();
-                        ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
-                        writeModFile(ionChannel, option);
-                    }
+//                    for(ChannelDensityNernst cdn : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
+//                    {
+//                        String ionChannel = cdn.getIonChannel();
+//                        ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
+//                        writeModFile(ionChannel, option);
+//                    }
+//
+//                    for(ChannelDensityGHK cdg : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
+//                    {
+//                        String ionChannel = cdg.getIonChannel();
+//                        ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
+//                        writeModFile(ionChannel, option);
+//                    }
 
-                    for(ChannelDensityGHK cdg : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
+                    for(Component channelDensity : popComp.getChild("biophysicalProperties").getChild("intracellularProperties").getChildrenAL("speciesList"))
                     {
-                        String ionChannel = cdg.getIonChannel();
-                        ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
-                        writeModFile(ionChannel, option);
+                    	writeModFile(channelDensity.getRefHM().get("concentrationModel"),null);
                     }
-
-                    for(Species sp : cell.getBiophysicalProperties().getIntracellularProperties().getSpecies())
-                    {
-                        String concModel = sp.getConcentrationModel();
-                        writeModFile(concModel);
-                    }
+                    
+//                    for(Species sp : cell.getBiophysicalProperties().getIntracellularProperties().getSpecies())
+//                    {
+//                        String concModel = sp.getConcentrationModel();
+//                        writeModFile(concModel);
+//                    }
 
                 }
                 else
@@ -496,8 +514,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
 
                 addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", id, prePop, postPop, synapse, number));
-
-                Component synapseComp = lems.getComponent(synapse);
+                
+                //Component synapseComp = lems.getComponent(synapse);
+                Component synapseComp = projection.getRefComponents().get("synapse");
 
                 String mod = generateModFile(synapseComp);
                 dumpModToFile(synapseComp, mod);
@@ -892,8 +911,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(Component inputList : inputLists)
             {
-                String inputReference = inputList.getStringValue("component");
-                Component inputComp = lems.getComponent(inputReference);
+                //String inputReference = inputList.getStringValue("component");
+                //Component inputComp = lems.getComponent(inputReference);
+            	
+            	Component inputComp = inputList.getRefComponents().get("component");
 
                 String mod = generateModFile(inputComp);
                 dumpModToFile(inputComp, mod);
@@ -1221,6 +1242,19 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         writeModFile(compName, null);
     }
 
+    
+    private void writeModFile(Component comp, ChannelConductanceOption option) throws LEMSException
+    {
+        if(!generatedModComponents.contains(comp.getID()))
+        {
+//            Component comp = lems.getComponent(compName);
+            String mod = generateModFile(comp, option);
+            generatedModComponents.add(comp.getID());
+
+            dumpModToFile(comp, mod);
+        }
+    }
+    
     private void writeModFile(String compName, ChannelConductanceOption option) throws LEMSException
     {
         if(!generatedModComponents.contains(compName))
