@@ -54,7 +54,7 @@ public class Utils
 	public static final String NEUROML_COMPTYPR_RESOURCES_DIR = "/NeuroML2CoreTypes";
 	public static final String NEUROML_EXAMPLES_RESOURCES_DIR = "/examples";
 
-	public static Lems getLemsWithNML2CompTypes() throws LEMSException
+	private static Lems getLemsWithNML2CompTypes() throws LEMSException
 	{
 		if(lemsWithNML2CompTypes == null)
 		{
