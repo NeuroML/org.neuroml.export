@@ -273,11 +273,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION))
                 {
-                    compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
+                    //compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
                     number = Integer.parseInt(popsOrComponent.getStringValue(NeuroMLElements.POPULATION_SIZE));
-                    popComp = lems.getComponent(compReference);
+                    popComp = popsOrComponent.getRefComponents().get("component");
+                    //popComp = lems.getComponent(compReference);
                     popName = popsOrComponent.getID();
-                    popIdsVsCellIds.put(popName, compReference);
+                    popIdsVsCellIds.put(popName, popComp.getID());
                     popIdsVsComps.put(popName, popComp);
                 }
                 else if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST))
