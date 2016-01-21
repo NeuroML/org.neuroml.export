@@ -105,7 +105,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
 
     public List<File> generateAndRun(boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
@@ -1367,6 +1367,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         StringBuilder blockParameter = new StringBuilder();
         StringBuilder blockAssigned = new StringBuilder();
         StringBuilder blockState = new StringBuilder();
+        StringBuilder blockKinetic = new StringBuilder();
+        StringBuilder blockLinear = new StringBuilder();
         StringBuilder blockInitial = new StringBuilder();
         StringBuilder blockInitial_v = new StringBuilder();
         StringBuilder blockBreakpoint = new StringBuilder();
@@ -1672,6 +1674,94 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             blockBreakpoint.insert(0, "SOLVE states METHOD cnexp\n\n");
         }
+        
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE)) 
+        {    
+            blockBreakpoint.insert(0, "SOLVE activation METHOD sparse ? "+comp.summary()+"\n\n");
+            blockKinetic.insert(0,"rates()\n\n");
+            blockLinear.insert(0,": sets initial equilibrium\n\n");
+            
+            HashMap<String,String> lines = new HashMap<String, String>();
+            HashMap<String,ArrayList<String>> inRates = new HashMap<String, ArrayList<String>>();
+            HashMap<String,ArrayList<String>> outRates = new HashMap<String, ArrayList<String>>();
+                
+            
+            String conserve = "";
+            
+            String prefix2 = prefix;
+            String lastState = null;
+            for (Component c: comp.getAllChildren()) 
+            {
+                if (c.getComponentType().isOrExtends("gateKS"))
+                {
+                    /*******
+                     * 
+                     * What follows is a hard coded implementation of the ionChannelKS for mod files
+                     * This is required since the <KineticScheme> element in LEMS does most of the
+                     * "magic" when solving the initial state, generating the rates of changes of states
+                     * etc. 
+                     * 
+                     *******/
+                    prefix2 = prefix2+c.id+"_";
+                    for (Component cc: c.getAllChildren()) 
+                    {
+                        if (cc.getComponentType().isOrExtends("forwardTransition"))
+                        {
+                            String from = prefix2+cc.getStringValue("from")+"_occupancy";
+                            String to = prefix2+cc.getStringValue("to")+"_occupancy";
+                            String rate = prefix2+cc.id+"_rate_r";
+                            lines.put(from+"_"+to, "~ "+from+" <-> "+to+"	("+rate+",REV_RATE)\n");
+                            
+                            if (!inRates.containsKey(to))
+                                inRates.put(to, new ArrayList<String>());
+                            inRates.get(to).add(from+"*"+rate);
+                            
+                            if (!outRates.containsKey(from))
+                                outRates.put(from, new ArrayList<String>());
+                            outRates.get(from).add(from+"*"+rate);
+                                
+                            if (!conserve.contains(" "+from+" +"))
+                                conserve = conserve +" "+from+" +";
+                            if (!conserve.contains(" "+to+" +"))
+                                conserve = conserve +" "+to+" +";
+                            
+                            lastState = to;
+                        }
+                        if (cc.getComponentType().isOrExtends("reverseTransition"))
+                        {
+                            String from = prefix2+cc.getStringValue("from")+"_occupancy";
+                            String to = prefix2+cc.getStringValue("to")+"_occupancy";
+                            String rate = prefix2+cc.id+"_rate_r";
+                            blockKinetic.append(""+lines.get(from+"_"+to).replaceAll("REV_RATE", rate));
+                            
+                            if (!inRates.containsKey(from))
+                                inRates.put(from, new ArrayList<String>());
+                            inRates.get(from).add(to+"*"+rate);
+                            
+                            if (!outRates.containsKey(to))
+                                outRates.put(to, new ArrayList<String>());
+                            outRates.get(to).add(to+"*"+rate);
+                        }
+                    }
+                    
+                    blockKinetic.append("CONSERVE "+conserve.substring(0,conserve.length()-1)+" = 1\n\n");
+                    Set<String> states = inRates.keySet();
+                    states.remove(lastState);
+                    
+                    for (String state: states) {
+                        blockLinear.append("? "+state+"\n ~ 0 ");
+                        for (String exp: inRates.get(state)) {
+                            blockLinear.append("+ "+exp+" ");
+                        }
+                        for (String exp: outRates.get(state)) {
+                            blockLinear.append("- "+exp+" ");
+                        }
+                        blockLinear.append("= 0\n\n");
+                    }
+                    blockLinear.append("~ "+conserve.substring(0,conserve.length()-1)+" = 1\n\n");
+                }
+            }
+        }
 
         //ArrayList<String> regimeNames = new ArrayList<String>();
         HashMap<String, Integer> flagsVsRegimes = new HashMap<String, Integer>();
@@ -1796,6 +1886,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         blockInitial.append("rates()\n");
         blockInitial.append("rates() ? To ensure correct initialisation.\n");
+        
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE)) 
+        {
+            blockInitial.append("SOLVE seqinitial\n");
+        }
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, blockNetReceive, paramMappings, lems);
 
@@ -1891,7 +1986,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         writeModBlock(mod, "STATE", blockState.toString());
         writeModBlock(mod, "INITIAL", blockInitial.toString());
 
-        if(blockDerivative.length() == 0)
+        if(blockDerivative.length() == 0 && !comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
         {
             blockBreakpoint.insert(0, "rates()\n");
         }
@@ -1913,6 +2008,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
 
         writeModBlock(mod, "BREAKPOINT", blockBreakpoint_regimes.toString() + "\n" + blockBreakpoint.toString());
+        
+        if(blockKinetic.length()>0)
+        {
+            writeModBlock(mod, "KINETIC activation", blockKinetic.toString());
+        }
+        if(blockLinear.length()>0)
+        {
+            writeModBlock(mod, "LINEAR seqinitial", blockLinear.toString());
+        }
 
         if(blockNetReceive.length() > 0)
         {
@@ -2301,8 +2405,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     dim = "(nA)";
                 }
+                String bounds = "";
+                if (comp.getComponentType().isOrExtends(NeuroMLElements.KS_STATE_COMP_TYPE)) {
+                    bounds = " FROM 0 TO 1";
+                }
 
-                blockState.append(svName + " " + dim + "\n");
+                blockState.append(svName +bounds + " "+ dim + " "+"\n");
             }
         }
 
@@ -2766,19 +2874,23 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex21_CurrentBasedSynapses.xml"));
-        /*
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_NaV.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
 
-        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_NaV.xml"));
+        /*
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex21_CurrentBasedSynapses.xml"));
+
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-
+        
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_NeuronMuscle.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/IL/LEMS_IL.nonernst.xml"));
 
