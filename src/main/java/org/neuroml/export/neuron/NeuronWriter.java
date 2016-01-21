@@ -2347,13 +2347,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         for(String key: paramMappings.get(compid).keySet())
                         {
                             String mapped = paramMappings.get(compid).get(key);
-                            //System.out.println("Checking mapping of "+req.getName()+" in "+comp.getID()+" ("+comp.getComponentType().getName()+") against "+compid+" mapping: "+key+"->"+mapped);
-                            if (key.equals(req.getName()))
+                            String rootPrefix = prefix.split("_")[0];
+                            String mapPrefix = mapped.split("_")[0];
+                            //System.out.println("Checking mapping of "+req.getName()+" in "+comp.getID()+" ("+comp.getComponentType().getName()+", "+prefix+") against "+compid+" mapping: "+key+"->"+mapped);
+                            if (key.equals(req.getName()) && rootPrefix.equals(mapPrefix))
                             {
                                 //System.out.println("Match!");
                                 mappedName = mapped;
                             }
-                        };
+                        }
                     }
                    
                 }
@@ -2905,6 +2907,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));
 
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
@@ -2925,7 +2928,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
         //lemsFiles.add(new File("../git/neuroml_use_case/LEMS_sim.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));
 
 
 
