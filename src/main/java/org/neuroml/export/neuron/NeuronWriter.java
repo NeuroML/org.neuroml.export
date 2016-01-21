@@ -1377,7 +1377,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         StringBuilder blockNetReceive = new StringBuilder();
         StringBuilder blockFunctions = new StringBuilder();
 
-        String blockNetReceiveParams = "";
+        String blockNetReceiveParams;
         StringBuilder ratesMethod = new StringBuilder("\n");
 
         HashMap<String, HashMap<String, String>> paramMappings = new HashMap<String, HashMap<String, String>>();
@@ -1398,7 +1398,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
         {
-
+            
             for(Component child1 : comp.getAllChildren())
             {
                 if(child1.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE))
@@ -1408,6 +1408,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
                         {
                             hasCaDependency = true;
+                        }
+                        
+                        for(Component child3 : child2.getAllChildren())
+                        {
+                            if(child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
+                            {
+                                hasCaDependency = true;
+                            }
                         }
                     }
                     for(Requirement r : child1.getComponentType().getRequirements())
@@ -2329,11 +2337,30 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         for(Requirement req : comp.getComponentType().getRequirements())
         {
-            String mappedName = prefixParent + req.getName();
+            String mappedName = null;
             if(!req.getName().equals("v") && !req.getName().equals("temperature") && !req.getName().equals("caConc"))
             {
-                // Make the assumption that the requirement is in the parent...
-                paramMappingsComp.put(req.getName(), mappedName);
+                for (String compid: paramMappings.keySet())
+                {
+                    if (mappedName==null)
+                    {
+                        for(String key: paramMappings.get(compid).keySet())
+                        {
+                            String mapped = paramMappings.get(compid).get(key);
+                            //System.out.println("Checking mapping of "+req.getName()+" in "+comp.getID()+" ("+comp.getComponentType().getName()+") against "+compid+" mapping: "+key+"->"+mapped);
+                            if (key.equals(req.getName()))
+                            {
+                                //System.out.println("Match!");
+                                mappedName = mapped;
+                            }
+                        };
+                    }
+                   
+                }
+                if (mappedName!=null)
+                {
+                    paramMappingsComp.put(req.getName(), mappedName);
+                }
             }
 
         }
@@ -2871,11 +2898,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_NaV.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
 
