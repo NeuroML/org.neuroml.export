@@ -2805,8 +2805,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 }
                                 eqn = eqn + getPrefix(childComp, prefix) + path;
                             }
-                            comment = "? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" + " c2 (" + comp.getAllChildren()
-                                    + ")";
+                            comment = "? " + reduce + " applied to all instances of " + path + " in: <" + children + "> (" + comp.getChildrenAL(children) + ")" /*+ " c2 (" + comp.getAllChildren()
+                                    */+ ")";
                         }
                         if (comment.length()>0) {
                             block.append(NRNUtils.checkCommentLineLength(comment)+"\n");
