@@ -24,6 +24,7 @@ import org.lemsml.jlems.viz.datadisplay.ControlPanel;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
+import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroML2Validator;
@@ -280,6 +281,15 @@ public class Utils
 	{
 		LinkedHashMap<String, Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
 		Cell cell = (Cell) els.values().iterator().next();
+        if (cell == null)
+        {
+            Cell2CaPools cell2 = (Cell2CaPools) els.values().iterator().next();
+            cell = cell2;
+        }
+        if (cell==null) 
+        {
+            throw new NeuroMLException("Problem finding cell element in component: "+comp+" and converting to NeuroML");
+        }
 		return cell;
 	}
 
