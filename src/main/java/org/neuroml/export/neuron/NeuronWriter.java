@@ -751,13 +751,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component comp : ep.getAllChildren())
                 {
 
-                    if(comp.getComponentType().getName().equals(NeuroMLElements.ELECTRICAL_CONNECTION))
+                    if(comp.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION) ||
+                       comp.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION_INSTANCE))
                     {
                         number++;
                     }
                 }
 
-                String info0 = String.format("Adding projection: %s\nFrom %s to %s %d connection(s)", id, prePop, postPop, number);
+                String info0 = String.format("Adding projection: %s\nFrom %s to %s, with %d connection(s)", id, prePop, postPop, number);
                 // System.out.println(info0);
                 addComment(main, info0);
 
@@ -778,13 +779,25 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component ec : ep.getChildrenAL("connections"))
                 {
 
-                    if(ec.getComponentType().getName().equals(NeuroMLElements.ELECTRICAL_CONNECTION))
+                    if(ec.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION) ||
+                       ec.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION_INSTANCE))
                     {
-                        int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
-                        int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
+                        int preCellId = -1;
+                        int postCellId = -1;
+                        
+                        if(ec.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION)) 
+                        {
+                            preCellId = Integer.parseInt(ec.getStringValue("preCell"));
+                            postCellId = Integer.parseInt(ec.getStringValue("postCell"));
+                        }
+                        else if (ec.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION_INSTANCE))
+                        {
+                            preCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("preCell"));
+                            postCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("postCell"));
+                        }
 
-                        int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
-                        int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
+                        int preSegmentId = ec.hasAttribute("preSegmentId") ? Integer.parseInt(ec.getAttributeValue("preSegmentId")) : 0;
+                        int postSegmentId = ec.hasAttribute("postSegmentId") ? Integer.parseInt(ec.getAttributeValue("postSegmentId")) : 0;
 
                         float preFractionAlong = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
@@ -2947,6 +2960,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_Soma_Test_HELPER.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
