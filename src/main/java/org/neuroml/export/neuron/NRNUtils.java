@@ -207,6 +207,10 @@ public class NRNUtils
         {
             return "(microfarads)";
         }
+        else if (dimensionName.equals("specificCapacitance"))
+        {
+            return "(microfarads / um2)";
+        }
         else if (dimensionName.equals("time"))
         {
             return "(ms)";
@@ -222,6 +226,10 @@ public class NRNUtils
         else if (dimensionName.equals("currentDensity"))
         {
             return "(nA / um2)";
+        }
+        else if (dimensionName.equals("conductanceDensity"))
+        {
+            return "(uS / um2)";
         }
         else if (dimensionName.equals("length"))
         {
@@ -302,11 +310,15 @@ public class NRNUtils
         }
         else if (dimensionName.equals("conductance"))
         {
-            return 1000000f;
+            return 1e6f;
         }
         else if (dimensionName.equals("capacitance"))
         {
             return 1e6f;
+        }
+        else if (dimensionName.equals("specificCapacitance"))
+        {
+            return 1e-6f;
         }
         else if (dimensionName.equals("per_time"))
         {
@@ -322,7 +334,7 @@ public class NRNUtils
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
-            return 1e-4f;
+            return 1e-6f;
         }
         else if (dimensionName.equals("time"))
         {
