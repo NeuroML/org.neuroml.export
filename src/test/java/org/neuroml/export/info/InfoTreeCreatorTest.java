@@ -99,7 +99,30 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    I: 1.0\n"
             + "    phi: 0.08\n"
             + "    V0: 0.0\n"
-            + "    W0: 0.0";
+            + "    W0: 0.0\n"
+            + "Element pr2A:\n"
+            + "    ID: pr2A\n"
+            + "    iSoma: 0.75 uA_per_cm2 (0.0075 A_per_m2)\n"
+            + "    iDend: 0 uA_per_cm2 (0.0 A_per_m2)\n"
+            + "    gLs: 0.1 mS_per_cm2 (1.0 S_per_m2)\n"
+            + "    gLd: 0.1 mS_per_cm2 (1.0 S_per_m2)\n"
+            + "    gNa: 30 mS_per_cm2 (300.0 S_per_m2)\n"
+            + "    gKdr: 15 mS_per_cm2 (150.0 S_per_m2)\n"
+            + "    gCa: 10 mS_per_cm2 (100.0 S_per_m2)\n"
+            + "    gKahp: 0.8 mS_per_cm2 (8.0 S_per_m2)\n"
+            + "    gKC: 15 mS_per_cm2 (150.0 S_per_m2)\n"
+            + "    gc: 2.1 mS_per_cm2 (21.0 S_per_m2)\n"
+            + "    eNa: 60 mV (0.06 V)\n"
+            + "    eCa: 80 mV (0.08 V)\n"
+            + "    eK: -75 mV (-0.075 V)\n"
+            + "    eL: -60 mV (-0.06 V)\n"
+            + "    pp: 0.5\n"
+            + "    cm: 3 uF_per_cm2 (0.03 F_per_m2)\n"
+            + "    alphac: 2.0\n"
+            + "    betac: 0.1\n"
+            + "    gNmda: 0 mS_per_cm2 (0.0 S_per_m2)\n"
+            + "    gAmpa: 0 mS_per_cm2 (0.0 S_per_m2)\n"
+            + "    qd0: 0.0";
         String tree = getInfoTreeAsString("NML2_AbstractCells.nml");
         compare(expected, tree);
     }
