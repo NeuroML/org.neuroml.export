@@ -61,7 +61,9 @@ import org.neuroml.model.ChannelDensityNonUniform;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.MembraneProperties2CaPools;
+import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.Species;
+import org.neuroml.model.SpikeThresh;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
@@ -529,7 +531,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component comp : projection.getAllChildren())
                 {
 
-                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONNECTION))
+                    if(comp.getComponentType().isOrExtends(NeuroMLElements.CONNECTION))
                     {
                         number++;
                     }
@@ -549,7 +551,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 int index = 0;
                 for(Component conn : projection.getAllChildren())
                 {
-                    if(conn.getComponentType().getName().equals(NeuroMLElements.CONNECTION))
+                    if(conn.getComponentType().isOrExtends(NeuroMLElements.CONNECTION))
                     {
                         int preCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("preCellId"));
                         int postCellId = Utils.parseCellRefStringForCellNum(conn.getStringValue("postCellId"));
@@ -589,12 +591,27 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", postSecName, synObjName, index, synapse, postFractionAlong));
 
                         String sourceVarToListenFor = "&v("+ preFractionAlong+")";
+                        
+                        float weight = 1;
+                        float delay = 0;
+                        if (conn.getComponentType().isOrExtends(NeuroMLElements.CONNECTION_WEIGHT_DELAY)) 
+                        {
+                            weight = Float.parseFloat(conn.getAttributeValue("weight"));
+                            delay = NRNUtils.convertToNeuronUnits(conn.getAttributeValue("delay"), lems);
+                        }
 
 
                         if(preCell != null)
                         {
-                            main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], 0, 0, 1))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
-                                    index));
+                            SpikeThresh st = preCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                            if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL)) 
+                            {
+                                throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                            }
+                            
+                            float threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                            main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
+                                    index, threshold, delay, weight));
                         }
                         else
                         {
@@ -610,7 +627,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 sourceVarToListenFor = hocMechName;
                             }
                             main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synObjName, index));
-                            main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, 0, 1)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, index, threshold));
+                            main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %s, %s)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, index, threshold, delay, weight));
                         }
                         index++;
                     }
@@ -2230,6 +2247,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                     else
                     {
+                        blockNetReceive.append("\nLOCAL weight\n\n");
                         blockNetReceive.append("\nif (flag == 1) { : Setting watch for top level OnCondition...\n");
                         blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
 
@@ -2247,6 +2265,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         for(Component childComp : comp.getAllChildren())
                         {
                             blockNetReceive.append("\n    : Child: "+childComp+"\n");
+                            if (childComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) 
+                            {
+                                blockNetReceive.append("\n    : This child is a synapse; defining weight\n" +
+                                                       "    weight = 1\n");
+                            }
                             for(OnEvent oe : childComp.getComponentType().getDynamics().getOnEvents())
                             {
                                 if(oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
@@ -2957,12 +2980,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_Soma_Test_HELPER.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex22_PinskyRinzelCA3.xml"));
-        /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
