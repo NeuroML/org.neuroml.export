@@ -1,66 +1,60 @@
-// NESTML file for Component: $name
-
-
-/////////////////////////////////////////////////////////////
-// 
-//    PLEASE NOTE: This export is not yet complete
-//
-/////////////////////////////////////////////////////////////
-
+# NESTML file for Component: $name
+#
+#    PLEASE NOTE: This export is not yet complete
+#
 package codegeneration.${name}_module:
 
-    neuron $name:
+neuron $name:
 
-        state:
+    state:
 #foreach ($s in $state.keySet())##
-            - $s
+        $s real
 #end
 #foreach ($sf in $state_functions.keySet())
-            alias $sf = $state_functions.get($sf)  
+        alias $sf real = $state_functions.get($sf)  
 #end
-        end
+    end
 
-        parameter:
+    parameter:
 #foreach ($p in $parameters.keySet())##
-            $p = $parameters.get($p)
+        $p real = $parameters.get($p)
 #end
-        end
+    end
 
-        input:
-            spikeBuffer   
-            currentBuffer 
-        end
+    input:
+        spikeBuffer <- spike  
+        currentBuffer <- current
+    end
 
-        output: spike
+    output: spike
 
-        dynamics timestep(t ms):
+    dynamics timestep(t ms):
 
-            ODE:
+        ODE:
 #foreach ($dyn in $dynamics.keySet())##
-                d/dt $dyn = $dynamics.get($dyn)
+            d/dt $dyn := $dynamics.get($dyn)
 #end##
 #foreach($ev in $events)
 
-                # Event: $ev.name
+            # Event: $ev.name
 #if ($ev.direction == "+" )##
-                if $ev.condition > 0:
+            if $ev.condition > 0:
 #end##
 #if ($ev.direction == "-" )##
-                if $ev.condition < 0:
+            if $ev.condition < 0:
 #end##
 #foreach ($state in $ev.effect.state.keySet())##
-                    $state = $ev.effect.state.get($state)
+                $state = $ev.effect.state.get($state)
 #end##
-                    emitSpike()   #  Todo: check for this in event!
-                end
-#end##
+                emitSpike()   #  Todo: check for this in event!
             end
-
+#end##
         end
 
     end
 
 end
+
 
 
 

@@ -17,7 +17,9 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.model.Annotation;
 import org.neuroml.model.BiophysicalProperties;
+import org.neuroml.model.BiophysicalProperties2CaPools;
 import org.neuroml.model.Cell;
+import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
@@ -28,6 +30,7 @@ import org.neuroml.model.InitMembPotential;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.Member;
 import org.neuroml.model.MembraneProperties;
+import org.neuroml.model.MembraneProperties2CaPools;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
@@ -363,9 +366,26 @@ public class JSONCellSerializer
             }
             g.writeEndArray();
 
-            BiophysicalProperties bp = cell.getBiophysicalProperties();
+            IntracellularProperties ip = null;
+            MembraneProperties mp = null;
+            MembraneProperties2CaPools mpCa2 = null;
+            boolean isCell2CaPools = false;
+            
+            if (cell instanceof Cell2CaPools) {
+                Cell2CaPools cell2ca = (Cell2CaPools)cell;
+                isCell2CaPools = true;
+                BiophysicalProperties2CaPools bp2 = cell2ca.getBiophysicalProperties2CaPools();
+                mpCa2 = bp2.getMembraneProperties2CaPools();
+                mp = mpCa2;
+                ip = bp2.getIntracellularProperties2CaPools();
+            }
+            else
+            {
+                BiophysicalProperties bp = cell.getBiophysicalProperties();
+                ip = bp.getIntracellularProperties();
+                mp = bp.getMembraneProperties();
+            }
             g.writeArrayFieldStart("specificCapacitance");
-            MembraneProperties mp = bp.getMembraneProperties();
             for(SpecificCapacitance sc : mp.getSpecificCapacitance())
             {
                 g.writeStartObject();
@@ -393,7 +413,6 @@ public class JSONCellSerializer
             g.writeEndArray();
 
             g.writeArrayFieldStart("resistivity");
-            IntracellularProperties ip = bp.getIntracellularProperties();
             for(Resistivity res : ip.getResistivity())
             {
                 g.writeStartObject();
@@ -485,6 +504,26 @@ public class JSONCellSerializer
                 g.writeStringField("erev", "calculated_by_Nernst_equation");
 
                 g.writeEndObject();
+            }
+            if (isCell2CaPools)
+            {
+                for(ChannelDensityNernst cdn : mpCa2.getChannelDensityNernstCa2())
+                {
+                    g.writeStartObject();
+                    g.writeStringField("id", cdn.getId());
+                    g.writeStringField("ionChannel", NRNUtils.getSafeName(cdn.getIonChannel()));
+                    g.writeStringField("ion", cdn.getIon());
+
+                    String group = cdn.getSegmentGroup() == null ? "all" : cdn.getSegmentGroup();
+                    g.writeStringField("group", group);
+
+                    float valueCondDens = Utils.getMagnitudeInSI(cdn.getCondDensity()) * units.condDensFactor;
+                    g.writeStringField("condDens", NeuronWriter.formatDefault(valueCondDens));
+
+                    g.writeStringField("erev", "calculated_by_Nernst_equation");
+
+                    g.writeEndObject();
+                }
             }
 
             for(ChannelDensityNonUniformNernst cdnn : mp.getChannelDensityNonUniformNernst())

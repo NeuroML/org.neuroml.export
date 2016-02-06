@@ -16,7 +16,7 @@ public enum Format
 	GEPPETTO("Geppetto", "xml"),
 	GRAPH_VIZ("GraphViz", "gv"),
 	NEST("NEST", "py"),
-	NEURON("NEURON", "nrn"),
+	NEURON("NEURON", "py"),
 	NEURON_A("NEURONa", "NEURONa"),
 	PYNN("PyNN", "py"),
 	SVG("SVG", "svg"),

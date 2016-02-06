@@ -20,6 +20,7 @@ import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
+import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.Instance;
 import org.neuroml.model.Location;
 import org.neuroml.model.Member;
@@ -84,18 +85,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
         return result.toString();
     }
+    
+    public List<Cell> getAllBasedOnCell(NeuroMLDocument nmlDocument) {
+        List<Cell> cells = nmlDocument.getCell();
+        cells.addAll(nmlDocument.getCell2CaPools());
+        return cells;
+    }
 
     public void render(StringBuilder result, boolean png) {
 
         if (nmlDocument.getNetwork().isEmpty()) 
         {
-            for(Cell cell : nmlDocument.getCell())
+            for(Cell cell : getAllBasedOnCell(nmlDocument))
             {
                 //Extract 3d vectors from morphology
                 Network3D cell3D = new Network3D(cell);
-
                 renderCells(result, cell3D, png);
-
             }
         }
         else 
@@ -107,7 +112,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 {
                     String comp = pop.getComponent();
                     Cell cell = null;
-                    for(Cell nextCell : nmlDocument.getCell())
+                    for(Cell nextCell : getAllBasedOnCell(nmlDocument))
                     {
                         if (nextCell.getId().equals(comp))
                             cell = nextCell;
@@ -120,7 +125,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                     }
                     if (pop.getInstance().isEmpty())
                     {
-                        for (int i= 0; i<pop.getSize().intValue(); i++) {
+                        for (int i= 0; i<pop.getSize(); i++) {
                             net3D.addCell(cell, 0, 0, 0);
                         }
                     } 
@@ -396,8 +401,11 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
         fileNames.add("src/test/resources/examples/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
-        fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
-        fileNames.add("../git/OlfactoryBulbMitralCell/neuroConstruct/generatedNeuroML2/Cell1.cell.nml");/**/
+        fileNames.add("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/Golgi_040408_C1.cell.nml");
+        fileNames.add("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/NeuroML2/CerebellarCortex.net.nml");
+        
+        //fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
+        //fileNames.add("../git/OlfactoryBulbMitralCell/neuroConstruct/generatedNeuroML2/Cell1.cell.nml");/**/
 
         NeuroMLConverter nmlc = new NeuroMLConverter();
 
