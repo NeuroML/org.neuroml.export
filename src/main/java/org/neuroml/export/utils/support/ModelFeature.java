@@ -123,21 +123,18 @@ public enum ModelFeature
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
-                        //for(ChannelDensityNernst cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
                         {
                             checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
                             if (channelDensity.hasAttribute("segment"))
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
-                        //for(ChannelDensityGHK cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
                         {
                         	checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
                         	if (channelDensity.hasAttribute("segment"))
                                 addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
                         }
                         for(Component population : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("populations"))
-                        //for(ChannelPopulation cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelPopulation())
                         {
                         	addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
                             System.out.println("cp");
@@ -202,9 +199,6 @@ public enum ModelFeature
                 if(pop.getComponentType().getName().equals(NeuroMLElements.POPULATION) || pop.getComponentType().getName().equals(NeuroMLElements.POPULATION_LIST))
                 {
                 	Component popComp = pop.getRefComponents().get("component");
-                	
-                    //String compReference = pop.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
-                    //Component popComp = lems.getComponent(compReference);
                     analyseSingleComponent(popComp, mfs, lems);
                 }
             }

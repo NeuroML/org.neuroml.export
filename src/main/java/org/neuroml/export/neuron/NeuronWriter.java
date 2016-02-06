@@ -375,57 +375,25 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
                     }
 
-                     //for(ChannelDensity cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensity())
                     for(Component channelDensity : popComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities"))
                     {
                     	if (channelDensity.getTypeName().equals("channelDensity") || channelDensity.getTypeName().equals("channelDensityNoUniform")){
-                    		//String ionChannel = cd.getIonChannel();
                             ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-                            //option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
                             option.erev = NRNUtils.convertToNeuronUnits((float)channelDensity.getParamValue("erev").getDoubleValue(), "voltage");
                             
                             writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     	}
                     	else {
-                    		//String ionChannel = cdn.getIonChannel();
                             ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
                             writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     	}
                         
                     }
 
-//                    for(ChannelDensityNonUniform cd : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNonUniform())
-//                    {
-//                        String ionChannel = cd.getIonChannel();
-//                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-//                        option.erev = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(cd.getErev()), "voltage");
-//                        writeModFile(ionChannel, option);
-//                    }
-
-//                    for(ChannelDensityNernst cdn : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityNernst())
-//                    {
-//                        String ionChannel = cdn.getIonChannel();
-//                        ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
-//                        writeModFile(ionChannel, option);
-//                    }
-//
-//                    for(ChannelDensityGHK cdg : cell.getBiophysicalProperties().getMembraneProperties().getChannelDensityGHK())
-//                    {
-//                        String ionChannel = cdg.getIonChannel();
-//                        ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
-//                        writeModFile(ionChannel, option);
-//                    }
-
                     for(Component channelDensity : popComp.getChild("biophysicalProperties").getChild("intracellularProperties").getChildrenAL("speciesList"))
                     {
                     	writeModFile(channelDensity.getRefHM().get("concentrationModel"),null);
                     }
-                    
-//                    for(Species sp : cell.getBiophysicalProperties().getIntracellularProperties().getSpecies())
-//                    {
-//                        String concModel = sp.getConcentrationModel();
-//                        writeModFile(concModel);
-//                    }
 
                 }
                 else
