@@ -43,7 +43,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 			{
 				if(popsOrComponent.getID().equals(population))
 				{
-					popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
+					popComp = popsOrComponent.getRefComponents().get("component");
 				}
 			}
 		}
