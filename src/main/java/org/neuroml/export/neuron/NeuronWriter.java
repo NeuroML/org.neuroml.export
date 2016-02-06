@@ -224,9 +224,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             Component simCpt = target.getComponent();
 
-            String targetId = simCpt.getStringValue("target");
-
-            Component targetComp = lems.getComponent(targetId);
+            Component targetComp = simCpt.getRefComponents().get("target");
             String info = "Adding simulation " + simCpt + " of network/component: " + targetComp.summary();
 
             E.info(info);
@@ -273,10 +271,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION))
                 {
-                    //compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
                     number = Integer.parseInt(popsOrComponent.getStringValue(NeuroMLElements.POPULATION_SIZE));
                     popComp = popsOrComponent.getRefComponents().get("component");
-                    //popComp = lems.getComponent(compReference);
                     popName = popsOrComponent.getID();
                     popIdsVsCellIds.put(popName, popComp.getID());
                     popIdsVsComps.put(popName, popComp);
@@ -285,7 +281,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     compReference = popsOrComponent.getStringValue(NeuroMLElements.POPULATION_COMPONENT);
                     popComp = popsOrComponent.getRefComponents().get("component");
-                    //popComp = lems.getComponent(compReference);
                     number = 0;
                     for(Component instance : popsOrComponent.getAllChildren())
                     {
@@ -516,7 +511,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", id, prePop, postPop, synapse, number));
                 
-                //Component synapseComp = lems.getComponent(synapse);
                 Component synapseComp = projection.getRefComponents().get("synapse");
 
                 String mod = generateModFile(synapseComp);
@@ -604,10 +598,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             synapticConnections.addAll(targetComp.getChildrenAL("synapticConnectionWDs"));
 
             /* First, group connections by synapse type */
-            HashMap<String, ArrayList<Component>> connectionsByType = new HashMap<String, ArrayList<Component>>();
+            HashMap<Component, ArrayList<Component>> connectionsByType = new HashMap<Component, ArrayList<Component>>();
             for(Component connection : synapticConnections)
             {
-                String synType = connection.getStringValue("synapse");
+                Component synType = connection.getRefComponents().get("synapse");
                 if(connectionsByType.containsKey(synType) == false)
                 {
                     connectionsByType.put(synType, new ArrayList<Component>());
@@ -615,23 +609,22 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 connectionsByType.get(synType).add(connection);
             }
 
-            for(Map.Entry<String, ArrayList<Component>> entry : connectionsByType.entrySet())
+            for(Map.Entry<Component, ArrayList<Component>> entry : connectionsByType.entrySet())
             {
 
-                String synType = entry.getKey();
+                Component synapseComp = entry.getKey();
                 ArrayList<Component> connections = entry.getValue();
 
-                Component synapseComp = lems.getComponent(synType);
 
                 /* Generate a .mod file for the synapse type (if one doesn't already exist) */
                 String mod = generateModFile(synapseComp);
                 dumpModToFile(synapseComp, mod);
 
                 /* Array of synapses of this type */
-                String info0 = String.format("Adding synapse %s used in %s connections", synType, connections.size());
+                String info0 = String.format("Adding synapse %s used in %s connections", synapseComp.getID(), connections.size());
                 addComment(main, info0);
 
-                String synArrayName = String.format("synapses_%s", synType);
+                String synArrayName = String.format("synapses_%s", synapseComp.getID());
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synArrayName, connections.size()));
 
                 for(int i = 0; i < connections.size(); i++)
@@ -672,7 +665,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String info1 = String.format("Adding connection from %s to %s", fromRef, toRef);
                     addComment(main, info1);
 
-                    main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synType, 0.5));
+                    main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synapseComp.getID(), 0.5));
 
                     float delay = connection.hasParam("delay") ? (float) connection.getParamValue("delay").getDoubleValue() * 1000 : 0.0f;
                     float weight = connection.hasParam("weight") ? (float) connection.getParamValue("weight").getDoubleValue() : 1.0f;
@@ -740,15 +733,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 // System.out.println(info0);
                 addComment(main, info0);
 
-                String synapse = ep.getChildrenAL("connections").get(0).getStringValue("synapse");
-
-                Component synapseComp = lems.getComponent(synapse);
+                Component synapseComp = ep.getChildrenAL("connections").get(0).getRefComponents().get("synapse");
 
                 String mod = generateModFile(synapseComp);
                 dumpModToFile(synapseComp, mod);
 
-                String synObjNameA = String.format("syn_%s_%s_A", id, synapse);
-                String synObjNameB = String.format("syn_%s_%s_B", id, synapse);
+                String synObjNameA = String.format("syn_%s_%s_A", id, synapseComp.getID());
+                String synObjNameB = String.format("syn_%s_%s_B", id, synapseComp.getID());
 
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synObjNameA, number));
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synObjNameB, number));
@@ -793,8 +784,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postSecName = postPop + "[" + postCellId + "]";
                         }
 
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapse, preFractionAlong));
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapse, postFractionAlong));
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapseComp.getID(), preFractionAlong));
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapseComp.getID(), postFractionAlong));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
@@ -833,19 +824,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 // System.out.println(info0);
                 addComment(main, info0);
 
-                String pre = ep.getChildrenAL("connections").get(0).getStringValue("preComponent");
-                String post = ep.getChildrenAL("connections").get(0).getStringValue("postComponent");
-
-                Component preComponent = lems.getComponent(pre);
-                Component postComponent = lems.getComponent(post);
+                Component preComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("preComponent");
+                Component postComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("postComponent");
 
                 String preMod = generateModFile(preComponent);
                 dumpModToFile(preComponent, preMod);
                 String postMod = generateModFile(postComponent);
                 dumpModToFile(postComponent, postMod);
 
-                String preCompObjName = String.format("syn_%s_%s_pre", id, pre);
-                String postCompObjName = String.format("syn_%s_%s_post", id, post);
+                String preCompObjName = String.format("syn_%s_%s_pre", id, preComponent.getID());
+                String postCompObjName = String.format("syn_%s_%s_post", id, postComponent.getID());
 
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", preCompObjName, number));
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", postCompObjName, number));
@@ -890,8 +878,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postSecName = postPop + "[" + postCellId + "]";
                         }
 
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, pre, preFractionAlong));
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, post, postFractionAlong));
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFractionAlong));
+                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFractionAlong));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
@@ -912,9 +900,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(Component inputList : inputLists)
             {
-                //String inputReference = inputList.getStringValue("component");
-                //Component inputComp = lems.getComponent(inputReference);
-            	
             	Component inputComp = inputList.getRefComponents().get("component");
 
                 String mod = generateModFile(inputComp);
@@ -1238,17 +1223,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private void writeModFile(String compName) throws LEMSException
-    {
-        writeModFile(compName, null);
-    }
-
-    
     private void writeModFile(Component comp, ChannelConductanceOption option) throws LEMSException
     {
         if(!generatedModComponents.contains(comp.getID()))
         {
-//            Component comp = lems.getComponent(compName);
             String mod = generateModFile(comp, option);
             generatedModComponents.add(comp.getID());
 
@@ -1256,18 +1234,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
     
-    private void writeModFile(String compName, ChannelConductanceOption option) throws LEMSException
-    {
-        if(!generatedModComponents.contains(compName))
-        {
-            Component comp = lems.getComponent(compName);
-            String mod = generateModFile(comp, option);
-            generatedModComponents.add(compName);
-
-            dumpModToFile(comp, mod);
-        }
-    }
-
     private void dumpModToFile(Component comp, String mod) throws ContentError
     {
         File modFile = new File(getOutputFolder(), NRNUtils.getSafeName(comp.getID()) + ".mod");
