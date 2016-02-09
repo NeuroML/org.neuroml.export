@@ -20,6 +20,8 @@ import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.Unit;
+import org.lemsml.jlems.core.type.dynamics.ConditionalDerivedVariable;
+import org.lemsml.jlems.core.type.dynamics.Case;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.Dynamics;
 import org.lemsml.jlems.core.type.dynamics.OnCondition;
@@ -119,7 +121,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			Target target = lems.getTarget();
 
 			Component simCpt = target.getComponent();
-			E.info("simCpt: " + simCpt);
+			//E.info("simCpt: " + simCpt);
 
 			String targetId = simCpt.getStringValue("target");
 
@@ -323,7 +325,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		if(dim.getName().equals("voltage")) return "volt";
 		if(dim.getName().equals("conductance")) return "siemens";
 		if(dim.getName().equals("time")) return "second";
-		if(dim.getName().equals("per_time")) return "1/second";
+		if(dim.getName().equals("per_time")) return "second**-1";
 		if(dim.getName().equals("capacitance")) return "farad";
 		if(dim.getName().equals("current")) return "amp";
 		if(dim.getName().equals("current")) return "amp";
@@ -355,8 +357,8 @@ public class BrianWriter extends ANeuroMLBaseWriter
 	}
 
 	public void getCompEqns(CompInfo compInfo, Component compOrig, String popName, ArrayList<String> stateVars, String prefix) throws ContentError, ParseError
-	{
-
+    {
+        
 		ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
 
 		ComponentType ctFlat;
@@ -384,31 +386,14 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			throw new ParseError("Error when flattening component: " + compOrig, e);
 		}
 
-		LemsCollection<Parameter> ps = ctFlat.getDimParams();
+		LemsCollection<Parameter> parameters = ctFlat.getDimParams();
 		/*
 		 * String localPrefix = comp.getID()+"_";
 		 * 
 		 * if (comp.getID()==null) localPrefix = comp.getName()+"_";
 		 */
 
-		for(Constant c : ctFlat.getConstants())
-		{
-			String units = "";
-			if(!c.getDimension().getName().equals(Dimension.NO_DIMENSION)) units = " * " + getBrianSIUnits(c.getDimension());
-
-			compInfo.params.append(prefix + c.getName() + " = " + (float) c.getValue() + units + " \n");
-		}
-
-		for(Parameter p : ps)
-		{
-			ParamValue pv = cpFlat.getParamValue(p.getName());
-			String units = " * " + getBrianSIUnits(p.getDimension());
-			if(units.contains(Unit.NO_UNIT)) units = "";
-			String val = pv == null ? "???" : (float) pv.getDoubleValue() + "";
-			compInfo.params.append(prefix + p.getName() + " = " + val + units + " \n");
-		}
-
-		if(ps.size() > 0) compInfo.params.append("\n");
+		//if(ps.size() > 0) compInfo.params.append("\n");
 
 		Dynamics dyn = ctFlat.getDynamics();
 		LemsCollection<TimeDerivative> tds = dyn.getTimeDerivatives();
@@ -422,6 +407,33 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			String expr = td.getValueExpression();
 			expr = expr.replace("^", "**");
 			compInfo.eqns.append("    d" + localName + "/dt = " + expr + " : " + units + "\n");
+		}
+        
+        for(Constant c : ctFlat.getConstants())
+		{
+			String units = "";
+			String unitsPost = ": 1";
+			if(!c.getDimension().getName().equals(Dimension.NO_DIMENSION)) 
+            {
+                units = " * " + getBrianSIUnits(c.getDimension());
+                unitsPost = " : " + getBrianSIUnits(c.getDimension());
+            }
+
+			compInfo.eqns.append("    "+prefix + c.getName() + " = " + (float) c.getValue() + units + unitsPost + " \n");
+		}
+
+		for(Parameter p : parameters)
+		{
+			String units = "";
+			String unitsPost = ": 1";
+			ParamValue pv = cpFlat.getParamValue(p.getName());
+            if(!pv.getDimensionName().equals(Dimension.NO_DIMENSION)) {
+                units = " * " + getBrianSIUnits(p.getDimension());
+                unitsPost = " : " + getBrianSIUnits(p.getDimension());
+            }
+            
+			String val = pv == null ? "???" : (float) pv.getDoubleValue() + "";
+			compInfo.eqns.append("    "+prefix + p.getName() + " = " + val + units + unitsPost + " \n");
 		}
 
 		for(StateVariable svar : dyn.getStateVariables())
@@ -451,6 +463,35 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			expr = expr.replace("^", "**");
 			compInfo.eqns.append("    " + prefix + edv.getName() + " = " + expr + " : " + units + "\n");
 		}
+        
+		LemsCollection<ConditionalDerivedVariable> condDevVar = dyn.getConditionalDerivedVariables();
+		for(ConditionalDerivedVariable cdv : condDevVar)
+		{
+			String units = " " + getBrianSIUnits(cdv.getDimension());
+			if(units.contains(Unit.NO_UNIT)) units = " 1";
+
+			String exprFull = "";
+            String exprDefault = "None";
+            String exprFinal="";
+            for (Case case_: cdv.cases) {
+                String iftrue = case_.getValueExpression();
+                if(iftrue.startsWith("0 ")) iftrue = "(0 *" + units + ") " + iftrue.substring(2);
+                if(iftrue.equals("0")) iftrue = iftrue + " * " + units;
+                iftrue = iftrue.replace("^", "**");
+                String condition;
+                if (case_.condition!=null) {
+                    condition = formatCondition(case_.condition);
+                } else {
+                    condition = "True";
+                }
+                exprFull = exprFull+ iftrue +" if "+condition+" else (";
+                exprFinal = exprFinal +")";
+            }
+            exprFull = exprFull + exprDefault;
+            exprFull = exprFull + exprFinal;
+            
+			compInfo.eqns.append("    " + prefix + cdv.getName() + " = " + exprFull + " : " + units + "\n");
+		}
 
 		LemsCollection<OnStart> initBlocks = dyn.getOnStarts();
 
@@ -477,12 +518,21 @@ public class BrianWriter extends ANeuroMLBaseWriter
 						}
 					}
 				}
-
 				for(DerivedVariable edv : expDevVar)
 				{
 					initVal = Utils.replaceInExpression(initVal, edv.getName(), popName + "." + prefix + edv.getName());
 				}
-				compInfo.initInfo.append(popName + "." + prefix + va.getStateVariable().getName() + " = " + initVal + "\n");
+				for(Parameter p : parameters)
+				{
+					initVal = Utils.replaceInExpression(initVal, p.getName(), popName + "." + prefix + p.getName());
+				}
+                if (brian2) {
+                    // hhpop.variables['kChans_k_n_q'].set_value(0.5)
+                    compInfo.initInfo.append(""+popName + "." + prefix + va.getStateVariable().getName() + " = " + initVal + "\n");
+                    //compInfo.initInfo.append(popName + ".variables['" + prefix + va.getStateVariable().getName() + "'].set_value(" + initVal + ")\n");
+                } else {
+                    compInfo.initInfo.append(popName + "." + prefix + va.getStateVariable().getName() + " = " + initVal + "\n");
+                }
 			}
 
 		}
@@ -491,14 +541,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		{
 			if(oc.test.startsWith("v .gt."))
 			{
-                String test = oc.test.replace(".gt.", ">");
-                test = test.replace(".lt.", "<");
-                test = test.replace(".leq.", "<=");
-                test = test.replace(".geq.", ">=");
-                test = test.replace(".eq.", "==");
-                test = test.replace(".neq.", "!=");
-                test = test.replace(".and.", "and");
-                test = test.replace(".or.", "or");
+                String test = formatCondition(oc.test);
                 
 				compInfo.conditionInfo.append(", threshold = '" + test + "'");
 				for(StateAssignment sa : oc.stateAssignments)
@@ -512,6 +555,18 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		}
 
 	}
+    
+    private String formatCondition(String cond) {
+        String newCond = cond.replace(".gt.", ">");
+        newCond = newCond.replace(".lt.", "<");
+        newCond = newCond.replace(".leq.", "<=");
+        newCond = newCond.replace(".geq.", ">=");
+        newCond = newCond.replace(".eq.", "==");
+        newCond = newCond.replace(".neq.", "!=");
+        newCond = newCond.replace(".and.", "and");
+        newCond = newCond.replace(".or.", "or");
+        return newCond;
+    }
 
 	public static void main(String[] args) throws Exception
 	{
@@ -519,9 +574,11 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		ArrayList<File> lemsFiles = new ArrayList<File>();
         
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        ///lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
 		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
-		lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
-		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+		//lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
+		//lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
 		//lemsFiles.add(new File("../git/PinskyRinzelModel/NeuroML2/LEMS_Figure3.xml"));
 
         
@@ -541,10 +598,13 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
             FileUtil.writeStringToFile(br, brFile);
             
-            lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            Sim sim = Utils.readLemsNeuroMLFile(lemsFile);
+            sim.build();
+            sim.getCurrentRootState();
+            lems = sim.getLems();
             bw = new BrianWriter(lems);
             
-            bw.setBrian2(false);
+            bw.setBrian2(true);
 
             br = bw.getMainScript();
 
