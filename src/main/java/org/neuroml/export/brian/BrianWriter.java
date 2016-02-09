@@ -3,6 +3,7 @@ package org.neuroml.export.brian;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.lemsml.jlems.core.expression.ParseError;
@@ -169,7 +170,34 @@ public class BrianWriter extends ANeuroMLBaseWriter
 					sb.append(pop.getID() + " = NeuronGroup(" + size + ", model=" + prefix + "eqs" + flags + compInfo.conditionInfo + ")\n");
 
 					sb.append(compInfo.initInfo.toString());
-				}
+					sb.append("# Initialise a second time...\n");
+					sb.append(compInfo.initInfo.toString());
+                    
+					sb.append("\n\n# Inputs\n");
+                    
+                    ArrayList<Component> explicitInputs = tgtNet.getChildrenAL("explicitInputs");
+
+                    for(Component explInput : explicitInputs)
+                    {
+                        HashMap<String, Component> inputReference = explInput.getRefComponents();
+
+                        Component inputComp = inputReference.get("input");
+                        String destination = explInput.getTextParam("destination");
+                        String targetComp = explInput.getAttributeValue("target");
+                        
+                        addComment(sb, "   Input " + inputComp.getID() + " on: " + destination + " of "+targetComp);
+
+                        compInfo = new CompInfo();
+                        stateVars = new ArrayList<String>();
+
+                        getCompEqns(compInfo, inputComp, "???", stateVars, "");
+                        
+                        sb.append("'''\n");
+                        sb.append(compInfo.eqns.toString());
+                        sb.append("'''\n\n");
+
+                    }
+                }
 			}
 			else
 			{
@@ -190,6 +218,8 @@ public class BrianWriter extends ANeuroMLBaseWriter
 				sb.append(DEFAULT_POP + " = NeuronGroup(" + "1" + ", model=" + prefix + "eqs" + flags + ")\n");
 
 				sb.append(compInfo.initInfo.toString());
+                sb.append("# Initialise a second time...\n");
+                sb.append(compInfo.initInfo.toString());
 			}
 
 			StringBuilder preRunSave = new StringBuilder();
