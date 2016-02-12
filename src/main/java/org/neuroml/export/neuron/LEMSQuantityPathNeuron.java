@@ -175,23 +175,19 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 
 	public String getNeuronVariableReference() throws ContentError, NeuroMLException
 	{
-
 		if(myType == Type.VAR_IN_SINGLE_COMP)
 		{
 			String hoc = getPopulation() + targetComp.getName() + "[i]";
 			String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
 			String varRef = mechRef + "." + getVariable();
 			return varRef;
-
 		}
 		else
 		{
-
 			if(popComp != null
 					&& (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || popComp
 							.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
 			{
-
 				if(compIdsVsCells.containsKey(popComp.getID()))
 				{
 					Cell cell = compIdsVsCells.get(popComp.getID());
@@ -224,20 +220,17 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 					}
 					return varRef;
 				}
-
 			}
 			else
 			{
 				String hoc = population + "[i]";
-				// System.out.println(this);
-				// System.out.println(popComp);
 				String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
 				String varRef = mechRef + "." + getVariable();
 				return varRef;
 			}
 		}
-
 	}
+    
 
 	@Override
 	public String toString()

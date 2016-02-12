@@ -39,6 +39,7 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.core.type.dynamics.Transition;
+import org.lemsml.jlems.core.type.simulation.EventWriter;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
@@ -1112,7 +1113,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             HashMap<String, String> outfiles = new HashMap<String, String>();
             HashMap<String, ArrayList<String>> columnsPre = new HashMap<String, ArrayList<String>>();
             HashMap<String, ArrayList<String>> columnsPost0 = new HashMap<String, ArrayList<String>>();
-            HashMap<String, ArrayList<String>> columnsPost = new HashMap<String, ArrayList<String>>();
+            HashMap<String, ArrayList<String>> columnsPostTraces = new HashMap<String, ArrayList<String>>();
+            HashMap<String, ArrayList<String>> columnsPostSpikes = new HashMap<String, ArrayList<String>>();
 
             String timeRef = "time";
             String timefileName = target.timesFile != null ? target.timesFile : "time.dat";
@@ -1120,7 +1122,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             columnsPre.put(timeRef, new ArrayList<String>());
             columnsPost0.put(timeRef, new ArrayList<String>());
-            columnsPost.put(timeRef, new ArrayList<String>());
+            columnsPostTraces.put(timeRef, new ArrayList<String>());
+            columnsPostSpikes.put(timeRef, new ArrayList<String>());
 
             columnsPre.get(timeRef).add("# Column: " + timeRef);
             columnsPre.get(timeRef).add("h(' objectvar v_" + timeRef + " ')");
@@ -1130,38 +1133,35 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             columnsPost0.get(timeRef).add("py_v_" + timeRef + " = [ t/1000 for t in h.v_" + timeRef + ".to_python() ]  # Convert to Python list for speed...");
 
-            columnsPost.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% py_v_" + timeRef + "[i])  # Save in SI units...");
+            columnsPostTraces.get(timeRef).add("    f_" + timeRef + "_f2.write('%f'% py_v_" + timeRef + "[i])  # Save in SI units...");
 
             for(Component ofComp : simCpt.getAllChildren())
             {
                 if(ofComp.getTypeName().equals("OutputFile"))
                 {
-
                     String outfileId = ofComp.getID().replaceAll(" ", "_");
                     outfiles.put(outfileId, ofComp.getTextParam("fileName"));
                     if(columnsPre.get(outfileId) == null)
                     {
                         columnsPre.put(outfileId, new ArrayList<String>());
                     }
-                    if(columnsPost.get(outfileId) == null)
+                    if(columnsPostTraces.get(outfileId) == null)
                     {
-                        columnsPost.put(outfileId, new ArrayList<String>());
+                        columnsPostTraces.put(outfileId, new ArrayList<String>());
                     }
                     if(columnsPost0.get(outfileId) == null)
                     {
                         columnsPost0.put(outfileId, new ArrayList<String>());
                     }
 
-                    columnsPost.get(outfileId).add("    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
+                    columnsPostTraces.get(outfileId).add("    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
 
                     ArrayList<String> colIds = new ArrayList<String>();
 
                     for(Component colComp : ofComp.getAllChildren())
                     {
-
                         if(colComp.getTypeName().equals("OutputColumn"))
                         {
-
                             String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
                             while(colIds.contains(colId))
                             {
@@ -1185,9 +1185,99 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             columnsPost0.get(outfileId).add(
                                     "py_v_" + colId + " = [ float(x " + factor + ") for x in h.v_" + colId + ".to_python() ]  # Convert to Python list for speed, variable has dim: " + lqp.getDimension().getName());
 
-                            columnsPost.get(outfileId).add(
+                            columnsPostTraces.get(outfileId).add(
                                     " + '%e\\t'%(py_v_" + colId + "[i]) ");
 
+                        }
+                    }
+                }
+                if(ofComp.getTypeName().equals("EventOutputFile"))
+                {
+                    String outfileId = ofComp.getID().replaceAll(" ", "_");
+                    outfiles.put(outfileId, ofComp.getTextParam("fileName"));
+                    String format = ofComp.getTextParam("format");
+                    if(columnsPre.get(outfileId) == null)
+                    {
+                        columnsPre.put(outfileId, new ArrayList<String>());
+                    }
+                    if(columnsPostSpikes.get(outfileId) == null)
+                    {
+                        columnsPostSpikes.put(outfileId, new ArrayList<String>());
+                    }
+                    if(columnsPost0.get(outfileId) == null)
+                    {
+                        columnsPost0.put(outfileId, new ArrayList<String>());
+                    }
+
+                    ArrayList<String> colIds = new ArrayList<String>();
+
+                    String spikeVecName = "spiketimes_" + outfileId;
+                    String ncName = "netConnSpike_" + outfileId;
+                    columnsPre.get(outfileId).add("h(' objectvar " + spikeVecName + ", t_" + spikeVecName + " ')");
+                    columnsPre.get(outfileId).add("h(' { " + spikeVecName + " = new Vector() } ')");
+                    columnsPre.get(outfileId).add("h(' { t_" + spikeVecName + " = new Vector() } ')");
+                    columnsPre.get(outfileId).add("h(' objref "+ncName+", nil ')");
+
+                    columnsPostSpikes.get(outfileId).add("h(' objref "+ncName+" ')");
+                    
+                    columnsPostSpikes.get(outfileId).add("spike_ids = h." + spikeVecName + ".to_python()  ");
+                    columnsPostSpikes.get(outfileId).add("spike_times = h.t_" + spikeVecName + ".to_python()");
+                    columnsPostSpikes.get(outfileId).add("for i, id in enumerate(spike_ids):");
+                    columnsPostSpikes.get(outfileId).add("    # Saving in format: "+format);
+                    if (format.equals(EventWriter.FORMAT_TIME_ID)) 
+                    {
+                        columnsPostSpikes.get(outfileId).add("    f_" + outfileId + "_f2.write(\"%s\\t%i\\n\"%(spike_times[i],id))");
+                    } 
+                    else if (format.equals(EventWriter.FORMAT_ID_TIME)) 
+                    {
+                        columnsPostSpikes.get(outfileId).add("    f_" + outfileId + "_f2.write(\"%i\\t%s\\n\"%(id,spike_times[i]))");
+                    }
+                    
+
+                    for(Component colComp : ofComp.getAllChildren())
+                    {
+                        if(colComp.getTypeName().equals("EventSelection"))
+                        {
+                            String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
+                            while(colIds.contains(colId))
+                            {
+                                colId += "_";
+                            }
+                            colIds.add(colId);
+                            String select = colComp.getStringValue("select");
+                            String id = colComp.getID();
+                            
+                            int srcCellNum = Utils.parseCellRefStringForCellNum(select);
+                            String srcCellPop = Utils.parseCellRefStringForPopulation(select);
+                            Cell srcCell = compIdsVsCells.get(popIdsVsCellIds.get(srcCellPop));
+                            String srcSecName;
+                            float threshold = 0;
+
+                            if(srcCell != null)
+                            {
+                                NamingHelper nh0 = new NamingHelper(srcCell);
+                                srcSecName = String.format("a_%s[%s].%s", srcCellPop, srcCellNum, nh0.getNrnSectionName(srcCell.getMorphology().getSegment().get(0)));
+                                SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                                if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL)) 
+                                {
+                                    throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                                }
+                                threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                            }
+                            else
+                            {
+                                srcSecName = srcCellPop + "[" + srcCellNum + "]";
+                                Component preComp = popIdsVsComps.get(srcCellPop);
+                                if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
+                                {
+                                    threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("thresh"), lems);
+                                }
+                            }
+                            
+                            columnsPre.get(outfileId).add("# Column: " + select+" ("+id+") "+srcSecName);
+                            columnsPre.get(outfileId).add("h(' "+srcSecName+" { "+ncName+" = new NetCon(&v(0.5), nil, "+threshold+", 0, 1) } ')");
+                            columnsPre.get(outfileId).add("h(' { "+ncName+".record(t_"+spikeVecName+", "+spikeVecName+", "+id+") } ')");
+                            
                         }
                     }
                 }
@@ -1196,8 +1286,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             for(String f : outfiles.keySet())
             {
                 addComment(main, "File to save: " + f);
-                // main.append(f + " = ???\n");
-
                 for(String col : columnsPre.get(f))
                 {
                     main.append(col + "\n");
@@ -1235,27 +1323,32 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             for(String f : refList)
             {
                 addComment(main, "File to save: " + f);
-                // String contents = "f_" + f + "_contents";
-                // main.append(contents+" = ''\n");
                 for(String col : columnsPost0.get(f))
                 {
                     main.append(col + "\n");
                 }
-                main.append("\n");
-
-                main.append("f_" + f + "_f2 = open('" + outfiles.get(f) + "', 'w')\n");
-                main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
-                for(String col : columnsPost.get(f))
+                main.append("\nf_" + f + "_f2 = open('" + outfiles.get(f) + "', 'w')\n");
+                
+                if (columnsPostTraces.containsKey(f)) 
                 {
-                    main.append(col);
+                    main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
+                    for(String col : columnsPostTraces.get(f))
+                    {
+                        main.append(col);
+                    }
+                    main.append("+ '\\n\')\n");
                 }
-                main.append("+ '\\n\')\n");
-
-                // main.append("f_" + f + "_f2.write(f_" + f + "_contents)\n");
+                if (columnsPostSpikes.containsKey(f)) 
+                {
+                    //main.append("for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
+                    for(String col : columnsPostSpikes.get(f))
+                    {
+                        main.append(""+col+"\n");
+                    }
+                    //main.append("+ '\\n\')\n");
+                }
                 main.append("f_" + f + "_f2.close()\n");
-                main.append("print(\"Saved data to: " + outfiles.get(f) + "\")\n");
-
-                main.append("\n");
+                main.append("print(\"Saved data to: " + outfiles.get(f) + "\")\n\n");
             }
 
             main.append("save_end = time.time()\n");
