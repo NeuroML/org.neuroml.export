@@ -691,6 +691,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         Component fromComp = popIdsVsComps.get(fromPop);
                         float fract = 0.5f;
                         String sourceVarToListenFor = "&v("+fract+")";
+                        float threshold = 0;
+                        
+                        if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
+                        {
+                            threshold = NRNUtils.convertToNeuronUnits(fromComp.getStringValue("thresh"), lems);
+                        }
 
                         if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                         {
@@ -698,7 +704,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             sourceVarToListenFor = hocMechName;
                         }
 
-                        main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], 0, %g, %g))\") # ...\n\n", fromSecName, toPop, toCellId, sourceVarToListenFor, synArrayName, i, delay, weight));
+                        main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], %g, %g, %g))\") # ...\n\n", fromSecName, toPop, toCellId, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
                     }
                     else
                     {
@@ -2819,10 +2825,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         /*
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_Soma_Test_HELPER.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
