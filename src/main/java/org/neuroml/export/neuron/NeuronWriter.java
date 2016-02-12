@@ -264,7 +264,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(Component popsOrComponent : popsOrComponents)
             {
-
                 String compReference;
                 String popName;
                 int number;
@@ -924,8 +923,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-
-
             ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
 
             for(Component inputList : inputLists)
@@ -969,7 +966,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(String.format("h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName, NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
 
                 }
-
             }
 
             ArrayList<Component> explicitInputs = targetComp.getChildrenAL("explicitInputs");
@@ -1010,7 +1006,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
                 main.append(String.format("h(\"%s { %s = new %s(0.5) } \")\n\n", secName, inputName, safeName));
-
             }
 
             main.append("trec = h.Vector()\n");
@@ -1027,7 +1022,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     if(dispComp.getTypeName().equals("Display"))
                     {
-
                         String dispId = dispComp.getID();
                         int plotColour = 1;
 
@@ -1041,7 +1035,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             if(lineComp.getTypeName().equals("Line"))
                             {
-
                                 String quantity = lineComp.getStringValue("quantity");
                                 String scale = lineComp.getStringValue("scale");
 
@@ -1337,13 +1330,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.neuronCellTemplateFile));
         cellString.append(sw1.toString());
         return cellString.toString();
-
     }
 
     // TODO: to be made more general
     public enum SupportedUnits
     {
-
         SI(1, 1, 1, 1, 1, 1, 1), PHYSIOLOGICAL(1000, 1e-6f, 100, 0.1f, 0.1f, 1e-6f, 1e-1f), NEURON(1000, 1e-6f, 100, 100, 1e-4f, 1, 100);
 
         SupportedUnits(float voltageFactor, float lengthFactor, float specCapFactor, float resistivityFactor, float condDensFactor, float concentrationFactor, float permeabilityFactor)
@@ -1411,8 +1402,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
         {
             HashMap<String, String> paramMappingsComp = new HashMap<String, String>();
-            // /paramMappingsComp.put(NEURON_VOLTAGE,
-            // NRNUtils.getStateVarName(NEURON_VOLTAGE));
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
 
@@ -1476,15 +1465,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(condOption == null || (condOption.equals(ChannelConductanceOption.USE_NERNST)))
                 {
-
                     readRevPot = "READ e" + species + " ";
-
                 }
                 else if(condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL))
                 {
-
                     blockInitial.append("e" + species + " = " + condOption.erev + "\n\n");
-
                 }
                 else if(condOption.equals(ChannelConductanceOption.USE_GHK))
                 {
@@ -1508,15 +1493,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(species.contains("ca"))
                 {
-
                     blockNeuron.append("USEION " + species + " " + readRevPot + "WRITE i" + species + " VALENCE 2 ? Assuming valence = 2 (Ca ion); TODO check this!!\n");
-
                 }
                 else
                 {
-
                     blockNeuron.append("USEION " + species + " " + readRevPot + "WRITE i" + species + " VALENCE 1 ? Assuming valence = 1; TODO check this!!\n");
-
                 }
             }
 
@@ -1524,22 +1505,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             if(condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL) || condOption.equals(ChannelConductanceOption.USE_NERNST))
             {
-
                 blockNeuron.append("\nRANGE gmax                              : Will be changed when ion channel mechanism placed on cell!\n");
                 blockParameter.append("\ngmax = 0  (S/cm2)                       : Will be changed when ion channel mechanism placed on cell!\n");
-
             }
             else if(condOption.equals(ChannelConductanceOption.USE_GHK))
             {
                 blockNeuron.append("\nRANGE permeability                      : Will be changed when ion channel mechanism placed on cell!\n");
                 blockParameter.append("\npermeability = 0  (cm/s)                       : Will be changed when ion channel mechanism placed on cell!\n");
-
                 blockNeuron.append("RANGE cai\n");
                 blockNeuron.append("RANGE cao\n");
-
                 blockAssigned.append("cai (mM)\n");
                 blockAssigned.append("cao (mM)\n");
-
             }
 
             blockAssigned.append("\ngion   (S/cm2)                          : Transient conductance density of the channel");
@@ -1581,8 +1557,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             ratesMethod.append(totalCaCurrent + " = -1 * (0.01) * i"+ion+" * " + NeuroMLElements.CONC_MODEL_SURF_AREA
                     + " :   "+totalCaCurrent+" has units "+NRNUtils.getNeuronUnit("current")+" ; i"+ion+" (built in to NEURON) has units (mA/cm2)...\n\n");
 
-            // locals.add(NeuroMLElements.CONC_MODEL_SURF_AREA);
-            // locals.add(NeuroMLElements.CONC_MODEL_CA_CURR_DENS);
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_CONC + "\n");
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + "\n");
             blockParameter.append(NeuroMLElements.CONC_MODEL_INIT_CONC + " "+NRNUtils.getNeuronUnit("concentration")+"\n");
@@ -1668,10 +1642,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
         }
 
-        // ratesMethod.append("? - \n");
         parseDerivedVars(comp, prefix, rangeVars, ratesMethod, blockNeuron, blockParameter, blockAssigned, blockBreakpoint, paramMappings);
 
-        // ratesMethod.append("? + \n");
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
         {
 
@@ -1705,7 +1677,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
             // ratesMethod.append("i = -1 * i ? Due to different convention in synapses\n");
-
         }
 
         parseTimeDerivs(comp, prefix, locals, blockDerivative, blockBreakpoint, blockAssigned, ratesMethod, paramMappings, ionSpecies);
@@ -1725,7 +1696,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             HashMap<String,ArrayList<String>> inRates = new HashMap<String, ArrayList<String>>();
             HashMap<String,ArrayList<String>> outRates = new HashMap<String, ArrayList<String>>();
                 
-            
             String conserve = "";
             
             String prefix2 = prefix;
@@ -1803,7 +1773,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
         }
 
-        //ArrayList<String> regimeNames = new ArrayList<String>();
         HashMap<String, Integer> flagsVsRegimes = new HashMap<String, Integer>();
 
         if(comp.getComponentType().hasDynamics())
@@ -1816,22 +1785,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 regimeFlag++;
             }
 
-            // //String elsePrefix = "";
             for(Regime regime : comp.getComponentType().getDynamics().getRegimes())
             {
                 String regimeStateName = NRNUtils.REGIME_PREFIX + regime.name;
-                //regimeNames.add(regimeStateName);
-
-                // StringBuilder test = new
-                // StringBuilder(": Testing for "+regimeStateName+ "\n");
-                // test.append(elsePrefix+"if ("+regimeStateName+" == 1 ) {\n");
-                // elsePrefix = "else ";
-                // blockNetReceive.append("if ("+regimeStateName+" == 1 && flag == "+regimeFlag+") { "
-                // +
-                // ": Setting watch for OnCondition in "+regimeStateName+"...\n");
-                // ////////blockNetReceive.append("    WATCH (" +
-                // NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) +
-                // ") "+conditionFlag+"\n");
                 for(OnCondition oc : regime.getOnConditions())
                 {
 
@@ -1861,9 +1817,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         blockNetReceive.append("\n        : Change regime flags\n");
                         blockNetReceive.append("        " + regimeStateName + " = 0\n");
                         blockNetReceive.append("        " + NRNUtils.REGIME_PREFIX + trans.regime + " = 1\n");
-                        // int flagTarget =
-                        // flagsVsRegimes.get(trans.getRegime());
-                        // test.append("    net_send(0,"+flagTarget+") : Sending to regime_"+trans.getRegime()+"\n");
 
                         Regime targetRegime = comp.getComponentType().getDynamics().getRegimes().getByName(trans.regime);
                         if(targetRegime != null)
@@ -1888,10 +1841,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     blockNetReceive.append("}\n");
 
                 }
-                // blockNetReceive.append("}\n");
-                // blockBreakpoint_regimes.insert(0, test.toString()+ "\n");
-                // blockBreakpoint_regimes.append(blockNetReceive.toString()+
-                // "\n");
                 regimeFlag++;
             }
         }
@@ -1916,8 +1865,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
 
         ratesMethod.insert(0, localsLine);
-        // blockDerivative.insert(0, localsLine);
-
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE) || comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
@@ -1934,10 +1881,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, blockNetReceive, paramMappings, lems);
 
-        /*
-         * for (OnStart os : comp.getComponentClass().getDynamics().getOnStarts()) { for (StateAssignment sa : os.getStateAssignments()) { blockInitial.append("\n" +
-         * NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = " + sa.getEvaluable() + "\n"); } }
-         */
         int conditionFlag = 1000;
         Dynamics dyn = comp.getComponentType().getDynamics();
 
@@ -1950,33 +1893,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockBreakpoint.append("\n"+ionSpecies+"i = " + NeuroMLElements.CONC_MODEL_CONC_STATE_VAR + "\n\n");
         }
 
-        // if (comp.getComponentType().hasDynamics()) {
-        // for (Regime regime : comp.getComponentType().getDynamics()
-        // .getRegimes()) {
-        // String regimeStateName = "regime_" + regime.name;
-        // blockNetReceive.append(": Conditions for " + regimeStateName);
-        // int regimeFlag = flagsVsRegimes.get(regime.name);
-        // blockNetReceive.append("if (flag == " + regimeFlag
-        // + ") { : Entry into " + regimeStateName + "\n");
-        // for (String r : regimeNames) {
-        // blockNetReceive.append("    " + r + " = "
-        // + (r.equals(regimeStateName) ? 1 : 0) + "\n");
-        // }
-        // for (OnEntry oe : regime.getOnEntrys()) {
-        //
-        // for (StateAssignment sa : oe.getStateAssignments()) {
-        // blockNetReceive.append("\n    "
-        // + NRNUtils.getStateVarName(sa.getStateVariable()
-        // .getName())
-        // + " = "
-        // + NRNUtils.checkForStateVarsAndNested(sa.getEvaluable()
-        // .toString(), comp, paramMappings)
-        // + "\n");
-        // }
-        // }
-        // blockNetReceive.append("}\n");
-        // }
-        // }
         if(blockInitial_v.toString().trim().length() > 0)
         {
             blockNetReceive.append("if (flag == 1) { : Set initial states\n");
@@ -1991,17 +1907,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
                 {
-                    // blockBreakpoint.append("\ni = " + HIGH_CONDUCTANCE_PARAM
-                    // + "*(v-" + NRNUtils.getStateVarName(NEURON_VOLTAGE) +
-                    // ") ? To ensure v of section rapidly follows " +
-                    // NRNUtils.getStateVarName(sv.getName()));
 
                     blockBreakpoint.append("\n" + NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " = " + NRNUtils.NEURON_VOLTAGE);
 
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
                     {
-                        // blockBreakpoint.append("\ni = -1 * " +
-                        // ABSTRACT_CELL_COMP_TYPE_CAP__I_MEMB + "");
                         blockBreakpoint.append("\ni = " + NRNUtils.getStateVarName(NRNUtils.NEURON_VOLTAGE) + " * C");
                     }
                     else
@@ -2075,7 +1985,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockNetReceive.indexOf("random")>0 ||
             ratesMethod.indexOf("random")>0)
         {
-
             blockFunctions.append(NRNUtils.randomFunctionDefs);
         }
 
@@ -2095,7 +2004,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(comp.getComponentType().hasDynamics())
         {
-
             for(Regime regime : comp.getComponentType().getDynamics().getRegimes())
             {
                 String regimeStateName = NRNUtils.REGIME_PREFIX + regime.name;
@@ -2107,7 +2015,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     blockInitial.append("\n" + regimeStateName + " = 0\n");
                 }
-
             }
             String addAfterwards = "";
             for(OnStart os : comp.getComponentType().getDynamics().getOnStarts())
@@ -2127,11 +2034,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         blockInitial.append("\nnet_send(0, 1) : go to NET_RECEIVE block, flag 1, for initial state\n");
                         blockInitial_v.append("\n    " + var + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
-
                     }
                     else
                     {
-
                         blockInitial.append("\n" + var + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
                     }
                 }
@@ -2273,14 +2178,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 conditionFlag++;
             }
         }
-        /*
-        for(Component childComp : comp.getAllChildren())
-        {
-
-            String prefixNew = getPrefix(childComp, prefix);
-            System.out.println("pp "+prefixNew);
-            parseOnCondition(childComp, prefixNew, blockBreakpoint, blockNetReceive, paramMappings, conditionFlag);
-        }*/
     }
 
     private static void parseOnEvent(Component comp, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings) throws ContentError
@@ -2390,7 +2287,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             //System.out.println("Checking mapping of "+req.getName()+" in "+comp.getID()+" ("+comp.getComponentType().getName()+", "+prefix+") against "+compid+" mapping: "+key+"->"+mapped);
                             if (key.equals(req.getName()) && rootPrefix.equals(mapPrefix))
                             {
-                                //System.out.println("Match!");
                                 mappedName = mapped;
                             }
                         }
@@ -2402,18 +2298,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     paramMappingsComp.put(req.getName(), mappedName);
                 }
             }
-
         }
 
         for(Component childComp : comp.getAllChildren())
         {
-
             String prefixNew = getPrefix(childComp, prefix);
 
             if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see parseOnStart
                 parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
             }
-
         }
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
@@ -2460,11 +2353,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 if(sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
                 {
                     blockNeuron.append("\n\nNONSPECIFIC_CURRENT i                    : To ensure v of section follows " + svName + "\n");
-                    // //blockNeuron.append("\nRANGE " + HIGH_CONDUCTANCE_PARAM
-                    // +
-                    // "                  : High conductance for above current");
-                    // //blockParameter.append("\n\n" + HIGH_CONDUCTANCE_PARAM +
-                    // " = 1000 (S/cm2)");
                     blockAssigned.append("v (mV)\n");
                     blockAssigned.append("i (mA/cm2)\n\n");
 
@@ -2493,8 +2381,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     private static String getPrefix(Component comp, String prefix)
     {
-        // System.out.println("Getting prefix for " + comp);
-        // System.out.println("comp " + comp.getID() + "; d " + comp.getDeclaredType() + "; e " + comp.getExtendsName());
         String prefixNew = prefix + comp.getID() + "_";
         if(comp.getID() == null)
         {
@@ -2508,7 +2394,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     prefixNew = prefix + comp.getDeclaredType() + "_";
                 }
-
             }
             else
             {
@@ -2526,7 +2411,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(comp.getComponentType().hasDynamics())
         {
-
             HashMap<String, String> rateNameVsRateExpr = new HashMap<String, String>();
 
             for(TimeDerivative td : comp.getComponentType().getDynamics().getTimeDerivatives())
@@ -2560,7 +2444,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         blockDerivative.append(line + " \n");
                     }
-
                 }
                 else
                 {
@@ -2630,7 +2513,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             blockDerivative.append(line + " \n");
                         }
-
                     }
                     else
                     {
@@ -2675,9 +2557,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         for(Component childComp : comp.getAllChildren())
         {
-
             String prefixNew = getPrefix(childComp, prefix);
-
             parseDerivedVars(childComp, prefixNew, rangeVars, ratesMethod, blockNeuron, blockParameter, blockAssigned, blockBreakpoint, paramMappings);
         }
 
@@ -2700,7 +2580,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
 
                 StringBuilder block = new StringBuilder();
-
                 String mappedName = prefix + dv.getName();
 
                 if(dv.getPath() != null && instanceRequirements.contains(dv.getPath().split("/")[0]))
