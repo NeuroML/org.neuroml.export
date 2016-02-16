@@ -3,6 +3,7 @@
  */
 package org.neuroml.export.info.model;
 
+import org.neuroml.model.Base;
 import org.neuroml.model.GateHHRates;
 import org.neuroml.model.GateHHRatesInf;
 import org.neuroml.model.GateHHRatesTau;
@@ -32,7 +33,7 @@ public class ChannelInfoExtractor
 				HHRateProcessor rateinfo = new HHRateProcessor(g);
 	
 				gate.put("instances", g.getInstances());
-				generateRatePlots(chan, gate, rateinfo);
+				generateRatePlots(chan, g, gate, rateinfo);
 			}
 			else{
 				gate.put("instances", g.getInstances());
@@ -47,9 +48,9 @@ public class ChannelInfoExtractor
 			HHRateProcessor rateinfo = new HHRateProcessor(g);
 
 			InfoNode gate = new InfoNode();
-
+			
 			gate.put("instances", g.getInstances());
-			generateRatePlots(chan, gate, rateinfo);
+			generateRatePlots(chan, g, gate, rateinfo);
 
 			gates.put("gate " + g.getId(), gate);
 
@@ -85,7 +86,7 @@ public class ChannelInfoExtractor
 			}
 			else
 			{
-				gate.put("steady state ", new ExpressionNode(inf.toString(), "Ion Channel " + chan.getId() + " - Steady State Activation - " + inf.getExpression().getId(), "V", "ms-1", -0.08, 0.1,
+				gate.put("steady state ", new ExpressionNode(inf.toString(), chan.getId() + " - " + g.getId() + " - Steady State Activation", "V", "ms-1", -0.08, 0.1,
 						0.005));
 			}
 			if(tau.toString().contains("ChannelMLGenericHHExpression"))
@@ -94,7 +95,7 @@ public class ChannelInfoExtractor
 			}
 			else
 			{
-				gate.put("time constant", new ExpressionNode(tau.toString(), "Ion Channel " + chan.getId() + " - Time Co - " + tau.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+				gate.put("time constant", new ExpressionNode(tau.toString(), chan.getId() + " - " + g.getId() + " - Time Co", "V", "ms-1", -0.08, 0.1, 0.005));
 			}
 			gate.put("steady state plot", PlotNodeGenerator.createPlotNode(inf.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 			gate.put("time constant plot", PlotNodeGenerator.createPlotNode(tau.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
@@ -104,7 +105,7 @@ public class ChannelInfoExtractor
 		}
 	}
 
-	private void generateRatePlots(IonChannel chan, InfoNode gate, HHRateProcessor rateinfo)
+	private void generateRatePlots(IonChannel chan, Base g, InfoNode gate, HHRateProcessor rateinfo)
 	{
 
 		ChannelMLHHExpression fwd = rateinfo.getForwardRate();
@@ -116,7 +117,7 @@ public class ChannelInfoExtractor
 		}
 		else
 		{
-			gate.put("forward rate", new ExpressionNode(fwd.toString(), "Ion Channel " + chan.getId() + " - Forward Rate - " + fwd.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+			gate.put("forward rate", new ExpressionNode(fwd.toString(), chan.getId() + " - " + g.getId() + " - Forward Rate", "V", "ms-1", -0.08, 0.1, 0.005));
 		}
 		if(rev.toString().contains("ChannelMLGenericHHExpression"))
 		{
@@ -124,7 +125,7 @@ public class ChannelInfoExtractor
 		}
 		else
 		{
-			gate.put("reverse rate", new ExpressionNode(rev.toString(), "Ion Channel " + chan.getId() + " - Reverse Rate - " + rev.getExpression().getId(), "V", "ms-1", -0.08, 0.1, 0.005));
+			gate.put("reverse rate", new ExpressionNode(rev.toString(), chan.getId() + " - " + g.getId() + " - Reverse Rate", "V", "ms-1", -0.08, 0.1, 0.005));
 		}
 		gate.put("forward rate plot", PlotNodeGenerator.createPlotNode(fwd.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
 		gate.put("reverse rate plot", PlotNodeGenerator.createPlotNode(rev.getExpression(), -0.08, 0.1, 0.005, "V", "ms-1"));
