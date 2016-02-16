@@ -33,9 +33,10 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	String commPre = "'''";
 	String commPost = "'''";
 
-	private List<File> outputFiles = new ArrayList<File>();
+	private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
-
+    private String mainDlemsFile = null;
+	
 	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.PYNN);
@@ -46,8 +47,17 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	public PyNNWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.PYNN, outputFolder, outputFileName);
-        dlemsw = new DLemsWriter(lems, null, false);
+        dlemsw = new DLemsWriter(lems, outputFolder, mainDlemsFile, null, false);
+        dlemsw.setPopulationMode(true);
 		initializeWriter();
+	}
+    
+    
+    @Override
+	public void setOutputFolder(File outputFolder)
+	{
+		super.setOutputFolder(outputFolder);
+        dlemsw.setOutputFolder(outputFolder);
 	}
 
 	private void initializeWriter()
@@ -76,12 +86,14 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	protected void addComment(StringBuilder sb, String comment)
 	{
 
-		if(comment.indexOf("\n") < 0) sb.append(comm + comment + "\n");
+		if(!comment.contains("\n")) sb.append(comm + comment + "\n");
 		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
 
 	public String getMainScript() throws GenerationException
 	{
+        mainDlemsFile = getOutputFileName()+"_main.json";
+        dlemsw.setOutputFileName(mainDlemsFile);
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 
@@ -94,7 +106,13 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 		try
 		{
-			String dlems = dlemsw.getMainScript();
+            List<File> files = dlemsw.convert();
+            String dlems = null;
+            for (File file: files) {
+                if (file.getName().equals(mainDlemsFile)) {
+                    dlems = FileUtil.readStringFromFile(file);
+                }
+            }
 
 			DLemsWriter.putIntoVelocityContext(dlems, context);
 
@@ -109,10 +127,10 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 			E.info("Writing " + format + " files to: " + this.getOutputFolder());
 			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-			File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_pynn.py");
+			//File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_pynn.py");
 			File cellScriptFile = new File(this.getOutputFolder(), name + "_pynn.py");
-			FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-			outputFiles.add(mainScriptFile);
+			//FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
+			//outputFiles.add(mainScriptFile);
 			FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
 			outputFiles.add(cellScriptFile);
 
@@ -124,10 +142,6 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		catch(VelocityException e)
 		{
 			throw new GenerationException("Problem using Velocity template", e);
-		}
-		catch(LEMSException e)
-		{
-			throw new GenerationException("Problem generating the files", e);
 		}
 
 		return mainRunScript.toString();

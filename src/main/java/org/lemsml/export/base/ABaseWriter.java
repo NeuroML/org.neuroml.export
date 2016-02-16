@@ -60,6 +60,7 @@ public abstract class ABaseWriter implements IBaseWriter
 		return outputFolder;
 	}
 
+    @Override
 	public void setOutputFolder(File outputFolder)
 	{
 		this.outputFolder = outputFolder;
@@ -70,12 +71,11 @@ public abstract class ABaseWriter implements IBaseWriter
 		return outputFileName;
 	}
 
+    @Override
 	public void setOutputFileName(String outputFileName)
 	{
 		this.outputFileName = outputFileName;
 	}
 	
 	
-
-
 }

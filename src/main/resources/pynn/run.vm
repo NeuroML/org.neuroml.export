@@ -1,7 +1,6 @@
 # Main PyNN script for: $name
 
-
-from pyNN.utility import get_simulator, init_logging, normalized_filename
+from pyNN.utility import get_simulator, init_logging
 
 sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
                              ("--debug", "Print debugging information"))
@@ -12,6 +11,33 @@ if options.debug:
 sim.tstop = $t_end
 
 sim.setup(timestep=$dt)
+
+#foreach ($pop in $populations.keySet() )
+#foreach ($pop_element in $populations.get($pop).keySet())
+#if ($pop_element=="component")
+#set($component_array=$populations.get($pop).get($pop_element))
+#foreach ($component_element in $component_array.keySet())
+#if ($component_element=="parameters")
+#set($parameters_array=$component_array.get($component_element))
+
+cell_params_$component_array.name = {
+#foreach($parameter in $parameters_array.keySet())     '$parameter':$parameters_array.get($parameter), 
+#end
+} #end
+#end
+#end
+#end
+#end
+
+
+#foreach ($pop in $populations.keySet() )
+#set($pop_size=$populations.get($pop).size)
+#set($pop_component=$populations.get($pop).component.name)
+
+# Population: $pop, size: $pop_size, component: $pop_component
+$pop = sim.Population($pop_size, sim.$pop_component(**cell_params_$pop_component), label="pop_$pop")
+
+#end
 
 print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 

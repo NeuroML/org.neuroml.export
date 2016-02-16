@@ -20,16 +20,14 @@ public class PyNNWriterTest extends TestCase
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
 		generateMainScript(exampleFilename);
 	}
-/*     
+
     
-      Should work....
 	public void testPyNN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{
 
 		String exampleFilename = "LEMS_NML2_Ex14_PyNN.xml";
 		generateMainScript(exampleFilename);
 	}
-    */
 
 	public void generateMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{

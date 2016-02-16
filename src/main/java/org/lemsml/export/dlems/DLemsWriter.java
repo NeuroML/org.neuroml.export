@@ -158,6 +158,8 @@ public class DLemsWriter extends ABaseWriter
         String targetId = simCpt.getStringValue("target");
 
         Component tgtComp = lems.getComponent(targetId);
+        
+        g.writeStringField(DLemsKeywords.NAME.get(), targetId);
 
         ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
 
@@ -294,8 +296,8 @@ public class DLemsWriter extends ABaseWriter
                     FileUtil.writeStringToFile(swComp.toString(), synFile);
                     outputFiles.add(synFile);
 
+                    }
                 }
-            }
 
         } else
         {

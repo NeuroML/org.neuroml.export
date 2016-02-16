@@ -2895,9 +2895,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 blockForEqns.append(block + "\n}\n\n");
 
             }
-
         }
-
     }
 
     public static void writeModBlock(StringBuilder main, String blockName, String contents)
