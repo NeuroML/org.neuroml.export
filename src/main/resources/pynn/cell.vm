@@ -2,4 +2,37 @@
 
 print("Loading cell file for $name")
 
+## Bad!!  NEURON specific
+from pyNN.neuron import NativeCellType
+from nrnutils import Section, Mechanism
+
+
+class $name(object):
+
+    def __init__(self, **parameters):
+        print("Created instance of $name with params: %s"%parameters)
+
+        hh = Mechanism('hh')
+
+        self.soma = Section(L=30, diam=30, mechanisms=[hh])
+        self.source = self.soma(0.5)._ref_v
+
+        # needed for PyNN
+        self.source_section = self.soma
+        self.parameter_names = ()
+        self.traces = {}
+        self.recording_time = False
+
+    def memb_init(self):
+        for seg in self.soma:
+            seg.v = -9 #self.v_init
+
+class ${name}Type(NativeCellType):
+
+    default_parameters = {}
+    default_initial_values = {}
+    recordable = []
+    units = {}
+    receptor_types = []
+    model = $name
 

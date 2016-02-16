@@ -35,7 +35,9 @@ cell_params_$component_array.name = {
 #set($pop_component=$populations.get($pop).component.name)
 
 # Population: $pop, size: $pop_size, component: $pop_component
-$pop = sim.Population($pop_size, sim.$pop_component(**cell_params_$pop_component), label="pop_$pop")
+from ${pop_component}_celldefinition import ${pop_component}Type
+from ${pop_component}_celldefinition import ${pop_component}
+$pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_component), label="pop_$pop")
 
 #end
 

@@ -36,6 +36,8 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
     private String mainDlemsFile = null;
+    
+    public final String CELL_DEFINITION_SUFFIX = "_celldefinition";
 	
 	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
@@ -107,32 +109,34 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		try
 		{
             List<File> files = dlemsw.convert();
-            String dlems = null;
+            
             for (File file: files) {
+                    
+                String dlems = FileUtil.readStringFromFile(file);
+
+                DLemsWriter.putIntoVelocityContext(dlems, context);
+
+                VelocityEngine ve = VelocityUtils.getVelocityEngine();
+                StringWriter sw1 = new StringWriter();
+
                 if (file.getName().equals(mainDlemsFile)) {
-                    dlems = FileUtil.readStringFromFile(file);
+                    boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
+                    mainRunScript.append(sw1);
+
+                }
+                else 
+                {
+
+                    boolean generationStatus2 = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
+                    cellScript.append(sw1);
+
+                    E.info("Writing " + format + " file to: " + file.getAbsolutePath());
+                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                    File cellScriptFile = new File(this.getOutputFolder(), name + CELL_DEFINITION_SUFFIX+".py");
+                    FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
+                    outputFiles.add(cellScriptFile);
                 }
             }
-
-			DLemsWriter.putIntoVelocityContext(dlems, context);
-
-			VelocityEngine ve = VelocityUtils.getVelocityEngine();
-			StringWriter sw1 = new StringWriter();
-			boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
-			mainRunScript.append(sw1);
-
-			StringWriter sw2 = new StringWriter();
-			boolean generationStatus2 = ve.evaluate(context, sw2, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
-			cellScript.append(sw2);
-
-			E.info("Writing " + format + " files to: " + this.getOutputFolder());
-			String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-			//File mainScriptFile = new File(this.getOutputFolder(), "run_" + name + "_pynn.py");
-			File cellScriptFile = new File(this.getOutputFolder(), name + "_pynn.py");
-			//FileUtil.writeStringToFile(mainRunScript.toString(), mainScriptFile);
-			//outputFiles.add(mainScriptFile);
-			FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
-			outputFiles.add(cellScriptFile);
 
 		}
 		catch(IOException e1)
