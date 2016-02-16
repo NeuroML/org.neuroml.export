@@ -50,10 +50,34 @@ public class InfoTreeCreator
 
 		return infoRoot;
 	}
+    
+
+	public static InfoNode createInfoTreeFromStandalone(final Standalone element) throws NeuroMLException
+	{
+		InfoNode infoRoot = new InfoNode();
+        Map<String, Object> properties = createPropertiesFromStandaloneComponent(element);
+		infoRoot.putAll(properties);
+		
+		return infoRoot;
+    }
+
+	public static InfoNode createInfoTreeFromComponent(final Component component) throws NeuroMLException, LEMSException
+	{
+		InfoNode infoRoot = new InfoNode();
+        
+        LinkedHashMap<String, Standalone> standalones = Utils.convertLemsComponentToNeuroML(component);
+
+		for(Standalone element : standalones.values())
+		{
+			Map<String, Object> properties = createPropertiesFromStandaloneComponent(element);
+			infoRoot.putAll(properties);
+		}
+		
+		return infoRoot;
+    }
 
 	public static Map<String, Object> createPropertiesFromStandaloneComponent(Standalone element) throws NeuroMLException
 	{
-
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
 		if(element instanceof Cell)
