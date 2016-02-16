@@ -1,15 +1,20 @@
 # Main PyNN script for: $name
 
 
-from pyNN.utility import get_script_args
+from pyNN.utility import get_simulator, init_logging, normalized_filename
 
-simulator_name = get_script_args(1)[0]  
-exec("from pyNN.%s import *" % simulator_name)
+sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
+                             ("--debug", "Print debugging information"))
 
+if options.debug:
+    init_logging(None, debug=True)
 
-tstop = $t_end
+sim.tstop = $t_end
 
-setup(timestep=$dt)
+sim.setup(timestep=$dt)
 
+print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 
-end()
+sim.run(sim.tstop)
+
+sim.end()
