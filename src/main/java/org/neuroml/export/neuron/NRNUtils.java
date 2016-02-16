@@ -6,6 +6,7 @@ package org.neuroml.export.neuron;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import org.lemsml.export.dlems.UnitConverter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.type.Component;
@@ -19,7 +20,7 @@ import org.neuroml.export.utils.Utils;
  * @author Boris Marin & Padraig Gleeson
  *
  */
-public class NRNUtils
+public class NRNUtils implements UnitConverter
 {
 
     final static String NEURON_VOLTAGE = "v";
@@ -285,6 +286,12 @@ public class NRNUtils
     {
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
         return convertToNeuronUnits((float) dq.getDoubleValue(), dq.getDimension().getName());
+    }
+    
+    @Override
+    public double convert(double siValue, String dimensionName) 
+    {
+        return convertToNeuronUnits((float)siValue, dimensionName);
     }
 
     protected static float convertToNeuronUnits(float val, String dimensionName)

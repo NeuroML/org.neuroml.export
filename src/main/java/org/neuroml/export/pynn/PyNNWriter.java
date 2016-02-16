@@ -21,6 +21,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.neuron.NRNUtils;
 import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
@@ -49,6 +50,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	{
 		super(lems, Format.PYNN);
         dlemsw = new DLemsWriter(lems, null, false);
+        dlemsw.setPopulationMode(true);
 		initializeWriter();
 	}
 	
@@ -83,7 +85,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
-		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
 		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
@@ -102,6 +104,8 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	{
         mainDlemsFile = getOutputFileName()+"_main.json";
         dlemsw.setOutputFileName(mainDlemsFile);
+        NRNUtils nrnUtils = new NRNUtils();
+        dlemsw.setUnitConverter(nrnUtils);
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 

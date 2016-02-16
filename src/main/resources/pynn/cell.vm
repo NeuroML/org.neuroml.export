@@ -4,7 +4,6 @@ print("Loading cell file for $name")
 
 ## Bad!!  NEURON specific
 from pyNN.neuron import NativeCellType
-from nrnutils import Section, Mechanism
 from neuron import h
 
 
@@ -13,17 +12,20 @@ class $name(object):
     def __init__(self, **parameters):
         print("Created instance of $name with params: %s"%parameters)
 
-        h(" create soma")
+        h(" create sec_${name}")
         h(" objectvar m_${name}")
 
-        h.soma.L = 10.0
-        h.soma(0.5).diam = 10.0
-        h.soma(0.5).cm = 318.31927
-        h.soma.push()
-        h(" soma  { m_${name} = new ${name}(0.5) } ")
+        h.sec_${name}.L = 10.0
+        h.sec_${name}(0.5).diam = 10.0
+        h.sec_${name}(0.5).cm = 318.31927
+        h.sec_${name}.push()
+        h(" sec_${name}  { m_${name} = new ${name}(0.5) } ")
 
+#foreach ($param in $parameters.keySet() )
+        h.m_${name}.${param} = parameters['${param}']
+#end
 
-        self.soma = h.soma
+        self.soma = h.sec_${name}
         self.source = self.soma(0.5)._ref_v
 
         # needed for PyNN
@@ -32,16 +34,28 @@ class $name(object):
         self.traces = {}
         self.recording_time = False
 
+#foreach ($param in $parameters.keySet() )
+    # Getter/setter for $param
+    def _set_${param}(self, value):
+        print("Setting $param in ${name} to %s"%value)
+        h.m_${name}.${param} = value
+    def _get_${param}(self):
+        return h.m_${name}.${param}
+    ${param} = property(fget=_get_${param}, fset=_set_${param})
+
+#end
+
     def memb_init(self):
-        for seg in self.soma:
-            seg.v = -9 #self.v_init
+        #for seg in self.sec_${name}:
+        #    seg.v = -9 #self.v_init
+        pass
 
 class ${name}Type(NativeCellType):
 
     default_parameters = {}
-    default_initial_values = {}
-    recordable = []
-    units = {}
+    default_initial_values = {}    
+    recordable = ['soma(0.5).v']
+    units = {'soma(0.5).v' : 'mV'}
     receptor_types = []
     model = $name
 

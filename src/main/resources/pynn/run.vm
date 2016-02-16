@@ -36,13 +36,38 @@ cell_params_$component_array.name = {
 
 # Population: $pop, size: $pop_size, component: $pop_component
 from ${pop_component}_celldefinition import ${pop_component}Type
-from ${pop_component}_celldefinition import ${pop_component}
+#from ${pop_component}_celldefinition import ${pop_component}
 $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_component), label="pop_$pop")
 
 #end
 
 print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 
+#foreach ($d in $display )
+# Display: $d.name
+#foreach ($curve in $d.curves )
+# Line: $curve.name: Pop: $curve.ordinate_population; cell: $curve.ordinate_index; value: $curve.ordinate
+${curve.ordinate_population}.record('soma(0.5).${curve.ordinate}')
+#end
+#end
+
+
 sim.run(sim.tstop)
+
+if options.plot_figure:
+
+    import matplotlib.pyplot as plt
+#foreach ($d in $display )
+    # Display: $d.name: $d.title
+    plt.figure("${d.title}")
+#foreach ($curve in $d.curves )
+    # Line: $curve.name: Pop: $curve.ordinate_population; cell: $curve.ordinate_index; value: $curve.ordinate
+    data =  ${curve.ordinate_population}.get_data()
+    vm = data.segments[0].analogsignalarrays[0]
+    plt.plot(vm, '-', label='${curve.name}')
+#end
+    plt.legend()
+#end
+    plt.show()
 
 sim.end()

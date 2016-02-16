@@ -56,6 +56,8 @@ public class DLemsWriter extends ABaseWriter
     boolean populationMode = false; // quick & dirty hack for multi component export
 
     private final List<File> outputFiles = new ArrayList<File>();
+    
+    UnitConverter unitConverter = new SIUnitConverter();
 
     public void setPopulationMode(boolean mode)
     {
@@ -96,6 +98,11 @@ public class DLemsWriter extends ABaseWriter
     {
         super(lems, Format.DLEMS, outputFolder, outputFileName);
         this.writer = writer;
+    }
+    
+    public void setUnitConverter(UnitConverter unitConv)
+    {
+        this.unitConverter = unitConv;
     }
 
     @Override
@@ -363,6 +370,9 @@ public class DLemsWriter extends ABaseWriter
             {
 
                 g.writeStartObject();
+                
+                g.writeStringField(DLemsKeywords.NAME.get(), dispComp.getID());
+                g.writeStringField(DLemsKeywords.TITLE.get(), dispComp.getStringValue("title"));
 
                 g.writeObjectFieldStart(DLemsKeywords.ABSCISSA_AXIS.get());
                 g.writeStringField(DLemsKeywords.MIN.get(), dispComp.getStringValue("xmin"));
@@ -382,10 +392,16 @@ public class DLemsWriter extends ABaseWriter
                     {
 
                         g.writeStartObject();
+                        g.writeStringField(DLemsKeywords.NAME.get(), lineComp.getID());
                         g.writeStringField(DLemsKeywords.ABSCISSA.get(), "t");
                         String quantity = lineComp.getStringValue("quantity");
 
                         g.writeStringField(DLemsKeywords.ORDINATE.get(), quantity.substring(quantity.indexOf("/") + 1));
+                        if (quantity.indexOf("[")>0)
+                        {
+                            g.writeStringField(DLemsKeywords.ORDINATE_POPULATION.get(), quantity.substring(0,quantity.indexOf("[")));
+                            g.writeStringField(DLemsKeywords.ORDINATE_INDEX.get(), quantity.substring(quantity.indexOf("[")+1,quantity.indexOf("]")));
+                        }
                         g.writeStringField(DLemsKeywords.COLOUR.get(), lineComp.getStringValue("color"));
                         g.writeEndObject();
                     }
@@ -448,12 +464,12 @@ public class DLemsWriter extends ABaseWriter
         {
             ParamValue pv = comp.getParamValue(p.getName());
 
-            g.writeStringField(p.getName(), (float) pv.getDoubleValue() + "");
+            g.writeStringField(p.getName(), (float)unitConverter.convert(pv.getDoubleValue(), pv.getDimensionName()) + "");
         }
 
         for (Constant c : ct.getConstants())
         {
-            g.writeStringField(c.getName(), c.getValue() + "");
+            g.writeStringField(c.getName(), unitConverter.convert(c.getValue(), c.getDimension().getName()) + "");
         }
 
     }

@@ -20,6 +20,12 @@ public class PyNNWriterTest extends TestCase
 		String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
 		generateMainScript(exampleFilename);
 	}
+	public void testIaF() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
+	{
+
+		String exampleFilename = "LEMS_NML2_Ex0_IaF.xml";
+		generateMainScript(exampleFilename);
+	}
 /*
     
 	public void testPyNN() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
