@@ -13,16 +13,22 @@ import org.lemsml.export.dlems.DLemsKeywords;
 import org.lemsml.export.dlems.DLemsWriter;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
+import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
+import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.model.Standalone;
+import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -108,6 +114,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
 		try
 		{
+            NeuronWriter nrnWriter = new NeuronWriter(lems,getOutputFolder(),"---");
             List<File> files = dlemsw.convert();
             
             for (File file: files) {
@@ -120,18 +127,28 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                 StringWriter sw1 = new StringWriter();
 
                 if (file.getName().equals(mainDlemsFile)) {
-                    boolean generationStatus = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
+                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
                     mainRunScript.append(sw1);
-
                 }
                 else 
                 {
+                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                    Component comp = lems.components.getByID(name);
+                    E.info("Component LEMS: " + comp.summary());
+                    
+                    if(comp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
+                    {
 
-                    boolean generationStatus2 = ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
+                    }
+                    else 
+                    {
+                        String mod = nrnWriter.generateModFile(comp);
+                        nrnWriter.saveModToFile(comp, mod);
+                    }
+                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
                     cellScript.append(sw1);
 
                     E.info("Writing " + format + " file to: " + file.getAbsolutePath());
-                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     File cellScriptFile = new File(this.getOutputFolder(), name + CELL_DEFINITION_SUFFIX+".py");
                     FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
                     outputFiles.add(cellScriptFile);
@@ -144,6 +161,18 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 			throw new GenerationException("Problem converting LEMS to dLEMS", e1);
 		}
 		catch(VelocityException e)
+		{
+			throw new GenerationException("Problem using Velocity template", e);
+		}
+		catch(ContentError e)
+		{
+			throw new GenerationException("Problem using Velocity template", e);
+		}
+		catch(LEMSException e)
+		{
+			throw new GenerationException("Problem using Velocity template", e);
+		}
+		catch(NeuroMLException e)
 		{
 			throw new GenerationException("Problem using Velocity template", e);
 		}

@@ -257,8 +257,10 @@ public class Utils
 		String compString = xmlSer.writeObject(comp);
 
 		NeuroMLConverter nmlc = new NeuroMLConverter();
-		NeuroMLDocument nmlDocument = nmlc.loadNeuroML("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-				+ "      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\">" + compString + "</neuroml>");
+        String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+				+ "      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\">" + compString + "</neuroml>";
+		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(nmlString);
+        //System.out.println("............."+nmlString);
 		LinkedHashMap<String, Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
 		return els;
 	}
