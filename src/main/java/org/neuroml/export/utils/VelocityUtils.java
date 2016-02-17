@@ -23,6 +23,7 @@ public class VelocityUtils
 	
 	public static final String pynnRunTemplateFile = "/pynn/run.vm";
 	public static final String pynnCellTemplateFile = "/pynn/cell.vm";
+	public static final String pynnInputNeuronTemplateFile = "/pynn/input_neuron.vm";
 	
 	public static final String cTemplateFile = "/cvode/cvode.vm";
 	public static final String makeFile = "cvode/Makefile";

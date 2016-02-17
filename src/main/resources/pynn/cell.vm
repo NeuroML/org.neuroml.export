@@ -5,6 +5,7 @@ print("Loading cell file for $name")
 ## Bad!!  NEURON specific
 from pyNN.neuron import NativeCellType
 from neuron import h
+from neuron import nrn
 
 
 class $name(object):
@@ -12,25 +13,24 @@ class $name(object):
     def __init__(self, **parameters):
         print("Created instance of $name with params: %s"%parameters)
 
-        h(" create sec_${name}")
-        h(" objectvar m_${name}")
+        self.soma = nrn.Section('sec_${name}')
+        #h(" forall psection() ")
 
-        h.sec_${name}.L = 10.0
-        h.sec_${name}(0.5).diam = 10.0
-        h.sec_${name}(0.5).cm = 318.31927
-        h.sec_${name}.push()
-        h(" sec_${name}  { m_${name} = new ${name}(0.5) } ")
+        self.soma.L = 10.0
+        self.soma(0.5).diam = 10.0
+        self.soma(0.5).cm = 31.831927
+        self.soma.push()
+        self.mechanism = h.$name(0.5, sec=self.soma)
 
 #foreach ($param in $parameters.keySet() )
-        h.m_${name}.${param} = parameters['${param}']
+        self.mechanism.${param} = parameters['${param}']
 #end
 
-        self.soma = h.sec_${name}
         self.source = self.soma(0.5)._ref_v
 
         # needed for PyNN
         self.source_section = self.soma
-        self.parameter_names = ()
+        self.parameter_names = (#foreach ($param in $parameters.keySet() ) '$param', #end)
         self.traces = {}
         self.recording_time = False
 
@@ -38,21 +38,37 @@ class $name(object):
     # Getter/setter for $param
     def _set_${param}(self, value):
         print("Setting $param in ${name} to %s"%value)
-        h.m_${name}.${param} = value
+        self.mechanism.${param} = value
     def _get_${param}(self):
-        return h.m_${name}.${param}
+        return self.mechanism.${param}
     ${param} = property(fget=_get_${param}, fset=_set_${param})
 
 #end
 
     def memb_init(self):
-        #for seg in self.sec_${name}:
-        #    seg.v = -9 #self.v_init
-        pass
+
+#foreach ($s in $state.keySet() )
+        # Initialising state $s
+#if ($s=="v")
+        for seg in self.soma:
+            seg.$s = self.get_value('$state.get($s)')
+#else
+        self.mechanism.$s = self.get_value('$state.get($s)')
+#end
+#end
+
+    def get_value(self, val_string):
+        if val_string=='v':
+            return self.soma(0.5)._ref_v
+        if val_string.isdigit():
+            return float(val_string) 
+        else:
+            return getattr(self.mechanism,val_string)
+
 
 class ${name}Type(NativeCellType):
 
-    default_parameters = {}
+    default_parameters = {#foreach ($param in $parameters.keySet() ) '$param':$parameters.get($param), #end}
     default_initial_values = {}    
     recordable = ['soma(0.5).v']
     units = {'soma(0.5).v' : 'mV'}

@@ -41,13 +41,23 @@ $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_compone
 
 #end
 
+# Inputs...
+#foreach ($input_ref in $inputs.keySet() )
+#set($input=$inputs.get($input_ref))
+# Input: $input_ref
+from ${input_ref}_inputdefinition import ${input_ref}
+${input_ref}_${input.population}_${input.population_index} = ${input_ref}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
+${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
+#end
+
+
 print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 
 #foreach ($d in $display )
 # Display: $d.name
 #foreach ($curve in $d.curves )
-# Line: $curve.name: Pop: $curve.ordinate_population; cell: $curve.ordinate_index; value: $curve.ordinate
-${curve.ordinate_population}.record('soma(0.5).${curve.ordinate}')
+# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
+${curve.population}.record('soma(0.5).${curve.ordinate}')
 #end
 #end
 
@@ -61,10 +71,12 @@ if options.plot_figure:
     # Display: $d.name: $d.title
     plt.figure("${d.title}")
 #foreach ($curve in $d.curves )
-    # Line: $curve.name: Pop: $curve.ordinate_population; cell: $curve.ordinate_index; value: $curve.ordinate
-    data =  ${curve.ordinate_population}.get_data()
-    vm = data.segments[0].analogsignalarrays[0]
-    plt.plot(vm, '-', label='${curve.name}')
+    # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
+    data =  ${curve.population}.get_data()
+    for seg in data.segments:
+        vm = seg.analogsignalarrays[0]
+        ts = [i*sim.get_time_step() for i in xrange(len(vm))]
+        plt.plot(ts, vm, '-', label='${curve.name}')
 #end
     plt.legend()
 #end

@@ -23,6 +23,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.DerivedParameter;
+import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Parameter;
@@ -39,7 +40,9 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.neuron.NRNUtils;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -58,11 +61,21 @@ public class DLemsWriter extends ABaseWriter
     private final List<File> outputFiles = new ArrayList<File>();
     
     UnitConverter unitConverter = new SIUnitConverter();
+    
+    String TIME_DIM = Dimension.getTimeDimension().getName();
+    boolean onlyflattenIfNecessary = false;
 
     public void setPopulationMode(boolean mode)
     {
         populationMode = mode;
     }
+
+    public void setOnlyflattenIfNecessary(boolean onlyflattenIfNecessary)
+    {
+        this.onlyflattenIfNecessary = onlyflattenIfNecessary;
+    }
+    
+    
 
     public DLemsWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
@@ -160,7 +173,7 @@ public class DLemsWriter extends ABaseWriter
         Target target = lems.getTarget();
         Component simCpt = target.getComponent();
 
-        g.writeStringField(DLemsKeywords.DT.get(), simCpt.getParamValue("step").stringValue());
+        g.writeStringField(DLemsKeywords.DT.get(), convertTime(simCpt.getParamValue("step")));
 
         String targetId = simCpt.getStringValue("target");
 
@@ -172,7 +185,7 @@ public class DLemsWriter extends ABaseWriter
 
         ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
         projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
-
+        
         if (pops.size() > 0)
         {
             ArrayList<String> written = new ArrayList<String>();
@@ -190,7 +203,7 @@ public class DLemsWriter extends ABaseWriter
 
                 if (!written.contains(synRef))
                 {
-                    System.out.println("-             Adding " + synRef);
+                    //System.out.println("-             Adding " + synRef);
                     Component synComp = lems.getComponent(synRef);
 
                     if (!writtenTypes.contains(synComp.getTypeName()))
@@ -228,7 +241,7 @@ public class DLemsWriter extends ABaseWriter
 
                 if (!written.contains(compRef))
                 {
-                    System.out.println("---------       Adding " + compRef);
+                    //System.out.println("---------       Adding " + compRef);
                     Component popComp = lems.getComponent(compRef);
 
                     if (!writtenTypes.contains(popComp.getTypeName()))
@@ -250,7 +263,7 @@ public class DLemsWriter extends ABaseWriter
                         gComp.writeEndObject();
                         gComp.close();
 
-                        File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".json");
+                        File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".cell.json");
                         FileUtil.writeStringToFile(swComp.toString(), compFile);
                         outputFiles.add(compFile);
 
@@ -281,7 +294,7 @@ public class DLemsWriter extends ABaseWriter
                 for (Component proj : projs)
                 {
                     String synRef = proj.getStringValue("synapse");
-                    System.out.println("-             Adding " + synRef);
+                    //System.out.println("-             Adding " + synRef);
                     Component synComp = lems.getComponent(synRef);
                     if (!writtenTypes.contains(synComp.getTypeName()))
                     {
@@ -303,8 +316,51 @@ public class DLemsWriter extends ABaseWriter
                     FileUtil.writeStringToFile(swComp.toString(), synFile);
                     outputFiles.add(synFile);
 
-                    }
+                    
                 }
+            
+                ArrayList<Component> inputs = tgtComp.getChildrenAL("explicitInputs");
+                if (!inputs.isEmpty())
+                {
+                    g.writeObjectFieldStart(DLemsKeywords.INPUTS.get());
+                    for (Component input : inputs)
+                    {
+                        String inputRef = input.getStringValue("input");
+                        g.writeObjectFieldStart(inputRef);
+                        Component inputComp = lems.getComponent(inputRef);
+                        String tgt = input.getStringValue("target");
+                        LEMSQuantityPath lqp = new LEMSQuantityPath(tgt+"/xxx");
+
+                        g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
+                        g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
+                        
+                        //TODO: flatten...
+                        //Component inputCompFlat = createFlattenedComp(inputComp);
+                        Component inputCompFlat = inputComp;
+                        
+                        g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
+                        writeDLemsForComponent(g, inputCompFlat);
+                        g.writeEndObject();
+                        g.writeEndObject();
+
+                        StringWriter swComp = new StringWriter();
+                        JsonGenerator gComp = f.createJsonGenerator(swComp);
+                        gComp.useDefaultPrettyPrinter();
+                        gComp.writeStartObject();
+
+                        writeDLemsForComponent(gComp, inputCompFlat);
+
+                        gComp.writeEndObject();
+                        gComp.close();
+
+                        File inputFile = new File(this.getOutputFolder(), inputCompFlat.getID() + ".input.json");
+                        FileUtil.writeStringToFile(swComp.toString(), inputFile);
+                        outputFiles.add(inputFile);
+
+                    }
+                    g.writeEndObject();
+                }
+            }
 
         } else
         {
@@ -348,10 +404,15 @@ public class DLemsWriter extends ABaseWriter
         g.writeEndObject();
 
     }
+    
+    private String convertTime(ParamValue lemsValue) throws ContentError
+    {
+        return (float)unitConverter.convert(lemsValue.getDoubleValue(),TIME_DIM)+"";
+    }
 
     private void writeSimulationInfo(JsonGenerator g, Component simCpt) throws ContentError, JsonGenerationException, IOException
     {
-        g.writeStringField(DLemsKeywords.T_END.get(), simCpt.getParamValue("length").stringValue());
+        g.writeStringField(DLemsKeywords.T_END.get(), convertTime(simCpt.getParamValue("length")));
         g.writeStringField(DLemsKeywords.T_START.get(), "0");
 
         for (Component dispComp : simCpt.getAllChildren())
@@ -395,13 +456,13 @@ public class DLemsWriter extends ABaseWriter
                         g.writeStringField(DLemsKeywords.NAME.get(), lineComp.getID());
                         g.writeStringField(DLemsKeywords.ABSCISSA.get(), "t");
                         String quantity = lineComp.getStringValue("quantity");
+                        
+                        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
 
-                        g.writeStringField(DLemsKeywords.ORDINATE.get(), quantity.substring(quantity.indexOf("/") + 1));
-                        if (quantity.indexOf("[")>0)
-                        {
-                            g.writeStringField(DLemsKeywords.ORDINATE_POPULATION.get(), quantity.substring(0,quantity.indexOf("[")));
-                            g.writeStringField(DLemsKeywords.ORDINATE_INDEX.get(), quantity.substring(quantity.indexOf("[")+1,quantity.indexOf("]")));
-                        }
+                        g.writeStringField(DLemsKeywords.ORDINATE.get(), lqp.getVariable());
+
+                        g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
+                        g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
                         g.writeStringField(DLemsKeywords.COLOUR.get(), lineComp.getStringValue("color"));
                         g.writeEndObject();
                     }
@@ -469,7 +530,7 @@ public class DLemsWriter extends ABaseWriter
 
         for (Constant c : ct.getConstants())
         {
-            g.writeStringField(c.getName(), unitConverter.convert(c.getValue(), c.getDimension().getName()) + "");
+            g.writeStringField(c.getName(), (float)unitConverter.convert(c.getValue(), c.getDimension().getName()) + "");
         }
 
     }
@@ -511,11 +572,9 @@ public class DLemsWriter extends ABaseWriter
             g.writeObjectFieldStart(DLemsKeywords.EFFECT.get());
 
             g.writeObjectFieldStart(DLemsKeywords.STATE.get());
-            System.out.println("..................oe " + oe);
 
             for (StateAssignment sa : oe.getStateAssignments())
             {
-                System.out.println(".......................sa " + sa);
                 g.writeStringField(sa.getVariable(), visitExpression(sa));
             }
 
@@ -571,6 +630,10 @@ public class DLemsWriter extends ABaseWriter
 
         ComponentType ctFlat = new ComponentType();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
+        
+        if (onlyflattenIfNecessary && !cf.requiresFlattenning()) {
+            return compOrig.getComponentType();
+        }
 
         try
         {
@@ -592,6 +655,10 @@ public class DLemsWriter extends ABaseWriter
         Component comp = new Component();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
 
+        if (onlyflattenIfNecessary && !cf.requiresFlattenning()) {
+            return compOrig;
+        }
+        
         try
         {
             comp = cf.getFlatComponent();
@@ -611,15 +678,19 @@ public class DLemsWriter extends ABaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 
         for (File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             DLemsWriter dw = new DLemsWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".json"), null, false);
             dw.setPopulationMode(true);
+
+            NRNUtils nrnUtils = new NRNUtils();
+            dw.setUnitConverter(nrnUtils);  
+            
             List<File> files = dw.convert();
             for (File f : files)
             {
@@ -654,5 +725,6 @@ public class DLemsWriter extends ABaseWriter
         // TODO Auto-generated method stub
 
     }
+
 
 }

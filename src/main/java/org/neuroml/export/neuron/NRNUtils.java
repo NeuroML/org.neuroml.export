@@ -285,7 +285,7 @@ public class NRNUtils implements UnitConverter
     protected static float convertToNeuronUnits(String neuromlQuantity, Lems lems) throws ParseError, ContentError
     {
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
-        return convertToNeuronUnits((float) dq.getDoubleValue(), dq.getDimension().getName());
+        return convertToNeuronUnits((float)dq.getDoubleValue(), dq.getDimension().getName());
     }
     
     @Override

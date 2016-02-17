@@ -28,14 +28,15 @@ public enum DLemsKeywords
     CURVES, 
     ABSCISSA, 
     ORDINATE, 
-    ORDINATE_POPULATION, 
-    ORDINATE_INDEX, 
+    POPULATION, 
+    POPULATION_INDEX, 
     COLOUR, 
     POPULATIONS, 
     SIZE, 
     SYNAPSES,
     SYNAPSE,
-    COMPONENT;
+    COMPONENT,
+    INPUTS;
     
     
 

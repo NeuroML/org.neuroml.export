@@ -28,7 +28,6 @@ import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
-import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
@@ -45,6 +44,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
     private String mainDlemsFile = null;
     
     public final String CELL_DEFINITION_SUFFIX = "_celldefinition";
+    public final String INPUT_DEFINITION_SUFFIX = "_inputdefinition";
 	
 	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
@@ -106,12 +106,11 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         dlemsw.setOutputFileName(mainDlemsFile);
         NRNUtils nrnUtils = new NRNUtils();
         dlemsw.setUnitConverter(nrnUtils);
+        dlemsw.setOnlyflattenIfNecessary(true);
 		StringBuilder mainRunScript = new StringBuilder();
-		StringBuilder cellScript = new StringBuilder();
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
-		addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
 
 		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
@@ -122,6 +121,8 @@ public class PyNNWriter extends ANeuroMLBaseWriter
             List<File> files = dlemsw.convert();
             
             for (File file: files) {
+                    
+                E.info(">>> Processing DLEMS file: " + file.getAbsolutePath());
                     
                 String dlems = FileUtil.readStringFromFile(file);
 
@@ -136,26 +137,44 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                 }
                 else 
                 {
+                    StringBuilder script = new StringBuilder();
+                    addComment(script, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+        
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     Component comp = lems.components.getByID(name);
                     E.info("Component LEMS: " + comp.summary());
+                    String suffix = null;
+                    String template = null;
                     
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
                     {
 
                     }
-                    else 
+                    else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE) || file.getName().endsWith(".cell.json"))
                     {
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
+                        suffix = CELL_DEFINITION_SUFFIX;
+                        template = VelocityUtils.pynnCellTemplateFile;
                     }
-                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnCellTemplateFile));
-                    cellScript.append(sw1);
+                    else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) || file.getName().endsWith(".input.json"))
+                    {
+                        String mod = nrnWriter.generateModFile(comp);
+                        nrnWriter.saveModToFile(comp, mod);
+                        suffix = INPUT_DEFINITION_SUFFIX;
+                        template = VelocityUtils.pynnInputNeuronTemplateFile;
+                    }
+                    else 
+                    {
+                        throw new NeuroMLException("Cannot determine type of Component: "+comp.summary());
+                    }
+                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(template));
+                    script.append(sw1);
 
                     E.info("Writing " + format + " file to: " + file.getAbsolutePath());
-                    File cellScriptFile = new File(this.getOutputFolder(), name + CELL_DEFINITION_SUFFIX+".py");
-                    FileUtil.writeStringToFile(cellScript.toString(), cellScriptFile);
-                    outputFiles.add(cellScriptFile);
+                    File scriptFile = new File(this.getOutputFolder(), name + suffix +".py");
+                    FileUtil.writeStringToFile(script.toString(), scriptFile);
+                    outputFiles.add(scriptFile);
                 }
             }
 
@@ -197,5 +216,28 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		
 		return this.outputFiles;
 	}
+    
+    public static void main(String[] args) throws Exception
+    {
+
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+
+        for (File lemsFile : lemsFiles)
+        {
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            PyNNWriter pw = new PyNNWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_pynn.py"));
+            
+            List<File> files = pw.convert();
+            for (File f : files)
+            {
+                System.out.println("Have created: " + f.getAbsolutePath());
+            }
+
+        }
+    }
 
 }
