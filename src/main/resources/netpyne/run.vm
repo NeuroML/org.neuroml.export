@@ -1,0 +1,99 @@
+# Main NetPyNE script for: $name
+
+netParams = {}  # dictionary to store sets of network parameters
+
+
+###############################################################################
+# NETWORK PARAMETERS
+###############################################################################
+
+# Cell properties list
+netParams['cellParams'] = []
+
+
+#foreach ($pop in $populations.keySet() )
+#foreach ($pop_element in $populations.get($pop).keySet())
+#if ($pop_element=="component")
+#set($component_array=$populations.get($pop).get($pop_element))
+#foreach ($component_element in $component_array.keySet())
+#if ($component_element=="parameters")
+#set($parameters_array=$component_array.get($component_element))
+
+# cell params for $component_array.name
+cellRule = {'label': '$component_array.name', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
+soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
+soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 123.0}
+soma['pointps']['Izhi'] = { #foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
+
+cellRule['sections'] = {'soma': soma}  # add sections to dict
+netParams['cellParams'].append(cellRule)  # add dict to list of cell properties
+
+
+#end
+#end
+#end
+#end
+#end
+
+
+
+# Population parameters
+netParams['popParams'] = []  # create list of populations - each item will contain dict with pop params
+
+#foreach ($pop in $populations.keySet() )
+#set($pop_size=$populations.get($pop).size)
+#set($pop_component=$populations.get($pop).component.name)
+
+# Population: $pop, size: $pop_size, component: $pop_component
+
+
+netParams['popParams'].append({'popLabel': '$pop', 'cellModel': 'cell', 'cellType': '$pop_component', 'numCells': $pop_size}) # add dict with params for this pop 
+
+#end
+
+
+
+
+
+# Inputs...
+#foreach ($input_ref in $inputs.keySet() )
+#set($input=$inputs.get($input_ref))
+# Input: $input_ref
+###from ${input_ref}_inputdefinition import ${input_ref}
+##${input_ref}_${input.population}_${input.population_index} = ${input_ref}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
+##${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
+#end
+
+
+
+###############################################################################
+# SIMULATION PARAMETERS
+###############################################################################
+
+simConfig = {}  # dictionary to store simConfig
+
+# Simulation parameters
+simConfig['duration'] = simConfig['tstop'] = $t_end # Duration of the simulation, in ms
+simConfig['dt'] = $dt # Internal integration timestep to use
+simConfig['randseed'] = 1 # Random seed to use
+simConfig['createNEURONObj'] = 1  # create HOC objects when instantiating network
+simConfig['createPyStruct'] = 1  # create Python structure (simulator-independent) when instantiating network
+simConfig['verbose'] = 1  # show detailed messages 
+
+# Recording 
+simConfig['recordTraces'] = True  # whether to record cell traces or not
+
+print("Running a NetPyNE based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
+
+#foreach ($d in $display )
+# Display: $d.name
+#foreach ($curve in $d.curves )
+# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
+###${curve.population}.record('soma(0.5).${curve.ordinate}')
+#end
+#end
+
+
+s.sim.initialize(                   
+    simConfig = HHTut.simConfig, 
+    netParams = HHTut.netParams)

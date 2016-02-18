@@ -85,9 +85,9 @@ public class NestWriter extends ANeuroMLBaseWriter
 		StringBuilder mainRunScript = new StringBuilder();
 		StringBuilder cellScript = new StringBuilder();
 
-		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
-		addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false));
+		addComment(cellScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
 		VelocityUtils.initializeVelocity();
 

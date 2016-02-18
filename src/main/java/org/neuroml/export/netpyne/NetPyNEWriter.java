@@ -1,4 +1,4 @@
-package org.neuroml.export.pynn;
+package org.neuroml.export.netpyne;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,7 @@ import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class PyNNWriter extends ANeuroMLBaseWriter
+public class NetPyNEWriter extends ANeuroMLBaseWriter
 {
 
 	String comm = "#";
@@ -46,17 +46,17 @@ public class PyNNWriter extends ANeuroMLBaseWriter
     public final String CELL_DEFINITION_SUFFIX = "_celldefinition";
     public final String INPUT_DEFINITION_SUFFIX = "_inputdefinition";
 	
-	public PyNNWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public NetPyNEWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.PYNN);
+		super(lems, Format.NETPYNE);
         dlemsw = new DLemsWriter(lems, null, false);
         dlemsw.setPopulationMode(true);
 		initializeWriter();
 	}
 	
-	public PyNNWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+	public NetPyNEWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
-		super(lems, Format.PYNN, outputFolder, outputFileName);
+		super(lems, Format.NETPYNE, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, outputFolder, mainDlemsFile, null, false);
         dlemsw.setPopulationMode(true);
 		initializeWriter();
@@ -80,7 +80,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 	public void setSupportedFeatures()
 	{
 		sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.LOW);
-		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.LOW);
@@ -88,7 +88,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
-		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
 	}
 
@@ -132,7 +132,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                 StringWriter sw1 = new StringWriter();
 
                 if (file.getName().equals(mainDlemsFile)) {
-                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.pynnRunTemplateFile));
+                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.netpyneRunTemplateFile));
                     mainRunScript.append(sw1);
                 }
                 else 
@@ -155,14 +155,14 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
                         suffix = CELL_DEFINITION_SUFFIX;
-                        template = VelocityUtils.pynnCellTemplateFile;
+                        template = VelocityUtils.netpyneCellTemplateFile;
                     }
                     else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) || file.getName().endsWith(".input.json"))
                     {
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
                         suffix = INPUT_DEFINITION_SUFFIX;
-                        template = VelocityUtils.pynnInputNeuronTemplateFile;
+                        template = VelocityUtils.netpyneInputNeuronTemplateFile;
                     }
                     else 
                     {
@@ -222,14 +222,15 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 
         for (File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
-            PyNNWriter pw = new PyNNWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_pynn.py"));
+            NetPyNEWriter pw = new NetPyNEWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
             
             List<File> files = pw.convert();
             for (File f : files)

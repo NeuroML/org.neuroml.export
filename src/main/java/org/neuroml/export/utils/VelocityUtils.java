@@ -25,6 +25,10 @@ public class VelocityUtils
 	public static final String pynnCellTemplateFile = "/pynn/cell.vm";
 	public static final String pynnInputNeuronTemplateFile = "/pynn/input_neuron.vm";
 	
+	public static final String netpyneRunTemplateFile = "/netpyne/run.vm";
+	public static final String netpyneCellTemplateFile = "/netpyne/cell.vm";
+	public static final String netpyneInputNeuronTemplateFile = "/netpyne/input_neuron.vm";
+	
 	public static final String cTemplateFile = "/cvode/cvode.vm";
 	public static final String makeFile = "cvode/Makefile";
 	
