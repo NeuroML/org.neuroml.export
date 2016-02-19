@@ -13,6 +13,7 @@ public enum DLemsKeywords
     DIRECTION, 
     EFFECT, 
     NAME, 
+    TYPE, 
     TITLE, 
     PARAMETERS, 
     STATE, 

@@ -1,5 +1,7 @@
 # Main NetPyNE script for: $name
 
+from netpyne import init  # import netpyne init module
+
 netParams = {}  # dictionary to store sets of network parameters
 
 
@@ -9,6 +11,9 @@ netParams = {}  # dictionary to store sets of network parameters
 
 # Cell properties list
 netParams['cellParams'] = []
+
+next_gid = 0
+gids = {} # Require here for plotting etc.
 
 
 #foreach ($pop in $populations.keySet() )
@@ -20,12 +25,12 @@ netParams['cellParams'] = []
 #set($parameters_array=$component_array.get($component_element))
 
 # cell params for $component_array.name
-cellRule = {'label': '$component_array.name', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
-soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
-soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 123.0}
-soma['pointps']['Izhi'] = { #foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
+cellRule = {'label': '$pop', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
+${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
+${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': 31.8309886}
+${pop}_soma['pointps']['$component_array.name'] = { '_type':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
 
-cellRule['sections'] = {'soma': soma}  # add sections to dict
+cellRule['sections'] = {'soma': ${pop}_soma}  # add sections to dict
 netParams['cellParams'].append(cellRule)  # add dict to list of cell properties
 
 
@@ -46,8 +51,10 @@ netParams['popParams'] = []  # create list of populations - each item will conta
 
 # Population: $pop, size: $pop_size, component: $pop_component
 
-
-netParams['popParams'].append({'popLabel': '$pop', 'cellModel': 'cell', 'cellType': '$pop_component', 'numCells': $pop_size}) # add dict with params for this pop 
+size_$pop = $pop_size
+netParams['popParams'].append({'popLabel': '$pop', 'cellModel': '$pop', 'cellType': '$pop_component', 'numCells': size_$pop}) # add dict with params for this pop 
+gids['$pop'] = [i+next_gid for i in range(size_$pop)]
+next_gid += size_$pop
 
 #end
 
@@ -59,6 +66,10 @@ netParams['popParams'].append({'popLabel': '$pop', 'cellModel': 'cell', 'cellTyp
 #foreach ($input_ref in $inputs.keySet() )
 #set($input=$inputs.get($input_ref))
 # Input: $input_ref
+
+${input.population}_soma['pointps']['${input_ref}'] = { '_type':'${input_ref}' } 
+
+
 ###from ${input_ref}_inputdefinition import ${input_ref}
 ##${input_ref}_${input.population}_${input.population_index} = ${input_ref}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
 ##${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
@@ -83,17 +94,38 @@ simConfig['verbose'] = 1  # show detailed messages
 # Recording 
 simConfig['recordTraces'] = True  # whether to record cell traces or not
 
-print("Running a NetPyNE based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
+simConfig['recordDict'] = {'Vsoma':{'sec':'soma','pos':0.5,'var':'v'}}
 
 #foreach ($d in $display )
 # Display: $d.name
 #foreach ($curve in $d.curves )
 # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
 ###${curve.population}.record('soma(0.5).${curve.ordinate}')
+
+simConfig['plotTracesGids'] = [gids['$curve.population'][$curve.population_index]] # plot recorded traces for this list of cells
 #end
 #end
 
 
-s.sim.initialize(                   
-    simConfig = HHTut.simConfig, 
-    netParams = HHTut.netParams)
+simConfig['recordStim'] = True  # record spikes of cell stims
+simConfig['recordStep'] = simConfig['dt'] # Step size in ms to save data (eg. V traces, LFP, etc)
+
+
+
+# Analysis and plotting 
+simConfig['plotRaster'] = True # Whether or not to plot a raster
+simConfig['plotLFPSpectrum'] = False # plot power spectral density
+simConfig['maxspikestoplot'] = 3e8 # Maximum number of spikes to plot
+simConfig['plotConn'] = False # whether to plot conn matrix
+simConfig['plotWeightChanges'] = False # whether to plot weight changes (shown in conn matrix)
+simConfig['plot3dArch'] = True # plot 3d architecture
+
+
+
+
+print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig['duration'], simConfig['dt']))
+init.createAndSimulate(                   
+    simConfig = simConfig, 
+    netParams = netParams)
+
+print("Finished simulation")

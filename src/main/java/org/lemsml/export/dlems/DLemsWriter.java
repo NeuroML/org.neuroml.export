@@ -63,16 +63,16 @@ public class DLemsWriter extends ABaseWriter
     UnitConverter unitConverter = new SIUnitConverter();
     
     String TIME_DIM = Dimension.getTimeDimension().getName();
-    boolean onlyflattenIfNecessary = false;
+    boolean onlyFlattenIfNecessary = false;
 
     public void setPopulationMode(boolean mode)
     {
         populationMode = mode;
     }
 
-    public void setOnlyflattenIfNecessary(boolean onlyflattenIfNecessary)
+    public void setOnlyFlattenIfNecessary(boolean onlyFlattenIfNecessary)
     {
-        this.onlyflattenIfNecessary = onlyflattenIfNecessary;
+        this.onlyFlattenIfNecessary = onlyFlattenIfNecessary;
     }
     
     
@@ -390,6 +390,7 @@ public class DLemsWriter extends ABaseWriter
         g.writeEndArray();
 
         g.writeStringField(DLemsKeywords.NAME.get(), comp.getID());
+        g.writeStringField(DLemsKeywords.TYPE.get(), comp.getComponentType().getName());
 
         g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
         writeParameters(g, comp);
@@ -631,7 +632,7 @@ public class DLemsWriter extends ABaseWriter
         ComponentType ctFlat = new ComponentType();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
         
-        if (onlyflattenIfNecessary && !cf.requiresFlattenning()) {
+        if (onlyFlattenIfNecessary && !cf.requiresFlattenning()) {
             return compOrig.getComponentType();
         }
 
@@ -655,7 +656,7 @@ public class DLemsWriter extends ABaseWriter
         Component comp = new Component();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
 
-        if (onlyflattenIfNecessary && !cf.requiresFlattenning()) {
+        if (onlyFlattenIfNecessary && !cf.requiresFlattenning()) {
             return compOrig;
         }
         

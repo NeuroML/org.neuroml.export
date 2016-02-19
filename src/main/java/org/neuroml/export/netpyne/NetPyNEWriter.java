@@ -106,7 +106,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         dlemsw.setOutputFileName(mainDlemsFile);
         NRNUtils nrnUtils = new NRNUtils();
         dlemsw.setUnitConverter(nrnUtils);
-        dlemsw.setOnlyflattenIfNecessary(true);
+        dlemsw.setOnlyFlattenIfNecessary(true);
 		StringBuilder mainRunScript = new StringBuilder();
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
@@ -224,7 +224,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 
         for (File lemsFile : lemsFiles)

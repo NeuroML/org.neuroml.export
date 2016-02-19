@@ -106,7 +106,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         dlemsw.setOutputFileName(mainDlemsFile);
         NRNUtils nrnUtils = new NRNUtils();
         dlemsw.setUnitConverter(nrnUtils);
-        dlemsw.setOnlyflattenIfNecessary(true);
+        dlemsw.setOnlyFlattenIfNecessary(true);
 		StringBuilder mainRunScript = new StringBuilder();
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
