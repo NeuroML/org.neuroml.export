@@ -44,10 +44,11 @@ $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_compone
 # Inputs...
 #foreach ($input_ref in $inputs.keySet() )
 #set($input=$inputs.get($input_ref))
-# Input: $input_ref
-from ${input_ref}_inputdefinition import ${input_ref}
-${input_ref}_${input.population}_${input.population_index} = ${input_ref}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
+# Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
+from ${input.component.name}_inputdefinition import ${input.component.name}
+${input_ref}_${input.population}_${input.population_index} = ${input.component.name}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
 ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
+
 #end
 
 

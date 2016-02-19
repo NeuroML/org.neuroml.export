@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +25,9 @@ import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
 import org.lemsml.jlems.core.type.DerivedParameter;
 import org.lemsml.jlems.core.type.Dimension;
+import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.ParamValue;
-import org.lemsml.jlems.core.type.Parameter;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.IVisitable;
@@ -319,16 +320,43 @@ public class DLemsWriter extends ABaseWriter
                     
                 }
             
-                ArrayList<Component> inputs = tgtComp.getChildrenAL("explicitInputs");
-                if (!inputs.isEmpty())
+                ArrayList<Component> exInputs = tgtComp.getChildrenAL("explicitInputs");
+                HashMap<String, String> inputIdsVsTargets = new HashMap<String, String>();
+                HashMap<String, String> inputIdsVsComponents = new HashMap<String, String>();
+                int count = 0;
+                for (Component input : exInputs)
+                {
+                    String inputRef = input.getStringValue("input")+count;
+                    String tgt = input.getStringValue("target");
+                    inputIdsVsTargets.put(inputRef, tgt);
+                    inputIdsVsComponents.put(inputRef, input.getStringValue("input"));
+                    count +=1;
+                }
+                for (Component il : tgtComp.getChildrenAL("inputs"))
+                {
+                    System.out.println("cc"+il);
+                    ArrayList<Component> inputs = il.getChildrenAL("inputs");
+                    for (int i=0; i<inputs.size(); i++) 
+                    {
+                        Component input = inputs.get(i);
+                        String inputRef = il.getID()+"__"+i;
+                        String tgt = input.getStringValue("target");
+                        inputIdsVsTargets.put(inputRef, tgt.substring(3)); // remove initial ../
+                        inputIdsVsComponents.put(inputRef, il.getStringValue("component"));
+                        
+                    }
+                    
+                }
+                
+                if (!inputIdsVsTargets.isEmpty())
                 {
                     g.writeObjectFieldStart(DLemsKeywords.INPUTS.get());
-                    for (Component input : inputs)
+                    for (String inputId : inputIdsVsTargets.keySet())
                     {
-                        String inputRef = input.getStringValue("input");
-                        g.writeObjectFieldStart(inputRef);
-                        Component inputComp = lems.getComponent(inputRef);
-                        String tgt = input.getStringValue("target");
+                        g.writeObjectFieldStart(inputId);
+                        
+                        Component inputComp = lems.getComponent(inputIdsVsComponents.get(inputId));
+                        String tgt = inputIdsVsTargets.get(inputId);
                         LEMSQuantityPath lqp = new LEMSQuantityPath(tgt+"/xxx");
 
                         g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
@@ -522,7 +550,7 @@ public class DLemsWriter extends ABaseWriter
     {
         ComponentType ct = comp.getComponentType();
 
-        for (Parameter p : ct.getDimParams())
+        for (FinalParam p : ct.getFinalParams())
         {
             ParamValue pv = comp.getParamValue(p.getName());
 
@@ -678,16 +706,18 @@ public class DLemsWriter extends ABaseWriter
     {
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SimpleNet.xml"));
 
         for (File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             DLemsWriter dw = new DLemsWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".json"), null, false);
             dw.setPopulationMode(true);
+            dw.setOnlyFlattenIfNecessary(true);
 
             NRNUtils nrnUtils = new NRNUtils();
             dw.setUnitConverter(nrnUtils);  

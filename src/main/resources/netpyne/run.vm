@@ -1,20 +1,20 @@
 # Main NetPyNE script for: $name
 
+# See https://github.com/Neurosim-lab/netpyne
 from netpyne import init  # import netpyne init module
 
-netParams = {}  # dictionary to store sets of network parameters
 
-
-###############################################################################
+#[[###############################################################################]]#
 # NETWORK PARAMETERS
-###############################################################################
+#[[###############################################################################]]#
+
+netParams = {}  # dictionary to store sets of network parameters
 
 # Cell properties list
 netParams['cellParams'] = []
 
 next_gid = 0
-gids = {} # Require here for plotting etc.
-
+gids = {} # Require these in this file for plotting etc.
 
 #foreach ($pop in $populations.keySet() )
 #foreach ($pop_element in $populations.get($pop).keySet())
@@ -24,25 +24,23 @@ gids = {} # Require here for plotting etc.
 #if ($component_element=="parameters")
 #set($parameters_array=$component_array.get($component_element))
 
-# cell params for $component_array.name
+# cell params for cell $component_array.name in population $pop
 cellRule = {'label': '$pop', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
 ${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
-${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': 31.8309886}
 ${pop}_soma['pointps']['$component_array.name'] = { '_type':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
+
+# Todo: work this out here from area etc.
+cm = (318309 * ${pop}_soma['pointps']['$component_array.name']['C'] if ${pop}_soma['pointps']['$component_array.name'].has_key('C') else 318.31927 )
+
+${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': cm}
 
 cellRule['sections'] = {'soma': ${pop}_soma}  # add sections to dict
 netParams['cellParams'].append(cellRule)  # add dict to list of cell properties
 
-
-#end
-#end
-#end
-#end
-#end
-
-
+#end #end #end #end #end
 
 # Population parameters
+
 netParams['popParams'] = []  # create list of populations - each item will contain dict with pop params
 
 #foreach ($pop in $populations.keySet() )
@@ -59,22 +57,14 @@ next_gid += size_$pop
 #end
 
 
-
-
-
 # Inputs...
 #foreach ($input_ref in $inputs.keySet() )
 #set($input=$inputs.get($input_ref))
-# Input: $input_ref
+# Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
 
-${input.population}_soma['pointps']['${input_ref}'] = { '_type':'${input_ref}' } 
+${input.population}_soma['pointps']['${input.population}'] = { '_type':'${input.component.name}' } 
 
-
-###from ${input_ref}_inputdefinition import ${input_ref}
-##${input_ref}_${input.population}_${input.population_index} = ${input_ref}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
-##${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
 #end
-
 
 
 ###############################################################################
@@ -97,15 +87,13 @@ simConfig['recordTraces'] = True  # whether to record cell traces or not
 simConfig['recordDict'] = {'Vsoma':{'sec':'soma','pos':0.5,'var':'v'}}
 
 #foreach ($d in $display )
-# Display: $d.name
+# Display id: $d.name
 #foreach ($curve in $d.curves )
-# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
-###${curve.population}.record('soma(0.5).${curve.ordinate}')
-
-simConfig['plotTracesGids'] = [gids['$curve.population'][$curve.population_index]] # plot recorded traces for this list of cells
+# Line id: $curve.name; displaying ${curve.ordinate} on cell: $curve.population_index in population: $curve.population;
+if '${curve.ordinate}'=='v':
+    simConfig['plotTracesGids'] = [gids['$curve.population'][$curve.population_index]] # plot recorded traces for this list of cells
 #end
 #end
-
 
 simConfig['recordStim'] = True  # record spikes of cell stims
 simConfig['recordStep'] = simConfig['dt'] # Step size in ms to save data (eg. V traces, LFP, etc)
@@ -120,7 +108,13 @@ simConfig['plotConn'] = False # whether to plot conn matrix
 simConfig['plotWeightChanges'] = False # whether to plot weight changes (shown in conn matrix)
 simConfig['plot3dArch'] = True # plot 3d architecture
 
-
+# Saving
+simConfig['filename'] = '${name}.txt'  # Set file output name
+simConfig['saveFileStep'] = simConfig['dt'] # step size in ms to save data to disk
+simConfig['savePickle'] = False # Whether or not to write spikes etc. to a .mat file
+simConfig['saveJson'] = False # Whether or not to write spikes etc. to a .mat file
+simConfig['saveMat'] = False # Whether or not to write spikes etc. to a .mat file
+simConfig['saveTxt'] = True # save spikes and conn to txt file
 
 
 print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig['duration'], simConfig['dt']))
