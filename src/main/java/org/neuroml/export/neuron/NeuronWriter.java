@@ -532,6 +532,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 main.append(String.format("h(\"objectvar %s[%d]\")\n\n", synObjName, number));
 
+                NamingHelper nhPre = new NamingHelper(preCell);
+                NamingHelper nhPost = new NamingHelper(postCell);
+                
                 int index = 0;
                 for(Component conn : projection.getAllChildren())
                 {
@@ -546,15 +549,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         float preFractionAlong = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
 
-                        addComment(main, String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong));
+                        String comment = String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong);
+                        //System.out.println("comment@: "+comment);
+                        addComment(main, comment);
 
 
                         String preSecName;
 
                         if(preCell != null)
                         {
-                            NamingHelper nhPre = new NamingHelper(preCell);
-                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(preCell.getMorphology().getSegment().get(preSegmentId)));
+                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegmentId)));
                         }
                         else
                         {
@@ -564,8 +568,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         String postSecName;
                         if(postCell != null)
                         {
-                            NamingHelper nhPost = new NamingHelper(postCell);
-                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(postCell.getMorphology().getSegment().get(postSegmentId)));
+                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegmentId)));
                         }
                         else
                         {
