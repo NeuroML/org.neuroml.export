@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -545,7 +546,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         float preFractionAlong = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
 
-                        addComment(main, String.format("Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong));
+                        addComment(main, String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong));
 
 
                         String preSecName;
@@ -571,7 +572,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postSecName = postPop + "[" + postCellId + "]";
                         }
 
-                        main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", postSecName, synObjName, index, synapse, postFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"%s %s[%d] = new %s(%f)\")\n", postSecName, synObjName, index, synapse, postFractionAlong));
 
                         String sourceVarToListenFor = "&v("+ preFractionAlong+")";
                         
@@ -610,7 +611,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 sourceVarToListenFor = hocMechName;
                             }
                             main.append(String.format("h(\"objectvar nc_%s_%d\")\n", synObjName, index));
-                            main.append(String.format("h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %s, %s)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, index, threshold, delay, weight));
+                            main.append(String.format(Locale.US, "h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %s, %s)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, index, threshold, delay, weight));
                         }
                         index++;
                     }
@@ -691,7 +692,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String info1 = String.format("Adding connection from %s to %s", fromRef, toRef);
                     addComment(main, info1);
 
-                    main.append(String.format("h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synapseComp.getID(), 0.5));
+                    main.append(String.format(Locale.US, "h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synapseComp.getID(), 0.5));
 
                     float delay = connection.hasParam("delay") ? (float) connection.getParamValue("delay").getDoubleValue() * 1000 : 0.0f;
                     //this also accounts for dimensional weights, if we ever want to support that.
@@ -830,16 +831,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postSecName = postPop + "[" + postCellId + "]";
                         }
 
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapseComp.getID(), preFractionAlong));
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapseComp.getID(), postFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapseComp.getID(), preFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapseComp.getID(), postFractionAlong));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameA, index, postSecName, postFractionAlong));
-                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameB, index, preSecName, preFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameA, index, postSecName, postFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameB, index, preSecName, preFractionAlong));
 
                         index++;
                     }
@@ -924,16 +925,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postSecName = postPop + "[" + postCellId + "]";
                         }
 
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFractionAlong));
-                        main.append(String.format("h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFractionAlong));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFractionAlong));
-                        main.append(String.format("h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", postCompObjName, index, preSecName, preFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFractionAlong));
+                        main.append(String.format(Locale.US, "h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", postCompObjName, index, preSecName, preFractionAlong));
 
                         index++;
                     }
@@ -980,7 +981,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     addComment(main, "Adding input: " + input);
 
                     main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-                    main.append(String.format("h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName, NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
+                    main.append(String.format(Locale.US, "h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName, NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
 
                 }
             }

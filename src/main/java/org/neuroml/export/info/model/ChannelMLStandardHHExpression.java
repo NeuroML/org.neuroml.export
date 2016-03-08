@@ -3,6 +3,7 @@ package org.neuroml.export.info.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLException;
@@ -99,7 +100,7 @@ class HHSigmoidalRate extends Function
 	@Override
 	public String toString()
 	{
-		return String.format("%s /(1 + exp((v - (%s))/%s))", format(rate), format(midpoint), format(scale));
+		return String.format(Locale.US, "%s /(1 + exp((v - (%s))/%s))", format(rate), format(midpoint), format(scale));
 	}
 }
 
@@ -125,7 +126,7 @@ class HHExponentialRate extends Function
 	@Override
 	public String toString()
 	{
-		return String.format("%s * exp((v - (%s))/%s)", format(rate), format(midpoint), format(scale));
+		return String.format(Locale.US, "%s * exp((v - (%s))/%s)", format(rate), format(midpoint), format(scale));
 	}
 }
 
@@ -160,6 +161,6 @@ class HHExponentialLinearRate extends Function
 	@Override
 	public String toString()
 	{
-		return String.format("%1$s * (v - (%2$s))/%3$s / ( 1 - exp(-(v - (%2$s)) / %3$s))", format(rate), format(midpoint), format(scale));
+		return String.format(Locale.US, "%1$s * (v - (%2$s))/%3$s / ( 1 - exp(-(v - (%2$s)) / %3$s))", format(rate), format(midpoint), format(scale));
 	}
 }

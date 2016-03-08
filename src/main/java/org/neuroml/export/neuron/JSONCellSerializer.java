@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.jlems.core.logging.E;
@@ -606,7 +607,7 @@ public class JSONCellSerializer
 
     private static String getPt3dString(Point3DWithDiam p0)
     {
-        return String.format("%g, %g, %g, %g", p0.getX(), p0.getY(), p0.getZ(), p0.getDiameter());
+        return String.format(Locale.US, "%s, %s, %s, %s", p0.getX(), p0.getY(), p0.getZ(), p0.getDiameter());
     }
 
     public static void main(String[] args) throws Exception
@@ -644,6 +645,16 @@ public class JSONCellSerializer
             FileUtil.writeStringToFile(json, f);
             System.out.println("Written to: " + f.getCanonicalPath());
         }
+        Locale.setDefault(new Locale("pt", "BR"));
+        float r = 2.3f;
+        System.out.println("r: "+r);
+        System.out.println("r: "+String.format("%f", r));
+        Point3DWithDiam p = new Point3DWithDiam();
+        p.setX(1);
+        p.setY(1);
+        p.setZ(1.3);
+        System.out.println("Point: "+p+": "+JSONCellSerializer.getPt3dString(p));
+        
     }
 
 }

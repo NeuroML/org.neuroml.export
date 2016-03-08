@@ -1,6 +1,7 @@
 package org.neuroml.export.info.model;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.neuroml.export.info.model.pairs.IterablePair;
 import org.neuroml.export.info.model.pairs.Pair;
@@ -105,7 +106,7 @@ public class PlotMetadataNode
 			IterablePair<Double, Double> listPair = new IterablePair<Double, Double>(data.getXData(), data.getYData());
 			for(Pair<Double, Double> d : listPair)
 			{
-				sb.append(String.format("%.4f %.4f", d.first(), d.second()));
+				sb.append(String.format(Locale.US, "%.4f %.4f", d.first(), d.second()));
 			}
 		}
 		return sb.toString();
