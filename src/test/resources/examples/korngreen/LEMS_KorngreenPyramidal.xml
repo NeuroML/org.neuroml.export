@@ -1,0 +1,52 @@
+<Lems xmlns="http://www.neuroml.org/lems/0.7.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/lems/0.7.2  https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.2.xsd">
+
+    <Target component="sim1" reportFile="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/simulator.props" timesFile="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/time.dat"/>
+
+     <!--Include standard NeuroML 2 ComponentType definitions-->
+
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+
+    
+
+     <!--Include the generated NeuroML 2 files-->
+
+
+     <!--   Channel/synapse files-->
+    <Include file="bk.channel.nml"/>
+    <Include file="cad.nml"/>
+    <Include file="iA.channel.nml"/>
+    <Include file="iH__q101_44732.channel.nml"/>
+    <Include file="kslow.channel.nml"/>
+    <Include file="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7.channel.nml"/>
+    <Include file="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <Include file="pas.channel.nml"/>
+    <Include file="sk.channel.nml"/>
+    <Include file="MVACa.channel.nml"/>
+    <Include file="HVACa.channel.nml"/>
+    <!--   Cell files-->
+    <Include file="A140612_nml2.cell.nml"/>
+    <!--   Network file-->
+    <Include file="KorngreenPyramidal.net.nml"/>
+    
+
+        <!--Note: this could be: Simulation id="sim1" ... , but Component type="Simulation" ... 
+        is used to allow validation of this file according to the LEMS schema specified above...-->
+    <Component type="Simulation" id="sim1" length="2000.0ms" step="0.0125ms" target="network_KorngreenPyramidal">
+        
+        <Display id="FullCell_mod_v" title="KorngreenPyramidal: bac6_nml2, FullCell_nml2, VOLTAGE, VOLTAGE, VOLTAGE" xmin="-0.2" xmax="2.2" ymin="-0.104" ymax="0.064" timeScale="1s">
+            <Line id="v" timeScale="1s" quantity="FullCell_nml2/0/A140612_nml2/2674/v" scale="1 V" color="#000000"/>
+        
+            <Line id="v" timeScale="1s" quantity="FullCell_nml2/0/A140612_nml2/2720/v" scale="1 V" color="#ff0000"/>
+        
+            <Line id="v" timeScale="1s" quantity="FullCell_nml2/0/A140612_nml2/0/v" scale="1 V" color="#0000ff"/>
+        </Display>
+    
+        <OutputFile id="bac6_v_soma(0.5)_nml2_0_0_OF" fileName="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/FullCell_nml2_0.0.dat">
+            <OutputColumn id="v" quantity="FullCell_nml2/0/A140612_nml2/0/v"/>
+        </OutputFile>
+    </Component>
+
+
+</Lems>

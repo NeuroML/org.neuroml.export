@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="sk">
+
+    <notes>ChannelML file containing a single SK Channel description, from a model of a Globus Pallidus neuron described in Deister, C. A., Chan, C. S., Surmeier, D. J., &amp; Wilson, C. J. (2009). Calcium-activated SK channels influence voltage-gated ion channels to determine the precision of firing in globus pallidus neurons. J Neurosci, 29(26), 8452&#8211;61. doi:10.1523/JNEUROSCI.0576-09.2009 </notes>
+
+    <ionChannel id="sk" conductance="10pS" type="ionChannelHH" species="k">
+
+        <notes/>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="sk">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Mercer JN, Chan CS, Tkatch T, Held J, Surmeier DJ. Nav1.6 sodium channels are critical to pacemaking and fast spiking in globus pallidus neurons.,J Neurosci. 2007 Dec 5;27(49):13552-66. </rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/18057213"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gate id="w" type="gateHHtauInf" instances="1">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="22 degC"/>
+            <timeCourse type="sk_w_tau_tau"/>
+            <steadyState type="sk_w_inf_inf"/>
+        </gate>
+                            
+    </ionChannel>
+
+    <ComponentType name="sk_w_tau_tau" extends="baseVoltageConcDepTime">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="a0" dimension="none" value="1.3e4"/>
+        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="b0" dimension="none" value="0.06"/>
+        <!--Note: this parameter (Cq10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="Cq10" dimension="none" value="3"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="(1/((a0 * ((1e6)*ca_conc)^4) + b0)) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="sk_w_inf_inf" extends="baseVoltageConcDepVariable">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="a0" dimension="none" value="1.3e4"/>
+        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="b0" dimension="none" value="0.06"/>
+        <!--Note: this parameter (Cq10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="Cq10" dimension="none" value="3"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="x" exposure="x" dimension="none" value="1 / (1 + b0/(a0 * ((1e6)*ca_conc)^4))"/>
+        </Dynamics>
+
+    </ComponentType>
+
+</neuroml>

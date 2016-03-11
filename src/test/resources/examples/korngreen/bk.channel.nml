@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="bk">
+
+    <notes>ChannelML file containing a single (Ca activated) K+ Channel (BK-type) description, from a model of Layer 5 Pyramidal Neurons described in Almog, M &amp; Korngreen, A (2013) A quantitative description of dendritic conductances and its application to dendritic excitation in layer 5 pyramidal neurons. J Neurosci</notes>
+
+    <ionChannel id="bk" conductance="10pS" type="ionChannelHH" species="k">
+
+        <notes/>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="bk">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li> Akemann, W., &amp; Knöpfel, T. (2006). Interaction of Kv3 potassium channels and resurgent sodium current influences the rate of spontaneous firing of Purkinje neurons. J Neuroscience, 26(17), 4602&#8211;12</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/16641240"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gate id="m" type="gateHHtauInf" instances="3">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="22 degC"/>
+            <timeCourse type="bk_m_tau_tau"/>
+            <steadyState type="bk_m_inf_inf"/>
+        </gate>
+
+        <gate id="z" type="gateHHtauInf" instances="2">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="22 degC"/>
+            <timeCourse type="bk_z_tau_tau"/>
+            <steadyState type="bk_z_inf_inf"/>
+        </gate>
+
+        <gate id="h" type="gateHHtauInf" instances="1">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="22 degC"/>
+            <timeCourse type="bk_h_tau_tau"/>
+            <steadyState type="bk_h_inf_inf"/>
+        </gate>
+                            
+    </ionChannel>
+
+    <ComponentType name="bk_m_tau_tau" extends="baseVoltageConcDepTime">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="((1e3) * ( ctm + 1. / ( exp(-((V+5) + cVtm1)/cktm1) + exp(-((V + 5)+cVtm2)/cktm2)) )) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="bk_m_inf_inf" extends="baseVoltageConcDepVariable">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="x" exposure="x" dimension="none" value="1 / (1 + exp(-((V+5) + cVm) / ckm))"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="bk_z_tau_tau" extends="baseVoltageConcDepTime">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="(ctauz) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="bk_z_inf_inf" extends="baseVoltageConcDepVariable">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="x" exposure="x" dimension="none" value="1 / (1 + zhalf/(1e6*ca_conc))"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="bk_h_tau_tau" extends="baseVoltageConcDepTime">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="((1e3) * (cth + 1 / (exp(-((V+5)+cVth1)/ckth1) + exp(-((V+5)+cVth2)/ckth2)))) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="bk_h_inf_inf" extends="baseVoltageConcDepVariable">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="CONC_SCALE" dimension="concentration" value="1 mol_per_cm3"/>
+        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="q10" dimension="none" value="3"/>
+        <!--Note: this parameter (cvm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvm" dimension="none" value="28.9"/>
+        <!--Note: this parameter (ckm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckm" dimension="none" value="6.2"/>
+        <!--Note: this parameter (ctm) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctm" dimension="none" value="0.000505"/>
+        <!--Note: this parameter (cvtm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm1" dimension="none" value="86.4"/>
+        <!--Note: this parameter (cktm1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm1" dimension="none" value="-10.1"/>
+        <!--Note: this parameter (cvtm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvtm2" dimension="none" value="-33.3"/>
+        <!--Note: this parameter (cktm2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cktm2" dimension="none" value="10"/>
+        <!--Note: this parameter (ctauz) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ctauz" dimension="none" value="1"/>
+        <!--Note: this parameter (ch) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ch" dimension="none" value="0.085"/>
+        <!--Note: this parameter (cvh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvh" dimension="none" value="32"/>
+        <!--Note: this parameter (ckh) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckh" dimension="none" value="-5.8"/>
+        <!--Note: this parameter (cth) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cth" dimension="none" value="0.0019"/>
+        <!--Note: this parameter (cvth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth1" dimension="none" value="48.5"/>
+        <!--Note: this parameter (ckth1) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth1" dimension="none" value="-5.2"/>
+        <!--Note: this parameter (cvth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="cvth2" dimension="none" value="-54.2"/>
+        <!--Note: this parameter (ckth2) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="ckth2" dimension="none" value="12.9"/>
+        <!--Note: this parameter (zhalf) should ideally be defined only once within the ionChannel! Work in progress...-->
+        <Constant name="zhalf" dimension="none" value="0.01"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="ca_conc" dimension="none" value="caConc / CONC_SCALE"/>
+            <DerivedVariable name="cVm" dimension="none" value="cvm"/>
+            <DerivedVariable name="cVtm1" dimension="none" value="cvtm1"/>
+            <DerivedVariable name="cVtm2" dimension="none" value="cvtm2"/>
+            <DerivedVariable name="cVh" dimension="none" value="cvh"/>
+            <DerivedVariable name="cVth1" dimension="none" value="cvth1"/>
+            <DerivedVariable name="cVth2" dimension="none" value="cvth2"/>
+            <DerivedVariable name="x" exposure="x" dimension="none" value="ch + (1-ch) / ( 1+exp(-((V+5)+cVh)/ckh) )"/>
+        </Dynamics>
+
+    </ComponentType>
+
+</neuroml>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.githubusercontent.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="network_KorngreenPyramidal">
+
+    <notes>
+
+Network structure (NeuroML 2beta4) for project: KorngreenPyramidal saved with neuroConstruct v1.7.1 on: 17:36:59, 09-Mar-16
+
+Cell Group: FullCell_nml2 contains 1 cells
+
+
+
+    </notes>
+
+
+    <include href="A140612_nml2.cell.nml"/>
+    <include href="bk.channel.nml"/>
+    <include href="cad.nml"/>
+    <include href="epsp_mod.warning"/>
+    <include href="iA.channel.nml"/>
+    <include href="iH__q101_44732.channel.nml"/>
+    <include href="iH__q101_44732.channel.nml"/>
+    <include href="kslow.channel.nml"/>
+    <include href="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7.channel.nml"/>
+    <include href="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <include href="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <include href="pas.channel.nml"/>
+    <include href="sk.channel.nml"/>
+    <network id="network_KorngreenPyramidal" type="networkWithTemperature" temperature="34.0 degC">
+
+        
+
+        <population id="FullCell_nml2" component="A140612_nml2" type="populationList" size="1">
+           <annotation>
+                <property tag="color" value="0.28515625 0.58203125 0.70703125"/>
+            </annotation>
+            <instance id="0">
+                <location x="-749.44904" y="603.90393" z="32.760376"/>
+            </instance>
+        </population>
+
+
+
+            <!--There are no synaptic connections present in the network-->
+
+
+            <!--There are no electrical inputs present in the network-->
+
+
+
+
+    </network>
+
+</neuroml>
