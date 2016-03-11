@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.lemsml.jlems.core.logging.E;
@@ -25,6 +26,7 @@ import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
+import org.neuroml.model.ChannelDensityNonUniformGHK;
 import org.neuroml.model.ChannelDensityNonUniformNernst;
 import org.neuroml.model.InhomogeneousParameter;
 import org.neuroml.model.InitMembPotential;
@@ -49,13 +51,13 @@ import org.w3c.dom.Element;
 
 /**
  * @author Boris Marin & Padraig Gleeson
- * 
+ *
  */
 public class JSONCellSerializer
 {
     private static final boolean verbose = false;
 
-    private static void printv(String comment) 
+    private static void printv(String comment)
     {
         if (verbose) {
             E.info(comment);
@@ -138,11 +140,11 @@ public class JSONCellSerializer
                         }
                         Point3DWithDiam dist = seg.getDistal();
 
-                        if(prox != null && 
-                           dist.getX() == prox.getX() && 
-                           dist.getY() == prox.getY() && 
-                           dist.getZ() == prox.getZ() && 
-                           dist.getDiameter() == prox.getDiameter() && 
+                        if(prox != null &&
+                           dist.getX() == prox.getX() &&
+                           dist.getY() == prox.getY() &&
+                           dist.getZ() == prox.getZ() &&
+                           dist.getDiameter() == prox.getDiameter() &&
                            segsHere.size() == 1)
                         {
                             comment += "Section in NeuroML is spherical, so using cylindrical section along Y axis for NEURON\n";
@@ -202,9 +204,9 @@ public class JSONCellSerializer
 
                         g.writeNumberField("fractionAlong", fract);
                     }
-                    
+
                     for(Property prop: grp.getProperty()){
-                        if (prop.getTag().equals("numberInternalDivisions")) 
+                        if (prop.getTag().equals("numberInternalDivisions"))
                         {
                             g.writeNumberField("numberInternalDivisions", Integer.parseInt(prop.getValue()));
                         }
@@ -371,7 +373,7 @@ public class JSONCellSerializer
             MembraneProperties mp = null;
             MembraneProperties2CaPools mpCa2 = null;
             boolean isCell2CaPools = false;
-            
+
             if (cell instanceof Cell2CaPools) {
                 Cell2CaPools cell2ca = (Cell2CaPools)cell;
                 isCell2CaPools = true;
@@ -570,6 +572,40 @@ public class JSONCellSerializer
                 g.writeEndObject();
             }
 
+            for(ChannelDensityNonUniformGHK cd : mp.getChannelDensityNonUniformGHK())
+            {
+                g.writeStartObject();
+                g.writeStringField("id", cd.getId());
+
+                g.writeStringField("ionChannel", NRNUtils.getSafeName(cd.getIonChannel()));
+
+                for(VariableParameter vp : cd.getVariableParameter())
+                {
+                    if(vp.getParameter().equals("permeability"))
+                    {
+                        g.writeStringField("group", vp.getSegmentGroup());
+                        g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
+
+                        String convFactor = units.permeabilityFactor + " * ";
+                        g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
+                        g.writeStringField("comment", "Conversion factor of:  (" + convFactor + ") added");
+                    }
+                }
+
+                if(cd.getIon() != null)
+                {
+                    g.writeStringField("ion", cd.getIon());
+                }
+                else
+                {
+                    g.writeStringField("ion", "non_specific");
+                }
+
+                g.writeStringField("erev", "calculated_by_GHK_equation");
+
+                g.writeEndObject();
+            }
+
             g.writeEndArray();
 
             g.writeArrayFieldStart("species");
@@ -654,7 +690,7 @@ public class JSONCellSerializer
         p.setY(1);
         p.setZ(1.3);
         System.out.println("Point: "+p+": "+JSONCellSerializer.getPt3dString(p));
-        
+
     }
 
 }
