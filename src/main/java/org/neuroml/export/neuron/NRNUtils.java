@@ -75,6 +75,14 @@ public class NRNUtils implements UnitConverter
         + "    random_float = scop_random()*max\n"
         + "    \n"
         + "}\n\n";
+    
+    static final String heavisideFunctionDefs = "\n: The Heaviside step function\nFUNCTION H(x) {\n"
+        + "    \n"
+        + "    if (x < 0) { H = 0 }\n"
+        + "    else if (x > 0) { H = 1 }\n"
+        + "    else { H = 0.5 }\n"
+        + "    \n"
+        + "}\n\n";
 
     // TODO Add more keywords / builtin mechanisms
     static final Set<String> NRNKeywords = new HashSet<String>()

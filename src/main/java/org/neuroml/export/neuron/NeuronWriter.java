@@ -2100,6 +2100,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             blockFunctions.append(NRNUtils.randomFunctionDefs);
         }
+        
+        if (blockInitial.indexOf("H(")>0 ||
+            blockNetReceive.indexOf("H(")>0 ||
+            ratesMethod.indexOf("H(")>0)
+        {
+            blockFunctions.append(NRNUtils.heavisideFunctionDefs);
+        }
 
         if(blockFunctions.length() > 0)
         {
@@ -2931,7 +2938,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
