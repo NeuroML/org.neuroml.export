@@ -1498,7 +1498,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         StringBuilder blockAssigned = new StringBuilder();
         StringBuilder blockState = new StringBuilder();
         StringBuilder blockKinetic = new StringBuilder();
-        StringBuilder blockLinear = new StringBuilder();
         StringBuilder blockInitial = new StringBuilder();
         StringBuilder blockInitial_v = new StringBuilder();
         StringBuilder blockBreakpoint = new StringBuilder();
@@ -1803,7 +1802,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             blockBreakpoint.insert(0, "SOLVE activation METHOD sparse ? "+comp.summary()+"\n\n");
             blockKinetic.insert(0,"rates()\n\n");
-            blockLinear.insert(0,": sets initial equilibrium\n\n");
 
             HashMap<String,String> lines = new HashMap<String, String>();
             HashMap<String,ArrayList<String>> inRates = new HashMap<String, ArrayList<String>>();
@@ -1871,17 +1869,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     Set<String> states = inRates.keySet();
                     states.remove(lastState);
 
-                    for (String state: states) {
-                        blockLinear.append("? "+state+"\n ~ 0 ");
-                        for (String exp: inRates.get(state)) {
-                            blockLinear.append("+ "+exp+" ");
-                        }
-                        for (String exp: outRates.get(state)) {
-                            blockLinear.append("- "+exp+" ");
-                        }
-                        blockLinear.append("= 0\n\n");
-                    }
-                    blockLinear.append("~ "+conserve.substring(0,conserve.length()-1)+" = 1\n\n");
                 }
             }
         }
@@ -1989,7 +1976,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
         {
-            blockInitial.append("SOLVE seqinitial\n");
+            blockInitial.append("SOLVE activation STEADYSTATE sparse\n");
         }
 
         parseOnStart(comp, prefix, blockInitial, blockInitial_v, blockNetReceive, paramMappings, lems);
@@ -2075,10 +2062,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(blockKinetic.length()>0)
         {
             writeModBlock(mod, "KINETIC activation", blockKinetic.toString());
-        }
-        if(blockLinear.length()>0)
-        {
-            writeModBlock(mod, "LINEAR seqinitial", blockLinear.toString());
         }
 
         if(blockNetReceive.length() > 0)
