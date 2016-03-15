@@ -6,12 +6,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.export.dlems.DLemsWriter;
@@ -57,7 +60,6 @@ import org.neuroml.model.BiophysicalProperties2CaPools;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.IntracellularProperties;
-import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.MembraneProperties2CaPools;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpikeThresh;
@@ -331,20 +333,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String fileName = cellName + ".hoc";
                     File cellFile = new File(getOutputFolder(), fileName);
                     IntracellularProperties ip = null;
-                    MembraneProperties mp = null;
                     MembraneProperties2CaPools mpCa2 = null;
                     Component bpComp;
                     Component mpComp = null;
                     Component ipComp = null;
-                    //Component mpCa2Comp = null;
-                    boolean isCell2CaPools = false;
-
                     if (cell instanceof Cell2CaPools) {
                         Cell2CaPools cell2ca = (Cell2CaPools)cell;
-                        isCell2CaPools = true;
                         BiophysicalProperties2CaPools bp2 = cell2ca.getBiophysicalProperties2CaPools();
                         mpCa2 = bp2.getMembraneProperties2CaPools();
-                        mp = mpCa2;
                         ip = bp2.getIntracellularProperties2CaPools();
                         bpComp = popComp.getChild("biophysicalProperties2CaPools");
                         mpComp = bpComp.getChild("membraneProperties2CaPools");
@@ -354,7 +350,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         BiophysicalProperties bp = cell.getBiophysicalProperties();
                         ip = bp.getIntracellularProperties();
-                        mp = bp.getMembraneProperties();
                         bpComp = popComp.getChild("biophysicalProperties");
                         mpComp = bpComp.getChild("membraneProperties");
                         ipComp = bpComp.getChild("intracellularProperties");
@@ -1462,7 +1457,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
 
         public float voltageFactor;
-        @SuppressWarnings("unused")
         public float lengthFactor;
         public float specCapFactor;
         public float resistivityFactor;
@@ -1786,10 +1780,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
         }
-        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
-        {
-            // ratesMethod.append("i = -1 * i ? Due to different convention in synapses\n");
-        }
+//        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
+//        {
+//            // ratesMethod.append("i = -1 * i ? Due to different convention in synapses\n");
+//        }
 
         parseTimeDerivs(comp, prefix, locals, blockDerivative, blockBreakpoint, blockAssigned, ratesMethod, paramMappings, ionSpecies);
 
@@ -1801,76 +1795,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
         {
             blockBreakpoint.insert(0, "SOLVE activation METHOD sparse ? "+comp.summary()+"\n\n");
-            blockKinetic.insert(0,"rates()\n\n");
-
-            HashMap<String,String> lines = new HashMap<String, String>();
-            HashMap<String,ArrayList<String>> inRates = new HashMap<String, ArrayList<String>>();
-            HashMap<String,ArrayList<String>> outRates = new HashMap<String, ArrayList<String>>();
-
-            String conserve = "";
-
-            String prefix2 = prefix;
-            String lastState = null;
-            for (Component c: comp.getAllChildren())
-            {
-                if (c.getComponentType().isOrExtends("gateKS"))
-                {
-                    /*******
-                     *
-                     * What follows is a hard coded implementation of the ionChannelKS for mod files
-                     * This is required since the <KineticScheme> element in LEMS does most of the
-                     * "magic" when solving the initial state, generating the rates of changes of states
-                     * etc.
-                     *
-                     *******/
-                    prefix2 = prefix2+c.id+"_";
-                    for (Component cc: c.getAllChildren())
-                    {
-                        if (cc.getComponentType().isOrExtends("forwardTransition"))
-                        {
-                            String from = prefix2+cc.getStringValue("from")+"_occupancy";
-                            String to = prefix2+cc.getStringValue("to")+"_occupancy";
-                            String rate = prefix2+cc.id+"_rate_r";
-                            lines.put(from+"_"+to, "~ "+from+" <-> "+to+"	("+rate+",REV_RATE)\n");
-
-                            if (!inRates.containsKey(to))
-                                inRates.put(to, new ArrayList<String>());
-                            inRates.get(to).add(from+"*"+rate);
-
-                            if (!outRates.containsKey(from))
-                                outRates.put(from, new ArrayList<String>());
-                            outRates.get(from).add(from+"*"+rate);
-
-                            if (!conserve.contains(" "+from+" +"))
-                                conserve = conserve +" "+from+" +";
-                            if (!conserve.contains(" "+to+" +"))
-                                conserve = conserve +" "+to+" +";
-
-                            lastState = to;
-                        }
-                        if (cc.getComponentType().isOrExtends("reverseTransition"))
-                        {
-                            String from = prefix2+cc.getStringValue("from")+"_occupancy";
-                            String to = prefix2+cc.getStringValue("to")+"_occupancy";
-                            String rate = prefix2+cc.id+"_rate_r";
-                            blockKinetic.append(""+lines.get(from+"_"+to).replaceAll("REV_RATE", rate));
-
-                            if (!inRates.containsKey(from))
-                                inRates.put(from, new ArrayList<String>());
-                            inRates.get(from).add(to+"*"+rate);
-
-                            if (!outRates.containsKey(to))
-                                outRates.put(to, new ArrayList<String>());
-                            outRates.get(to).add(to+"*"+rate);
-                        }
-                    }
-
-                    blockKinetic.append("CONSERVE "+conserve.substring(0,conserve.length()-1)+" = 1\n\n");
-                    Set<String> states = inRates.keySet();
-                    states.remove(lastState);
-
-                }
-            }
+            parseKS(comp, blockKinetic, prefix);
         }
 
         HashMap<String, Integer> flagsVsRegimes = new HashMap<String, Integer>();
@@ -2091,6 +2016,61 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         return mod.toString();
     }
+
+	private void parseKS(Component comp, StringBuilder blockKinetic, String prefix) throws ContentError {
+        /*******
+         *
+         * What follows is a hard coded implementation of the ionChannelKS for mod files
+         * This is required since the <KineticScheme> element in LEMS does most of the
+         * "magic" when solving the initial state, generating the rates of changes of states
+         * etc.
+         *
+         *******/
+
+		blockKinetic.insert(0,"rates()\n\n");
+		HashMap<String,String> lines = new HashMap<String, String>();
+
+		for (Component c: comp.getAllChildren())
+		{
+		    if (c.getComponentType().isOrExtends("gateKS")){
+		    	String prefix2 = prefix;
+		    	Set<String> gateMicroStates = new HashSet<String>();
+		        prefix2 = prefix2+c.id+"_";
+		        for (Component cc: c.getAllChildren())
+		        {
+		            if (cc.getComponentType().isOrExtends("forwardTransition"))
+		            {
+		                String from = prefix2+cc.getStringValue("from")+"_occupancy";
+		                String to = prefix2+cc.getStringValue("to")+"_occupancy";
+		                gateMicroStates.addAll(Arrays.asList(from, to));
+		                String rate = prefix2+cc.id+"_rate_r";
+		                lines.put(from+"_"+to, "~ "+from+" <-> "+to+"	("+rate+",REV_RATE)\n");
+
+		            }
+		            if (cc.getComponentType().isOrExtends("reverseTransition"))
+		            {
+		                String from = prefix2+cc.getStringValue("from")+"_occupancy";
+		                String to = prefix2+cc.getStringValue("to")+"_occupancy";
+		                gateMicroStates.addAll(Arrays.asList(from, to));
+		                String rate = prefix2+cc.id+"_rate_r";
+		                blockKinetic.append(""+lines.get(from+"_"+to).replaceAll("REV_RATE", rate));
+
+		            }
+		            if (cc.getComponentType().isOrExtends("tauInfTransition"))
+		            {
+		                String from = prefix2+cc.getStringValue("from")+"_occupancy";
+		                String to = prefix2+cc.getStringValue("to")+"_occupancy";
+		                String fwdrate = prefix2+cc.id+"_rf";
+		                String revrate = prefix2+cc.id+"_rr";
+		                gateMicroStates.addAll(Arrays.asList(from, to));
+		                blockKinetic.append("~ "+from+" <-> "+to+"	("+fwdrate+", "+revrate+")\n");
+		            }
+		        }
+
+		        blockKinetic.append("CONSERVE " + StringUtils.join(gateMicroStates.toArray(), '+') + "= 1\n\n");
+		    }
+		}
+	}
 
     private void parseOnStart(Component comp, String prefix, StringBuilder blockInitial, StringBuilder blockInitial_v, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, Lems lems)
             throws LEMSException

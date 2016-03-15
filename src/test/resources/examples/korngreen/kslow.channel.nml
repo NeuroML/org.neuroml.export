@@ -22,17 +22,31 @@
             </rdf:RDF>
         </annotation>
 
-        <gate id="a" type="gateHHrates" instances="2">
+        <gateKS id="a" instances="2">
+            <openState id="ao"/>
+            <closedState id="ac"/>
             <q10Settings type="q10ExpTemp" q10Factor="2.3" experimentalTemp="21 degC"/>
-            <forwardRate type="kslow_a_alpha_rate"/>
-            <reverseRate type="kslow_a_beta_rate"/>
-        </gate>
+            <forwardTransition id="ft" from="ac" to="ao" >
+                <rate type="kslow_a_alpha_rate"/>
+            </forwardTransition>
+            <reverseTransition id="rt" from="ac" to="ao">
+                <rate type="kslow_a_beta_rate"/>
+            </reverseTransition>
+        </gateKS>
 
         <gateKS id="b" instances="1">
-            <q10Settings type="q10ExpTemp" q10Factor="1" experimentalTemp="21 degC"/>
-            <closedState id="bc"/>
-            <openState id="b"/>
-            <openState id="b1"/>
+            <q10Settings type="q10ExpTemp" q10Factor="2.3" experimentalTemp="21 degC"/>
+            <KSState id="bc" relativeConductance="0"/>
+            <KSState id="bo" relativeConductance="0.5"/>
+            <KSState id="bo1" relativeConductance="0.5"/>
+            <tauInfTransition from="bc" to="bo" id="tauinf0" >
+                <steadyState type="kslow_b_inf"/>
+                <timeCourse type="kslow_b_tau"/>
+            </tauInfTransition> 
+            <tauInfTransition from="bc" to="bo1" id="tauinf1">
+                <steadyState type="kslow_b_inf"/>
+                <timeCourse type="kslow_b1_tau"/>
+            </tauInfTransition> 
         </gateKS>
                             
     </ionChannelKS>
@@ -40,62 +54,16 @@
     <ComponentType name="kslow_a_alpha_rate" extends="baseVoltageDepRate">
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
-        <!--Note: this parameter (vshift) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="vshift" dimension="none" value="0"/>
-        <!--Note: this parameter (v05a) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05a" dimension="none" value="-14.3"/>
-        <!--Note: this parameter (za) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="za" dimension="none" value="14.6"/>
-        <!--Note: this parameter (v05b) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05b" dimension="none" value="-58"/>
-        <!--Note: this parameter (zb) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="zb" dimension="none" value="-11"/>
-        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a0" dimension="none" value="0.0052"/>
-        <!--Note: this parameter (a1) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a1" dimension="none" value="11.1"/>
-        <!--Note: this parameter (a2) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a2" dimension="none" value="13.1"/>
-        <!--Note: this parameter (a3) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a3" dimension="none" value="0.01938"/>
-        <!--Note: this parameter (a4) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a4" dimension="none" value="-1.27"/>
-        <!--Note: this parameter (a5) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a5" dimension="none" value="71"/>
-        <!--Note: this parameter (a6) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a6" dimension="none" value="-0.0053"/>
-        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b0" dimension="none" value="360"/>
-        <!--Note: this parameter (b11) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b11" dimension="none" value="1010"/>
-        <!--Note: this parameter (b2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b2" dimension="none" value="-75"/>
-        <!--Note: this parameter (b3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b3" dimension="none" value="48"/>
-        <!--Note: this parameter (b4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b4" dimension="none" value="23.7"/>
-        <!--Note: this parameter (b5) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b5" dimension="none" value="-54"/>
-        <!--Note: this parameter (bb0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb0" dimension="none" value="2350"/>
-        <!--Note: this parameter (bb1) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb1" dimension="none" value="1380"/>
-        <!--Note: this parameter (bb2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb2" dimension="none" value="0.01118"/>
-        <!--Note: this parameter (bb3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb3" dimension="none" value="-210"/>
-        <!--Note: this parameter (bb4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb4" dimension="none" value="0.0306"/>
-        <!--Note: this parameter (temp) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="temp" dimension="none" value="21"/>
-        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="q10" dimension="none" value="2.3"/>
 
         <Dynamics>
             <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
-            <DerivedVariable name="Vshift" dimension="none" value="vshift"/>
-            <DerivedVariable name="V05a" dimension="none" value="v05a"/>
-            <DerivedVariable name="V05b" dimension="none" value="v05b"/>
             <DerivedVariable name="r" exposure="r" dimension="per_time" value="(a0*(V-a1)/(1-exp(-(V-a1)/a2))) / TIME_SCALE"/>
         </Dynamics>
 
@@ -104,195 +72,73 @@
     <ComponentType name="kslow_a_beta_rate" extends="baseVoltageDepRate">
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
-        <!--Note: this parameter (vshift) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="vshift" dimension="none" value="0"/>
-        <!--Note: this parameter (v05a) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05a" dimension="none" value="-14.3"/>
-        <!--Note: this parameter (za) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="za" dimension="none" value="14.6"/>
-        <!--Note: this parameter (v05b) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05b" dimension="none" value="-58"/>
-        <!--Note: this parameter (zb) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="zb" dimension="none" value="-11"/>
-        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a0" dimension="none" value="0.0052"/>
-        <!--Note: this parameter (a1) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a1" dimension="none" value="11.1"/>
-        <!--Note: this parameter (a2) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a2" dimension="none" value="13.1"/>
-        <!--Note: this parameter (a3) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a3" dimension="none" value="0.01938"/>
-        <!--Note: this parameter (a4) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a4" dimension="none" value="-1.27"/>
-        <!--Note: this parameter (a5) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a5" dimension="none" value="71"/>
-        <!--Note: this parameter (a6) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="a6" dimension="none" value="-0.0053"/>
-        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b0" dimension="none" value="360"/>
-        <!--Note: this parameter (b11) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b11" dimension="none" value="1010"/>
-        <!--Note: this parameter (b2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b2" dimension="none" value="-75"/>
-        <!--Note: this parameter (b3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b3" dimension="none" value="48"/>
-        <!--Note: this parameter (b4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b4" dimension="none" value="23.7"/>
-        <!--Note: this parameter (b5) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b5" dimension="none" value="-54"/>
-        <!--Note: this parameter (bb0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb0" dimension="none" value="2350"/>
-        <!--Note: this parameter (bb1) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb1" dimension="none" value="1380"/>
-        <!--Note: this parameter (bb2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb2" dimension="none" value="0.01118"/>
-        <!--Note: this parameter (bb3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb3" dimension="none" value="-210"/>
-        <!--Note: this parameter (bb4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb4" dimension="none" value="0.0306"/>
-        <!--Note: this parameter (temp) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="temp" dimension="none" value="21"/>
-        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="q10" dimension="none" value="2.3"/>
         <Requirement name="rateScale" dimension="none"/>
 
         <Dynamics>
             <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
-            <DerivedVariable name="Vshift" dimension="none" value="vshift"/>
-            <DerivedVariable name="V05a" dimension="none" value="v05a"/>
-            <DerivedVariable name="V05b" dimension="none" value="v05b"/>
-            <DerivedVariable name="r" exposure="r" dimension="per_time" value="(a3*exp(-(V-a4)/a5)+a6/rateScale) / TIME_SCALE"/>
+            <DerivedVariable name="r" exposure="r" dimension="per_time" value="(a3*exp(-(V-a4)/a5)+a6) / TIME_SCALE"/>
         </Dynamics>
 
     </ComponentType>
 
 
-    <ComponentType name="kslow_b_tau_tau" extends="baseVoltageDepTime">
+    <ComponentType name="kslow_b_tau" extends="baseVoltageDepTime">
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
-        <!--Note: this parameter (vshift) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="vshift" dimension="none" value="0"/>
-        <!--Note: this parameter (v05a) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05a" dimension="none" value="-14.3"/>
-        <!--Note: this parameter (za) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="za" dimension="none" value="14.6"/>
-        <!--Note: this parameter (v05b) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="v05b" dimension="none" value="-58"/>
-        <!--Note: this parameter (zb) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="zb" dimension="none" value="-11"/>
-        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a0" dimension="none" value="0.0052"/>
-        <!--Note: this parameter (a1) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a1" dimension="none" value="11.1"/>
-        <!--Note: this parameter (a2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a2" dimension="none" value="13.1"/>
-        <!--Note: this parameter (a3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a3" dimension="none" value="0.01938"/>
-        <!--Note: this parameter (a4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a4" dimension="none" value="-1.27"/>
-        <!--Note: this parameter (a5) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a5" dimension="none" value="71"/>
-        <!--Note: this parameter (a6) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a6" dimension="none" value="-0.0053"/>
-        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b0" dimension="none" value="360"/>
-        <!--Note: this parameter (b11) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b11" dimension="none" value="1010"/>
-        <!--Note: this parameter (b2) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b2" dimension="none" value="-75"/>
-        <!--Note: this parameter (b3) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b3" dimension="none" value="48"/>
-        <!--Note: this parameter (b4) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b4" dimension="none" value="23.7"/>
-        <!--Note: this parameter (b5) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="b5" dimension="none" value="-54"/>
-        <!--Note: this parameter (bb0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb0" dimension="none" value="2350"/>
-        <!--Note: this parameter (bb1) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb1" dimension="none" value="1380"/>
-        <!--Note: this parameter (bb2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb2" dimension="none" value="0.01118"/>
-        <!--Note: this parameter (bb3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb3" dimension="none" value="-210"/>
-        <!--Note: this parameter (bb4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="bb4" dimension="none" value="0.0306"/>
-        <!--Note: this parameter (temp) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="temp" dimension="none" value="21"/>
-        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="q10" dimension="none" value="2.3"/>
-<!--Since the channel type is KS...-->
+
         <Requirement name="rateScale" dimension="none"/>
 
         <Dynamics>
             <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
-            <DerivedVariable name="Vshift" dimension="none" value="vshift"/>
-            <DerivedVariable name="V05a" dimension="none" value="v05a"/>
-            <DerivedVariable name="V05b" dimension="none" value="v05b"/>
-            <DerivedVariable name="t" exposure="t" dimension="time" value="rateScale * (bb0+bb1*exp(-bb2*V)+bb3*exp(-bb4*V)) * TIME_SCALE"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="(b0+(b11+b4*(V-b5))*exp(-(V-b2)*(V-b2)/(b3*b3))) * TIME_SCALE"/>
         </Dynamics>
 
     </ComponentType>
 
-    <ComponentType name="kslow_b_inf_inf" extends="baseVoltageDepVariable">
+
+    <ComponentType name="kslow_b1_tau" extends="baseVoltageDepTime">
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
-        <!--Note: this parameter (vshift) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="vshift" dimension="none" value="0"/>
-        <!--Note: this parameter (v05a) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05a" dimension="none" value="-14.3"/>
-        <!--Note: this parameter (za) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="za" dimension="none" value="14.6"/>
-        <!--Note: this parameter (v05b) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="v05b" dimension="none" value="-58"/>
-        <!--Note: this parameter (zb) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="zb" dimension="none" value="-11"/>
-        <!--Note: this parameter (a0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a0" dimension="none" value="0.0052"/>
-        <!--Note: this parameter (a1) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a1" dimension="none" value="11.1"/>
-        <!--Note: this parameter (a2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a2" dimension="none" value="13.1"/>
-        <!--Note: this parameter (a3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a3" dimension="none" value="0.01938"/>
-        <!--Note: this parameter (a4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a4" dimension="none" value="-1.27"/>
-        <!--Note: this parameter (a5) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a5" dimension="none" value="71"/>
-        <!--Note: this parameter (a6) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="a6" dimension="none" value="-0.0053"/>
-        <!--Note: this parameter (b0) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b0" dimension="none" value="360"/>
-        <!--Note: this parameter (b11) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b11" dimension="none" value="1010"/>
-        <!--Note: this parameter (b2) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b2" dimension="none" value="-75"/>
-        <!--Note: this parameter (b3) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b3" dimension="none" value="48"/>
-        <!--Note: this parameter (b4) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b4" dimension="none" value="23.7"/>
-        <!--Note: this parameter (b5) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="b5" dimension="none" value="-54"/>
-        <!--Note: this parameter (bb0) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="bb0" dimension="none" value="2350"/>
-        <!--Note: this parameter (bb1) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="bb1" dimension="none" value="1380"/>
-        <!--Note: this parameter (bb2) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="bb2" dimension="none" value="0.01118"/>
-        <!--Note: this parameter (bb3) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="bb3" dimension="none" value="-210"/>
-        <!--Note: this parameter (bb4) should ideally be defined only once within the ionChannel! Work in progress...-->
         <Constant name="bb4" dimension="none" value="0.0306"/>
-        <!--Note: this parameter (temp) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="temp" dimension="none" value="21"/>
-        <!--Note: this parameter (q10) should ideally be defined only once within the ionChannel! Work in progress...-->
-        <Constant name="q10" dimension="none" value="2.3"/>
-<!--Since the channel type is KS...-->
+
         <Requirement name="rateScale" dimension="none"/>
 
         <Dynamics>
             <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
-            <DerivedVariable name="Vshift" dimension="none" value="vshift"/>
-            <DerivedVariable name="V05a" dimension="none" value="v05a"/>
+            <DerivedVariable name="t" exposure="t" dimension="time" value="(bb0+bb1*exp(-bb2*V)+bb3*exp(-bb4*V)) * TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+
+    <ComponentType name="kslow_b_inf" extends="baseVoltageDepVariable">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Constant name="v05b" dimension="none" value="-58"/>
+        <Constant name="zb" dimension="none" value="-11"/>
+        <Requirement name="rateScale" dimension="none"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
             <DerivedVariable name="V05b" dimension="none" value="v05b"/>
             <DerivedVariable name="x" exposure="x" dimension="none" value="rateScale * 1/(1 + exp(-(V-V05b)/zb))"/>
         </Dynamics>
