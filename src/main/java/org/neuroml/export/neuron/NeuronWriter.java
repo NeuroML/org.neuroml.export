@@ -144,7 +144,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             try
             {
                 currentProcess.waitFor();
-
                 E.info("Exit value for compilation: " + currentProcess.exitValue());
             }
             catch(InterruptedException e)
