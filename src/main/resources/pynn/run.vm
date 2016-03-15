@@ -52,18 +52,14 @@ ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.
 
 #end
 
-
 print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 
-recorded = []
 
 #foreach ($d in $display )
 # Display: $d.name
 #foreach ($curve in $d.curves )
 # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
-if not 'soma(0.5).${curve.ordinate}' in recorded:
-    ${curve.population}.record('soma(0.5).${curve.ordinate}')
-    recorded.append('soma(0.5).${curve.ordinate}')
+${curve.population}.record('soma(0.5).${curve.ordinate}')
 #end
 #end
 
@@ -72,9 +68,7 @@ if not 'soma(0.5).${curve.ordinate}' in recorded:
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
-if not 'soma(0.5).${oc.variable}' in recorded: 
-    ${oc.population}.record('soma(0.5).${oc.variable}')
-    recorded.append('soma(0.5).${oc.variable}')
+${oc.population}.record('soma(0.5).${oc.variable}')
 #end
 #end
 #end
@@ -89,8 +83,8 @@ print("Saving to file: $of.file_name (ref: $of.name)")
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
 segment =  ${oc.population}.get_data().segments[0]
-${of.name}_${oc.variable} = [next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None).T[$oc.population_index]]
-${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.variable}))
+${of.name}_${oc.name}_${oc.variable} = [next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None).T[$oc.population_index]]
+${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
 #else
 # Column: $oc.name
 t = np.arange(0,sim.tstop+($dt/2),$dt)
@@ -109,7 +103,7 @@ if options.plot_figure:
 #foreach ($curve in $d.curves )
     # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
     segment =  ${curve.population}.get_data().segments[0]
-    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None)
+    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
     ts = [i*sim.get_time_step() for i in xrange(len(vm))]
     plt.plot(ts, vm, '-', label='${curve.name}')
 #end
