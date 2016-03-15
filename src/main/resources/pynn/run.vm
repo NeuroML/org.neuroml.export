@@ -1,6 +1,7 @@
 # Main PyNN script for: $name
 
 from pyNN.utility import get_simulator, init_logging
+import numpy as np
 
 sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
                              ("--debug", "Print debugging information"))
@@ -54,30 +55,63 @@ ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.
 
 print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
 
+recorded = []
+
 #foreach ($d in $display )
 # Display: $d.name
 #foreach ($curve in $d.curves )
 # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
-${curve.population}.record('soma(0.5).${curve.ordinate}')
+if not 'soma(0.5).${curve.ordinate}' in recorded:
+    ${curve.population}.record('soma(0.5).${curve.ordinate}')
+    recorded.append('soma(0.5).${curve.ordinate}')
+#end
+#end
+
+#foreach ($of in $output_file )
+# Output file: $of.file_name
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+if not 'soma(0.5).${oc.variable}' in recorded: 
+    ${oc.population}.record('soma(0.5).${oc.variable}')
+    recorded.append('soma(0.5).${oc.variable}')
+#end
 #end
 #end
 
 
 sim.run(sim.tstop)
 
-if options.plot_figure:
+#foreach ($of in $output_file )
+print("Saving to file: $of.file_name (ref: $of.name)")
+ 
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+segment =  ${oc.population}.get_data().segments[0]
+${of.name}_${oc.variable} = [next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None).T[$oc.population_index]]
+${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.variable}))
+#else
+# Column: $oc.name
+t = np.arange(0,sim.tstop+($dt/2),$dt)
+${of.name}_data = np.array([t])
+#end
+#end
+np.savetxt('$of.file_name', ${of.name}_data.T, delimiter=',',fmt='%s')
+#end
 
+if options.plot_figure:
     import matplotlib.pyplot as plt
 #foreach ($d in $display )
     # Display: $d.name: $d.title
+    print("Display ($d.name): $d.title")
     plt.figure("${d.title}")
 #foreach ($curve in $d.curves )
     # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
-    data =  ${curve.population}.get_data()
-    for seg in data.segments:
-        vm = seg.analogsignalarrays[0]
-        ts = [i*sim.get_time_step() for i in xrange(len(vm))]
-        plt.plot(ts, vm, '-', label='${curve.name}')
+    segment =  ${curve.population}.get_data().segments[0]
+    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None)
+    ts = [i*sim.get_time_step() for i in xrange(len(vm))]
+    plt.plot(ts, vm, '-', label='${curve.name}')
 #end
     plt.legend()
 #end

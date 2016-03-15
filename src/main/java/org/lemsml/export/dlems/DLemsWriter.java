@@ -448,9 +448,52 @@ public class DLemsWriter extends ABaseWriter
         {
             if (dispComp.getTypeName().equals("OutputFile"))
             {
+                // Todo: remove, it is only used in older dlems templates...
                 g.writeStringField(DLemsKeywords.DUMP_TO_FILE.get(), dispComp.getStringValue("fileName"));
             }
         }
+        
+        g.writeArrayFieldStart(DLemsKeywords.OUTPUT_FILE.get());
+        
+        for (Component outFile : simCpt.getAllChildren())
+        {
+            if (outFile.getTypeName().equals("OutputFile"))
+            {
+                g.writeStartObject();
+                g.writeStringField(DLemsKeywords.NAME.get(), outFile.getID());
+                g.writeStringField(DLemsKeywords.FILE_NAME.get(), outFile.getStringValue("fileName"));
+                
+                g.writeArrayFieldStart(DLemsKeywords.OUTPUT_COLUMNS.get());
+                
+                g.writeStartObject();
+                g.writeStringField(DLemsKeywords.NAME.get(), "t");
+                //g.writeStringField(DLemsKeywords., "t");
+                g.writeEndObject();
+                        
+                for (Component outputColumn : outFile.getAllChildren())
+                {
+                    if (outputColumn.getTypeName().equals("OutputColumn"))
+                    {
+                        g.writeStartObject();
+                        String quantity = outputColumn.getStringValue("quantity");
+                        
+                        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
+
+
+                        g.writeStringField(DLemsKeywords.NAME.get(), outputColumn.getID());
+                        g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
+                        g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
+                        g.writeStringField(DLemsKeywords.VARIABLE.get(), lqp.getVariable());
+                        g.writeEndObject();
+                    }
+                }
+                
+                g.writeEndArray();
+                
+                g.writeEndObject();
+            }
+        }
+        g.writeEndArray();
 
         g.writeArrayFieldStart(DLemsKeywords.DISPLAY.get());
 
@@ -708,9 +751,9 @@ public class DLemsWriter extends ABaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-        lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SimpleNet.xml"));
 
         for (File lemsFile : lemsFiles)
         {

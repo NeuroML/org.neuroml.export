@@ -71,7 +71,7 @@ class ${name}Type(NativeCellType):
 
     default_parameters = {#foreach ($param in $parameters.keySet() ) '$param':$parameters.get($param), #end}
     default_initial_values = {}    
-    recordable = ['soma(0.5).v']
+    recordable = [#foreach ($s in $state.keySet() ) 'soma(0.5).$s', #end]
     units = {'soma(0.5).v' : 'mV'}
     receptor_types = []
     model = $name
