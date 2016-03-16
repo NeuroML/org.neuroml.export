@@ -15,9 +15,9 @@
 
     <include href="na.channel.nml"/>
 
-    <include href="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7.channel.nml"/>
+    <include href="na__vshifth3__vshiftm7.channel.nml"/>
 
-    <include href="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <include href="na__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
 
     <include href="pas.channel.nml"/>
 
@@ -31774,17 +31774,17 @@
                 
                 <channelDensity condDensity="20.96737 mS_per_cm2" id="kslow_basal_dend_group" ionChannel="kslow" segmentGroup="basal_dend_group" ion="k" erev="-100.0 mV"/>
                 
-                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_nodes_group" ionChannel="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7" segmentGroup="nodes_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_nodes_group" ionChannel="na__vshifth3__vshiftm7" segmentGroup="nodes_group" ion="na" erev="60.0 mV"/>
                 
-                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_iseg_group" ionChannel="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7" segmentGroup="iseg_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_iseg_group" ionChannel="na__vshifth3__vshiftm7" segmentGroup="iseg_group" ion="na" erev="60.0 mV"/>
                 
-                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_hill_group" ionChannel="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7" segmentGroup="hill_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="3000.0 mS_per_cm2" id="na_hill_group" ionChannel="na__vshifth3__vshiftm7" segmentGroup="hill_group" ion="na" erev="60.0 mV"/>
                 
-                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_soma_group" ionChannel="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="soma_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_soma_group" ionChannel="na__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="soma_group" ion="na" erev="60.0 mV"/>
                 
-                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_myelin_group" ionChannel="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="myelin_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_myelin_group" ionChannel="na__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="myelin_group" ion="na" erev="60.0 mV"/>
                 
-                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_basal_dend_group" ionChannel="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="basal_dend_group" ion="na" erev="60.0 mV"/>
+                <channelDensity condDensity="35.2142 mS_per_cm2" id="na_basal_dend_group" ionChannel="na__vshifthmin9_60842__vshiftmmin10_9975" segmentGroup="basal_dend_group" ion="na" erev="60.0 mV"/>
                 
                 <channelDensity condDensity="20.0 mS_per_cm2" id="pas_nodes_group" ionChannel="pas" segmentGroup="nodes_group" erev="-47.8446 mV" ion="non_specific"/>
                 
@@ -31839,7 +31839,7 @@
 
                 <!--na with param: gmax = f(p) = (5.64519E-8 * H(5.64519E-8 - ((3.52142E-7 + ((p - 16.229) * ((5.64519E-8 - 3.52142E-7) / 480.929))) * (H(480.929 - (p - 16.229)) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229)))))))) + ((((3.52142E-7 + (((p - 16.229) * (5.64519E-8 - 3.52142E-7)) / 480.929)) * H(480.929 - (p - 16.229))) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229))))) * H((-1) * ((5.64519E-8 - ((3.52142E-7 + (((p - 16.229) * (5.64519E-8 - 3.52142E-7)) / 480.929)) * H(480.929 - (p - 16.229)))) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229))))))) on ParameterisedGroup: PathLengthApicalDends on: apical_dend_group with metric: Path Length from root (NO_TRANSLATION, NO_NORMALISATION), var: p-->
 
-                <channelDensityNonUniform id="na_apical_dend_group" ionChannel="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975" ion="na" erev="60.0 mV">
+                <channelDensityNonUniform id="na_apical_dend_group" ionChannel="na__vshifthmin9_60842__vshiftmmin10_9975" ion="na" erev="60.0 mV">
                     <variableParameter parameter="condDensity" segmentGroup="apical_dend_group">
                         <inhomogeneousValue inhomogeneousParameter="PathLengthApicalDends" value="1.0E9 *( (5.64519E-8 * H(5.64519E-8 - ((3.52142E-7 + ((p - 16.229) * ((5.64519E-8 - 3.52142E-7) / 480.929))) * (H(480.929 - (p - 16.229)) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229)))))))) + ((((3.52142E-7 + (((p - 16.229) * (5.64519E-8 - 3.52142E-7)) / 480.929)) * H(480.929 - (p - 16.229))) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229))))) * H((-1) * ((5.64519E-8 - ((3.52142E-7 + (((p - 16.229) * (5.64519E-8 - 3.52142E-7)) / 480.929)) * H(480.929 - (p - 16.229)))) + (5.64519E-8 * H((-1) * (480.929 - (p - 16.229))))))) )"/>    <!--Note: conversion factor (1.0E9 * ) included to convert to units: GENESIS SI Units-->
                     </variableParameter>

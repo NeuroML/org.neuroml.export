@@ -1,6 +1,6 @@
 <Lems xmlns="http://www.neuroml.org/lems/0.7.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/lems/0.7.2  https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.2.xsd">
 
-    <Target component="sim1" reportFile="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/simulator.props" timesFile="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/time.dat"/>
+    <Target component="sim1" />
 
      <!--Include standard NeuroML 2 ComponentType definitions-->
 
@@ -19,8 +19,8 @@
     <Include file="iA.channel.nml"/>
     <Include file="iH__q101_44732.channel.nml"/>
     <Include file="kslow.channel.nml"/>
-    <Include file="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7.channel.nml"/>
-    <Include file="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <Include file="na__vshifth3__vshiftm7.channel.nml"/>
+    <Include file="na__vshifth-9_60842__vshiftm-10_9975.channel.nml"/>
     <Include file="pas.channel.nml"/>
     <Include file="sk.channel.nml"/>
     <Include file="MVACa.channel.nml"/>
@@ -43,9 +43,11 @@
             <Line id="v" timeScale="1s" quantity="FullCell_nml2/0/A140612_nml2/0/v" scale="1 V" color="#0000ff"/>
         </Display>
     
-        <OutputFile id="bac6_v_soma(0.5)_nml2_0_0_OF" fileName="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/FullCell_nml2_0.0.dat">
+        <!--
+        <OutputFile id="bac6_v_soma" fileName="/Users/borismarin/git/korngreen-pyramidal/neuroConstruct/simulations/Sim_206/FullCell_nml2.dat">
             <OutputColumn id="v" quantity="FullCell_nml2/0/A140612_nml2/0/v"/>
         </OutputFile>
+        -->
     </Component>
 
 

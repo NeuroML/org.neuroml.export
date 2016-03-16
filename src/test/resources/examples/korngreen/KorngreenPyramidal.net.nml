@@ -15,14 +15,12 @@ Cell Group: FullCell_nml2 contains 1 cells
     <include href="A140612_nml2.cell.nml"/>
     <include href="bk.channel.nml"/>
     <include href="cad.nml"/>
-    <include href="epsp_mod.warning"/>
     <include href="iA.channel.nml"/>
     <include href="iH__q101_44732.channel.nml"/>
-    <include href="iH__q101_44732.channel.nml"/>
     <include href="kslow.channel.nml"/>
-    <include href="na__tauh_scale1__taum_scale1__vshifth3__vshiftm7.channel.nml"/>
-    <include href="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
-    <include href="na__tauh_scale1__taum_scale1__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <include href="na__vshifth3__vshiftm7.channel.nml"/>
+    <include href="na__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
+    <include href="na__vshifthmin9_60842__vshiftmmin10_9975.channel.nml"/>
     <include href="pas.channel.nml"/>
     <include href="sk.channel.nml"/>
     <network id="network_KorngreenPyramidal" type="networkWithTemperature" temperature="34.0 degC">
