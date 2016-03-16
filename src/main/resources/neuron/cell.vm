@@ -214,7 +214,7 @@ proc biophys_inhomogeneous() {
     for ${cd.inhomogeneousParameter}.loop() {
         x = ${cd.inhomogeneousParameter}.x
         p = ${cd.inhomogeneousParameter}.p
-        gmax_${cd.ionChannel}(x) = $cd.inhomogeneousValue
+        ${cd.parameterName}_${cd.ionChannel}(x) = $cd.inhomogeneousValue
     }
 #end##
 #end##

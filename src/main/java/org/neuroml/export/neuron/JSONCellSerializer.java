@@ -470,6 +470,7 @@ public class JSONCellSerializer
                     {
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
+                        g.writeStringField("parameterName", "gmax");
 
                         String convFactor = units.condDensFactor + " * ";
                         g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
@@ -542,6 +543,7 @@ public class JSONCellSerializer
                     {
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
+                        g.writeStringField("parameterName", "gmax");
 
                         String convFactor = units.condDensFactor + " * ";
                         g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
@@ -585,6 +587,7 @@ public class JSONCellSerializer
                     {
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
+                        g.writeStringField("parameterName", "permeability");
 
                         String convFactor = units.permeabilityFactor + " * ";
                         g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
