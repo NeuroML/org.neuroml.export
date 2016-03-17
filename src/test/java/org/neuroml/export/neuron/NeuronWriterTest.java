@@ -50,12 +50,12 @@ public class NeuronWriterTest extends TestCase {
          testGetMainScript(exampleFilename);
      }
 
-    public void testInhomoGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
-
-   	 ClassLoader classLoader = getClass().getClassLoader();
-	 File exampleGHK = new File(classLoader.getResource("examples/korngreen/LEMS_KorngreenPyramidal.xml").getFile());
-     generateMainScript(exampleGHK);
-    }
+//    public void testInhomoGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+//
+//   	 ClassLoader classLoader = getClass().getClassLoader();
+//	 File exampleGHK = new File(classLoader.getResource("examples/korngreen/LEMS_KorngreenPyramidal.xml").getFile());
+//     generateMainScript(exampleGHK);
+//    }
 
 
     public void testChannel() throws LEMSException, IOException, GenerationException, NeuroMLException {
