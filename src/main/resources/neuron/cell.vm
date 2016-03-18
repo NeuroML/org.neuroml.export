@@ -39,7 +39,7 @@ proc init() {
     biophys_inhomogeneous()
     synlist = new List()
     x = y = z = 0
-    
+
 }
 
 proc set_initial_v() {
@@ -143,7 +143,7 @@ proc subsets_inhomogeneous() {
 
     distal_style = #if( $ip.distalNormalizationEnd ) #if( $ip.distalNormalizationEnd == '1' || $ip.distalNormalizationEnd == '1.0' )1#{else}???#end #{else}0#end
 
-    $ip.id = new SubsetDomainIterator($g.name, metric, proximal_style, distal_style) 
+    $ip.id = new SubsetDomainIterator($g.name, metric, proximal_style, distal_style)
 #end##
 #end##
 }
@@ -165,8 +165,12 @@ proc biophys() {
     forsec $cd.group {
         insert $cd.ionChannel
 #if( $cd.erev == 'calculated_by_GHK_equation' )##
-        // current calculated through GHK flux equation 
-        permeability_$cd.ionChannel = $cd.permeability  // units: cm / s 
+        // current calculated through GHK flux equation
+#if( $cd.permeability )##
+        permeability_$cd.ionChannel = $cd.permeability  // units: cm / s
+#else##
+        // permeability_$cd.ionChannel will be set later...
+#end##
 #else##
 #if( $cd.condDens )##
         gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
@@ -210,7 +214,7 @@ proc biophys_inhomogeneous() {
     for ${cd.inhomogeneousParameter}.loop() {
         x = ${cd.inhomogeneousParameter}.x
         p = ${cd.inhomogeneousParameter}.p
-        gmax_${cd.ionChannel}(x) = $cd.inhomogeneousValue
+        ${cd.parameterName}_${cd.ionChannel}(x) = $cd.inhomogeneousValue
     }
 #end##
 #end##
