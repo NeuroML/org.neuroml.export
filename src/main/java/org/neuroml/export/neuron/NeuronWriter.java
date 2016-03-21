@@ -437,8 +437,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else
                 {
-                    String mod = generateModFile(popComp);
-                    saveModToFile(popComp, mod);
+                    generateModForComp(popComp);
 
                     main.append("h(\" {n_" + popName + " = " + number + "} \")\n");
 
@@ -520,8 +519,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 Component synapseComp = projection.getRefComponents().get("synapse");
 
-                String mod = generateModFile(synapseComp);
-                saveModToFile(synapseComp, mod);
+                generateModForComp(synapseComp);
 
                 String synObjName = String.format("syn_%s_%s", id, synapse);
 
@@ -641,9 +639,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 ArrayList<Component> connections = entry.getValue();
 
 
-                /* Generate a .mod file for the synapse type (if one doesn't already exist) */
-                String mod = generateModFile(synapseComp);
-                saveModToFile(synapseComp, mod);
+                generateModForComp(synapseComp);
 
                 /* Array of synapses of this type */
                 String info0 = String.format("Adding synapse %s used in %s connections", synapseComp.getID(), connections.size());
@@ -768,8 +764,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 Component synapseComp = ep.getChildrenAL("connections").get(0).getRefComponents().get("synapse");
 
-                String mod = generateModFile(synapseComp);
-                saveModToFile(synapseComp, mod);
+                generateModForComp(synapseComp);
 
                 String synObjNameA = String.format("syn_%s_%s_A", id, synapseComp.getID());
                 String synObjNameB = String.format("syn_%s_%s_B", id, synapseComp.getID());
@@ -872,10 +867,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 Component preComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("preComponent");
                 Component postComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("postComponent");
 
-                String preMod = generateModFile(preComponent);
-                saveModToFile(preComponent, preMod);
-                String postMod = generateModFile(postComponent);
-                saveModToFile(postComponent, postMod);
+                generateModForComp(preComponent);
+                generateModForComp(postComponent);
 
                 String preCompObjName = String.format("syn_%s_%s_pre", id, preComponent.getID());
                 String postCompObjName = String.format("syn_%s_%s_post", id, postComponent.getID());
@@ -1310,9 +1303,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             String safeName = NRNUtils.getSafeName(inputComp.getID());
             String inputName = explInput.getTypeName() + "_" + safeName;
-            String mod = generateModFile(inputComp);
-
-            saveModToFile(inputComp, mod);
+            generateModForComp(inputComp);
 
             String targetString = explInput.getStringValue("target");
 
@@ -1351,8 +1342,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             Component inputComp = inputList.getRefComponents().get("component");
 
-            String mod = generateModFile(inputComp);
-            saveModToFile(inputComp, mod);
+            generateModForComp(inputComp);
 
             ArrayList<Component> inputs = inputList.getChildrenAL("inputs");
 
@@ -1389,6 +1379,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             }
         }
+    }
+
+    private void generateModForComp(Component comp) throws LEMSException,
+            ContentError {
+        if(!comp.getComponentType().isOrExtends("timedSynapticInput")) {
+            String mod = generateModFile(comp);
+            saveModToFile(comp, mod);
+        } // timedSynapticInput leverages netstim, so no mod generation needed
+          // TODO: probably all "literal" time dependency should be implemented this way
     }
 
     private void writeModFile(Component comp, ChannelConductanceOption option) throws LEMSException
