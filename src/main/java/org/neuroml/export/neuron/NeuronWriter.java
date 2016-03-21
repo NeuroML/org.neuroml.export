@@ -63,6 +63,7 @@ import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.MembraneProperties2CaPools;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpikeThresh;
+import org.neuroml.model.TimedSynapticInput;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
@@ -1336,17 +1337,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             HashMap<String, Cell> compIdsVsCells,
             HashMap<String, String> popIdsVsCellIds) throws LEMSException,
             ContentError, NeuroMLException {
-        ArrayList<Component> inputLists = targetComp.getChildrenAL("inputs");
 
-        for(Component inputList : inputLists)
+        for(Component inputList : targetComp.getChildrenAL("inputs"))
         {
             Component inputComp = inputList.getRefComponents().get("component");
 
             generateModForComp(inputComp);
 
-            ArrayList<Component> inputs = inputList.getChildrenAL("inputs");
-
-            for(Component input : inputs)
+            for(Component input : inputList.getChildrenAL("inputs"))
             {
                 String targetString = input.getStringValue("target");
 
@@ -1377,17 +1375,25 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
                 main.append(String.format(Locale.US, "h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName, NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
 
+                processTimeDependentLiterals(main, input);
+
             }
         }
     }
 
+    private void processTimeDependentLiterals(StringBuilder main, Component input) {
+        // TODO Auto-generated method stub
+    }
+
     private void generateModForComp(Component comp) throws LEMSException,
             ContentError {
-        if(!comp.getComponentType().isOrExtends("timedSynapticInput")) {
-            String mod = generateModFile(comp);
-            saveModToFile(comp, mod);
-        } // timedSynapticInput leverages netstim, so no mod generation needed
-          // TODO: probably all "literal" time dependency should be implemented this way
+        if(comp.getComponentType().isOrExtends("timedSynapticInput")) {
+            // timedSynapticInput leverages netstim, so no mod generation needed
+            // TODO: probably all "literal" time dependency should be implemented this way
+            comp = comp.getRefComponents().get("synapse");
+        }
+        String mod = generateModFile(comp);
+        saveModToFile(comp, mod);
     }
 
     private void writeModFile(Component comp, ChannelConductanceOption option) throws LEMSException
