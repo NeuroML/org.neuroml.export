@@ -31,6 +31,7 @@ cell_params_$component_array.name = {
 #end
 
 
+#Populations
 #foreach ($pop in $populations.keySet() )
 #set($pop_size=$populations.get($pop).size)
 #set($pop_component=$populations.get($pop).component.name)
@@ -41,6 +42,26 @@ from ${pop_component}_celldefinition import ${pop_component}Type
 $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_component), label="pop_$pop")
 
 #end
+
+
+#Projections
+#foreach ($proj in $projections.keySet() )
+#set($pre_pop=$projections.get($proj).pre_population)
+#set($post_pop=$projections.get($proj).post_population)
+#set($synapse=$projections.get($proj).synapse)
+
+# Projection: $proj: $pre_pop -> $post_pop with synapse: $synapse
+connections = []
+#foreach ($conn in $projections.get($proj).connections )
+# Connection: $conn.name: $pre_pop ($conn.pre_cell_id) -> $post_pop ($conn.post_cell_id)
+# connections.append((${conn.pre_cell_id}, ${conn.post_cell_id}, 1.0, 0.0))
+connections.append((${conn.pre_cell_id}, ${conn.post_cell_id}))
+#end
+# connector = sim.FromListConnector(connections, column_names=["weight", "delay"])
+connector = sim.FromListConnector(connections, column_names=[])
+###$proj = sim.Projection(${pre_pop}, ${post_pop}, connector=connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='excitatory')
+#end
+
 
 # Inputs...
 #foreach ($input_ref in $inputs.keySet() )

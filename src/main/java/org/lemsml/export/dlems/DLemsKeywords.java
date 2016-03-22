@@ -41,6 +41,12 @@ public enum DLemsKeywords
     SYNAPSES,
     SYNAPSE,
     COMPONENT,
+    PROJECTIONS, 
+    PRE_POPULATION, 
+    POST_POPULATION, 
+    CONNECTIONS,
+    PRE_CELL_ID, 
+    POST_CELL_ID, 
     INPUTS;
     
     
