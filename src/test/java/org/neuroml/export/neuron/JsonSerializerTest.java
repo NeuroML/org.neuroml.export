@@ -8,6 +8,7 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
@@ -56,6 +57,12 @@ public class JsonSerializerTest extends TestCase {
         
         String physCell = JSONCellSerializer.cellToJson(cell, NeuronWriter.SupportedUnits.PHYSIOLOGICAL);
         //System.out.println("Phys: \n"+physCell);
+        
+        File outFile = new File(exampleFile.getParentFile().getAbsolutePath(), exampleFile.getName().replace(".nml", ".json"));
+        FileUtil.writeStringToFile(physCell, outFile);
+        System.out.println("Written JSON file to: "+outFile.getAbsolutePath());
+        
+        
        
     }
     

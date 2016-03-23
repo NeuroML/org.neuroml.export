@@ -73,7 +73,7 @@
             </segment>
             
             <segment id="9" name="basalX">
-                <parent segment="6"/>
+                <parent segment="6" fractionAlong="0.5"/>
                 <proximal x="0.0" y="-25.0" z="0.0" diameter="11"/>
                 <distal x="-300" y="-300" z="-300.0" diameter="11"/>
             </segment>

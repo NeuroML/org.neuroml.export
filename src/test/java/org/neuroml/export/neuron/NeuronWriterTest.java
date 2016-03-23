@@ -126,11 +126,29 @@ public class NeuronWriterTest extends TestCase {
 
 		UtilsTest.checkConvertedFiles(outputFiles);
     }
+    
+    public void testAcnet() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
+
+    	testLocalLEMS("LEMS_SomeCells.xml");
+	}
+
+    public void testLocalLEMS(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+
+        MinimalMessageHandler.setVeryMinimal(true);
+    	Lems lems = Utils.readLemsNeuroMLFile(new File("src/test/resources/examples/"+exampleFilename)).getLems();
+        
+        testLems(lems, exampleFilename);
+    }
 
     public void testGetMainScript(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         MinimalMessageHandler.setVeryMinimal(true);
         Lems lems = UtilsTest.readLemsFileFromExamples(exampleFilename);
+        
+        testLems(lems, exampleFilename);
+    }
+    
+    private void testLems(Lems lems, String exampleFilename) throws NeuroMLException, ModelFeatureSupportException, GenerationException, LEMSException {
 
         NeuronWriter nw = new NeuronWriter(lems, UtilsTest.getTempDir(), exampleFilename.replaceAll(".xml", "_nrn.py"));
         List<File> outputFiles = nw.convert();
