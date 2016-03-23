@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.lemsml.export.dlems.DLemsWriter;
+import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -61,9 +62,9 @@ import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.IntracellularProperties;
 import org.neuroml.model.MembraneProperties2CaPools;
+import org.neuroml.model.Segment;
 import org.neuroml.model.Species;
 import org.neuroml.model.SpikeThresh;
-import org.neuroml.model.TimedSynapticInput;
 import org.neuroml.model.util.CellUtils;
 import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
@@ -82,6 +83,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     public static final String NEURON_HOME_ENV_VAR = "NEURON_HOME";
 
     public HashMap<String, String> modWritten = new HashMap<String, String>();
+
+    private HashMap<String, Cell> compIdsVsCells = new HashMap<String, Cell>();
+
+    private HashMap<String, String> popIdsVsCellIds = new HashMap<String, String>();
+
+    private HashMap<String, Component> popIdsVsComps = new HashMap<String, Component>();
 
     public enum ChannelConductanceOption
     {
@@ -246,10 +253,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             HashMap<String, Integer> compMechsCreated = new HashMap<String, Integer>();
             HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
-
-            HashMap<String, Cell> compIdsVsCells = new HashMap<String, Cell>();
-            HashMap<String, String> popIdsVsCellIds = new HashMap<String, String>();
-            HashMap<String, Component> popIdsVsComps = new HashMap<String, Component>();
 
             if(popsOrComponents.isEmpty())
             {
@@ -933,8 +936,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            processInputLists(main, targetComp, compIdsVsCells, popIdsVsCellIds);
-            processExplicitInputs(main, targetComp, compIdsVsCells, popIdsVsCellIds);
+            processInputLists(main, targetComp);
+            processExplicitInputs(main, targetComp);
 
             main.append("trec = h.Vector()\n");
             main.append("trec.record(h._ref_t)\n\n");
@@ -1290,10 +1293,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private void processExplicitInputs(StringBuilder main,
-            Component targetComp, HashMap<String, Cell> compIdsVsCells,
-            HashMap<String, String> popIdsVsCellIds) throws LEMSException,
-            ContentError {
+    private void processExplicitInputs(StringBuilder main, Component targetComp)
+            throws LEMSException, ContentError, NeuroMLException {
         ArrayList<Component> explicitInputs = targetComp.getChildrenAL("explicitInputs");
 
         for(Component explInput : explicitInputs)
@@ -1306,87 +1307,112 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             String inputName = explInput.getTypeName() + "_" + safeName;
             generateModForComp(inputComp);
 
-            String targetString = explInput.getStringValue("target");
-
-            int cellNum = Utils.parseCellRefStringForCellNum(targetString);
-            String popName = Utils.parseCellRefStringForPopulation(targetString);
-
-            String secName;
-            String cellId = popIdsVsCellIds.get(popName);
-            Cell cell = compIdsVsCells.get(cellId);
-
-            if(cell != null)
-            {
-                NamingHelper nh0 = new NamingHelper(cell);
-                secName = String.format("a_%s[%s].%s", popName, cellNum, nh0.getNrnSectionName(cell.getMorphology().getSegment().get(0)));
-            }
-            else
-            {
-                secName = popName + "[" + cellNum + "]";
-            }
-            inputName += "_" + popName + "_" + cellNum + "_" + secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
+            String secName = parseInputSecName(explInput);
+//            inputName += "_" + popName + "_" + cellNum + "_" + secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
+            inputName += secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
 
             addComment(main, "Adding input: " + explInput);
 
-            main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-            main.append(String.format("h(\"%s { %s = new %s(0.5) } \")\n\n", secName, inputName, safeName));
+            generateHocForInput(main, explInput, inputComp, inputName);
         }
     }
 
-    private void processInputLists(StringBuilder main, Component targetComp,
-            HashMap<String, Cell> compIdsVsCells,
-            HashMap<String, String> popIdsVsCellIds) throws LEMSException,
+
+    private void processInputLists(StringBuilder main, Component targetComp) throws LEMSException,
             ContentError, NeuroMLException {
 
-        for(Component inputList : targetComp.getChildrenAL("inputs"))
-        {
-            Component inputComp = inputList.getRefComponents().get("component");
+        for(Component inputList : targetComp.getChildrenAL("inputs")) {
 
-            generateModForComp(inputComp);
+            generateModForComp(inputList.getRefComponents().get("component"));
 
-            for(Component input : inputList.getChildrenAL("inputs"))
-            {
-                String targetString = input.getStringValue("target");
-
-                int segmentId = input.hasAttribute("segmentId") ? Integer.parseInt(input.getAttributeValue("segmentId")) : 0;
-                float fractionAlong = input.hasAttribute("fractionAlong") ? Float.parseFloat(input.getAttributeValue("fractionAlong")) : 0.5f;
-
-                int cellNum = Utils.parseCellRefStringForCellNum(targetString);
-                String popName = Utils.parseCellRefStringForPopulation(targetString);
-
-                String secName;
-                String cellId = popIdsVsCellIds.get(popName);
-                Cell cell = compIdsVsCells.get(cellId);
-
-                if(cell != null)
-                {
-                    NamingHelper nh0 = new NamingHelper(cell);
-                    secName = String.format("a_%s[%s].%s", popName, cellNum, nh0.getNrnSectionName(CellUtils.getSegmentWithId(cell, segmentId)));
-                }
-                else
-                {
-                    secName = popName + "[" + cellNum + "]";
-                }
-
+            for(Component input : inputList.getChildrenAL("inputs")) {
                 String inputName = NRNUtils.getSafeName(inputList.getID()) + "_" + input.getID();
-
-                addComment(main, "Adding input: " + input);
-
-                main.append(String.format("\nh(\"objectvar %s\")\n", inputName));
-                main.append(String.format(Locale.US, "h(\"%s { %s = new %s(%f) } \")\n\n", secName, inputName, NRNUtils.getSafeName(inputComp.getID()), fractionAlong));
-
-                processTimeDependentLiterals(main, input);
-
+                Component inputComp = inputList.getRefComponents().get("component");
+                generateHocForInput(main, input, inputComp, inputName);
             }
         }
     }
 
-    private void processTimeDependentLiterals(StringBuilder main, Component input) {
-        // TODO Auto-generated method stub
+    private void generateHocForInput(StringBuilder main, Component input, Component inputComp, String inputName) throws ContentError,
+            NeuroMLException, ParseError {
+
+        float fractionAlong = parseFractionAlong(input);
+
+        addComment(main, "Adding input: " + input);
+
+        String safeInputName = NRNUtils.getSafeName(inputComp.getID());
+
+        if(!inputComp.getComponentType().isOrExtends("timedSynapticInput")) {
+            main.append(String.format("\nh(\"objref %s\")\n", inputName));
+            main.append(String.format("h(\"%s { %s = new %s(%f) } \")\n\n", parseInputSecName(input), inputName, safeInputName, fractionAlong));
+        } else {
+            processTimeDependentLiterals(main, input, inputComp);
+        }
     }
 
-    private void generateModForComp(Component comp) throws LEMSException,
-            ContentError {
+    private String parseInputSecName(Component input) throws ContentError,
+            NeuroMLException {
+        String targetString = input.getStringValue("target");
+        int segmentId = parseSegmentId(input);
+        int cellNum = Utils.parseCellRefStringForCellNum(targetString);
+        String popName = Utils.parseCellRefStringForPopulation(targetString);
+        String secName = generateSecName(popName, cellNum, segmentId);
+        return secName;
+    }
+
+    private String generateSecName(String popName, int cellNum, int segmentId)
+            throws NeuroMLException {
+        String secName;
+        String cellId = popIdsVsCellIds.get(popName);
+        Cell cell = compIdsVsCells.get(cellId);
+        if (cell != null) {
+            Segment segment;
+            if (segmentId > 0)
+                segment = CellUtils.getSegmentWithId(cell, segmentId);
+            else
+                segment = cell.getMorphology().getSegment().get(0);
+            NamingHelper nh0 = new NamingHelper(cell);
+            secName = String.format("a_%s[%s].%s", popName, cellNum, nh0.getNrnSectionName(segment));
+        } else {
+            secName = popName + "[" + cellNum + "]";
+        }
+        return secName;
+    }
+
+    private float parseFractionAlong(Component input) throws ContentError {
+        return input.hasAttribute("fractionAlong") ? Float.parseFloat(input.getAttributeValue("fractionAlong")) : 0.5f;
+    }
+
+    private int parseSegmentId(Component input) throws ContentError {
+        return input.hasAttribute("segmentId") ? Integer.parseInt(input.getAttributeValue("segmentId")) : -1;
+    }
+
+    private void processTimeDependentLiterals(StringBuilder main, Component input, Component inputComp)
+            throws ContentError, NeuroMLException, ParseError {
+        // TODO Auto-generated method stub
+        String inputName = NRNUtils.getSafeName(inputComp.getID());
+        addComment(main, "Generating event source for point process " + input);
+        Component synapse = inputComp.getRefComponents().get("synapse");
+        String synSafeName = NRNUtils.getSafeName(synapse.getID());
+        String synFullName =  inputName + "_" + synSafeName;
+        main.append(String.format("%s = h.%s(%f, sec=h.%s)\n",
+                                        synFullName,
+                                        synSafeName,
+                                        parseFractionAlong(input),
+                                        parseInputSecName(input)));
+        int nspk = 0;
+        for(Component spk : inputComp.getComponents()) {
+            String spkId =  inputName + "_spk_" + nspk;
+            main.append(String.format("%s = h.NetStim()\n", spkId));
+            main.append(String.format("%s.number = 1\n", spkId));
+            float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
+            main.append(String.format("%s.start = %f\n", spkId, spkTime));
+            main.append(String.format("h.NetCon(%s, %s)\n", spkId, synFullName));
+            nspk++;
+        }
+    }
+
+    private void generateModForComp(Component comp) throws LEMSException, ContentError {
         if(comp.getComponentType().isOrExtends("timedSynapticInput")) {
             // timedSynapticInput leverages netstim, so no mod generation needed
             // TODO: probably all "literal" time dependency should be implemented this way
