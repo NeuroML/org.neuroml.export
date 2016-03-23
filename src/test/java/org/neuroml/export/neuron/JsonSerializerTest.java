@@ -8,7 +8,6 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
-import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Utils;
@@ -25,9 +24,20 @@ public class JsonSerializerTest extends TestCase {
         String exampleFilename = "pyr_4_sym.cell.nml";
         testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
     }
+    
+    public void testPyrComplex() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+
+        String exampleFilename = "pyrComplex.cell.nml";
+        testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
+    }
     public void testBask() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         String exampleFilename = "bask.cell.nml";
+        testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
+    }
+    public void testL5PC() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+
+        String exampleFilename = "L5PC.cell.nml";
         testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
     }
 
