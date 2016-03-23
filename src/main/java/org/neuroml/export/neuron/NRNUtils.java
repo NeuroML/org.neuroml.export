@@ -252,6 +252,10 @@ public class NRNUtils implements UnitConverter
         {
             return "(um3)";
         }
+        else if (dimensionName.equals("resistivity"))
+        {
+            return "(ohm cm)";
+        }
         else if (dimensionName.equals("resistance"))
         {
             return "(Mohm)";
@@ -370,6 +374,10 @@ public class NRNUtils implements UnitConverter
         else if (dimensionName.equals("resistance"))
         {
             return 1e-6f;
+        }
+        else if (dimensionName.equals("resistivity"))
+        {
+            return 100f;
         }
         else if (dimensionName.equals("concentration"))
         {
