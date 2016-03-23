@@ -1311,8 +1311,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //            inputName += "_" + popName + "_" + cellNum + "_" + secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
             inputName += secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
 
-            addComment(main, "Adding input: " + explInput);
-
             generateHocForInput(main, explInput, inputComp, inputName);
         }
     }
@@ -1407,7 +1405,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(String.format("%s.number = 1\n", spkId));
             float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
             main.append(String.format("%s.start = %f\n", spkId, spkTime));
-            main.append(String.format("h.NetCon(%s, %s)\n", spkId, synFullName));
+            main.append(String.format("nc_%s_%d = h.NetCon(%s, %s, 0, 0, 1)\n", synFullName, nspk, spkId, synFullName));
             nspk++;
         }
     }
