@@ -46,7 +46,7 @@ public class NeuronWriterTest extends TestCase {
 
     public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
 
-    	 String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
+         String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
          testGetMainScript(exampleFilename);
      }
 
@@ -57,6 +57,10 @@ public class NeuronWriterTest extends TestCase {
 //     generateMainScript(exampleGHK);
 //    }
 
+    public void testInputsEx() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+        String exampleFilename = "LEMS_NML2_Ex16a_Inputs.xml";
+        testGetMainScript(exampleFilename);
+   }
 
     public void testChannel() throws LEMSException, IOException, GenerationException, NeuroMLException {
 
@@ -87,9 +91,9 @@ public class NeuronWriterTest extends TestCase {
     public void testComponentToMod(String nmlFilename, String compId) throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException {
         E.info("Loading: " + nmlFilename);
 
-		String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
+        String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR+"/"+nmlFilename);
 
-    	String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
+        String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(content);
 
         Lems lems = Utils.readLemsNeuroMLFile(nmlLems).getLems();
         Component comp = lems.getComponent(compId);
@@ -110,21 +114,21 @@ public class NeuronWriterTest extends TestCase {
 
     public void testSBML() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
 
-    	File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
-    	generateMainScript(exampleSBML);
-	}
+        File exampleSBML = new File("src/test/resources/BIOMD0000000185_LEMS.xml");
+        generateMainScript(exampleSBML);
+    }
 
-	public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
+    public void generateMainScript(File localFile) throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
 
 //    	Lems lems = Utils.readLemsNeuroMLFile(FileUtil.readStringFromFile(localFile)).getLems();
-    	Lems lems = Utils.readLemsNeuroMLFile(localFile).getLems();
+        Lems lems = Utils.readLemsNeuroMLFile(localFile).getLems();
 
         NeuronWriter nw = new NeuronWriter(lems, UtilsTest.getTempDir(), localFile.getName().replaceAll(".xml", "_nrn.py"));
         List<File> outputFiles = nw.convert();
 
         assertTrue(outputFiles.size() >= 2);
 
-		UtilsTest.checkConvertedFiles(outputFiles);
+        UtilsTest.checkConvertedFiles(outputFiles);
     }
     
     public void testAcnet() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
@@ -155,7 +159,7 @@ public class NeuronWriterTest extends TestCase {
 
         assertTrue(outputFiles.size() >= 2);
 
-		UtilsTest.checkConvertedFiles(outputFiles);
+        UtilsTest.checkConvertedFiles(outputFiles);
 
     }
 
