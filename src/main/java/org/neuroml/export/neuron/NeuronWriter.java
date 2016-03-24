@@ -1404,8 +1404,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
             spkTimes.add(Float.toString(spkTime));
         }
-        main.append(String.format("stims = [singleNetStimT(t) for t in %s]\n", spkTimes));
-        main.append(String.format("netCons = [h.NetCon(s, %s, 0, 0, 1) for s in stims]\n", synFullName));
+        main.append(String.format("%s_stims = [singleNetStimT(t) for t in %s]\n", inputName, spkTimes));
+        main.append(String.format("%s_netCons = [h.NetCon(s, %s, 0, 0, 1) for s in %s_stims]\n", inputName, synFullName, inputName));
 
     }
 
