@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta3.xsd" id="network_L5bPyrCellHayEtAl2011">
+
+    <notes>
+
+Network structure (NeuroML 2beta3) for project: L5bPyrCellHayEtAl2011 saved with neuroConstruct v1.7.1 on: 17:33:24, 19-Aug-14
+
+Cell Group: CellGroup_1 contains 1 cells
+
+
+
+    </notes>
+
+
+    <include href="Ca_HVA.channel.nml"/>
+    <include href="Ca_LVAst.channel.nml"/>
+    <include href="CaDynamics_E2_NML2.nml"/>
+    <include href="Ih.channel.nml"/>
+    <include href="Im.channel.nml"/>
+    <include href="K_Pst.channel.nml"/>
+    <include href="K_Tst.channel.nml"/>
+    <include href="L5PC.cell.nml"/>
+    <include href="Nap_Et2.channel.nml"/>
+    <include href="NaTa_t.channel.nml"/>
+    <include href="pas.channel.nml"/>
+    <include href="SK_E2.channel.nml"/>
+    <include href="SKv3_1.channel.nml"/>
+
+    <pulseGenerator id="Input_0" delay="0.7s" duration="2.0s" amplitude="7.93E-10A"/>
+
+    
+    <network id="network_L5bPyrCellHayEtAl2011" type="networkWithTemperature" temperature="6.3 degC">
+
+        
+
+        <population id="CellGroup_1" component="L5PC" type="populationList" size="1">
+           <annotation>
+                <property tag="color" value="0.11328125 0.0546875 0.734375"/>
+            </annotation>
+            <instance id="0">
+                <location x="0.0" y="0.0" z="0.0"/>
+            </instance>
+        </population>
+
+
+
+            <!--There are no synaptic connections present in the network-->
+
+
+        <inputList id="Input_0" component="Input_0" population="CellGroup_1">
+            <input id="0" target="../CellGroup_1/0/L5PC" destination="synapses"/>
+        </inputList>
+
+
+
+
+
+    </network>
+
+</neuroml>

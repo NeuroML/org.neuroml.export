@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="GranPassiveCond">
+
+    <notes>ChannelML file containing a single Channel description</notes>
+
+    <ionChannel id="GranPassiveCond" conductance="10pS" type="ionChannelPassive">
+
+        <notes>Simple leak conductance for Granule cell</notes>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="GranPassiveCond">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Maex, R and De Schutter, E. 
+            Synchronization of Golgi and Granule Cell Firing in a Detailed Network Model of the 
+            cerebellar Granule Cell Layer. J Neurophysiol, Nov 1998; 80: 2521 - 2537</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/9819260"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+                            
+    </ionChannel>
+
+</neuroml>

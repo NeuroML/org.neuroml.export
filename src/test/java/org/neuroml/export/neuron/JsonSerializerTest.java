@@ -25,9 +25,20 @@ public class JsonSerializerTest extends TestCase {
         String exampleFilename = "pyr_4_sym.cell.nml";
         testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
     }
+    
+    public void testPyrComplex() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+
+        String exampleFilename = "pyrComplex.cell.nml";
+        testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
+    }
     public void testBask() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
         String exampleFilename = "bask.cell.nml";
+        testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
+    }
+    public void testL5PC() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+
+        String exampleFilename = "L5PC.cell.nml";
         testCreateJson(new File("src/test/resources/examples/"+exampleFilename));
     }
 
@@ -46,12 +57,18 @@ public class JsonSerializerTest extends TestCase {
         
         String physCell = JSONCellSerializer.cellToJson(cell, NeuronWriter.SupportedUnits.PHYSIOLOGICAL);
         //System.out.println("Phys: \n"+physCell);
+        
+        File outFile = new File(exampleFile.getParentFile().getAbsolutePath(), exampleFile.getName().replace(".nml", ".json"));
+        FileUtil.writeStringToFile(physCell, outFile);
+        System.out.println("Written JSON file to: "+outFile.getAbsolutePath());
+        
+        
        
     }
     
     public void testConvertFromLems() throws LEMSException, NeuroMLException, FileNotFoundException {
         
-    	Lems lems = Utils.readLemsNeuroMLFile(new File("src/test/resources/examples/LEMS_TwoCell.xml")).getLems();
+    	Lems lems = Utils.readLemsNeuroMLFile(new File("src/test/resources/examples/LEMS_SomeCells.xml")).getLems();
         
         //String[] cellNames = new String[]{"bask", "pyr_4_sym"};
         String[] cellNames = new String[]{"bask"};

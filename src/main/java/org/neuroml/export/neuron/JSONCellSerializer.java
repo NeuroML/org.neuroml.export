@@ -167,10 +167,6 @@ public class JSONCellSerializer
                             fract = 1;
                         }
 
-                        if(fract != 0 && fract != 1)
-                        {
-                            throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1, it's " + fract + " in seg " + firstSeg + "...");
-                        }
                         String parentSection = null;
                         int parentId = (int) firstSeg.getParent().getSegment();
 
@@ -181,6 +177,12 @@ public class JSONCellSerializer
                             {
                                 // System.out.println("parent? SG "+sgPar.getId()+" ("+sgPar.getNeuroLexId()+", "+CellUtils.isUnbranchedNonOverlapping(sgPar)+"): "+sgVsSegId.get(sgPar));
                                 ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
+                                
+                                if( (fract != 0 && fract != 1) && segsPar.size()>1)
+                                {
+                                    throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1 (it's " + fract + " in seg " + firstSeg + ") when there are >1 segments in parent segmentGroup...");
+                                }
+                        
                                 if(CellUtils.isUnbranchedNonOverlapping(sgPar) && segsPar.contains(parentId))
                                 {
                                     if(fract == 1 && segsPar.get(segsPar.size() - 1) == parentId)
@@ -662,6 +664,7 @@ public class JSONCellSerializer
         tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/pyr_4_sym.cell.nml");
 
         tests.add("/home/padraig/neuroConstruct/osb/showcase/BlueBrainProjectShowcase/NMC/NeuroML2/cNAC187_L1_HAC_f8c9772d9d_0_0.cell.nml");
+        tests.add("/home/padraig/nC_projects/ACnet3/generatedNeuroML2/pyr_4_sym.cell.nml");
         /*tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
         // tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");

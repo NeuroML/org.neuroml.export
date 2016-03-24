@@ -26,6 +26,7 @@
         <!--   Cell files-->
     <Include file="bask.cell.nml"/>
     <Include file="pyr_4_sym.cell.nml"/>
+    <Include file="pyrComplex.cell.nml"/>
         <!--   Network file-->
     <Include file="TwoCell.net.nml"/>
     

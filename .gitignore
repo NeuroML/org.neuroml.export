@@ -34,4 +34,7 @@ src/test/resources/examples/*.hoc
 src/test/resources/examples/*nrn.py
 
 .DS_Store
-
+/src/test/resources/examples/L5PC.cell.json
+/src/test/resources/examples/bask.cell.json
+/src/test/resources/examples/pyrComplex.cell.json
+/src/test/resources/examples/pyr_4_sym.cell.json

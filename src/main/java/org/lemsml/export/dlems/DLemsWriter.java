@@ -17,6 +17,8 @@ import org.codehaus.jackson.type.TypeReference;
 import org.lemsml.export.base.ABaseWriter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
+import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
@@ -127,9 +129,9 @@ public class DLemsWriter extends ABaseWriter
         sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
         sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
@@ -234,56 +236,77 @@ public class DLemsWriter extends ABaseWriter
                 g.writeEndObject();
                 g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
             }
+            HashMap<String,Component> flatComps = new HashMap<String, Component>();
             for (Component pop : pops)
             {
-
                 String compRef = pop.getStringValue("component");
                 String popName = pop.getID();
 
-                if (!written.contains(compRef))
+                //System.out.println("---------       Adding " + compRef);
+                Component popComp = lems.getComponent(compRef);
+                
+                if (false && popComp.getComponentType().isOrExtends("cell")) 
                 {
-                    //System.out.println("---------       Adding " + compRef);
-                    Component popComp = lems.getComponent(compRef);
-
-                    if (!writtenTypes.contains(popComp.getTypeName()))
+                    //...
+                }
+                else 
+                {
+                    if (!written.contains(compRef))
                     {
-                        createFlattenedCompType(popComp);
-                        writtenTypes.add(popComp.getTypeName());
+                        if (!writtenTypes.contains(popComp.getTypeName()))
+                        {
+                            createFlattenedCompType(popComp);
+                            writtenTypes.add(popComp.getTypeName());
+                        }
+
+                        Component cpFlat = createFlattenedComp(popComp);
+                        flatComps.put(compRef, cpFlat);
+                        if (populationMode)
+                        {
+                            StringWriter swComp = new StringWriter();
+                            JsonGenerator gComp = f.createJsonGenerator(swComp);
+                            gComp.useDefaultPrettyPrinter();
+                            gComp.writeStartObject();
+
+                            writeDLemsForComponent(gComp, cpFlat);
+
+                            gComp.writeEndObject();
+                            gComp.close();
+
+                            File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".cell.json");
+                            FileUtil.writeStringToFile(swComp.toString(), compFile);
+                            outputFiles.add(compFile);
+
+                        } 
+                        else
+                        {
+                            writeDLemsForComponent(g, cpFlat);
+                        }
+
+                        written.add(compRef);
                     }
+                }
+                
+                if (populationMode) 
+                {
 
-                    Component cpFlat = createFlattenedComp(popComp);
-                    if (populationMode)
+                    g.writeObjectFieldStart(popName);
+
+                    g.writeStringField(DLemsKeywords.SIZE.get(), pop.getStringValue("size"));
+
+                    g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
+                    if (false && popComp.getComponentType().isOrExtends("cell"))
                     {
-                        StringWriter swComp = new StringWriter();
-                        JsonGenerator gComp = f.createJsonGenerator(swComp);
-                        gComp.useDefaultPrettyPrinter();
-                        gComp.writeStartObject();
-
-                        writeDLemsForComponent(gComp, cpFlat);
-
-                        gComp.writeEndObject();
-                        gComp.close();
-
-                        File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".cell.json");
-                        FileUtil.writeStringToFile(swComp.toString(), compFile);
-                        outputFiles.add(compFile);
-
-                        g.writeObjectFieldStart(popName);
-
-                        g.writeStringField(DLemsKeywords.SIZE.get(), pop.getStringValue("size"));
-
-                        g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
-                        writeDLemsForComponent(g, cpFlat);
-                        g.writeEndObject();
-
-                        g.writeEndObject();
-
-                    } else
+                        g.writeStringField(DLemsKeywords.NAME.get(), popComp.getID());
+                        g.writeStringField(DLemsKeywords.TYPE.get(), popComp.getComponentType().getName());
+                    } 
+                    else 
                     {
-                        writeDLemsForComponent(g, cpFlat);
+                        writeDLemsForComponent(g, flatComps.get(compRef));
                     }
+                    g.writeEndObject();
 
-                    written.add(compRef);
+                    g.writeEndObject();
                 }
             }
 
@@ -388,6 +411,38 @@ public class DLemsWriter extends ABaseWriter
                     }
                     g.writeEndObject();
                 }
+            }
+            
+            
+            if (populationMode && projs.size()>0) 
+            {
+                g.writeObjectFieldStart(DLemsKeywords.PROJECTIONS.get());
+                for (Component proj: projs)
+                {
+                    g.writeObjectFieldStart(proj.id);
+                    g.writeStringField(DLemsKeywords.PRE_POPULATION.get(), proj.getStringValue("presynapticPopulation"));
+                    g.writeStringField(DLemsKeywords.POST_POPULATION.get(), proj.getStringValue("postsynapticPopulation"));
+                    g.writeStringField(DLemsKeywords.SYNAPSE.get(), proj.getStringValue("synapse"));
+                    
+                    g.writeArrayFieldStart(DLemsKeywords.CONNECTIONS.get());
+                    for (Component conn: proj.getChildrenAL("connections"))
+                    {
+                        g.writeStartObject();
+                        g.writeStringField(DLemsKeywords.NAME.get(), conn.id);
+                        String pre = conn.getStringValue("preCellId").substring(3);  // remove ../
+                        LEMSQuantityPath lqpPre = new LEMSQuantityPath(pre+"/xxx");
+                        String post = conn.getStringValue("postCellId").substring(3);  // remove ../
+                        LEMSQuantityPath lqpPost = new LEMSQuantityPath(post+"/xxx");
+                        g.writeStringField(DLemsKeywords.PRE_CELL_ID.get(), lqpPre.getPopulationIndex()+"");
+                        g.writeStringField(DLemsKeywords.POST_CELL_ID.get(), lqpPost.getPopulationIndex()+"");
+                        g.writeEndObject();
+                    }
+                    
+                    g.writeEndArray();
+                    
+                    g.writeEndObject();
+                }
+                g.writeEndObject();
             }
 
         } else
@@ -712,7 +767,7 @@ public class DLemsWriter extends ABaseWriter
             ctFlat = cf.getFlatType();
             lems.addComponentType(ctFlat);
             String typeOut = XMLSerializer.serialize(ctFlat);
-            // E.info("Flat type: \n" + typeOut);
+            //System.out.println("Flat type: \n" + typeOut);
             lems.resolve(ctFlat);
         } catch (ConnectionError e)
         {
@@ -736,7 +791,7 @@ public class DLemsWriter extends ABaseWriter
             comp = cf.getFlatComponent();
             lems.addComponent(comp);
             String compOut = XMLSerializer.serialize(comp);
-            //E.info("Flat component: \n" + compOut.ge);
+            //System.out.println("Flat component: \n" + compOut);
             lems.resolve(comp);
         } catch (ConnectionError e)
         {
@@ -747,13 +802,17 @@ public class DLemsWriter extends ABaseWriter
 
     public static void main(String[] args) throws Exception
     {
+        MinimalMessageHandler.setVeryMinimal(true);
+        E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
 
         for (File lemsFile : lemsFiles)
         {
