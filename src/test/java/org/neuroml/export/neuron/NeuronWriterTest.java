@@ -26,41 +26,44 @@ public class NeuronWriterTest extends TestCase {
 
 
     public void testHH() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
-
         String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml";
         testGetMainScript(exampleFilename);
     }
-    /*
-    public void testQ10() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException {
-
-        String exampleFilename = "LEMS_NML2_Ex10_Q10.xml";
-        Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-        testGetMainScript(exampleFilename, lems);
-    }*/
 
     public void testFN() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
-
         String exampleFilename = "LEMS_NML2_Ex9_FN.xml";
         testGetMainScript(exampleFilename);
     }
 
-    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
-
-         String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
-         testGetMainScript(exampleFilename);
-     }
-
-//    public void testInhomoGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
-//
-//   	 ClassLoader classLoader = getClass().getClassLoader();
-//	 File exampleGHK = new File(classLoader.getResource("examples/korngreen/LEMS_KorngreenPyramidal.xml").getFile());
-//     generateMainScript(exampleGHK);
-//    }
+    public void testNet2() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
+        String exampleFilename = "LEMS_NML2_Ex12_Net2.xml";
+        testGetMainScript(exampleFilename);
+    }
 
     public void testInputsEx() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
-        String exampleFilename = "LEMS_NML2_Ex16a_Inputs.xml";
+        String exampleFilename = "LEMS_NML2_Ex16_Inputs.xml";
         testGetMainScript(exampleFilename);
-   }
+    }
+
+    public void testGHK() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+         String exampleFilename = "LEMS_NML2_Ex18_GHK.xml";
+         testGetMainScript(exampleFilename);
+    }
+    
+    public void testGJ() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+         String exampleFilename = "LEMS_NML2_Ex19a_GapJunctionInstances.xml";
+         testGetMainScript(exampleFilename);
+    }
+    
+    public void testAnalog() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+         String exampleFilename = "LEMS_NML2_Ex20_AnalogSynapses.xml";
+         testGetMainScript(exampleFilename);
+    }
+
+    public void testSpiketimesEx() throws LEMSException, IOException, GenerationException, NeuroMLException, JAXBException, ModelFeatureSupportException {
+        String exampleFilename = "LEMS_NML2_Ex23_Spiketimes.xml";
+        testGetMainScript(exampleFilename);
+    }
 
     public void testChannel() throws LEMSException, IOException, GenerationException, NeuroMLException {
 

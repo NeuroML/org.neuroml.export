@@ -2,6 +2,7 @@
 
 from pyNN.utility import get_simulator, init_logging
 import numpy as np
+import time
 
 sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
                              ("--debug", "Print debugging information"))
@@ -73,7 +74,8 @@ ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.
 
 #end
 
-print("Running a PyNN based simulation in %s for %sms (dt: %sms)"%(options.simulator.upper(), sim.tstop, sim.get_time_step()))
+sim_start = time.time()
+print("Running a PyNN based simulation in %s for %sms (dt: %sms) on node %i"%(options.simulator.upper(), sim.tstop, sim.get_time_step(), sim.rank()))
 
 
 #foreach ($d in $display )
@@ -94,8 +96,11 @@ ${oc.population}.record('soma(0.5).${oc.variable}')
 #end
 #end
 
-
 sim.run(sim.tstop)
+
+sim_end = time.time()
+sim_time = sim_end - sim_start
+print("Finished simulation in %f seconds (%f mins)"%(sim_time, sim_time/60.0))
 
 #foreach ($of in $output_file )
 print("Saving to file: $of.file_name (ref: $of.name)")
@@ -112,8 +117,12 @@ t = np.arange(0,sim.tstop+($dt/2),$dt)
 ${of.name}_data = np.array([t])
 #end
 #end
-np.savetxt('$of.file_name', ${of.name}_data.T, delimiter=',',fmt='%s')
+np.savetxt('$of.file_name', ${of.name}_data.T, delimiter='\t',fmt='%s')
 #end
+
+save_end = time.time()
+save_time = save_end - sim_end
+print("Saved all data in %f seconds (%f mins)"%(save_time, save_time/60.0))
 
 if options.plot_figure:
     import matplotlib.pyplot as plt
