@@ -1398,17 +1398,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                         synSafeName,
                                         parseFractionAlong(input),
                                         parseInputSecName(input)));
-        int nspk = 0;
+        main.append("def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n");
+        List<String> spkTimes = new ArrayList<String>();
         for(Component spk : inputComp.getComponents()) {
-            String spkId =  inputName + "_spk_" + nspk;
-            main.append(String.format("%s = h.NetStim()\n", spkId));
-            main.append(String.format("%s.number = 1\n", spkId));
             float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
-            main.append(String.format("%s.start = %f\n", spkId, spkTime));
-            main.append(String.format("nc_%s_%d = h.NetCon(%s, %s, 0, 0, 1)\n", synFullName, nspk, spkId, synFullName));
-            nspk++;
+            spkTimes.add(Float.toString(spkTime));
         }
+        main.append(String.format("%s_stims = [singleNetStimT(t) for t in %s]\n", inputName, spkTimes));
+        main.append(String.format("%s_netCons = [h.NetCon(s, %s, 0, 0, 1) for s in %s_stims]\n", inputName, synFullName, inputName));
+
     }
+
 
     private void generateModForComp(Component comp) throws LEMSException, ContentError {
         if(comp.getComponentType().isOrExtends("timedSynapticInput")) {
