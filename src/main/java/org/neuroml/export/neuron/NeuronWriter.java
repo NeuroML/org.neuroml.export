@@ -741,7 +741,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            ArrayList<Component> electricalProjections = targetComp.getChildrenAL("electricalProjection");
+            ArrayList<Component> electricalProjections = targetComp.getChildrenAL(NeuroMLElements.ELECTRICAL_PROJECTION);
 
             for(Component ep : electricalProjections)
             {
@@ -858,7 +858,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component comp : ep.getAllChildren())
                 {
 
-                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION) ||
+                       comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
                     {
                         number++;
                     }
@@ -884,11 +885,22 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component ec : ep.getChildrenAL("connections"))
                 {
 
-                    if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION) ||
+                       ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
                     {
-                        int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
-                        int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
-
+                        int preCellId = -1;
+                        int postCellId = -1;
+                        
+                        if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                        {
+                            preCellId = Integer.parseInt(ec.getStringValue("preCell"));
+                            postCellId = Integer.parseInt(ec.getStringValue("postCell"));
+                        }
+                        else if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
+                        {
+                            preCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("preCell"));
+                            postCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("postCell"));
+                        }
                         int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
                         int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
 
@@ -2944,9 +2956,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         /*
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
