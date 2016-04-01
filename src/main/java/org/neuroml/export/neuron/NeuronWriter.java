@@ -1404,20 +1404,24 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         addComment(main, "Generating event source for point process " + input);
         Component synapse = inputComp.getRefComponents().get("synapse");
         String synSafeName = NRNUtils.getSafeName(synapse.getID());
-        String synFullName =  inputName + "_" + synSafeName;
+        String synFullName =  inputName + "_" + synSafeName+"_"+input.getID();
         main.append(String.format("%s = h.%s(%f, sec=h.%s)\n",
                                         synFullName,
                                         synSafeName,
                                         parseFractionAlong(input),
                                         parseInputSecName(input)));
-        main.append("def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n");
+        String helperFunc = "def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n";
+        //if (main.indexOf("def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n"))
+        main.append(helperFunc);
         List<String> spkTimes = new ArrayList<String>();
         for(Component spk : inputComp.getComponents()) {
             float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
             spkTimes.add(Float.toString(spkTime));
         }
-        main.append(String.format("%s_stims = [singleNetStimT(t) for t in %s]\n", inputName, spkTimes));
-        main.append(String.format("%s_netCons = [h.NetCon(s, %s, 0, 0, 1) for s in %s_stims]\n", inputName, synFullName, inputName));
+        String stimName = String.format("%s_stims_%s", inputName,input.getID());
+        //stimName = String.format("%s_stims", inputName);
+        main.append(String.format("%s = [singleNetStimT(t) for t in %s]\n", stimName, spkTimes));
+        main.append(String.format("%s_netCons_%s = [h.NetCon(s, %s, 0, 0, 1) for s in %s]\n", inputName, input.getID(), synFullName, stimName));
 
     }
 
@@ -2959,8 +2963,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
         /*
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
@@ -2973,7 +2979,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));*/
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));
 
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
