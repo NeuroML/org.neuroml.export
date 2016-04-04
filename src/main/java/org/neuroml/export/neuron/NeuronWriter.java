@@ -1833,7 +1833,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             //TODO: nasty numerics in neuron: https://www.neuron.yale.edu/phpBB/viewtopic.php?f=28&t=592
             //      this is a disgusting workaround
-            String method = blockNeuron.indexOf("READ cai, cao") > 0 ?  "cnexp" : "derivimplicit";
+            String method = hasCaDependency ?  "derivimplicit" : "cnexp";
             blockBreakpoint.insert(0, String.format("SOLVE states METHOD %s\n\n", method));
         }
 
