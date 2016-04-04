@@ -1831,7 +1831,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(blockDerivative.length() > 0)
         {
-            blockBreakpoint.insert(0, "SOLVE states METHOD cnexp\n\n");
+            //TODO: nasty numerics in neuron: https://www.neuron.yale.edu/phpBB/viewtopic.php?f=28&t=592
+            //      this is a disgusting workaround
+            String method = blockNeuron.indexOf("READ cai, cao") > 0 ?  "cnexp" : "derivimplicit";
+            blockBreakpoint.insert(0, String.format("SOLVE states METHOD %s\n\n", method));
         }
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
