@@ -23,7 +23,9 @@ import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.neuron.NRNUtils;
 import org.neuroml.export.neuron.NeuronWriter;
+import org.neuroml.export.neuron.ProcessManager;
 import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.ProcessOutputWatcher;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.VelocityUtils;
 import org.neuroml.export.utils.support.ModelFeature;
@@ -99,6 +101,45 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 		if(!comment.contains("\n")) sb.append(comm + comment + "\n");
 		else sb.append(commPre + "\n" + comment + "\n" + commPost + "\n");
 	}
+    
+    
+    public List<File> generateAndRun(boolean nogui, boolean runNrn) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
+    {
+        List<File> files = convert();
+
+        if(runNrn)
+        {
+            E.info("Trying to compile mods in: " + this.getOutputFolder());
+            ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+            
+            String commandToExecute = "python "
+                    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath()+" neuron";
+            E.info("Going to execute command: " + commandToExecute);
+
+            Runtime rt = Runtime.getRuntime();
+            Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
+            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
+            procOutputMain.start();
+
+            ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
+            procOutputError.start();
+
+            E.info("Have successfully executed command: " + commandToExecute);
+
+            try
+            {
+                currentProcess.waitFor();
+                E.info("Exit value for compilation: " + currentProcess.exitValue());
+            }
+            catch(InterruptedException e)
+            {
+                E.info("Problem executing Neuron " + e);
+            }
+            
+        }
+        
+        return files;
+    }
 
 	public String getMainScript() throws GenerationException
 	{

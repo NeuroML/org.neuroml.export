@@ -2967,6 +2967,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         /*
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));

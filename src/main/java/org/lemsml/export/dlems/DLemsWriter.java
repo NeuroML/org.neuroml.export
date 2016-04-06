@@ -236,7 +236,9 @@ public class DLemsWriter extends ABaseWriter
                 g.writeEndObject();
                 g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
             }
-            HashMap<String,Component> flatComps = new HashMap<String, Component>();
+            
+            HashMap<String,Component> processedComps = new HashMap<String, Component>();
+            
             for (Component pop : pops)
             {
                 String compRef = pop.getStringValue("component");
@@ -245,9 +247,30 @@ public class DLemsWriter extends ABaseWriter
                 //System.out.println("---------       Adding " + compRef);
                 Component popComp = lems.getComponent(compRef);
                 
-                if (false && popComp.getComponentType().isOrExtends("cell")) 
+                if (popComp.getComponentType().isOrExtends("cell")) 
                 {
-                    //...
+                    processedComps.put(compRef, popComp);
+                    if (populationMode)
+                    {
+                        StringWriter swComp = new StringWriter();
+                        JsonGenerator gComp = f.createJsonGenerator(swComp);
+                        gComp.useDefaultPrettyPrinter();
+                        gComp.writeStartObject();
+
+                        writeDLemsForComponent(gComp, popComp);
+
+                        gComp.writeEndObject();
+                        gComp.close();
+
+                        File compFile = new File(this.getOutputFolder(), popComp.getID() + ".cell.json");
+                        FileUtil.writeStringToFile(swComp.toString(), compFile);
+                        outputFiles.add(compFile);
+
+                    } 
+                    else
+                    {
+                        //writeDLemsForComponent(g, cpFlat);
+                    }
                 }
                 else 
                 {
@@ -260,7 +283,7 @@ public class DLemsWriter extends ABaseWriter
                         }
 
                         Component cpFlat = createFlattenedComp(popComp);
-                        flatComps.put(compRef, cpFlat);
+                        processedComps.put(compRef, cpFlat);
                         if (populationMode)
                         {
                             StringWriter swComp = new StringWriter();
@@ -302,7 +325,7 @@ public class DLemsWriter extends ABaseWriter
                     } 
                     else 
                     {
-                        writeDLemsForComponent(g, flatComps.get(compRef));
+                        writeDLemsForComponent(g, processedComps.get(compRef));
                     }
                     g.writeEndObject();
 
@@ -463,29 +486,36 @@ public class DLemsWriter extends ABaseWriter
 
     private void writeDLemsForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
     {
-
-        g.writeObjectFieldStart(DLemsKeywords.DYNAMICS.get());
-        writeDynamics(g, comp);
-        g.writeEndObject();
-
-        g.writeArrayFieldStart(DLemsKeywords.EVENTS.get());
-        writeEvents(g, comp);
-        g.writeEndArray();
-
+        if (comp==null)
+            return;
+        
         g.writeStringField(DLemsKeywords.NAME.get(), comp.getID());
         g.writeStringField(DLemsKeywords.TYPE.get(), comp.getComponentType().getName());
+        
+        
+        if (comp.getComponentType().isOrExtends("cell")) {
+            g.writeStringField(DLemsKeywords.COMMENT.get(), "Not adding rest of cell definition in JSON as it is of type <cell>");
+        } else {
+            g.writeObjectFieldStart(DLemsKeywords.DYNAMICS.get());
+            writeDynamics(g, comp);
+            g.writeEndObject();
 
-        g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
-        writeParameters(g, comp);
-        g.writeEndObject();
+            g.writeArrayFieldStart(DLemsKeywords.EVENTS.get());
+            writeEvents(g, comp);
+            g.writeEndArray();
 
-        g.writeObjectFieldStart(DLemsKeywords.STATE.get());
-        writeState(g, comp);
-        g.writeEndObject();
+            g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
+            writeParameters(g, comp);
+            g.writeEndObject();
 
-        g.writeObjectFieldStart(DLemsKeywords.STATE_FUNCTIONS.get());
-        writeStateFunctions(g, comp);
-        g.writeEndObject();
+            g.writeObjectFieldStart(DLemsKeywords.STATE.get());
+            writeState(g, comp);
+            g.writeEndObject();
+
+            g.writeObjectFieldStart(DLemsKeywords.STATE_FUNCTIONS.get());
+            writeStateFunctions(g, comp);
+            g.writeEndObject();
+        }
 
     }
     
