@@ -301,14 +301,16 @@ public class NRNUtils implements UnitConverter
     }
     
     @Override
-    public double convert(double siValue, String dimensionName) 
+    public float convert(float siValue, String dimensionName) 
     {
-        return convertToNeuronUnits((float)siValue, dimensionName);
+        return convertToNeuronUnits(siValue, dimensionName);
     }
 
     protected static float convertToNeuronUnits(float val, String dimensionName)
     {
-        float newVal = val * getNeuronUnitFactor(dimensionName);
+        float factor = getNeuronUnitFactor(dimensionName);
+        float newVal = val * factor;
+        //System.out.println("f "+factor+" val "+val+"  new "+newVal+"; dim "+dimensionName);
         return newVal;
     }
 
@@ -317,7 +319,7 @@ public class NRNUtils implements UnitConverter
 
         if (dimensionName.equals("none"))
         {
-            return 1f;
+            return 1;
         }
         else if (dimensionName.equals("voltage"))
         {
@@ -421,5 +423,20 @@ public class NRNUtils implements UnitConverter
             return unit.replaceAll("\\)", "/ms)");
         }
     }
+    
+    
+	public static void main(String args[])
+	{
+		NRNUtils nu = new NRNUtils();
+        float f = 0.001f;
+        
+        System.out.println("Converting "+f+" to "+nu.convert(f, "none"));
+        System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "none"));
+        System.out.println("Converting "+f+" to "+nu.convert(f, "voltage"));
+        System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "voltage"));
+        System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "conductance"));
+        
+
+	}
 
 }

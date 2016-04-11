@@ -89,9 +89,9 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.MEDIUM);
 		sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.LOW);
-		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.LOW);
 		sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
-		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.NONE);
+		sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
 	}
 
 	@Override
@@ -177,16 +177,17 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                 else 
                 {
                     StringBuilder script = new StringBuilder();
-                    addComment(script, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
         
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     Component comp = lems.components.getByID(name);
+                    addComment(script, format + " simulator compliant export for:\n\n" + comp.details("") + "\n\n" + Utils.getHeaderComment(format) + "\n");
                     E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
                     String template = null;
                     
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
                     {
+                        nrnWriter.convertCellWithMorphology(comp);
                         suffix = CELL_DEFINITION_SUFFIX;
                         template = VelocityUtils.pynnMorphCellTemplateFile;
                     }
@@ -265,10 +266,11 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_Complex.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/PyNNShowcase/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_iv_RS.xml"));
 

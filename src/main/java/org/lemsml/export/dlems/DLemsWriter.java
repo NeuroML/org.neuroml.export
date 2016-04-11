@@ -495,6 +495,11 @@ public class DLemsWriter extends ABaseWriter
         
         if (comp.getComponentType().isOrExtends("cell")) {
             g.writeStringField(DLemsKeywords.COMMENT.get(), "Not adding rest of cell definition in JSON as it is of type <cell>");
+            
+            g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
+            writeParameters(g, comp);
+            g.writeEndObject();
+            
         } else {
             g.writeObjectFieldStart(DLemsKeywords.DYNAMICS.get());
             writeDynamics(g, comp);
@@ -521,7 +526,7 @@ public class DLemsWriter extends ABaseWriter
     
     private String convertTime(ParamValue lemsValue) throws ContentError
     {
-        return (float)unitConverter.convert(lemsValue.getDoubleValue(),TIME_DIM)+"";
+        return unitConverter.convert((float)lemsValue.getDoubleValue(),TIME_DIM)+"";
     }
 
     private void writeSimulationInfo(JsonGenerator g, Component simCpt) throws ContentError, JsonGenerationException, IOException
@@ -681,13 +686,14 @@ public class DLemsWriter extends ABaseWriter
         for (FinalParam p : ct.getFinalParams())
         {
             ParamValue pv = comp.getParamValue(p.getName());
-
-            g.writeStringField(p.getName(), (float)unitConverter.convert(pv.getDoubleValue(), pv.getDimensionName()) + "");
+            float f = unitConverter.convert((float)pv.getDoubleValue(), pv.getDimensionName());
+            String s = f+"";
+            g.writeStringField(p.getName(), s);
         }
 
         for (Constant c : ct.getConstants())
         {
-            g.writeStringField(c.getName(), (float)unitConverter.convert(c.getValue(), c.getDimension().getName()) + "");
+            g.writeStringField(c.getName(), unitConverter.convert((float)c.getValue(), c.getDimension().getName()) + "");
         }
 
     }
@@ -781,6 +787,21 @@ public class DLemsWriter extends ABaseWriter
         }
 
     }
+    
+    private boolean continueFlattenning(Component comp, ComponentFlattener cf) 
+    {
+        if (onlyFlattenIfNecessary) {
+            if (!cf.requiresFlattenning()) {
+                return false;
+            }
+            if (comp.getAllChildren().size()==1 &&
+                comp.getAllChildren().get(0).getTypeName().equals("notes")) {
+                return false;
+            }
+        } 
+            
+        return true;
+    }
 
     private ComponentType createFlattenedCompType(Component compOrig) throws ContentError, ParseError
     {
@@ -788,7 +809,7 @@ public class DLemsWriter extends ABaseWriter
         ComponentType ctFlat = new ComponentType();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig, true, true);
         
-        if (onlyFlattenIfNecessary && !cf.requiresFlattenning()) {
+        if (!continueFlattenning(compOrig, cf)) {
             return compOrig.getComponentType();
         }
 
@@ -812,7 +833,7 @@ public class DLemsWriter extends ABaseWriter
         Component comp = new Component();
         ComponentFlattener cf = new ComponentFlattener(lems, compOrig);
 
-        if (onlyFlattenIfNecessary && !cf.requiresFlattenning()) {
+        if (!continueFlattenning(compOrig, cf)) {
             return compOrig;
         }
         
@@ -840,9 +861,10 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-        //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SimpleNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SpikingNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
         for (File lemsFile : lemsFiles)
         {
