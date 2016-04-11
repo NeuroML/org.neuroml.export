@@ -24,6 +24,7 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.InstanceRequirement;
 import org.lemsml.jlems.core.type.Lems;
@@ -1563,39 +1564,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
         {
 
-            for(Component child1 : comp.getAllChildren())
-            {
-                if(child1.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE))
-                {
-                    for(Component child2 : child1.getAllChildren())
-                    {
-                        if(child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
-                        {
-                            hasCaDependency = true;
-                        }
-
-                        for(Component child3 : child2.getAllChildren())
-                        {
-                            if(child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
-                            {
-                                hasCaDependency = true;
-                            }
-                        }
-                    }
-                    for(Requirement r : child1.getComponentType().getRequirements())
-                    {
-                        if(r.getName().equals(NRNUtils.caConc))
-                        {
-                            hasCaDependency = true;
-                        }
-                    }
-                }
-
-                if(child1.getComponentType().isOrExtends(NeuroMLElements.BASE_COND_SCALING_CA))
-                {
-                    hasCaDependency = true;
-                }
-            }
+            hasCaDependency = checkCaDependency(comp);
 
             mechName = NRNUtils.getSafeName(comp.getID());
             blockNeuron.append("SUFFIX " + mechName + "\n");
@@ -1941,8 +1910,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockInitial.append(NeuroMLElements.TEMPERATURE + " = " + NRNUtils.NEURON_TEMP + " + 273.15\n\n");
         }
 
-        blockInitial.append("rates()\n");
-        blockInitial.append("rates() ? To ensure correct initialisation.\n");
+        String ratesInvocation = ratesFunctionCall(comp);
+        blockInitial.append(ratesInvocation + "\n");
+        blockInitial.append(ratesInvocation + "? To ensure correct initialisation.\n");
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
         {
@@ -2008,7 +1978,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(blockDerivative.length() == 0 && !comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_KS_COMP_TYPE))
         {
-            blockBreakpoint.insert(0, "rates()\n");
+            blockBreakpoint.insert(0, ratesInvocation + "\n");
         }
 
         if(dyn != null)
@@ -2041,11 +2011,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(blockDerivative.length() > 0)
         {
-            blockDerivative.insert(0, "rates()\n");
+            blockDerivative.insert(0, ratesInvocation + "\n");
             writeModBlock(mod, "DERIVATIVE states", blockDerivative.toString());
         }
 
-        writeModBlock(mod, "PROCEDURE rates()", ratesMethod.toString());
+        writeModBlock(mod, "PROCEDURE " + ratesInvocation, ratesMethod.toString());
 
         if (blockInitial.indexOf("random")>0 ||
             blockNetReceive.indexOf("random")>0 ||
@@ -2069,6 +2039,56 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return mod.toString();
     }
 
+    private boolean checkCaDependency(Component comp) {
+        boolean hasCaDependency = false;
+        for(Component child1 : comp.getAllChildren())
+        {
+            if(child1.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE))
+            {
+                for(Component child2 : child1.getAllChildren())
+                {
+                    if(child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child2.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
+                    {
+                        hasCaDependency = true;
+                    }
+
+                    for(Component child3 : child2.getAllChildren())
+                    {
+                        if(child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
+                        {
+                            hasCaDependency = true;
+                        }
+                    }
+                }
+                for(Requirement r : child1.getComponentType().getRequirements())
+                {
+                    if(r.getName().equals(NRNUtils.caConc))
+                    {
+                        hasCaDependency = true;
+                    }
+                }
+            }
+
+            if(child1.getComponentType().isOrExtends(NeuroMLElements.BASE_COND_SCALING_CA))
+            {
+                hasCaDependency = true;
+            }
+        }
+        return hasCaDependency;
+    }
+
+    private String ratesFunctionCall(Component comp) {
+        boolean hasCaDependency = checkCaDependency(comp);
+        ComponentType type = comp.getComponentType();
+        List<String> args = new ArrayList<String>();
+        if (type.isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE) ||
+                        type.isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
+            args.add("v");
+        if(hasCaDependency)
+            args.add("cai");
+        return "rates(" + StringUtils.join(args, ',') + ")";
+    }
+
     private void parseKS(Component comp, StringBuilder blockKinetic, String prefix) throws ContentError {
         /*******
          *
@@ -2079,7 +2099,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
          *
          *******/
 
-        blockKinetic.insert(0,"rates()\n\n");
+        blockKinetic.insert(0, ratesFunctionCall(comp) + "\n\n");
         HashMap<String,String> lines = new HashMap<String, String>();
 
         for (Component c: comp.getAllChildren())
