@@ -61,6 +61,18 @@ class $name(object):
 #end
 #end
 
+
+#foreach ($syn in $synapses_allowed )
+
+    # Allowed synapse: $syn
+    @property
+    def $syn(self):
+        print("Creating synapse $syn on cell $name")
+        self.syn_$syn = h.$syn(0.5, sec=self.soma)
+        return self.syn_$syn
+
+#end
+
     def get_value(self, val_string):
         if val_string=='v':
             return self.soma(0.5)._ref_v
@@ -76,6 +88,7 @@ class ${name}Type(NativeCellType):
     default_initial_values = {}    
     recordable = [#foreach ($s in $state.keySet() ) 'soma(0.5).$s', #end]
     units = {'soma(0.5).v' : 'mV'}
-    receptor_types = []
+    # Synapses allowed: $synapses_allowed
+    receptor_types = [#foreach ($syn in $synapses_allowed ) '$syn', #end]
     model = $name
 

@@ -64,15 +64,14 @@ $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_compone
 #set($synapse=$projections.get($proj).synapse)
 
 # Projection: $proj: $pre_pop -> $post_pop with synapse: $synapse
-connections = []
+${proj}__conns = []
 #foreach ($conn in $projections.get($proj).connections )
 # Connection: $conn.name: $pre_pop ($conn.pre_cell_id) -> $post_pop ($conn.post_cell_id)
-# connections.append((${conn.pre_cell_id}, ${conn.post_cell_id}, 1.0, 0.0))
-connections.append((${conn.pre_cell_id}, ${conn.post_cell_id}))
+${proj}__conns.append((${conn.pre_cell_id}, ${conn.post_cell_id}))
 #end
-# connector = sim.FromListConnector(connections, column_names=["weight", "delay"])
-connector = sim.FromListConnector(connections, column_names=[])
-$proj = sim.Projection(${pre_pop}, ${post_pop}, connector=connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='excitatory')
+# ${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=["weight", "delay"])
+${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=[])
+$proj = sim.Projection(${pre_pop}, ${post_pop}, connector=${proj}__connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='$synapse')
 #end
 
 
@@ -97,7 +96,7 @@ ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.
 # Display: $d.name
 #foreach ($curve in $d.curves )
 # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
-${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinate}')
+${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinate}', sampling_interval=$dt)
 #end
 #end
 
@@ -106,7 +105,7 @@ ${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinat
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
-${oc.population}[[$oc.population_index]].record('soma(0.5).${oc.variable}')
+${oc.population}[[$oc.population_index]].record('soma(0.5).${oc.variable}', sampling_interval=$dt)
 #end
 #end
 #end
@@ -138,12 +137,13 @@ if sim.rank() == 0:
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
     # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
-    segment =  ${oc.population}.get_data().segments[0]
-    ${of.name}_${oc.name}_${oc.variable} = [next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None).T[$oc.population_index]]
+    ${oc.population}_segment =  ${oc.population}.get_data().segments[0]
+    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
+    ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
     ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
 #else
     # Column: $oc.name
-    t = np.arange(0,sim.tstop+($dt/2),$dt)
+    t = np.arange(0,(sim.tstop+($dt/2))/1000.,$dt/1000.)
     ${of.name}_data = np.array([t])
 #end
 #end
@@ -160,17 +160,27 @@ if sim.rank() == 0:
 
 if options.plot_figure:
     import matplotlib.pyplot as plt
+    mp = 'Membrane potential (mV) '
 #foreach ($d in $display )
     # Display: $d.name: $d.title
     print("Display ($d.name): $d.title")
     plt.figure("${d.title}")
+    plt.xlabel('Time (ms)')
+    ylabel = ''
+
 #foreach ($curve in $d.curves )
     # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
     segment =  ${curve.population}.get_data().segments[0]
     vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
+#if (${curve.ordinate} == 'v')
+    if not mp in ylabel: ylabel += mp
+#else
+    ylabel += '${curve.ordinate} '
+#end
     ts = [i*sim.get_time_step() for i in xrange(len(vm))]
     plt.plot(ts, vm, '-', label='${curve.name}')
 #end
+    plt.ylabel(ylabel)
     plt.legend()
 #end
     plt.show()

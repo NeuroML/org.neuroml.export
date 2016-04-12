@@ -6,8 +6,10 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.velocity.VelocityContext;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
@@ -79,7 +81,6 @@ public class DLemsWriter extends ABaseWriter
     }
     
     
-
     public DLemsWriter(Lems lems) throws ModelFeatureSupportException, LEMSException, NeuroMLException
     {
         super(lems, Format.DLEMS);
@@ -188,6 +189,9 @@ public class DLemsWriter extends ABaseWriter
 
         ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
         projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
+        HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
+        HashMap<String,Set<String>> cellIdsVsSynapses = new HashMap<String, Set<String>>();
+        
         
         if (pops.size() > 0)
         {
@@ -196,18 +200,30 @@ public class DLemsWriter extends ABaseWriter
 
             if (populationMode)
             {
+                for (Component pop : pops)
+                {
+                    String compRef = pop.getStringValue("component");
+                    String popName = pop.getID();
+                    cellIdsVsPopulations.put(popName, compRef);
+                }
                 g.writeObjectFieldStart(DLemsKeywords.SYNAPSES.get());
-
             }
             for (Component proj : projs)
             {
-                String synRef = proj.getStringValue("synapse");
-                String synName = proj.getStringValue("synapse");
+                String synId = proj.getStringValue("synapse");
+                String postsynapticPopulation = proj.getStringValue("postsynapticPopulation");
+                String postCell = cellIdsVsPopulations.get(postsynapticPopulation);
+                if (cellIdsVsSynapses.get(postCell)==null)
+                {
+                    cellIdsVsSynapses.put(postCell, new LinkedHashSet<String>());
+                }
+                cellIdsVsSynapses.get(postCell).add(synId);
+                
 
-                if (!written.contains(synRef))
+                if (!written.contains(synId))
                 {
                     //System.out.println("-             Adding " + synRef);
-                    Component synComp = lems.getComponent(synRef);
+                    Component synComp = lems.getComponent(synId);
 
                     if (!writtenTypes.contains(synComp.getTypeName()))
                     {
@@ -217,8 +233,7 @@ public class DLemsWriter extends ABaseWriter
                     Component cpFlat = createFlattenedComp(synComp);
                     if (populationMode)
                     {
-
-                        g.writeObjectFieldStart(synName);
+                        g.writeObjectFieldStart(synId);
 
                         g.writeObjectFieldStart(DLemsKeywords.SYNAPSE.get());
                         writeDLemsForComponent(g, cpFlat);
@@ -230,15 +245,18 @@ public class DLemsWriter extends ABaseWriter
                 }
 
             }
+            //System.out.println("cellIdsVsPopulations "+cellIdsVsPopulations);
+            //System.out.println("cellIdsVsSynapses "+cellIdsVsSynapses);
 
             if (populationMode)
             {
-                g.writeEndObject();
+                g.writeEndObject(); // synapses
                 g.writeObjectFieldStart(DLemsKeywords.POPULATIONS.get());
             }
             
             HashMap<String,Component> processedComps = new HashMap<String, Component>();
             
+                            
             for (Component pop : pops)
             {
                 String compRef = pop.getStringValue("component");
@@ -246,6 +264,9 @@ public class DLemsWriter extends ABaseWriter
 
                 //System.out.println("---------       Adding " + compRef);
                 Component popComp = lems.getComponent(compRef);
+
+                HashMap<String, Set<String>> extraParameters = new HashMap<String, Set<String>>();
+                extraParameters.put("synapses_allowed", cellIdsVsSynapses.get(popComp.id));
                 
                 if (popComp.getComponentType().isOrExtends("cell")) 
                 {
@@ -257,7 +278,7 @@ public class DLemsWriter extends ABaseWriter
                         gComp.useDefaultPrettyPrinter();
                         gComp.writeStartObject();
 
-                        writeDLemsForComponent(gComp, popComp);
+                        writeDLemsForComponent(gComp, popComp, extraParameters);
 
                         gComp.writeEndObject();
                         gComp.close();
@@ -291,7 +312,7 @@ public class DLemsWriter extends ABaseWriter
                             gComp.useDefaultPrettyPrinter();
                             gComp.writeStartObject();
 
-                            writeDLemsForComponent(gComp, cpFlat);
+                            writeDLemsForComponent(gComp, cpFlat, extraParameters);
 
                             gComp.writeEndObject();
                             gComp.close();
@@ -325,7 +346,7 @@ public class DLemsWriter extends ABaseWriter
                     } 
                     else 
                     {
-                        writeDLemsForComponent(g, processedComps.get(compRef));
+                        writeDLemsForComponent(g, processedComps.get(compRef), extraParameters);
                     }
                     g.writeEndObject();
 
@@ -486,6 +507,11 @@ public class DLemsWriter extends ABaseWriter
 
     private void writeDLemsForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
     {
+        writeDLemsForComponent(g, comp, null);
+    }
+
+    private void writeDLemsForComponent(JsonGenerator g, Component comp, HashMap<String, Set<String>> extraParameters) throws ContentError, JsonGenerationException, IOException
+    {
         if (comp==null)
             return;
         
@@ -520,6 +546,17 @@ public class DLemsWriter extends ABaseWriter
             g.writeObjectFieldStart(DLemsKeywords.STATE_FUNCTIONS.get());
             writeStateFunctions(g, comp);
             g.writeEndObject();
+        }
+        if (extraParameters!=null) {
+            for (String s1: extraParameters.keySet()) {
+                if (extraParameters.get(s1)!=null && !extraParameters.get(s1).isEmpty()) {
+                    g.writeArrayFieldStart(s1);
+                    for (String s2: extraParameters.get(s1)){
+                        g.writeString(s2);
+                    }
+                    g.writeEndArray();
+                }
+            }
         }
 
     }
@@ -861,9 +898,9 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
-        //lemsFiles.add(new File("../OpenCortex/NeuroML2/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
         for (File lemsFile : lemsFiles)
