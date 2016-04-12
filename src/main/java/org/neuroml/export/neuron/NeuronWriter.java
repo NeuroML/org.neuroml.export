@@ -330,14 +330,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
 
                     Cell cell = Utils.getCellFromComponent(popComp);
-                    
+
                     IntracellularProperties ip = convertCellWithMorphology(popComp);
                     NamingHelper nh = new NamingHelper(cell);
-                    
+
                     String cellName = popComp.getID();
                     String fileName = cellName + ".hoc";
-                    
-                    
+
+
                     for (Species species: ip.getSpecies()) {
 
                         float internal = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialConcentration()), "concentration");
@@ -829,7 +829,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         int preCellId = -1;
                         int postCellId = -1;
-                        
+
                         if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
                         {
                             preCellId = Integer.parseInt(ec.getStringValue("preCell"));
@@ -1408,9 +1408,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
         return modFile;
     }
-    
+
     public IntracellularProperties convertCellWithMorphology(Component cellComponent) throws LEMSException, NeuroMLException {
-        
+
         Cell cell = Utils.getCellFromComponent(cellComponent);
         NamingHelper nh = new NamingHelper(cell);
         compIdsVsCells.put(cellComponent.getID(), cell);
@@ -1482,7 +1482,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
         }
-        
+
         return ip;
     }
 
@@ -2623,7 +2623,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else
                 {
-                    ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
+                    ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * (" + rateNameVsRateExpr.get(rateName) + ")\n");
                 }
 
             }
@@ -2692,7 +2692,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                     else
                     {
-                        ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
+                        ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * (" + rateNameVsRateExpr.get(rateName) + ")\n");
                     }
                 }
             }
@@ -2990,7 +2990,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
-        
+
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
