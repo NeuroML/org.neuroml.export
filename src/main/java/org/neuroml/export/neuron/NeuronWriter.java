@@ -330,11 +330,24 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     Cell cell = Utils.getCellFromComponent(popComp);
                     
-                    convertCellWithMorphology(popComp);
+                    IntracellularProperties ip = convertCellWithMorphology(popComp);
                     NamingHelper nh = new NamingHelper(cell);
                     
                     String cellName = popComp.getID();
                     String fileName = cellName + ".hoc";
+                    
+                    
+                    for (Species species: ip.getSpecies()) {
+
+                        float internal = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialConcentration()), "concentration");
+                        float external = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialExtConcentration()), "concentration");
+                        main.append("print(\"Setting the default initial concentrations for " + species.getIon() + " (used in "+cellName
+                                +") to "+internal+" mM (internal), "+external+" mM (external)\")\n");
+
+                        main.append("h(\"" + species.getIon() + "i0_" + species.getIon() + "_ion = " + internal + "\")\n");
+                        main.append("h(\"" + species.getIon() + "o0_" + species.getIon() + "_ion = " + external + "\")\n\n");
+
+                    }
 
                     main.append("h.load_file(\"" + fileName + "\")\n");
 
@@ -1395,7 +1408,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return modFile;
     }
     
-    public void convertCellWithMorphology(Component cellComponent) throws LEMSException, NeuroMLException {
+    public IntracellularProperties convertCellWithMorphology(Component cellComponent) throws LEMSException, NeuroMLException {
         
         Cell cell = Utils.getCellFromComponent(cellComponent);
         NamingHelper nh = new NamingHelper(cell);
@@ -1469,7 +1482,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
         }
         
-        return;
+        return ip;
     }
 
     public static String generateCellFile(Cell cell) throws LEMSException, NeuroMLException
