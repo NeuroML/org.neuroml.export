@@ -22,7 +22,8 @@ public class VelocityUtils
 	public static final String nestCellTemplateFile = "/nest/cell.vm";
 	
 	public static final String pynnRunTemplateFile = "/pynn/run.vm";
-	public static final String pynnCellTemplateFile = "/pynn/cell.vm";
+	public static final String pynnAbstractCellTemplateFile = "/pynn/abstract_cell.vm";
+	public static final String pynnMorphCellTemplateFile = "/pynn/morph_cell.vm";
 	public static final String pynnInputNeuronTemplateFile = "/pynn/input_neuron.vm";
 	
 	public static final String netpyneRunTemplateFile = "/netpyne/run.vm";

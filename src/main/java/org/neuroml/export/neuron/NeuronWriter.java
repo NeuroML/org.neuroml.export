@@ -330,36 +330,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
 
                     Cell cell = Utils.getCellFromComponent(popComp);
+                    
+                    IntracellularProperties ip = convertCellWithMorphology(popComp);
                     NamingHelper nh = new NamingHelper(cell);
-                    compIdsVsCells.put(popComp.getID(), cell);
-                    String cellString = generateCellFile(cell);
+                    
                     String cellName = popComp.getID();
-
                     String fileName = cellName + ".hoc";
-                    File cellFile = new File(getOutputFolder(), fileName);
-                    IntracellularProperties ip = null;
-                    MembraneProperties2CaPools mpCa2 = null;
-                    Component bpComp;
-                    Component mpComp = null;
-                    Component ipComp = null;
-                    if (cell instanceof Cell2CaPools) {
-                        Cell2CaPools cell2ca = (Cell2CaPools)cell;
-                        BiophysicalProperties2CaPools bp2 = cell2ca.getBiophysicalProperties2CaPools();
-                        mpCa2 = bp2.getMembraneProperties2CaPools();
-                        ip = bp2.getIntracellularProperties2CaPools();
-                        bpComp = popComp.getChild("biophysicalProperties2CaPools");
-                        mpComp = bpComp.getChild("membraneProperties2CaPools");
-                        ipComp = bpComp.getChild("intracellularProperties2CaPools");
-                    }
-                    else
-                    {
-                        BiophysicalProperties bp = cell.getBiophysicalProperties();
-                        ip = bp.getIntracellularProperties();
-                        bpComp = popComp.getChild("biophysicalProperties");
-                        mpComp = bpComp.getChild("membraneProperties");
-                        ipComp = bpComp.getChild("intracellularProperties");
-                    }
-
+                    
+                    
                     for (Species species: ip.getSpecies()) {
 
                         float internal = NRNUtils.convertToNeuronUnits(Utils.getMagnitudeInSI(species.getInitialConcentration()), "concentration");
@@ -398,46 +376,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(String.format("h(\"objref fih_ion_%s\")\n", popName));
                     main.append(String.format("h(\'{fih_ion_%s = new FInitializeHandler(1, \"initialiseIons_%s()\")}\')\n\n", popName, popName));
 
-                    try
-                    {
-                        if (!outputFiles.contains(cellFile))
-                        {
-                            E.info("-- Writing to hoc: " + cellFile);
-                            FileUtil.writeStringToFile(cellString, cellFile);
-                            this.outputFiles.add(cellFile);
-
-                            for(Component channelDensity : mpComp.getChildrenAL("channelDensities"))
-                            {
-                                if (channelDensity.getTypeName().equals("channelDensity") || channelDensity.getTypeName().equals("channelDensityNonUniform")){
-                                    ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
-                                    option.erev = NRNUtils.convertToNeuronUnits((float)channelDensity.getParamValue("erev").getDoubleValue(), "voltage");
-
-                                    writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
-                                }
-                                else if (channelDensity.getTypeName().equals("channelDensityNernst")){
-                                    ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
-                                    writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
-                                }
-                                else if (channelDensity.getTypeName().equals("channelDensityNernstCa2") && mpCa2!=null){
-                                    ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
-                                    writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
-                                }
-                                else if (channelDensity.getTypeName().equals("channelDensityGHK") || channelDensity.getTypeName().equals("channelDensityNonUniformGHK") ){
-                                    ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
-                                    writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
-                                }
-                            }
-
-                            for(Component species : ipComp.getChildrenAL("speciesList"))
-                            {
-                                writeModFile(species.getRefHM().get("concentrationModel"),null);
-                            }
-                        }
-                    }
-                    catch(IOException ex)
-                    {
-                        throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
-                    }
 
                 }
                 else
@@ -742,7 +680,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            ArrayList<Component> electricalProjections = targetComp.getChildrenAL("electricalProjection");
+            ArrayList<Component> electricalProjections = targetComp.getChildrenAL(NeuroMLElements.ELECTRICAL_PROJECTION);
 
             for(Component ep : electricalProjections)
             {
@@ -859,7 +797,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component comp : ep.getAllChildren())
                 {
 
-                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    if(comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION) ||
+                       comp.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
                     {
                         number++;
                     }
@@ -885,11 +824,22 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 for(Component ec : ep.getChildrenAL("connections"))
                 {
 
-                    if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                    if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION) ||
+                       ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
                     {
-                        int preCellId = Integer.parseInt(ec.getStringValue("preCell"));
-                        int postCellId = Integer.parseInt(ec.getStringValue("postCell"));
-
+                        int preCellId = -1;
+                        int postCellId = -1;
+                        
+                        if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION))
+                        {
+                            preCellId = Integer.parseInt(ec.getStringValue("preCell"));
+                            postCellId = Integer.parseInt(ec.getStringValue("postCell"));
+                        }
+                        else if(ec.getComponentType().getName().equals(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
+                        {
+                            preCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("preCell"));
+                            postCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("postCell"));
+                        }
                         int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
                         int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
 
@@ -1393,20 +1343,24 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         addComment(main, "Generating event source for point process " + input);
         Component synapse = inputComp.getRefComponents().get("synapse");
         String synSafeName = NRNUtils.getSafeName(synapse.getID());
-        String synFullName =  inputName + "_" + synSafeName;
+        String synFullName =  inputName + "_" + synSafeName+"_"+input.getID();
         main.append(String.format("%s = h.%s(%f, sec=h.%s)\n",
                                         synFullName,
                                         synSafeName,
                                         parseFractionAlong(input),
                                         parseInputSecName(input)));
-        main.append("def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n");
+        String helperFunc = "def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n";
+        //if (main.indexOf("def singleNetStimT(tstim):\n\tn=h.NetStim()\n\tn.number = 1\n\tn.start=tstim\n\treturn n\n"))
+        main.append(helperFunc);
         List<String> spkTimes = new ArrayList<String>();
         for(Component spk : inputComp.getComponents()) {
             float spkTime = NRNUtils.convertToNeuronUnits(spk.getAttributeValue("time"), lems);
             spkTimes.add(Float.toString(spkTime));
         }
-        main.append(String.format("%s_stims = [singleNetStimT(t) for t in %s]\n", inputName, spkTimes));
-        main.append(String.format("%s_netCons = [h.NetCon(s, %s, 0, 0, 1) for s in %s_stims]\n", inputName, synFullName, inputName));
+        String stimName = String.format("%s_stims_%s", inputName,input.getID());
+        //stimName = String.format("%s_stims", inputName);
+        main.append(String.format("%s = [singleNetStimT(t) for t in %s]\n", stimName, spkTimes));
+        main.append(String.format("%s_netCons_%s = [h.NetCon(s, %s, 0, 0, 1) for s in %s]\n", inputName, input.getID(), synFullName, stimName));
 
     }
 
@@ -1432,13 +1386,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    public void saveModToFile(Component comp, String mod) throws ContentError
+    public File saveModToFile(Component comp, String mod) throws ContentError
     {
         File modFile = new File(getOutputFolder(), NRNUtils.getSafeName(comp.getID()) + ".mod");
         if(modWritten.containsKey(comp.getID()) && modWritten.get(comp.getID()).equals(mod))
         {
             E.info("-- Mod file for: " + comp.getID() + " has already been written");
-            return;
+            return modFile;
         }
         E.info("-- Writing to mod: " + modFile.getAbsolutePath());
 
@@ -1452,6 +1406,84 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
         }
+        return modFile;
+    }
+    
+    public IntracellularProperties convertCellWithMorphology(Component cellComponent) throws LEMSException, NeuroMLException {
+        
+        Cell cell = Utils.getCellFromComponent(cellComponent);
+        NamingHelper nh = new NamingHelper(cell);
+        compIdsVsCells.put(cellComponent.getID(), cell);
+        String cellString = generateCellFile(cell);
+        String cellName = cellComponent.getID();
+
+        String fileName = cellName + ".hoc";
+        File cellFile = new File(getOutputFolder(), fileName);
+        IntracellularProperties ip = null;
+        MembraneProperties2CaPools mpCa2 = null;
+        Component bpComp;
+        Component mpComp = null;
+        Component ipComp = null;
+        if (cell instanceof Cell2CaPools) {
+            Cell2CaPools cell2ca = (Cell2CaPools)cell;
+            BiophysicalProperties2CaPools bp2 = cell2ca.getBiophysicalProperties2CaPools();
+            mpCa2 = bp2.getMembraneProperties2CaPools();
+            ip = bp2.getIntracellularProperties2CaPools();
+            bpComp = cellComponent.getChild("biophysicalProperties2CaPools");
+            mpComp = bpComp.getChild("membraneProperties2CaPools");
+            ipComp = bpComp.getChild("intracellularProperties2CaPools");
+        }
+        else
+        {
+            BiophysicalProperties bp = cell.getBiophysicalProperties();
+            ip = bp.getIntracellularProperties();
+            bpComp = cellComponent.getChild("biophysicalProperties");
+            mpComp = bpComp.getChild("membraneProperties");
+            ipComp = bpComp.getChild("intracellularProperties");
+        }
+
+        try
+        {
+            if (!outputFiles.contains(cellFile))
+            {
+                E.info("-- Writing to hoc: " + cellFile);
+                FileUtil.writeStringToFile(cellString, cellFile);
+                this.outputFiles.add(cellFile);
+
+                for(Component channelDensity : mpComp.getChildrenAL("channelDensities"))
+                {
+                    if (channelDensity.getTypeName().equals("channelDensity") || channelDensity.getTypeName().equals("channelDensityNonUniform")){
+                        ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
+                        option.erev = NRNUtils.convertToNeuronUnits((float)channelDensity.getParamValue("erev").getDoubleValue(), "voltage");
+
+                        writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    }
+                    else if (channelDensity.getTypeName().equals("channelDensityNernst")){
+                        ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
+                        writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    }
+                    else if (channelDensity.getTypeName().equals("channelDensityNernstCa2") && mpCa2!=null){
+                        ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
+                        writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    }
+                    else if (channelDensity.getTypeName().equals("channelDensityGHK") || channelDensity.getTypeName().equals("channelDensityNonUniformGHK") ){
+                        ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
+                        writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    }
+                }
+
+                for(Component species : ipComp.getChildrenAL("speciesList"))
+                {
+                    writeModFile(species.getRefHM().get("concentrationModel"),null);
+                }
+            }
+        }
+        catch(IOException ex)
+        {
+            throw new ContentError("Error writing to file: " + cellFile.getAbsolutePath(), ex);
+        }
+        
+        return ip;
     }
 
     public static String generateCellFile(Cell cell) throws LEMSException, NeuroMLException
@@ -2953,9 +2985,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         /*
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
@@ -2968,10 +3006,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));*/
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));
 
         /*
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex21_CurrentBasedSynapses.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));

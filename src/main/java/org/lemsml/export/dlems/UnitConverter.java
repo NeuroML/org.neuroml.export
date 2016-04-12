@@ -11,5 +11,5 @@ package org.lemsml.export.dlems;
  */
 public interface UnitConverter
 {
-    double convert(double siValue, String dimensionName);
+    float convert(float siValue, String dimensionName);
 }

@@ -291,68 +291,71 @@ public class JSONCellSerializer
             boolean foundAll = false;
             for(SegmentGroup grp : morph.getSegmentGroup())
             {
-                if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
+                if(!grp.getId().equals("all"))    // I'll calculate this here...
                 {
-                    g.writeStartObject();
-                    g.writeStringField("name", grp.getId());
-                    foundAll = foundAll || grp.getId().equals("all");
-                    if(!grp.getMember().isEmpty())
+                    if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
                     {
-                        g.writeArrayFieldStart("segments");
-                        for(Member m : grp.getMember())
-                        {
-                            g.writeString(idsVsNames.get(m.getSegment()));
-                        }
-                        g.writeEndArray();
-                    }
-                    if(!grp.getInclude().isEmpty())
-                    {
-                        g.writeArrayFieldStart("groups");
-                        for(org.neuroml.model.Include inc : grp.getInclude())
-                        {
-                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                            if(!isSection)
-                            {
-                                g.writeString(inc.getSegmentGroup());
-                            }
-                        }
-                        g.writeEndArray();
-                        g.writeArrayFieldStart("sections");
-                        for(org.neuroml.model.Include inc : grp.getInclude())
-                        {
-                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                            if(isSection)
-                            {
-                                g.writeString(inc.getSegmentGroup());
-                            }
-                        }
-                        g.writeEndArray();
-                    }
-                    // System.out.println("+++ " +grp.getInhomogeneousParameter());
-                    // System.out.println("--  " +ChannelDensity.class.getSimpleName());
-                    if(!grp.getInhomogeneousParameter().isEmpty())
-                    {
-                        g.writeArrayFieldStart("inhomogeneousParameters");
-                        for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
-                        {
-                            g.writeStartObject();
-                            g.writeStringField("id", ih.getId());
-                            g.writeStringField("variable", ih.getVariable());
-                            g.writeStringField("metric", ih.getMetric().value());
-                            if(ih.getProximal() != null)
-                            {
-                                g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
-                            }
-                            if(ih.getDistal() != null)
-                            {
-                                g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
-                            }
-                            g.writeEndObject();
-                        }
-                        g.writeEndArray();
-                    }
+                        g.writeStartObject();
+                        g.writeStringField("name", grp.getId());
 
-                    g.writeEndObject();
+                            if(!grp.getMember().isEmpty())
+                            {
+                                g.writeArrayFieldStart("segments");
+                                for(Member m : grp.getMember())
+                                {
+                                    g.writeString(idsVsNames.get(m.getSegment()));
+                                }
+                                g.writeEndArray();
+                            }
+                            if(!grp.getInclude().isEmpty())
+                            {
+                                g.writeArrayFieldStart("groups");
+                                for(org.neuroml.model.Include inc : grp.getInclude())
+                                {
+                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                                    if(!isSection)
+                                    {
+                                        g.writeString(inc.getSegmentGroup());
+                                    }
+                                }
+                                g.writeEndArray();
+                                g.writeArrayFieldStart("sections");
+                                for(org.neuroml.model.Include inc : grp.getInclude())
+                                {
+                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                                    if(isSection)
+                                    {
+                                        g.writeString(inc.getSegmentGroup());
+                                    }
+                                }
+                                g.writeEndArray();
+                            }
+                            // System.out.println("+++ " +grp.getInhomogeneousParameter());
+                            // System.out.println("--  " +ChannelDensity.class.getSimpleName());
+                            if(!grp.getInhomogeneousParameter().isEmpty())
+                            {
+                                g.writeArrayFieldStart("inhomogeneousParameters");
+                                for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
+                                {
+                                    g.writeStartObject();
+                                    g.writeStringField("id", ih.getId());
+                                    g.writeStringField("variable", ih.getVariable());
+                                    g.writeStringField("metric", ih.getMetric().value());
+                                    if(ih.getProximal() != null)
+                                    {
+                                        g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
+                                    }
+                                    if(ih.getDistal() != null)
+                                    {
+                                        g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
+                                    }
+                                    g.writeEndObject();
+                                }
+                                g.writeEndArray();
+                            }
+
+                        g.writeEndObject();
+                    }
                 }
             }
             if(!foundAll)
@@ -665,6 +668,7 @@ public class JSONCellSerializer
 
         tests.add("/home/padraig/neuroConstruct/osb/showcase/BlueBrainProjectShowcase/NMC/NeuroML2/cNAC187_L1_HAC_f8c9772d9d_0_0.cell.nml");
         tests.add("/home/padraig/nC_projects/ACnet3/generatedNeuroML2/pyr_4_sym.cell.nml");
+        tests.add("/home/padraig/NeuroML2/examples/NML2_SingleCompHHCell.nml");
         /*tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
         // tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");

@@ -18,5 +18,6 @@ class $name(object):
     def inject_into(self, cells):
         print("Injecting $name into: %s"%cells)
         for id in cells:
-            self.all_inputs[id] = h.$name(0.5, sec=id._cell.source_section)
-            #h('forall psection()')
+            if id.local:
+                self.all_inputs[id] = h.$name(0.5, sec=id._cell.source_section)
+                #h('forall psection()')
