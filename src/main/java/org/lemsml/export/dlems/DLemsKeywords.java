@@ -47,6 +47,8 @@ public enum DLemsKeywords
     CONNECTIONS,
     PRE_CELL_ID, 
     POST_CELL_ID, 
+    WEIGHT, 
+    DELAY, 
     INPUTS;
     
     

@@ -469,7 +469,11 @@ public class DLemsWriter extends ABaseWriter
                     g.writeStringField(DLemsKeywords.SYNAPSE.get(), proj.getStringValue("synapse"));
                     
                     g.writeArrayFieldStart(DLemsKeywords.CONNECTIONS.get());
-                    for (Component conn: proj.getChildrenAL("connections"))
+
+                    ArrayList<Component> conns = proj.getChildrenAL("connections");
+                    conns.addAll(proj.getChildrenAL("connectionsWD"));
+        
+                    for (Component conn: conns)
                     {
                         g.writeStartObject();
                         g.writeStringField(DLemsKeywords.NAME.get(), conn.id);
@@ -479,6 +483,22 @@ public class DLemsWriter extends ABaseWriter
                         LEMSQuantityPath lqpPost = new LEMSQuantityPath(post+"/xxx");
                         g.writeStringField(DLemsKeywords.PRE_CELL_ID.get(), lqpPre.getPopulationIndex()+"");
                         g.writeStringField(DLemsKeywords.POST_CELL_ID.get(), lqpPost.getPopulationIndex()+"");
+                        if (conn.hasStringValue("weight"))
+                        {
+                            g.writeStringField(DLemsKeywords.WEIGHT.get(), conn.getStringValue("weight"));
+                        }
+                        else
+                        {
+                            g.writeStringField(DLemsKeywords.WEIGHT.get(), "1");
+                        }
+                        if (conn.hasStringValue("delay"))
+                        {
+                            g.writeStringField(DLemsKeywords.DELAY.get(), convertTime(conn.getParamValue("delay")));
+                        }
+                        else
+                        {
+                            g.writeStringField(DLemsKeywords.DELAY.get(), "0");
+                        }
                         g.writeEndObject();
                     }
                     
