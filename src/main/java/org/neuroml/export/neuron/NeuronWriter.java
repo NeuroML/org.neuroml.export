@@ -2555,7 +2555,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             StringBuilder ratesMethod, HashMap<String, HashMap<String, String>> paramMappings, String ionSpecies) throws ContentError
     {
 
-        StringBuilder ratesMethodFinal = new StringBuilder();
 
         if(comp.getComponentType().hasDynamics())
         {
@@ -2569,9 +2568,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 blockAssigned.append(rateName + " " + rateUnits + "\n");
 
-                // ratesMethod.append(rateName + " = " +
-                // NRNUtils.checkForStateVarsAndNested(td.getEvaluable().toString(),
-                // comp, paramMappings) + " ? \n");
                 String rateExpr = NRNUtils.checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings);
                 rateNameVsRateExpr.put(rateName, rateExpr);
 
@@ -2580,7 +2576,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     String stateVarToUse = NRNUtils.getStateVarName(td.getStateVariable().getName());
 
-                    String line = prefix + stateVarToUse + "' = " + rateName;
+                    String line = prefix + stateVarToUse + "' = " + rateNameVsRateExpr.get(rateName);
 
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
                         td.getStateVariable().getName().equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
@@ -2595,7 +2591,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else
                 {
-                    ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
+                    ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
                 }
 
             }
@@ -2655,7 +2651,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     if(!td.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE))
                     {
-                        String line = prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + "' = " + rateName;
+                        String line = prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + "' = " + rateNameVsRateExpr.get(rateName);
 
                         if(!blockDerivative.toString().contains(line))
                         {
@@ -2664,20 +2660,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                     else
                     {
-                        ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n"); // //
+                        ratesMethod.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
                     }
                 }
             }
-
-            for(String rateName : rateNameVsRateExpr.keySet())
-            {
-                String rateExpr = rateNameVsRateExpr.get(rateName);
-
-                ratesMethod.append(rateName + " = " + rateExpr + " ? Note units of all quantities used here need to be consistent!\n");
-
-            }
-
-            ratesMethod.append("\n" + ratesMethodFinal + " \n");
 
         }
 
