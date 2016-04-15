@@ -61,6 +61,7 @@ import org.neuroml.model.BiophysicalProperties2CaPools;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.IntracellularProperties;
+import org.neuroml.model.MembraneProperties;
 import org.neuroml.model.MembraneProperties2CaPools;
 import org.neuroml.model.Segment;
 import org.neuroml.model.Species;
@@ -522,16 +523,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             delay = NRNUtils.convertToNeuronUnits(conn.getAttributeValue("delay"), lems);
                         }
 
-
                         if(preCell != null)
                         {
-                            SpikeThresh st = preCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                            float threshold = 0;
+                            
+                            SpikeThresh st = getMembraneProperties(preCell).getSpikeThresh().get(0);
                             if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
                             {
                                 throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
                             }
 
-                            float threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                            threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
                             main.append(String.format("h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
                                     index, threshold, delay, weight));
                         }
@@ -1406,6 +1408,20 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             throw new ContentError("Error writing to file: " + modFile.getAbsolutePath(), ex);
         }
         return modFile;
+    }
+    
+    public MembraneProperties getMembraneProperties(Cell cell) 
+    {
+        if (cell instanceof Cell2CaPools) {
+            Cell2CaPools cell2ca = (Cell2CaPools)cell;
+            BiophysicalProperties2CaPools bp2 = cell2ca.getBiophysicalProperties2CaPools();
+            return bp2.getMembraneProperties2CaPools();
+        }
+        else
+        {
+            BiophysicalProperties bp = cell.getBiophysicalProperties();
+            return bp.getMembraneProperties();
+        }
     }
     
     public IntracellularProperties convertCellWithMorphology(Component cellComponent) throws LEMSException, NeuroMLException {
