@@ -149,7 +149,7 @@ public class NRNUtils implements UnitConverter
         // in jLEMS
         newExpr = newExpr.replaceAll("\\.gt\\.", ">");
         newExpr = newExpr.replaceAll("\\.leq\\.", "<=");
-        newExpr = newExpr.replaceAll("\\.lt\\.", "<=");
+        newExpr = newExpr.replaceAll("\\.lt\\.", "<");
         newExpr = newExpr.replaceAll("\\.eq\\.", "==");
         newExpr = newExpr.replaceAll("\\.neq\\.", "!=");
         newExpr = newExpr.replaceAll("\\.and.", "&&");
