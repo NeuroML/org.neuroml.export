@@ -997,7 +997,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             main.append(bIndent+"h.tstop = tstop\n\n");
             main.append(bIndent+"h.dt = dt\n\n");
-            main.append(bIndent+"h.steps_per_ms = int(1/h.dt)\n\n");
+            main.append(bIndent+"h.steps_per_ms = 1/h.dt\n\n");
 
             if(!nogui)
             {

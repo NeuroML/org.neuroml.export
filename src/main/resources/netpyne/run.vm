@@ -79,12 +79,10 @@ simConfig['dt'] = $dt # Internal integration timestep to use
 simConfig['randseed'] = 1 # Random seed to use
 simConfig['createNEURONObj'] = 1  # create HOC objects when instantiating network
 simConfig['createPyStruct'] = 1  # create Python structure (simulator-independent) when instantiating network
-simConfig['verbose'] = 1  # show detailed messages 
+simConfig['verbose'] = True  # show detailed messages 
 
 # Recording 
-simConfig['recordTraces'] = True  # whether to record cell traces or not
-
-simConfig['recordDict'] = {'Vsoma':{'sec':'soma','pos':0.5,'var':'v'}}
+simConfig['recordTraces'] = {'Vsoma':{'sec':'soma','pos':0.5,'var':'v'}}
 
 #foreach ($d in $display )
 # Display id: $d.name
@@ -106,7 +104,7 @@ simConfig['plotLFPSpectrum'] = False # plot power spectral density
 simConfig['maxspikestoplot'] = 3e8 # Maximum number of spikes to plot
 simConfig['plotConn'] = False # whether to plot conn matrix
 simConfig['plotWeightChanges'] = False # whether to plot weight changes (shown in conn matrix)
-simConfig['plot3dArch'] = True # plot 3d architecture
+#simConfig['plot3dArch'] = True # plot 3d architecture
 
 # Saving
 simConfig['filename'] = '${name}.txt'  # Set file output name
