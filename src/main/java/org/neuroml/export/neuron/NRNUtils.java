@@ -274,7 +274,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return "(millijoule / K)";
+            return "(millijoule / K / umol)";
         }
         else if (dimensionName.equals("rho_factor"))
         {
@@ -391,7 +391,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return 1000f;
+            return 0.001f;
         }
         else if (dimensionName.equals("rho_factor"))
         {

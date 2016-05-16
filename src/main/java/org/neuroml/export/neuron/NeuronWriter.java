@@ -186,7 +186,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
         else
         {
-            sb.append(indent+NRNUtils.commPre + "\n" + comment + "\n" + NRNUtils.commPost + "\n");
+            sb.append(indent+NRNUtils.commPre + "\n" + indent+ comment.replaceAll("\n", "\n"+indent+"") + "\n" + indent + NRNUtils.commPost + "\n");
         }
     }
 
@@ -487,10 +487,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             E.info("Adding projections/connections...");
 
             ArrayList<Component> projections = targetComp.getChildrenAL("projections");
+            
+            HashMap<String, Integer> segmentSynapseCounts = new HashMap<String, Integer>();
 
             for(Component projection : projections)
             {
-                String id = projection.getID();
+                String projId = projection.getID();
                 String prePop = projection.getStringValue("presynapticPopulation");
                 String postPop = projection.getStringValue("postsynapticPopulation");
                 Cell preCell = compIdsVsCells.get(popIdsVsCellIds.get(prePop));
@@ -506,15 +508,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                 }
 
-                addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", id, prePop, postPop, synapse, number),"        ");
+                addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", projId, prePop, postPop, synapse, number),"        ");
 
                 Component synapseComp = projection.getRefComponents().get("synapse");
 
                 generateModForComp(synapseComp);
 
-                String synObjName = String.format("syn_%s_%s", id, synapse);
+                //String synObjName = String.format("syn_%s_%s", id, synapse);
 
-                main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", synObjName, number));
+                //main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", synObjName, number));
 
                 NamingHelper nhPre = new NamingHelper(preCell);
                 NamingHelper nhPost = new NamingHelper(postCell);
@@ -558,8 +560,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             postSecName = postPop + "[" + postCellId + "]";
                         }
+                        
+                        String segSynRef = String.format("syn_%s_%s_%s_%s", postPop,postCellId, postSegmentId, synapse);
+                        if (!segmentSynapseCounts.containsKey(segSynRef))
+                            segmentSynapseCounts.put(segSynRef, 0);
+                        int synIndex = segmentSynapseCounts.get(segSynRef);
+                        String synObjName = String.format("%s_%s", segSynRef, synIndex);
+                        main.append(String.format(bIndent+"h(\"objectvar %s\")\n\n", synObjName));
+                        segmentSynapseCounts.put(segSynRef, synIndex+1);
 
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s %s[%d] = new %s(%f)\")\n", postSecName, synObjName, index, synapse, postFractionAlong));
+                //
+
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new %s(%f)\")\n", postSecName, synObjName, synapse, postFractionAlong));
 
                         String sourceVarToListenFor = "&v("+ preFractionAlong+")";
 
@@ -582,8 +594,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             }
 
                             threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
-                            main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
-                                    index, threshold, delay, weight));
+                            main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
+                                    threshold, delay, weight));
                         }
                         else
                         {
@@ -599,7 +611,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 sourceVarToListenFor = hocMechName;
                             }
                             main.append(String.format(bIndent+"h(\"objectvar nc_%s_%d\")\n", synObjName, index));
-                            main.append(String.format(Locale.US, bIndent+"h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %f, %s, %s)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, index, threshold, delay, weight));
+                            main.append(String.format(Locale.US, bIndent+"h(\"%s nc_%s_%d = new NetCon(%s, %s, %f, %s, %s)\")  \n\n", preSecName, synObjName, index, sourceVarToListenFor, synObjName, threshold, delay, weight));
                         }
                         index++;
                     }
@@ -637,56 +649,64 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 String info0 = String.format("Adding synapse %s used in %s connections", synapseComp.getID(), connections.size());
                 addComment(main, info0,bIndent);
 
-                String synArrayName = String.format("synapses_%s", synapseComp.getID());
-                main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", synArrayName, connections.size()));
+                //String synArrayName = String.format("synapses_%s", synapseComp.getID());
+                //main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", synArrayName, connections.size()));
 
                 for(int i = 0; i < connections.size(); i++)
                 {
                     Component connection = connections.get(i);
 
                     String fromRef = connection.getStringValue("from");
-                    int fromCellId = Utils.parseCellRefStringForCellNum(fromRef);
-                    String fromPop = Utils.parseCellRefStringForPopulation(fromRef);
-                    Cell fromCell = compIdsVsCells.get(popIdsVsCellIds.get(fromPop));
-                    String fromSecName;
+                    int preCellId = Utils.parseCellRefStringForCellNum(fromRef);
+                    String prePop = Utils.parseCellRefStringForPopulation(fromRef);
+                    Cell preCell = compIdsVsCells.get(popIdsVsCellIds.get(prePop));
+                    String preSecName;
 
-                    if(fromCell != null)
+                    if(preCell != null)
                     {
-                        NamingHelper nh0 = new NamingHelper(fromCell);
-                        fromSecName = String.format("a_%s[%s].%s", fromPop, fromCellId, nh0.getNrnSectionName(fromCell.getMorphology().getSegment().get(0)));
+                        NamingHelper nh0 = new NamingHelper(preCell);
+                        preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nh0.getNrnSectionName(preCell.getMorphology().getSegment().get(0)));
                     }
                     else
                     {
-                        fromSecName = fromPop + "[" + fromCellId + "]";
+                        preSecName = prePop + "[" + preCellId + "]";
                     }
 
-                    String toRef = connection.getStringValue("to");
-                    int toCellId = Utils.parseCellRefStringForCellNum(toRef);
-                    String toPop = Utils.parseCellRefStringForPopulation(toRef);
-                    Cell toCell = compIdsVsCells.get(popIdsVsCellIds.get(toPop));
+                    String postRef = connection.getStringValue("to");
+                    int postCellId = Utils.parseCellRefStringForCellNum(postRef);
+                    String postPop = Utils.parseCellRefStringForPopulation(postRef);
+                    Cell postCell = compIdsVsCells.get(popIdsVsCellIds.get(postPop));
                     String toSecName;
-                    if(toCell != null)
+                    if(postCell != null)
                     {
-                        NamingHelper nh0 = new NamingHelper(toCell);
-                        toSecName = String.format("a_%s[%s].%s", toPop, toCellId, nh0.getNrnSectionName(toCell.getMorphology().getSegment().get(0)));
+                        NamingHelper nh0 = new NamingHelper(postCell);
+                        toSecName = String.format("a_%s[%s].%s", postPop, postCellId, nh0.getNrnSectionName(postCell.getMorphology().getSegment().get(0)));
                     }
                     else
                     {
-                        toSecName = toPop + "[" + toCellId + "]";
+                        toSecName = postPop + "[" + postCellId + "]";
                     }
 
-                    String info1 = String.format("Adding connection from %s to %s", fromRef, toRef);
+                    String info1 = String.format("Adding connection from %s to %s", fromRef, postRef);
                     addComment(main, info1,bIndent);
+                    
+                    String segSynRef = String.format("syn_%s_%s_%s_%s", postPop, postCellId, 0, synapseComp.getID());
+                    if (!segmentSynapseCounts.containsKey(segSynRef))
+                        segmentSynapseCounts.put(segSynRef, 0);
+                    int synIndex = segmentSynapseCounts.get(segSynRef);
+                    String synObjName = String.format("%s_%s", segSynRef, synIndex);
+                    main.append(String.format(bIndent+"h(\"objectvar %s\")\n\n", synObjName));
+                    segmentSynapseCounts.put(segSynRef, synIndex+1);
 
-                    main.append(String.format(Locale.US, bIndent+"h(\"%s %s[%d] = new %s(%f)\")\n", toSecName, synArrayName, i, synapseComp.getID(), 0.5));
+                    main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new %s(%f)\")\n", toSecName, synObjName, synapseComp.getID(), 0.5));
 
                     float delay = connection.hasParam("delay") ? (float) connection.getParamValue("delay").getDoubleValue() * 1000 : 0.0f;
                     //this also accounts for dimensional weights, if we ever want to support that.
                     float weight = connection.hasParam("weight") ? (float) NRNUtils.convertToNeuronUnits(connection.getAttributeValue("weight") , lems) : 1.0f;
 
-                    if(toCell != null)
+                    if(postCell != null)
                     {
-                        Component fromComp = popIdsVsComps.get(fromPop);
+                        Component fromComp = popIdsVsComps.get(prePop);
                         float fract = 0.5f;
                         String sourceVarToListenFor = "&v("+fract+")";
                         float threshold = 0;
@@ -698,15 +718,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                         {
-                            String hocMechName = NRNUtils.getMechanismName(fromComp, fromPop) + "["+fromCellId+"]";
+                            String hocMechName = NRNUtils.getMechanismName(fromComp, prePop) + "["+preCellId+"]";
                             sourceVarToListenFor = hocMechName;
                         }
 
-                        main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s[%d], %g, %g, %g))\") # ...\n\n", fromSecName, toPop, toCellId, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
+                        main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %g, %g, %g))\") # ...\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName, threshold, delay, weight));
                     }
                     else
                     {
-                        Component fromComp = popIdsVsComps.get(fromPop);
+                        Component fromComp = popIdsVsComps.get(prePop);
                         float threshold = 0;
 
                         String sourceVarToListenFor = "&v(0.5)";
@@ -719,11 +739,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         if(fromComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                         {
-                            String hocMechName = NRNUtils.getMechanismName(fromComp, fromPop) + "["+fromCellId+"]";
+                            String hocMechName = NRNUtils.getMechanismName(fromComp, prePop) + "["+preCellId+"]";
                             sourceVarToListenFor = hocMechName;
                         }
-                        main.append(String.format(bIndent+"h(\"objectvar nc_%s_%d\")\n", synArrayName, i));
-                        main.append(String.format(bIndent+"h(\"%s nc_%s_%d = new NetCon(%s, %s[%d], %g, %g, %g)\")  # ,,,\n\n", fromSecName, synArrayName, i, sourceVarToListenFor, synArrayName, i, threshold, delay, weight));
+                        main.append(String.format(bIndent+"h(\"objectvar nc_%s_%d\")\n", synObjName, i));
+                        main.append(String.format(bIndent+"h(\"%s nc_%s_%d = new NetCon(%s, %s, %g, %g, %g)\")  # ,,,\n\n", preSecName, synObjName, i, sourceVarToListenFor, synObjName, threshold, delay, weight));
                     }
 
                 }
@@ -970,6 +990,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 String scale = lineComp.getStringValue("scale");
 
                                 LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
+                                
+                                //System.out.println("lqp: "+lqp);
 
                                 if(plots.get(dispGraph) == null)
                                 {
@@ -1080,6 +1102,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             String scale = "1";
 
                             LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
+                            
+                            //System.out.println("lqp: "+lqp);
 
                             columnsPre.get(outfileId).add(bIndent+"# Column: " + lqp.getQuantity());
                             columnsPre.get(outfileId).add(bIndent+"h(' objectvar v_" + colId + " ')");
@@ -3062,9 +3086,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
+        lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex7_STP.xml"));
+        
         /*lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         

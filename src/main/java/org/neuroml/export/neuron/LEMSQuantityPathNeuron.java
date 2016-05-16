@@ -20,254 +20,335 @@ import org.neuroml.model.util.NeuroMLException;
 public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 {
 
-	HashMap<String, String> compMechNamesHoc = null;
-	ArrayList<Component> popsOrComponents = null;
-	HashMap<String, Cell> compIdsVsCells = null;
-	Component targetComp = null;
-	Lems lems = null;
-	Component popComp = null;
+    HashMap<String, String> compMechNamesHoc = null;
+    ArrayList<Component> popsOrComponents = null;
+    HashMap<String, Cell> compIdsVsCells = null;
+    Component targetComp = null;
+    Lems lems = null;
+    Component popComp = null;
 
-	public LEMSQuantityPathNeuron(String q, String s, Component targetComp, HashMap<String, String> compMechNamesHoc, ArrayList<Component> popsOrComponents, HashMap<String, Cell> compIdsVsCells,
-			Lems lems) throws ContentError
-	{
-		super(q, s);
-		this.targetComp = targetComp;
-		this.compMechNamesHoc = compMechNamesHoc;
-		this.popsOrComponents = popsOrComponents;
-		this.compIdsVsCells = compIdsVsCells;
-		this.lems = lems;
+    public LEMSQuantityPathNeuron(String q, String s, Component targetComp, HashMap<String, String> compMechNamesHoc, ArrayList<Component> popsOrComponents, HashMap<String, Cell> compIdsVsCells,
+        Lems lems) throws ContentError
+    {
+        super(q, s);
+        this.targetComp = targetComp;
+        this.compMechNamesHoc = compMechNamesHoc;
+        this.popsOrComponents = popsOrComponents;
+        this.compIdsVsCells = compIdsVsCells;
+        this.lems = lems;
 
-		if(myType != Type.VAR_IN_SINGLE_COMP)
-		{
-			for(Component popsOrComponent : popsOrComponents)
-			{
-				if(popsOrComponent.getID().equals(population))
-				{
-					popComp = popsOrComponent.getRefComponents().get("component");
-				}
-			}
-		}
+        if (myType != Type.VAR_IN_SINGLE_COMP)
+        {
+            for (Component popsOrComponent : popsOrComponents)
+            {
+                if (popsOrComponent.getID().equals(population))
+                {
+                    popComp = popsOrComponent.getRefComponents().get("component");
+                }
+            }
+        }
 
 		// System.out.println("----------------------\nCreated:"+this+"\n----------------------");
+    }
 
-	}
+    private Exposure getExposure(Component c, String path) throws ContentError
+    {
+        try
+        {
+            Exposure e = c.getComponentType().getExposure(path);
+            return e;
+        }
+        catch (ContentError e)
+        {
+            String child = path.substring(0, path.indexOf("/"));
+            String pathInChild = path.substring(path.indexOf("/") + 1);
+            Component ch = null;
+            for (Component chi : c.getAllChildren())
+            {
+                if (chi.getID() != null && chi.getID().equals(child))
+                {
+                    ch = chi;
+                }
+            }
+            if (ch == null)
+            {
+                for (Component chi : c.getAllChildren())
+                {
+                    if (chi.getTypeName().equals(child))
+                    {
+                        ch = chi;
+                    }
+                }
+            }
 
-	private Exposure getExposure(Component c, String path) throws ContentError
-	{
+            return getExposure(ch, pathInChild);
+        }
 
-		// System.out.println("Path: "+path+", Comp: "+c);
-		try
-		{
-			Exposure e = c.getComponentType().getExposure(path);
-			return e;
-		}
-		catch(ContentError e)
-		{
-			String child = path.substring(0, path.indexOf("/"));
-			String pathInChild = path.substring(path.indexOf("/") + 1);
-			Component ch = null;
-			for(Component chi : c.getAllChildren())
-				if(chi.getID() != null && chi.getID().equals(child)) ch = chi;
-			if(ch == null) for(Component chi : c.getAllChildren())
-				if(chi.getTypeName().equals(child)) ch = chi;
+    }
 
-			return getExposure(ch, pathInChild);
-		}
+    public Dimension getDimension() throws ContentError
+    {
+        if (isVariableOnSynapse())
+        {
+            String synId = getSynapseType();
+            Component synComp = lems.getComponent(synId);
+            return getExposure(synComp, getPathforVariableOnSyn()).getDimension();
+        }
+        else
+        {
+            String path = getVariablePathInPopComp();
+            Component comp = (myType != Type.VAR_IN_SINGLE_COMP) ? popComp : targetComp;
+            return getExposure(comp, path).getDimension();
+        }
+    }
 
-	}
+    public String getNeuronVariableLabel() throws ContentError
+    {
+        if (!isVariableInPopulation())
+        {
+            return getVariable();
+        }
+        else
+        {
+            return getPopulationArray() + "[" + populationIndex + "]." + getVariable();
+        }
+    }
 
-	public Dimension getDimension() throws ContentError
-	{
-		String path = getVariablePathInPopComp();
-		Component comp = (myType != Type.VAR_IN_SINGLE_COMP) ? popComp : targetComp;
-		return getExposure(comp, path).getDimension();
-	}
+    
+    private String convertToNeuronVariable() throws ContentError
+    {
+        HashMap<String, String> topSubstitutions = new HashMap<String, String>();
+        topSubstitutions.put("caConc", "cai");
 
-	public String getNeuronVariableLabel() throws ContentError
-	{
+        String var = new String();
 
-		if(!isVariableInPopulation())
-		{
-			return getVariable();
-		}
-		else
-		{
-			return getPopulationArray() + "[" + populationIndex + "]." + getVariable();
-		}
-	}
+        if (variableParts.length == 1)
+        {
+            var = variableParts[0];
+        }
+        else
+        {
+            if (variableParts[1].contains("membraneProperties"))
+            {
 
-	private String convertToNeuronVariable() throws ContentError
-	{
+                if (variableParts.length == 4)
+                {
 
-		HashMap<String, String> topSubstitutions = new HashMap<String, String>();
-		topSubstitutions.put("caConc", "cai");
+                    var = variableParts[3];
 
-		String var = new String();
+                    if (var.equals("gDensity") || var.equals("iDensity"))
+                    {
+                        String channelDensId = variableParts[2];
+                        ArrayList<Component> channelDensityComps = popComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
+                        if (var.equals("gDensity"))
+                        {
+                            for (Component c : channelDensityComps)
+                            {
+                                if (c.getID().equals(channelDensId))
+                                {
+                                    var = "gion_" + c.getStringValue("ionChannel");
+                                }
+                            }
+                        }
+                        else if (var.equals("iDensity"))
+                        {
+                            for (Component c : channelDensityComps)
+                            {
+                                if (c.getID().equals(channelDensId))
+                                {
+                                    var = "i" + c.getStringValue("ion");
+                                }
+                            }
+                        }
+                    }
+                }
 
-		if(variableParts.length == 1)
-		{
-			var = variableParts[0];
-		}
-		else
-		{
-			if(variableParts[1].contains("membraneProperties"))
-			{
+                if (variableParts.length > 4)
+                {
+                    for (int i = 4; i < variableParts.length; i++)
+                    {
+                        var += variableParts[i] + "_";
+                    }
 
-				if(variableParts.length == 4)
-				{
+                    var += variableParts[3];
+                }
+            }
+        }
+        if (var.length() == 0)
+        {
+            var = getVariable();
+        }
 
-					var = variableParts[3];
+        for (String key : topSubstitutions.keySet())
+        {
+            if (var.equals(key))
+            {
+                var = topSubstitutions.get(key);
+            }
+        }
 
-					if(var.equals("gDensity") || var.equals("iDensity"))
-					{
-						String channelDensId = variableParts[2];
-						ArrayList<Component> channelDensityComps = popComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
-						if(var.equals("gDensity"))
-						{
-							for(Component c : channelDensityComps)
-							{
-								if(c.getID().equals(channelDensId))
-								{
-									var = "gion_" + c.getStringValue("ionChannel");
-								}
-							}
-						}
-						else if(var.equals("iDensity"))
-						{
-							for(Component c : channelDensityComps)
-							{
-								if(c.getID().equals(channelDensId))
-								{
-									var = "i" + c.getStringValue("ion");
-								}
-							}
-						}
-					}
-				}
+        return var;
 
-				if(variableParts.length > 4)
-				{
-					for(int i = 4; i < variableParts.length; i++)
-					{
-						var += variableParts[i] + "_";
-					}
+    }
+    
+    
+    public String getSynapseType()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
 
-					var += variableParts[3];
-				}
-			}
-		}
-		if(var.length() == 0)
-		{
-			var = getVariable();
-		}
+        String var = getVariable();
+        String synInfoFull = var.split("_")[0];
+        String[] synInfo = synInfoFull.split(":");
+        return synInfo[1];
+    }
 
-		for(String key : topSubstitutions.keySet())
-		{
-			if(var.equals(key))
-			{
-				var = topSubstitutions.get(key);
-			}
-		}
+    
+    public int getSynapseIndex()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return -1;
+        }
 
-		return var;
+        String var = getVariable();
+        String synInfoFull = var.split("_")[0];
+        String[] synInfo = synInfoFull.split(":");
+        return Integer.parseInt(synInfo[2]);
+    }
 
-	}
+    
+    public String getVariableOnSyn()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
 
-	public String getNeuronVariableReference() throws ContentError, NeuroMLException
-	{
-		if(myType == Type.VAR_IN_SINGLE_COMP)
-		{
-			String hoc = getPopulation() + targetComp.getName() + "[i]";
-			String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
-			String varRef = mechRef + "." + getVariable();
-			return varRef;
-		}
-		else
-		{
-			if(popComp != null
-					&& (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || popComp
-							.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
-			{
-				if(compIdsVsCells.containsKey(popComp.getID()))
-				{
-					Cell cell = compIdsVsCells.get(popComp.getID());
-					NamingHelper nh = new NamingHelper(cell);
-					Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
-					String varInst = nh.getNrnSectionName(segment);
+        String var = getVariable();
+        return var.substring(var.indexOf("_") + 1);
 
-					float fract;
-					if(cell.getMorphology().getSegment().size() == 1) {
+    }
+
+    
+    public String getPathforVariableOnSyn()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
+
+        String var = getVariableParts("/");
+        return var.substring(var.indexOf("/") + 1);
+
+    }
+
+    
+    public String getNeuronVariableReference() throws ContentError, NeuroMLException
+    {
+        if (myType == Type.VAR_IN_SINGLE_COMP)
+        {
+            String hoc = getPopulation() + targetComp.getName() + "[i]";
+            String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
+            String varRef = mechRef + "." + getVariable();
+            return varRef;
+        }
+        else if (isVariableOnSynapse())
+        {
+            String varRef = "syn" + "_" + getPopulation() + "_" + getPopulationIndex() + "_" + getSegmentId() + "_" + getSynapseType() + "_" + getSynapseIndex() + "." + getVariableOnSyn();
+            return varRef;
+        }
+        else
+        {
+            if (popComp != null
+                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || popComp
+                .getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+            {
+                if (compIdsVsCells.containsKey(popComp.getID()))
+                {
+                    Cell cell = compIdsVsCells.get(popComp.getID());
+                    NamingHelper nh = new NamingHelper(cell);
+                    Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
+                    String varInst = nh.getNrnSectionName(segment);
+
+                    float fract;
+                    if (cell.getMorphology().getSegment().size() == 1)
+                    {
                         fract = 0.5f;
                     }
-                    else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst)) {
+                    else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst))
+                    {
                         // No real segment group, segment ids being used for sections...
                         fract = 0.5f;
-                    } else {
+                    }
+                    else
+                    {
                         fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
                     }
-                    
-					String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
-					return varRef;
-				}
-				else
-				{
-					String nrnVar = convertToNeuronVariable();
-					String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
 
-					if(nrnVar.equals(NRNUtils.NEURON_VOLTAGE))
-					{ // redundant..?
-						varRef += "(0.5)";
-					}
-					return varRef;
-				}
-			}
-			else
-			{
-				String hoc = population + "[i]";
-				String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
-				String varRef = mechRef + "." + getVariable();
-				return varRef;
-			}
-		}
-	}
-    
+                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
+                    return varRef;
+                }
+                else
+                {
+                    String nrnVar = convertToNeuronVariable();
+                    String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
 
-	@Override
-	public String toString()
-	{
-		String ref;
-		try
-		{
-			ref = getNeuronVariableReference();
-		}
-		catch(ContentError ex)
-		{
-			ref = "=== Unable to determine reference: " + ex;
-		}
-		catch(NeuroMLException ex)
-		{
-			ref = "=== Unable to determine reference: " + ex;
-		}
+                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE))
+                    { // redundant..?
+                        varRef += "(0.5)";
+                    }
+                    return varRef;
+                }
+            }
+            else
+            {
+                String hoc = population + "[i]";
+                String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
+                String varRef = mechRef + "." + getVariable();
+                return varRef;
+            }
+        }
+    }
 
-		return super.toString() + "\nNeuron ref:     " + ref
-		/* + "\ncompIdsVsCells: " + compIdsVsCells */
-		+ "\npopsOrComponents: " + popsOrComponents + "\ntargetComp: " + targetComp + "\npopComp: " + popComp;
-	}
+    @Override
+    public String toString()
+    {
+        String ref;
+        try
+        {
+            ref = getNeuronVariableReference();
+        }
+        catch (ContentError ex)
+        {
+            ref = "=== Unable to determine reference: " + ex;
+        }
+        catch (NeuroMLException ex)
+        {
+            ref = "=== Unable to determine reference: " + ex;
+        }
 
-	public static void main(String[] args) throws Exception
-	{
-		HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
-		compMechNamesHoc.put("fnPop1[i]", "m_fitzHughNagumoCell[i]");
-		ArrayList<String> paths = new ArrayList<String>();
-		paths.add("X1__S");
-		paths.add("hhpop[6]/bioPhys1/membraneProperties/naChans/naChan/m/q");
-		paths.add("fnPop1[0]/V");
+        return super.toString() + "\n    Neuron ref:     " + ref
+            /* + "\ncompIdsVsCells: " + compIdsVsCells */
+            + "\n    popsOrComponents: " + popsOrComponents + "\n    targetComp: " + targetComp + "\n    popComp: " + popComp;
+    }
 
-		for(String path : paths)
-		{
-			LEMSQuantityPathNeuron l1 = new LEMSQuantityPathNeuron(path, "1", null, compMechNamesHoc, null, null, null);
-			System.out.println("\n--------\n" + l1);
-		}
-	}
+    public static void main(String[] args) throws Exception
+    {
+        HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
+        compMechNamesHoc.put("fnPop1[i]", "m_fitzHughNagumoCell[i]");
+        ArrayList<String> paths = new ArrayList<String>();
+        paths.add("X1__S");
+        paths.add("hhpop[6]/bioPhys1/membraneProperties/naChans/naChan/m/q");
+        paths.add("fnPop1[0]/V");
+
+        for (String path : paths)
+        {
+            LEMSQuantityPathNeuron l1 = new LEMSQuantityPathNeuron(path, "1", null, compMechNamesHoc, null, null, null);
+            System.out.println("\n--------\n" + l1);
+        }
+    }
 
 }
