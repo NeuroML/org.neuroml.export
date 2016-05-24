@@ -313,6 +313,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 
 
                 HashMap<Integer,String> locations = new HashMap<Integer,String>();
+                HashMap<Integer,String> locationStrs = new HashMap<Integer,String>();
 
 
                 if(popsOrComponent.getComponentType().getName().equals(NeuroMLElements.POPULATION))
@@ -337,8 +338,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             String location = "("+loc.getAttributeValue(NeuroMLElements.LOCATION_X)
                                     +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Y)
                                     +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Z)+")";
+                            String locationStr = "("+loc.getAttributeValue(NeuroMLElements.LOCATION_X)
+                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Y)
+                                    +" + XXX, "+loc.getAttributeValue(NeuroMLElements.LOCATION_Z)+", 10)";
 
                             locations.put(Integer.parseInt(instance.getID()), location);
+                            locationStrs.put(Integer.parseInt(instance.getID()), locationStr);
                         }
                     }
                     popComp.getAllChildren().size();
@@ -477,7 +482,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         main.append(bIndent+"    h." + hocMechName + "." + pv.getName() + " = " + NRNUtils.convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
                     }
-                    main.append(bIndent+"    h.pop_section()\n");
+                    main.append(bIndent+"    h.pop_section()\n\n");
+                    
+                    
+                    for (Integer cell_id: locationStrs.keySet()) {
+                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dclear() } \")\n");
+                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("XXX","(5)")+" } \")\n");
+                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("XXX","(-5)")+" } \")\n");
+                    }
 
                 }
 
@@ -3092,6 +3104,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex7_STP.xml"));
         
         /*lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));

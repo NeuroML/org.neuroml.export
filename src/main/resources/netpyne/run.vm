@@ -1,6 +1,7 @@
 # Main NetPyNE script for: $name
 
 # See https://github.com/Neurosim-lab/netpyne
+
 from netpyne import init  # import netpyne init module
 
 
@@ -85,12 +86,13 @@ simConfig['verbose'] = True  # show detailed messages
 simConfig['recordCells'] = [0]  
 simConfig['recordTraces'] = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
 
+simConfig['plotCells'] = []
 #foreach ($d in $display )
 # Display id: $d.name
 #foreach ($curve in $d.curves )
 # Line id: $curve.name; displaying ${curve.ordinate} on cell: $curve.population_index in population: $curve.population;
 if '${curve.ordinate}'=='v':
-    simConfig['plotTracesGids'] = [gids['$curve.population'][$curve.population_index]] # plot recorded traces for this list of cells
+    simConfig['plotCells'].append(gids['$curve.population'][$curve.population_index]) # plot recorded traces for this list of cells
 #end
 #end
 

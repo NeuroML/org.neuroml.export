@@ -335,8 +335,18 @@ public class DLemsWriter extends ABaseWriter
                 {
 
                     g.writeObjectFieldStart(popName);
+                    int size;
+                    
+                    if (pop.hasStringValue("size"))
+                    {
+                        size = Integer.parseInt(pop.getStringValue("size"));
+                    }
+                    else
+                    {
+                        size = pop.getChildrenAL("instances").size();
+                    }
 
-                    g.writeStringField(DLemsKeywords.SIZE.get(), pop.getStringValue("size"));
+                    g.writeStringField(DLemsKeywords.SIZE.get(), size+"");
 
                     g.writeObjectFieldStart(DLemsKeywords.COMPONENT.get());
                     if (false && popComp.getComponentType().isOrExtends("cell"))
