@@ -15,7 +15,6 @@ public class SIUnitConverter implements UnitConverter
     @Override
     public float convert(float siValue, String dimensionName) 
     {
-        System.out.println("in out: "+siValue);
         return siValue;
     }
 }
