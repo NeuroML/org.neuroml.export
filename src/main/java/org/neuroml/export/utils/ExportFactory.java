@@ -16,6 +16,7 @@ import org.neuroml.export.dnsim.DNSimWriter;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.graph.GraphWriter;
 import org.neuroml.export.nest.NestWriter;
+import org.neuroml.export.netpyne.NetPyNEWriter;
 import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.export.pynn.PyNNWriter;
 import org.neuroml.export.sbml.SBMLWriter;
@@ -65,6 +66,9 @@ public class ExportFactory
 				break;
 			case NEST:
 				writer = new NestWriter(lems);
+				break;
+			case NETPYNE:
+				writer = new NetPyNEWriter(lems);
 				break;
 			case NEURON:
 				writer = new NeuronWriter(lems);
