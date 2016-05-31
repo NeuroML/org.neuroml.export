@@ -32,18 +32,18 @@ public class ProcessManager
         }
         ArrayList<String> options = new ArrayList<String>();
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
+        String[] knownVersions = new String[]{"7.4", "7.3", "7.2", "7.1", "6.2", "6.1", "6.0"};
+        
         if (nrnEnvVar != null) {
             options.add(nrnEnvVar);
         } else if (Utils.isWindowsBasedPlatform()) {
-            String[] toTry = new String[]{"nrn73", "nrn72", "nrn71", "nrn70", "nrn62", "nrn61", "nrn60"};
-            for (String ver: toTry) {
-                options.add("C:\\"+ver);
-                options.add("C:\\"+ver+"w");
+            for (String ver: knownVersions) {
+                options.add("C:\\nrn"+ver.replaceAll("\\.", ""));
+                options.add("C:\\nrn"+ver.replaceAll("\\.", "")+"w");
             }
 
         } else if (Utils.isMacBasedPlatform()) {
-            String[] vers = new String[]{"7.3", "7.2", "7.1", "6.2", "6.1", "6.0"};
-            for (String ver : vers) {
+            for (String ver : knownVersions) {
                 options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
                 options.add("/Applications/NEURON-" + ver + "/nrn/umac");
                 options.add("/Applications/NEURON-" + ver + "/nrn/i386");
@@ -117,7 +117,9 @@ public class ProcessManager
                                 
                                 
                                 if (binExe.indexOf("mingw")>0)
-                                    shFriendlyPath = shFriendlyPath.replaceAll("/cygdrive", "");
+                                    throw new NeuroMLException("****\n  Unfortunately, jNeuroML doesn't currently support MinGW versions of NEURON. Try the Cygwin version of 7.3, e.g. nrn-7.3.i686-pc-cygwin-setup.exe\n****\n");
+                                if (binExe.indexOf("74")>0)
+                                    throw new NeuroMLException("****\n  Unfortunately, jNeuroML doesn't yet support NEURON 7.4. Try the Cygwin version of 7.3, e.g. nrn-7.3.i686-pc-cygwin-setup.exe\n****\n");
                                 
                                 commandToExecute = binExe + " \"" + shFriendlyPath + "\" " + neuronHome + " "+" -q"; 
                                    
@@ -280,9 +282,8 @@ public class ProcessManager
 			{
 				dirContents = "bin\\neuron.exe";
 			}
-			throw new NeuroMLException("Error testing: " + modDirectory.getAbsolutePath() + ".\nIs NEURON correctly installed?\n" + "NEURON home dir being used: " + "???"
-					+ "\nThis should be set to the correct location (the folder containing " + dirContents + ") at Settings -> General Properties & Project Defaults\n\n"
-					+ "Note: leave that field blank in that options window and restart and neuroConstruct will search for a possible location of NEURON\n\n", ex);
+			throw new NeuroMLException("Error testing: " + modDirectory.getAbsolutePath() + ".\nIs NEURON correctly installed?\n" + "NEURON home dir being used: " + findNeuronHome().getAbsolutePath()
+					+ "\n\n", ex);
 		}
 
 	}
