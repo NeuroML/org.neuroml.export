@@ -27,6 +27,9 @@ public class ProcessManager
         if (Utils.isWindowsBasedPlatform()) {
             nrnExe = "bin/neuron.exe";
         }
+        if (Utils.isWindowsBasedPlatform() && Utils.is64bitPlatform()) {
+            nrnExe = "bin64/neuron.exe";
+        }
         ArrayList<String> options = new ArrayList<String>();
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
         if (nrnEnvVar != null) {
