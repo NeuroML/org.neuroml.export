@@ -21,54 +21,46 @@ import org.neuroml.model.util.NeuroMLException;
 public class ProcessManager
 {
 
-	public static File findNeuronHome() throws NeuroMLException
-	{
+    public static File findNeuronHome() throws NeuroMLException {
 
-		ArrayList<String> options = new ArrayList<String>();
-		String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
-		if(nrnEnvVar != null)
-		{
-			options.add(nrnEnvVar);
-		}
-		else
-		{
+        String nrnExe = "bin/nrniv";
+        if (Utils.isWindowsBasedPlatform()) {
+            nrnExe = "bin/neuron.exe";
+        }
+        ArrayList<String> options = new ArrayList<String>();
+        String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
+        if (nrnEnvVar != null) {
+            options.add(nrnEnvVar);
+        } else if (Utils.isWindowsBasedPlatform()) {
+            Collections.addAll(options, "C:\\nrn73", "C:\\nrn72", "C:\\nrn71", "C:\\nrn70", "C:\\nrn62", "C:\\nrn61", "C:\\nrn60");
 
-			if(Utils.isWindowsBasedPlatform())
-			{
-				Collections.addAll(options, "C:\\nrn73", "C:\\nrn72", "C:\\nrn71", "C:\\nrn70", "C:\\nrn62", "C:\\nrn61", "C:\\nrn60");
+        } else if (Utils.isMacBasedPlatform()) {
+            String[] vers = new String[]{"7.3", "7.2", "7.1", "6.2", "6.1", "6.0"};
+            for (String ver : vers) {
+                options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
+                options.add("/Applications/NEURON-" + ver + "/nrn/umac");
+                options.add("/Applications/NEURON-" + ver + "/nrn/i386");
+            }
 
-			}
-			else if(Utils.isMacBasedPlatform())
-			{
-				String[] vers = new String[] { "7.3", "7.2", "7.1", "6.2", "6.1", "6.0" };
-				for(String ver : vers)
-				{
-					options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
-					options.add("/Applications/NEURON-" + ver + "/nrn/umac");
-					options.add("/Applications/NEURON-" + ver + "/nrn/i386");
-				}
+        } else if (Utils.isLinuxBasedPlatform()) {
+            options.add("/usr/local");
+            options.add("/usr/local/nrn/x86_64");
+        }
 
-			}
-			else if(Utils.isLinuxBasedPlatform())
-			{
-				options.add("/usr/local");
-				options.add("/usr/local/nrn/x86_64");
-			}
-		}
+        for (String option : options) {
+            File f = new File(option, nrnExe);
+            if (f.exists()) {
+                return new File(option);
+            }
+        }
 
-		for(String option : options)
-		{
-			File f = new File(option, "bin/nrniv");
-			if(f.exists())
-			{
-				return new File(option);
-			}
-		}
+        throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options 
+                + ", NEURON executable sought: "+nrnExe+". \n\n" 
+                + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
+                + " to the location of your NEURON installation (containing bin), e.g.\n\n" 
+                + "  export " + NeuronWriter.NEURON_HOME_ENV_VAR + "=/home/myuser/nrn7/x86_64\n", null);
 
-		throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options + "\n\n" + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
-				+ " to the location of your NEURON installation (containing bin), e.g.\n\n" + "  export " + NeuronWriter.NEURON_HOME_ENV_VAR + "=/home/myuser/nrn7/x86_64\n", null);
-
-	}
+    }
 
 	/*
 	 * Compliles all of the mod files at the specified location using NEURON's nrnivmodl/mknrndll.sh
@@ -100,17 +92,19 @@ public class ProcessManager
 				fileToBeCreated = new File(filename);
 
 				E.info("Name of file to be created: " + fileToBeCreated.getAbsolutePath());
+                                
+                                
 
-				System.out.println("Automatic compilation of NEURON mod files on Windows not yet implemented...");
+                                File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
-				/*
-				 * File modCompileScript = ProjectStructure.getNeuronUtilsWinModCompileFile();
-				 * 
-				 * if (showDialog) { commandToExecute = neuronHome + "\\bin\\rxvt.exe -e " + neuronHome + "/bin/sh \"" + modCompileScript.getAbsolutePath() + "\" " + neuronHome + " "; } else {
-				 * commandToExecute = neuronHome + "/bin/sh \"" + modCompileScript.getAbsolutePath() + "\" " + neuronHome + " "+" -q"; //quiet mode, no "press any key to continue"... }
-				 * 
-				 * E.info("commandToExecute: " + commandToExecute);
-				 */
+                                //commandToExecute = neuronHome + "/bin/sh \"" + modCompileScript.getAbsolutePath() + "\" " + neuronHome + " "+" -q"; //quiet mode, no "press any key to continue"... 
+                                String cygWinPath = modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
+                                System.out.println(neuronHome.getAbsolutePath()+" -> "+cygWinPath);
+                                commandToExecute = neuronHome + "\\bin\\sh \"" + cygWinPath + "\" " + neuronHome + " "+" -q"; 
+                                   
+                                E.info("commandToExecute: " + commandToExecute);
+                                //directoryToExecuteIn = neuronHome + "\\bin";
+				 
 			}
 			else
 			{
@@ -277,7 +271,7 @@ public class ProcessManager
 	public static void main(String args[]) throws IOException
 	{
 		// File f = new File("/home/padraig/temp/mod/leak.mod");
-		File f = new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2");
+		File f = new File("c:\\pyNeuroML\\examples");
 
 		MinimalMessageHandler.setVeryMinimal(true);
 		E.setDebug(false);

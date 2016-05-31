@@ -2,6 +2,7 @@ package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.AbstractList;
 import java.util.LinkedHashMap;
 
@@ -213,6 +214,17 @@ public class Utils
 		sim.readModel();
 		return sim;
 	}
+        
+        public static File copyFromJarToTempLocation(String filename) throws ContentError, IOException
+        {
+            NeuroML2Validator nmlv = new NeuroML2Validator();
+            String content = JUtil.getRelativeResource(nmlv.getClass(), filename);
+            File tempDir = Files.createTempDirectory("jNeuroML").toFile();
+            File newFile = new File(tempDir,(new File(filename)).getName());
+            FileUtil.writeStringToFile(content, newFile);
+            
+            return newFile;
+        }
 
 	public static Sim readLemsNeuroMLFile(File f) throws LEMSException
 	{
@@ -433,9 +445,14 @@ public class Utils
 	public static boolean is64bitPlatform()
 	{
 		return System.getProperty("os.arch").contains("64"); // should be
-																	// enough in
-																	// most
 																	// cases
 	}
+        
+
+        public static void main(String args[]) throws ContentError, IOException
+        {
+            File f = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
+            System.out.println("Created: "+f.getAbsolutePath());
+        }
 
 }
