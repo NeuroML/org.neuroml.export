@@ -3,7 +3,6 @@ package org.neuroml.export.neuron;
 import java.io.*;
 import java.text.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 
 import org.lemsml.jlems.core.logging.E;

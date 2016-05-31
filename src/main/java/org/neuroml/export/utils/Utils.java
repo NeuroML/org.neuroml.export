@@ -2,7 +2,6 @@ package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.AbstractList;
 import java.util.LinkedHashMap;
 
