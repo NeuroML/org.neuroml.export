@@ -24,11 +24,11 @@ public class ProcessManager
     public static File findNeuronHome() throws NeuroMLException {
 
         String nrnExe = "bin/nrniv";
+        String nrnExe64 = "bin/nrniv";
+        
         if (Utils.isWindowsBasedPlatform()) {
             nrnExe = "bin/neuron.exe";
-        }
-        if (Utils.isWindowsBasedPlatform() && Utils.is64bitPlatform()) {
-            nrnExe = "bin64/neuron.exe";
+            nrnExe64 = "bin64/neuron.exe";
         }
         ArrayList<String> options = new ArrayList<String>();
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
@@ -52,6 +52,10 @@ public class ProcessManager
 
         for (String option : options) {
             File f = new File(option, nrnExe);
+            if (f.exists()) {
+                return new File(option);
+            }
+            f = new File(option, nrnExe64);
             if (f.exists()) {
                 return new File(option);
             }
@@ -96,14 +100,13 @@ public class ProcessManager
 
 				E.info("Name of file to be created: " + fileToBeCreated.getAbsolutePath());
                                 
-                                
-
                                 File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
                                 //commandToExecute = neuronHome + "/bin/sh \"" + modCompileScript.getAbsolutePath() + "\" " + neuronHome + " "+" -q"; //quiet mode, no "press any key to continue"... 
                                 String cygWinPath = modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
                                 System.out.println(neuronHome.getAbsolutePath()+" -> "+cygWinPath);
-                                commandToExecute = neuronHome + "\\bin\\sh \"" + cygWinPath + "\" " + neuronHome + " "+" -q"; 
+                                String bin = Utils.is64bitPlatform() ? "bin64" : "bin";
+                                commandToExecute = neuronHome + "\\"+bin+"\\sh \"" + cygWinPath + "\" " + neuronHome + " "+" -q"; 
                                    
                                 E.info("commandToExecute: " + commandToExecute);
                                 //directoryToExecuteIn = neuronHome + "\\bin";
