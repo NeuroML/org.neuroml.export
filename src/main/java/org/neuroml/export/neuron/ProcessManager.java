@@ -35,7 +35,11 @@ public class ProcessManager
         if (nrnEnvVar != null) {
             options.add(nrnEnvVar);
         } else if (Utils.isWindowsBasedPlatform()) {
-            Collections.addAll(options, "C:\\nrn73", "C:\\nrn72", "C:\\nrn71", "C:\\nrn70", "C:\\nrn62", "C:\\nrn61", "C:\\nrn60");
+            String[] toTry = new String[]{"nrn73", "nrn72", "nrn71", "nrn70", "nrn62", "nrn61", "nrn60"};
+            for (String ver: toTry) {
+                options.add("C:\\"+ver);
+                options.add("C:\\"+ver+"w");
+            }
 
         } else if (Utils.isMacBasedPlatform()) {
             String[] vers = new String[]{"7.3", "7.2", "7.1", "6.2", "6.1", "6.0"};
@@ -97,16 +101,25 @@ public class ProcessManager
 				String filename = directoryToExecuteIn + System.getProperty("file.separator") + "nrnmech.dll";
 
 				fileToBeCreated = new File(filename);
+                                
+                                String binExe = neuronHome + "\\bin\\sh.exe";
+                                if (!(new File(binExe)).exists()) binExe = neuronHome + "\\bin64\\sh.exe";
+                                if (!(new File(binExe)).exists()) binExe = neuronHome + "\\mingw\\bin\\sh.exe";
+                                if (!(new File(binExe)).exists()) binExe = neuronHome + "\\mingw64\\bin\\sh.exe";
 
 				E.info("Name of file to be created: " + fileToBeCreated.getAbsolutePath());
                                 
                                 File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
                                 //commandToExecute = neuronHome + "/bin/sh \"" + modCompileScript.getAbsolutePath() + "\" " + neuronHome + " "+" -q"; //quiet mode, no "press any key to continue"... 
-                                String cygWinPath = modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
-                                System.out.println(neuronHome.getAbsolutePath()+" -> "+cygWinPath);
-                                String bin = Utils.is64bitPlatform() ? "bin64" : "bin";
-                                commandToExecute = neuronHome + "\\"+bin+"\\sh \"" + cygWinPath + "\" " + neuronHome + " "+" -q"; 
+                                String shFriendlyPath = modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
+                                //System.out.println(neuronHome.getAbsolutePath()+" -> "+cygWinPath);
+                                
+                                
+                                if (binExe.indexOf("mingw")>0)
+                                    shFriendlyPath = shFriendlyPath.replaceAll("/cygdrive", "");
+                                
+                                commandToExecute = binExe + " \"" + shFriendlyPath + "\" " + neuronHome + " "+" -q"; 
                                    
                                 E.info("commandToExecute: " + commandToExecute);
                                 //directoryToExecuteIn = neuronHome + "\\bin";
