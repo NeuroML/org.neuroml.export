@@ -214,17 +214,21 @@ public class Utils
 		sim.readModel();
 		return sim;
 	}
+
+    public static File copyFromJarToTempLocation(String filename) throws ContentError, IOException
+    {
+        NeuroML2Validator nmlv = new NeuroML2Validator();
+        String content = JUtil.getRelativeResource(nmlv.getClass(), filename);
         
-        public static File copyFromJarToTempLocation(String filename) throws ContentError, IOException
-        {
-            NeuroML2Validator nmlv = new NeuroML2Validator();
-            String content = JUtil.getRelativeResource(nmlv.getClass(), filename);
-            File tempDir = Files.createTempDirectory("jNeuroML").toFile();
-            File newFile = new File(tempDir,(new File(filename)).getName());
-            FileUtil.writeStringToFile(content, newFile);
-            
-            return newFile;
-        }
+        //File tempDir = Files.createTempDirectory("jNeuroML").toFile();
+        //File newFile = new File(tempDir,(new File(filename)).getName());
+        
+        File newFile = File.createTempFile("jNeuroML", "_"+(new File(filename)).getName());
+        
+        FileUtil.writeStringToFile(content, newFile);
+
+        return newFile;
+    }
 
 	public static Sim readLemsNeuroMLFile(File f) throws LEMSException
 	{
