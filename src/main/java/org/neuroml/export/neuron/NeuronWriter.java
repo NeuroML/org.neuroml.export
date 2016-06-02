@@ -141,7 +141,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             E.info("Trying to compile mods in: " + this.getOutputFolder());
 
-            ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+            boolean comp = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+            
+            E.info("Success: " + comp);
 
             File neuronHome = findNeuronHome();
             String nrncmd = nogui ? "nrniv" : "nrngui";
@@ -162,7 +164,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 currentProcess.waitFor();
 
-                E.info("Exit value for compilation: " + currentProcess.exitValue());
+                E.info("Exit value for running NEURON: " + currentProcess.exitValue());
             }
             catch(InterruptedException e)
             {
@@ -3106,6 +3108,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
+
+        
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex7_STP.xml"));
         
         /*lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));

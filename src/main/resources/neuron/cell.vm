@@ -213,7 +213,7 @@ proc biophys_inhomogeneous() {
     ${cd.inhomogeneousParameter}.update()
     for ${cd.inhomogeneousParameter}.loop() {
         x = ${cd.inhomogeneousParameter}.x
-        p = ${cd.inhomogeneousParameter}.p
+        ${cd.variable} = ${cd.inhomogeneousParameter}.p
         ${cd.parameterName}_${cd.ionChannel}(x) = $cd.inhomogeneousValue
     }
 #end##

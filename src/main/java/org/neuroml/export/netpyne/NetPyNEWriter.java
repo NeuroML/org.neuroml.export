@@ -129,7 +129,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             try
             {
                 currentProcess.waitFor();
-                E.info("Exit value for compilation: " + currentProcess.exitValue());
+                E.info("Exit value for running PyNEURON: " + currentProcess.exitValue());
             }
             catch(InterruptedException e)
             {
