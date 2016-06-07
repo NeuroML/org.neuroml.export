@@ -1239,21 +1239,34 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append("\n");
             }
 
-            main.append("\n\n");
+            main.append(bIndent+"self.initialized = False\n\n");
+            main.append(bIndent+"self.sim_end = -1 # will be overwritten\n\n");
 
             if(!nogui)
             {
-                main.append(bIndent+"h.nrncontrolmenu()\n\n");
+                main.append(bIndent+"h.nrncontrolmenu()\n\n\n");
             }
                 
             main.append("    def run(self):\n\n");
 
+            main.append(bIndent+"self.initialized = True\n");
             main.append(bIndent+"sim_start = time.time()\n");
             main.append(bIndent+"print(\"Running a simulation of %sms (dt = %sms)\" % (h.tstop, h.dt))\n\n");
             main.append(bIndent+"h.run()\n\n");
-            main.append(bIndent+"sim_end = time.time()\n");
-            main.append(bIndent+"sim_time = sim_end - sim_start\n");
-            main.append(bIndent+"print(\"Finished simulation in %f seconds (%f mins), saving results...\"%(sim_time, sim_time/60.0))\n\n");
+            main.append(bIndent+"self.sim_end = time.time()\n");
+            main.append(bIndent+"sim_time = self.sim_end - sim_start\n");
+            main.append(bIndent+"print(\"Finished NEURON simulation in %f seconds (%f mins)...\"%(sim_time, sim_time/60.0))\n\n");
+            main.append(bIndent+"self.save_results()\n\n\n");
+            
+            main.append("    def advance(self):\n\n");
+            main.append(bIndent+"if not self.initialized:\n");
+            main.append(bIndent+"    h.finitialize()\n");
+            main.append(bIndent+"    self.initialized = True\n\n");
+            main.append(bIndent+"h.fadvance()\n\n\n");
+            
+            main.append("    def save_results(self):\n\n");
+            main.append(bIndent+"print(\"Saving results at t=%s...\"%h.t)\n\n");
+            main.append(bIndent+"if self.sim_end < 0: self.sim_end = time.time()\n\n");
 
             // main.append("objref SampleGraph\n");
             for(String dg : displayGraphs)
@@ -1300,7 +1313,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
 
             main.append(bIndent+"save_end = time.time()\n");
-            main.append(bIndent+"save_time = save_end - sim_end\n");
+            main.append(bIndent+"save_time = save_end - self.sim_end\n");
             main.append(bIndent+"print(\"Finished saving results in %f seconds\"%(save_time))\n\n");
             main.append(bIndent+"print(\"Done\")\n\n");
             if(nogui)
@@ -3094,7 +3107,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
@@ -3105,11 +3118,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
         //lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
         
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
 
         
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex7_STP.xml"));
