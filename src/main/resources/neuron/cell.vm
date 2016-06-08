@@ -182,6 +182,8 @@ proc biophys() {
 #else##
 #if( $cd.erev == 'calculated_by_Nernst_equation' )##
         // erev is calculated by Nernst equation
+#elseif( $cd.erev == 'calculated_by_GHK2_equation' )##
+        // erev is calculated by GHK2 equation
 #else## fixed erev
         e$cd.ion = $cd.erev  // units: mV
 #end## if( $cd.erev == 'calculated_by_Nernst_equation' )

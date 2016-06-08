@@ -24,6 +24,7 @@ import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
+import org.neuroml.model.ChannelDensityGHK2;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
 import org.neuroml.model.ChannelDensityNonUniformGHK;
@@ -579,6 +580,24 @@ public class JSONCellSerializer
                 g.writeStringField("permeability", NeuronWriter.formatDefault(valuePermeab));
 
                 g.writeStringField("erev", "calculated_by_GHK_equation");
+
+                g.writeEndObject();
+            }
+            for(ChannelDensityGHK2 cdg : mp.getChannelDensityGHK2())
+            {
+                g.writeStartObject();
+                g.writeStringField("id", cdg.getId());
+                g.writeStringField("ionChannel", NRNUtils.getSafeName(cdg.getIonChannel()));
+
+                g.writeStringField("ion", cdg.getIon());
+
+                String group = cdg.getSegmentGroup() == null ? "all" : cdg.getSegmentGroup();
+                g.writeStringField("group", group);
+
+                float valueCondDens = Utils.getMagnitudeInSI(cdg.getCondDensity()) * units.condDensFactor;
+                g.writeStringField("condDens", NeuronWriter.formatDefault(valueCondDens));
+                
+                g.writeStringField("erev", "calculated_by_GHK2_equation");
 
                 g.writeEndObject();
             }

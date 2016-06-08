@@ -97,7 +97,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public enum ChannelConductanceOption
     {
-        FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK;
+        FIXED_REVERSAL_POTENTIAL, USE_NERNST, USE_GHK, USE_GHK2;
         float erev;
     };
 
@@ -277,6 +277,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             
 
             Component targetComp = simCpt.getRefComponents().get("target");
+            
+            main.append(bIndent+"print(\"\\n    Starting simulation in NEURON generated from NeuroML2 model...\\n\")\n\n");
+
             String info = "Adding simulation " + simCpt + " of network/component: " + targetComp.summary();
 
             E.info(info);
@@ -407,7 +410,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     popInfo.append("        a_" + popName + " = []\n");
 
-                    popInfo.append(bIndent+"h(\"n_" + popName + " = " + number + "\")\n");
+                    popInfo.append(bIndent+"h(\"{ n_" + popName + " = " + number + " }\")\n");
 
                     popInfo.append(bIndent+"h(\"objectvar a_" + popName + "[n_" + popName + "]\")\n");
 
@@ -418,7 +421,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     popInfo.append("            h(\"access a_" + popName + "[%i]." + nh.getNrnSectionName(cell.getMorphology().getSegment().get(0)) + "\"%i)\n\n");
 
                     for (Integer cell_id: locations.keySet()) {
-                        popInfo.append(bIndent+"h(\"a_" + popName + "["+cell_id+"].position"+locations.get(cell_id)+"\")\n");
+                        popInfo.append(bIndent+"h(\"{ a_" + popName + "["+cell_id+"].position"+locations.get(cell_id)+" }\")\n");
                     }
 
                     popInfo.append(String.format("\n        h(\"proc initialiseV_%s() { for i = 0, n_%s-1 { a_%s[i].set_initial_v() } }\")\n", popName, popName, popName));
@@ -1072,7 +1075,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             columnsPre.get(timeRef).add(bIndent+"# Column: " + timeRef);
             columnsPre.get(timeRef).add(bIndent+"h(' objectvar v_" + timeRef + " ')");
             columnsPre.get(timeRef).add(bIndent+"h(' { v_" + timeRef + " = new Vector() } ')");
-            columnsPre.get(timeRef).add(bIndent+"h(' v_" + timeRef + ".record(&t) ')");
+            columnsPre.get(timeRef).add(bIndent+"h(' { v_" + timeRef + ".record(&t) } ')");
             columnsPre.get(timeRef).add(bIndent+"h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
             columnsPost0.get(timeRef).add(bIndent+"py_v_" + timeRef + " = [ t/1000 for t in h.v_" + timeRef + ".to_python() ]  # Convert to Python list for speed...");
@@ -1122,7 +1125,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             columnsPre.get(outfileId).add(bIndent+"# Column: " + lqp.getQuantity());
                             columnsPre.get(outfileId).add(bIndent+"h(' objectvar v_" + colId + " ')");
                             columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + " = new Vector() } ')");
-                            columnsPre.get(outfileId).add(bIndent+"h(' v_" + colId + ".record(&" + lqp.getNeuronVariableReference() + ") ')");
+                            columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + ".record(&" + lqp.getNeuronVariableReference() + ") } ')");
                             columnsPre.get(outfileId).add(bIndent+"h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
                             float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
@@ -1598,6 +1601,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         ChannelConductanceOption option = ChannelConductanceOption.USE_GHK;
                         writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     }
+                    else if (channelDensity.getTypeName().equals("channelDensityGHK2")  ){
+                        ChannelConductanceOption option = ChannelConductanceOption.USE_GHK2;
+                        writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
+                    }
                 }
 
                 for(Component species : ipComp.getChildrenAL("speciesList"))
@@ -1788,6 +1795,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     readRevPot = String.format("READ %si, %so ", species, species);
 
                 }
+                else if(condOption.equals(ChannelConductanceOption.USE_GHK2))
+                {
+
+                    blockFunctions.append(NRNUtils.ghk2FunctionDefs);
+                    blockUnits.append(NRNUtils.ghkUnits);
+                    readRevPot = String.format("READ %si, %so ", species, species);
+                }
                 if(readRevPot.length() == 0 && hasCaDependency)
                 {
                     if(species.contains("ca"))
@@ -1825,6 +1839,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 blockNeuron.append("RANGE cao\n");
                 blockAssigned.append("cai (mM)\n");
                 blockAssigned.append("cao (mM)\n");
+            }
+            else if(condOption.equals(ChannelConductanceOption.USE_GHK2))
+            {
+                blockNeuron.append("\nRANGE gmax                              : Will be changed when ion channel mechanism placed on cell!\n");
+                blockParameter.append("\ngmax = 0  (S/cm2)                       : Will be changed when ion channel mechanism placed on cell!\n");
+                blockParameter.append("\nki=.001 (mM)\n");
+                blockNeuron.append("\nRANGE cai\n");
+                blockNeuron.append("RANGE cao\n");
+                //blockAssigned.append("cai (mM)\n");
+                //blockAssigned.append("cao (mM)\n");
             }
 
             blockAssigned.append("\ngion   (S/cm2)                          : Transient conductance density of the channel");
@@ -1964,6 +1988,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 blockBreakpoint.append("gion = permeability * fopen \n");
             }
+            else if(condOption.equals(ChannelConductanceOption.USE_GHK2))
+            {
+                blockBreakpoint.append("gion = gmax * fopen * h2(cai)\n\n");
+            }
             String species = comp.getTextParam("species");
 
             // Only for ohmic!!
@@ -1980,6 +2008,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 else if(condOption.equals(ChannelConductanceOption.USE_GHK))
                 {
                     blockBreakpoint.append("i" + species + " = gion * ghk(v, cai, cao)\n");
+                }
+                else if(condOption.equals(ChannelConductanceOption.USE_GHK2))
+                {
+                    blockBreakpoint.append("i" + species + " = gion * ghk2(v, cai, cao)\n");
                 }
             }
         }
@@ -3108,6 +3140,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         

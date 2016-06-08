@@ -69,6 +69,30 @@ public class NRNUtils implements UnitConverter
         + "        }else{\n"
         + "                efun = z/(exp(z) - 1)\n"
         + "        }\n" + "}\n";
+    
+    static final String ghk2FunctionDefs = "\nFUNCTION h2(cai(mM)) {\n" +
+                "	h2 = ki/(ki+cai)\n" +
+                "}\n" +
+                "\n" +
+                "FUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
+                "        LOCAL nu,f\n" +
+                "\n" +
+                "        f = KTF(celsius)/2\n" +
+                "        nu = v/f\n" +
+                "        ghk2=-f*(1. - (ci/co)*exp(nu))*efun(nu)\n" +
+                "}\n" +
+                "\n" +
+                "FUNCTION KTF(celsius (DegC)) (mV) {\n" +
+                "        KTF = ((25./293.15)*(celsius + 273.15))\n" +
+                "}\n" +
+                "\n" +
+                "FUNCTION efun(z) {\n" +
+                "	if (fabs(z) < 1e-4) {\n" +
+                "		efun = 1 - z/2\n" +
+                "	}else{\n" +
+                "		efun = z/(exp(z) - 1)\n" +
+                "	}\n" +
+                "}\n";
 
     static final String randomFunctionDefs = "\n: Returns a float between 0 and max\nFUNCTION random_float(max) {\n"
         + "    \n"
