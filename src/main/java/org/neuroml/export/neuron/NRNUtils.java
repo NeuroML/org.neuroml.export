@@ -70,11 +70,7 @@ public class NRNUtils implements UnitConverter
         + "                efun = z/(exp(z) - 1)\n"
         + "        }\n" + "}\n";
     
-    static final String ghk2FunctionDefs = "\nFUNCTION h2(cai(mM)) {\n" +
-                "	h2 = ki/(ki+cai)\n" +
-                "}\n" +
-                "\n" +
-                "FUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
+    static final String ghk2FunctionDefs = "\nFUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
                 "        LOCAL nu,f\n" +
                 "\n" +
                 "        f = KTF(celsius)/2\n" +

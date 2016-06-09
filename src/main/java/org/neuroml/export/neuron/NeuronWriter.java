@@ -1990,7 +1990,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
             else if(condOption.equals(ChannelConductanceOption.USE_GHK2))
             {
-                blockBreakpoint.append("gion = gmax * fopen * h2(cai)\n\n");
+                blockBreakpoint.append("gion = gmax * fopen\n\n");
             }
             String species = comp.getTextParam("species");
 
