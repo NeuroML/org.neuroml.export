@@ -2,7 +2,7 @@
 
 # See https://github.com/Neurosim-lab/netpyne
 
-from netpyne import init  # import netpyne init module
+from netpyne import sim  # import netpyne sim module
 
 
 #[[###############################################################################]]#
@@ -28,7 +28,7 @@ gids = {} # Require these in this file for plotting etc.
 # cell params for cell $component_array.name in population $pop
 cellRule = {'label': '$pop', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
 ${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
-${pop}_soma['pointps']['$component_array.name'] = { '_type':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
+${pop}_soma['pointps']['$component_array.name'] = { 'mod':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
 
 # Todo: work this out here from area etc.
 cm = (318309 * ${pop}_soma['pointps']['$component_array.name']['C'] if ${pop}_soma['pointps']['$component_array.name'].has_key('C') else 318.31927 )
@@ -63,7 +63,7 @@ next_gid += size_$pop
 #set($input=$inputs.get($input_ref))
 # Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
 
-${input.population}_soma['pointps']['${input.population}'] = { '_type':'${input.component.name}' } 
+${input.population}_soma['pointps']['${input.population}'] = { 'mod':'${input.component.name}' } 
 
 #end
 
@@ -116,7 +116,7 @@ simConfig['saveDat'] = True # save to dat file
 
 
 print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig['duration'], simConfig['dt']))
-init.createAndSimulate(                   
+sim.createAndSimulate(                   
     simConfig = simConfig, 
     netParams = netParams)
 
