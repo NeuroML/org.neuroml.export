@@ -4,7 +4,7 @@
     <groupId>org.neuroml.export</groupId>
     <artifactId>org.neuroml.export</artifactId>
     <packaging>bundle</packaging>
-    <version>1.4.5</version>
+    <version>1.4.6</version>
     <name>org.neuroml.export</name>
     <url>http://maven.apache.org</url>
 
@@ -18,12 +18,12 @@
         <dependency>
             <groupId>org.neuroml.model</groupId>
             <artifactId>org.neuroml.model</artifactId>
-            <version>1.4.5</version>
+            <version>1.4.6</version>
         </dependency>
         <dependency>
             <groupId>org.lemsml</groupId>
             <artifactId>jlems</artifactId>
-            <version>0.9.8.5</version>
+            <version>0.9.8.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.velocity</groupId>
