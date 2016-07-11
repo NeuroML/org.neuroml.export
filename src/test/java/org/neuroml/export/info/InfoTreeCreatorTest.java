@@ -7,7 +7,6 @@ import javax.xml.bind.JAXBException;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.lemsml.export.base.GenerationException;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.run.RuntimeError;
@@ -16,8 +15,9 @@ import org.lemsml.jlems.core.sim.ParseException;
 import org.lemsml.jlems.core.type.BuildException;
 import org.lemsml.jlems.core.xml.XMLException;
 import org.lemsml.jlems.io.util.JUtil;
-import org.neuroml.export.Main;
+import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.info.model.InfoNode;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLConverter;
 
@@ -64,6 +64,18 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    c: -50.0\n"
             + "    d: 2.0\n"
             + "    thresh: 30mV (0.03 V)\n"
+            + "Element iz2007RS:\n"
+            + "    ID: iz2007RS\n"
+            + "    v0: -60mV (-0.06 V)\n"
+            + "    k: 0.7 nS_per_mV (7.0E-7 S_per_V)\n"
+            + "    vr: -60 mV (-0.06 V)\n"
+            + "    vt: -40 mV (-0.04 V)\n"
+            + "    vpeak: 35 mV (0.035 V)\n"
+            + "    a: 0.03 per_ms (30.0 per_s)\n"
+            + "    b: -2 nS (-2.0E-9 S)\n"
+            + "    c: -50 mV (-0.05 V)\n"
+            + "    d: 100 pA (1.0E-10 A)\n"
+            + "    C: 100 pF (1.0E-10 F)\n"
             + "Element adExBurst:\n"
             + "    ID: adExBurst\n"
             + "    gL: 30nS (3.0E-8 S)\n"
@@ -79,13 +91,47 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    C: 281pF (2.81E-10 F)\n"
             + "Element fn1:\n"
             + "    ID: fn1\n"
-            + "    I: 0.8";
+            + "    I: 0.8\n"
+            + "Element fn1969:\n"
+            + "    ID: fn1969\n"
+            + "    a: 0.7\n"
+            + "    b: 0.08\n"
+            + "    I: 1.0\n"
+            + "    phi: 0.08\n"
+            + "    V0: 0.0\n"
+            + "    W0: 0.0\n"
+            + "Element pr2A:\n"
+            + "    ID: pr2A\n"
+            + "    iSoma: 0.75 uA_per_cm2 (0.0075 A_per_m2)\n"
+            + "    iDend: 0 uA_per_cm2 (0.0 A_per_m2)\n"
+            + "    gLs: 0.1 mS_per_cm2 (1.0 S_per_m2)\n"
+            + "    gLd: 0.1 mS_per_cm2 (1.0 S_per_m2)\n"
+            + "    gNa: 30 mS_per_cm2 (300.0 S_per_m2)\n"
+            + "    gKdr: 15 mS_per_cm2 (150.0 S_per_m2)\n"
+            + "    gCa: 10 mS_per_cm2 (100.0 S_per_m2)\n"
+            + "    gKahp: 0.8 mS_per_cm2 (8.0 S_per_m2)\n"
+            + "    gKC: 15 mS_per_cm2 (150.0 S_per_m2)\n"
+            + "    gc: 2.1 mS_per_cm2 (21.0 S_per_m2)\n"
+            + "    eNa: 60 mV (0.06 V)\n"
+            + "    eCa: 80 mV (0.08 V)\n"
+            + "    eK: -75 mV (-0.075 V)\n"
+            + "    eL: -60 mV (-0.06 V)\n"
+            + "    pp: 0.5\n"
+            + "    cm: 3 uF_per_cm2 (0.03 F_per_m2)\n"
+            + "    alphac: 2.0\n"
+            + "    betac: 0.1\n"
+            + "    gNmda: 0 mS_per_cm2 (0.0 S_per_m2)\n"
+            + "    gAmpa: 0 mS_per_cm2 (0.0 S_per_m2)\n"
+            + "    qd0: 0.0";
         String tree = getInfoTreeAsString("NML2_AbstractCells.nml");
         compare(expected, tree);
     }
 
     public void testCell() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception {
-        String expected = "Cell SpikingCell:\n"
+        String expected = "Ion Channel pas:\n"
+            + "    ID: pas\n"
+            + "    Gates:\n"
+            + "Cell SpikingCell:\n"
             + "    ID: SpikingCell\n"
             + "    Description: A Simple Spiking cell for testing purposes\n"
             + "    Number of segments: 4\n"
@@ -93,14 +139,14 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    Channel density: pasChans:\n"
             + "        ID: pasChans\n"
             + "        IonChannel: pas\n"
-            + "        Ion: null\n"
+            + "        Ion: non_specific\n"
             + "        Reversal potential: -70mV (-0.07 V)\n"
             + "        Conductance density: 3.0 S_per_m2\n"
             + "        Segment group: all\n"
             + "    Channel density: naChansSoma:\n"
             + "        ID: naChansSoma\n"
             + "        IonChannel: NaConductance\n"
-            + "        Ion: null\n"
+            + "        Ion: na\n"
             + "        Reversal potential: 50mV (0.05 V)\n"
             + "        Conductance density: 120.0 mS_per_cm2 (1200.0 S_per_m2)\n"
             + "        Segment group: soma_group\n"
@@ -118,21 +164,17 @@ public class InfoTreeCreatorTest extends TestCase {
     }
 
     public void testIonChannel() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError, JAXBException, GenerationException, Exception {
-        String expected = "Ion Channel na:\n"
-            + "    ID: na\n"
+        String expected = "Ion Channel NaConductance:\n"
+            + "    ID: NaConductance\n"
             + "    Gates:\n"
             + "        gate m:\n"
-            + "            forward rate: 1000 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))\n"
-            + "            reverse rate: 4000 * exp((v - (-0.06))/-0.02)\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpLinearRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
             + "            instances: 3\n"
+            + "            forward rate: 1e3 * (v - (-0.04))/0.01 / ( 1 - exp(-(v - (-0.04)) / 0.01))\n"
+            + "            reverse rate: 4e3 * exp((v - (-0.065))/-0.018)\n"
             + "        gate h:\n"
-            + "            forward rate: 70 * exp((v - (-0.06))/-0.02)\n"
-            + "            reverse rate: 1000 /(1 + exp((v - (-0.04))/0.01))\n"
-            + "            forward rate plot: PlotNode [Title=Standard ChannelML Expression:HHExpRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            reverse rate plot: PlotNode [Title=Standard ChannelML Expression:HHSigmoidRate, X=V, Y=ms-1, Num data points=1]\n"
-            + "            instances: 1";
+            + "            instances: 1\n"
+            + "            forward rate: 70 * exp((v - (-0.065))/-0.02)\n"
+            + "            reverse rate: 1e3 /(1 + exp((v - (-0.035))/0.01))";
 
         compare(expected, getInfoTreeAsString("NML2_SimpleIonChannel.nml"));
     }
@@ -171,7 +213,7 @@ public class InfoTreeCreatorTest extends TestCase {
             + "    Population iafCells:\n"
             + "        ID: iafCells\n"
             + "        Component: iaf\n"
-            + "        Size (number of instances): 3\n"
+            + "        Size: 3\n"
             + "    Number of projections: 2\n"
             + "    Projection internal1:\n"
             + "        ID: internal1\n"
@@ -211,7 +253,7 @@ public class InfoTreeCreatorTest extends TestCase {
      * @throws JAXBException
      */
     private String getInfoTreeAsString(String nmlFilename) throws ContentError, JAXBException, Exception {
-        String content = JUtil.getRelativeResource(this.getClass(), Main.getNeuroMLExamplesResourcesDir() + "/" + nmlFilename);
+        String content = JUtil.getRelativeResource(this.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + nmlFilename);
         NeuroMLConverter nmlc = new NeuroMLConverter();
         NeuroMLDocument nmlDocument = nmlc.loadNeuroML(content);
         InfoNode root = InfoTreeCreator.createInfoTree(nmlDocument);

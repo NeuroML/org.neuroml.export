@@ -1,2 +1,62 @@
-// Class file in NestML for Component: $name
+# NESTML file for Component: $name
+#
+#    PLEASE NOTE: This export is not yet complete
+#
+package codegeneration.${name}_module:
+
+neuron $name:
+
+    state:
+#foreach ($s in $state.keySet())##
+        $s real
+#end
+#foreach ($sf in $state_functions.keySet())
+        alias $sf real = $state_functions.get($sf)  
+#end
+    end
+
+    parameter:
+#foreach ($p in $parameters.keySet())##
+        $p real = $parameters.get($p)
+#end
+    end
+
+    input:
+        spikeBuffer <- spike  
+        currentBuffer <- current
+    end
+
+    output: spike
+
+    dynamics timestep(t ms):
+
+        ODE:
+#foreach ($dyn in $dynamics.keySet())##
+            d/dt $dyn := $dynamics.get($dyn)
+#end##
+#foreach($ev in $events)
+
+            # Event: $ev.name
+#if ($ev.direction == "+" )##
+            if $ev.condition > 0:
+#end##
+#if ($ev.direction == "-" )##
+            if $ev.condition < 0:
+#end##
+#foreach ($state in $ev.effect.state.keySet())##
+                $state = $ev.effect.state.get($state)
+#end##
+                emitSpike()   #  Todo: check for this in event!
+            end
+#end##
+        end
+
+    end
+
+end
+
+
+
+
+
 

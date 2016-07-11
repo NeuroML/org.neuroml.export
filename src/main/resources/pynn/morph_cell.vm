@@ -1,0 +1,94 @@
+# Cell file for Component: $name
+
+print("Loading cell file for $name")
+
+## Bad!!  NEURON specific
+from pyNN.neuron import NativeCellType
+from neuron import h
+
+instance_count_${name} = 0
+
+class $name(object):
+
+    def __init__(self, **parameters):
+        print("Created instance of $name with params: %s"%parameters)
+
+        h.load_file("${name}.hoc")
+        global instance_count_${name}
+        h("objectvar mycell_${name}_%i"%instance_count_${name}) 
+        h("mycell_${name}_%i = new $name()"%instance_count_${name})
+
+
+        self.soma = h.${name}[instance_count_${name}].soma
+
+        h(" forall psection() ")
+        instance_count_${name}+=1
+
+
+#foreach ($param in $parameters.keySet() )
+        self.mechanism.${param} = parameters['${param}']
+#end
+
+        self.source = self.soma(0.5)._ref_v
+
+        # needed for PyNN
+        self.source_section = self.soma
+        self.parameter_names = (#foreach ($param in $parameters.keySet() ) '$param', #end)
+        self.traces = {}
+        self.recording_time = False
+
+#foreach ($param in $parameters.keySet() )
+    # Getter/setter for $param
+    def _set_${param}(self, value):
+        print("Setting $param in ${name} to %s"%value)
+        self.mechanism.${param} = value
+    def _get_${param}(self):
+        return self.mechanism.${param}
+    ${param} = property(fget=_get_${param}, fset=_set_${param})
+
+#end
+
+    def memb_init(self):
+        # Initialising...
+        self.soma
+#foreach ($s in $state.keySet() )
+        # Initialising state $s
+#if ($s=="v")
+        for seg in self.soma:
+            seg.$s = self.get_value('$state.get($s)')
+#else
+        self.mechanism.$s = self.get_value('$state.get($s)')
+#end
+#end
+
+
+#foreach ($syn in $synapses_allowed )
+
+    # Allowed synapse: $syn
+    @property
+    def $syn(self):
+        print("Creating synapse $syn on cell $name")
+        self.syn_$syn = h.$syn(0.5, sec=self.soma)
+        return self.syn_$syn
+
+#end
+
+    def get_value(self, val_string):
+        if val_string=='v':
+            return self.soma(0.5)._ref_v
+        if val_string.isdigit():
+            return float(val_string) 
+        else:
+            return getattr(self.mechanism,val_string)
+
+
+class ${name}Type(NativeCellType):
+
+    default_parameters = {#foreach ($param in $parameters.keySet() ) '$param':$parameters.get($param), #end}
+    default_initial_values = {}    
+    recordable = [#foreach ($s in $state.keySet() ) 'soma(0.5).$s', #end]
+    units = {'soma(0.5).v' : 'mV'}
+    # Synapses allowed: $synapses_allowed
+    receptor_types = [#foreach ($syn in $synapses_allowed ) '$syn', #end]
+    model = $name
+

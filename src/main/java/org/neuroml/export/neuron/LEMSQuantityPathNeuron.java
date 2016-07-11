@@ -7,8 +7,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.Lems;
-import org.neuroml.export.LEMSQuantityPath;
-import org.neuroml.export.neuron.NeuronWriter;
+import org.neuroml.export.utils.LEMSQuantityPath;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Segment;
 import org.neuroml.model.util.CellUtils;
@@ -18,7 +17,8 @@ import org.neuroml.model.util.NeuroMLException;
 /**
  * @author Padraig Gleeson
  */
-public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
+public class LEMSQuantityPathNeuron extends LEMSQuantityPath
+{
 
     HashMap<String, String> compMechNamesHoc = null;
     ArrayList<Component> popsOrComponents = null;
@@ -27,13 +27,9 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
     Lems lems = null;
     Component popComp = null;
 
-    public LEMSQuantityPathNeuron(String q,
-            String s,
-            Component targetComp,
-            HashMap<String, String> compMechNamesHoc,
-            ArrayList<Component> popsOrComponents,
-            HashMap<String, Cell> compIdsVsCells,
-            Lems lems) throws ContentError {
+    public LEMSQuantityPathNeuron(String q, String s, Component targetComp, HashMap<String, String> compMechNamesHoc, ArrayList<Component> popsOrComponents, HashMap<String, Cell> compIdsVsCells,
+        Lems lems) throws ContentError
+    {
         super(q, s);
         this.targetComp = targetComp;
         this.compMechNamesHoc = compMechNamesHoc;
@@ -41,84 +37,125 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         this.compIdsVsCells = compIdsVsCells;
         this.lems = lems;
 
-        if (myType != Type.VAR_IN_SINGLE_COMP) {
-            for (Component popsOrComponent : popsOrComponents) {
-                if (popsOrComponent.getID().equals(population)) {
-                    popComp = lems.getComponent(popsOrComponent.getStringValue("component"));
+        if (myType != Type.VAR_IN_SINGLE_COMP)
+        {
+            for (Component popsOrComponent : popsOrComponents)
+            {
+                if (popsOrComponent.getID().equals(population))
+                {
+                    popComp = popsOrComponent.getRefComponents().get("component");
                 }
             }
         }
-        
-        //System.out.println("----------------------\nCreated:"+this+"\n----------------------");
-        
+
+		// System.out.println("----------------------\nCreated:"+this+"\n----------------------");
     }
-    
-    private Exposure getExposure(Component c, String path) throws ContentError {
-           
-        //System.out.println("Path: "+path+", Comp: "+c);
-        try {
+
+    private Exposure getExposure(Component c, String path) throws ContentError
+    {
+        try
+        {
             Exposure e = c.getComponentType().getExposure(path);
             return e;
-        } catch (ContentError e) {
-            String child = path.substring(0,path.indexOf("/"));
-            String pathInChild = path.substring(path.indexOf("/")+1);
+        }
+        catch (ContentError e)
+        {
+            String child = path.substring(0, path.indexOf("/"));
+            String pathInChild = path.substring(path.indexOf("/") + 1);
             Component ch = null;
-            for (Component chi: c.getAllChildren())
-                if (chi.getID()!=null && chi.getID().equals(child))
+            for (Component chi : c.getAllChildren())
+            {
+                if (chi.getID() != null && chi.getID().equals(child))
+                {
                     ch = chi;
+                }
+            }
             if (ch == null)
-                for (Component chi: c.getAllChildren())
+            {
+                for (Component chi : c.getAllChildren())
+                {
                     if (chi.getTypeName().equals(child))
+                    {
                         ch = chi;
-            
+                    }
+                }
+            }
+
             return getExposure(ch, pathInChild);
         }
-         
-    }
-    
-    public Dimension getDimension() throws ContentError {
-        String path = getVariablePathInPopComp();
-        Component comp = (myType != Type.VAR_IN_SINGLE_COMP) ? popComp : targetComp;
-        return getExposure(comp, path).getDimension();
+
     }
 
-    public String getNeuronVariableLabel() throws ContentError {
+    public Dimension getDimension() throws ContentError
+    {
+        if (isVariableOnSynapse())
+        {
+            String synId = getSynapseType();
+            Component synComp = lems.getComponent(synId);
+            return getExposure(synComp, getPathforVariableOnSyn()).getDimension();
+        }
+        else
+        {
+            String path = getVariablePathInPopComp();
+            Component comp = (myType != Type.VAR_IN_SINGLE_COMP) ? popComp : targetComp;
+            return getExposure(comp, path).getDimension();
+        }
+    }
 
-        if (!isVariableInPopulation()) {
+    public String getNeuronVariableLabel() throws ContentError
+    {
+        if (!isVariableInPopulation())
+        {
             return getVariable();
-        } else {
+        }
+        else
+        {
             return getPopulationArray() + "[" + populationIndex + "]." + getVariable();
         }
     }
 
-    private String convertToNeuronVariable() throws ContentError {
-
+    
+    private String convertToNeuronVariable() throws ContentError
+    {
         HashMap<String, String> topSubstitutions = new HashMap<String, String>();
         topSubstitutions.put("caConc", "cai");
 
         String var = new String();
 
-        if (variableParts.length == 1) {
+        if (variableParts.length == 1)
+        {
             var = variableParts[0];
-        } else {
-            if (variableParts[1].indexOf("membraneProperties") >= 0) {
+        }
+        else
+        {
+            if (variableParts[1].contains("membraneProperties"))
+            {
 
-                if (variableParts.length == 4) {
+                if (variableParts.length == 4)
+                {
 
                     var = variableParts[3];
 
-                    if (var.equals("gDensity") || var.equals("iDensity")) {
+                    if (var.equals("gDensity") || var.equals("iDensity"))
+                    {
                         String channelDensId = variableParts[2];
                         ArrayList<Component> channelDensityComps = popComp.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities");
-                        if (var.equals("gDensity")) {
-                            for (Component c : channelDensityComps) {
-                                if (c.getID().equals(channelDensId)) {
+                        if (var.equals("gDensity"))
+                        {
+                            for (Component c : channelDensityComps)
+                            {
+                                if (c.getID().equals(channelDensId))
+                                {
                                     var = "gion_" + c.getStringValue("ionChannel");
                                 }
                             }
-                        } else if (var.equals("iDensity")) {
-                            for (Component c : channelDensityComps) {
-                                if (c.getID().equals(channelDensId)) {
+                        }
+                        else if (var.equals("iDensity"))
+                        {
+                            for (Component c : channelDensityComps)
+                            {
+                                if (c.getID().equals(channelDensId))
+                                {
                                     var = "i" + c.getStringValue("ion");
                                 }
                             }
@@ -126,8 +163,10 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                     }
                 }
 
-                if (variableParts.length > 4) {
-                    for (int i = 4; i < variableParts.length; i++) {
+                if (variableParts.length > 4)
+                {
+                    for (int i = 4; i < variableParts.length; i++)
+                    {
                         var += variableParts[i] + "_";
                     }
 
@@ -135,12 +174,15 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
                 }
             }
         }
-        if (var.length() == 0) {
+        if (var.length() == 0)
+        {
             var = getVariable();
         }
 
-        for (String key : topSubstitutions.keySet()) {
-            if (var.equals(key)) {
+        for (String key : topSubstitutions.keySet())
+        {
+            if (var.equals(key))
+            {
                 var = topSubstitutions.get(key);
             }
         }
@@ -148,72 +190,153 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         return var;
 
     }
+    
+    
+    public String getSynapseType()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
 
-    public String getNeuronVariableReference() throws ContentError, NeuroMLException {
-        //System.out.println("getNeuronVariableReference in "+getQuantity());
-        
-        if (myType == Type.VAR_IN_SINGLE_COMP) {
+        String var = getVariable();
+        String synInfoFull = var.split("_")[0];
+        String[] synInfo = synInfoFull.split(":");
+        return synInfo[1];
+    }
+
+    
+    public int getSynapseIndex()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return -1;
+        }
+
+        String var = getVariable();
+        String synInfoFull = var.split("_")[0];
+        String[] synInfo = synInfoFull.split(":");
+        return Integer.parseInt(synInfo[2]);
+    }
+
+    
+    public String getVariableOnSyn()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
+
+        String var = getVariable();
+        return var.substring(var.indexOf("_") + 1);
+
+    }
+
+    
+    public String getPathforVariableOnSyn()
+    {
+        if (!isVariableOnSynapse())
+        {
+            return null;
+        }
+
+        String var = getVariableParts("/");
+        return var.substring(var.indexOf("/") + 1);
+
+    }
+
+    
+    public String getNeuronVariableReference() throws ContentError, NeuroMLException
+    {
+        if (myType == Type.VAR_IN_SINGLE_COMP)
+        {
             String hoc = getPopulation() + targetComp.getName() + "[i]";
             String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
             String varRef = mechRef + "." + getVariable();
             return varRef;
-        } else {
+        }
+        else if (isVariableOnSynapse())
+        {
+            String varRef = "syn" + "_" + getPopulation() + "_" + getPopulationIndex() + "_" + getSegmentId() + "_" + getSynapseType() + "_" + getSynapseIndex() + "." + getVariableOnSyn();
+            return varRef;
+        }
+        else
+        {
             if (popComp != null
-                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE)
-                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE)
-                || popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))) {
-                
-                if (compIdsVsCells.containsKey(popComp.getID())) {
+                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || popComp
+                .getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+            {
+                if (compIdsVsCells.containsKey(popComp.getID()))
+                {
                     Cell cell = compIdsVsCells.get(popComp.getID());
+                    NamingHelper nh = new NamingHelper(cell);
                     Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
-                    String varInst = NeuronWriter.getNrnSectionName(cell, segment);
-                    
+                    String varInst = nh.getNrnSectionName(segment);
+
                     float fract;
-                    if (cell.getMorphology().getSegment().size()==1)
+                    if (cell.getMorphology().getSegment().size() == 1)
+                    {
                         fract = 0.5f;
+                    }
+                    else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst))
+                    {
+                        // No real segment group, segment ids being used for sections...
+                        fract = 0.5f;
+                    }
                     else
-                        fract = (float)CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
-                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable()+"("+fract+")";
+                    {
+                        fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
+                    }
+
+                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
                     return varRef;
-                } else {
+                }
+                else
+                {
                     String nrnVar = convertToNeuronVariable();
                     String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
-                    if (nrnVar.equals(NRNConst.NEURON_VOLTAGE)) {
+
+                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE))
+                    { // redundant..?
                         varRef += "(0.5)";
                     }
                     return varRef;
                 }
-
-            } else {
+            }
+            else
+            {
                 String hoc = population + "[i]";
-                //System.out.println(this);
-                //System.out.println(popComp);
                 String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
                 String varRef = mechRef + "." + getVariable();
                 return varRef;
             }
         }
-
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         String ref;
-        try {
+        try
+        {
             ref = getNeuronVariableReference();
-        } catch (Exception ex) {
-            //ex.printStackTrace();
-            ref = "=== Unable to determine reference: "+ex;
         }
-        return super.toString()
-                + "\nNeuron ref:     " + ref
-                /*+ "\ncompIdsVsCells: " + compIdsVsCells*/
-                + "\npopsOrComponents: " + popsOrComponents
-                + "\ntargetComp: " + targetComp
-                + "\npopComp: " + popComp;
+        catch (ContentError ex)
+        {
+            ref = "=== Unable to determine reference: " + ex;
+        }
+        catch (NeuroMLException ex)
+        {
+            ref = "=== Unable to determine reference: " + ex;
+        }
+
+        return super.toString() + "\n    Neuron ref:     " + ref
+            /* + "\ncompIdsVsCells: " + compIdsVsCells */
+            + "\n    popsOrComponents: " + popsOrComponents + "\n    targetComp: " + targetComp + "\n    popComp: " + popComp;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception
+    {
         HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
         compMechNamesHoc.put("fnPop1[i]", "m_fitzHughNagumoCell[i]");
         ArrayList<String> paths = new ArrayList<String>();
@@ -221,7 +344,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath {
         paths.add("hhpop[6]/bioPhys1/membraneProperties/naChans/naChan/m/q");
         paths.add("fnPop1[0]/V");
 
-        for (String path : paths) {
+        for (String path : paths)
+        {
             LEMSQuantityPathNeuron l1 = new LEMSQuantityPathNeuron(path, "1", null, compMechNamesHoc, null, null, null);
             System.out.println("\n--------\n" + l1);
         }

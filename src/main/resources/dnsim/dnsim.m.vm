@@ -1,0 +1,15 @@
+#######################################################################
+## Template for generating DNSim code from a dLEMS description       ##
+## This is work in progress, expect substantial changes              ##
+#######################################################################
+
+spec=[];
+spec.nodes(1).label = '$name';
+spec.nodes(1).multiplicity = 1;
+spec.nodes(1).dynamics = {};
+spec.nodes(1).mechanisms = {'${name}_dnsim'};
+
+% open model: $name in DNSim GUI
+dnsim(spec); 
+
+

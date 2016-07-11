@@ -1,0 +1,210 @@
+
+% VERTEX file for Component: $name
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+%    PLEASE NOTE: This export is still in development
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+classdef SynapseModel_$name.toLowerCase() < SynapseModel
+
+  %PointNeuronModel_${name} equivalent to the ${name} in LEMS
+#foreach ($par in $parameters.keySet())
+  %  - $par .. 
+#end
+  
+  properties (SetAccess = protected)
+#foreach ($s in $state.keySet())
+    
+      $s 
+#end
+#foreach ($par in $parameters.keySet() )
+
+     $par
+#end
+  #foreach ($s in $state.keySet() )
+    ${s}EventBuffer
+  #end
+  bufferCount
+  bufferMax
+  end
+  
+  methods
+    function SM = SynapseModel_${name}(Neuron, CP, SimulationSettings, ...
+                                     postID, number)
+      SM = SM@SynapseModel(Neuron, number);
+      #foreach ($par in $parameters.keySet() )
+         SM.$par = CP.${par}{postID};
+         
+      #end
+      SM.bufferCount = 1;
+      maxDelaySteps = SimulationSettings.maxDelaySteps;
+      numComparts = Neuron.numCompartments;
+      #foreach ($s in $state.keySet() )
+        SM.$s = zeros(number, numComparts);
+        SM.${s}EventBuffer = zeros(number, numComparts, maxDelaySteps);
+      #end
+      SM.bufferMax = maxDelaySteps;
+    end
+    
+    function SM = updateBuffer(SM)
+     #foreach ($s in $state.keySet() )
+      SM.$s = SM.$s + SM.${s}EventBuffer(:, :, SM.bufferCount);
+          
+      SM.${s}EventBuffer(:, :, SM.bufferCount) = 0;
+      
+      
+     #end
+      SM.bufferCount = SM.bufferCount + 1;
+      if SM.bufferCount > SM.bufferMax
+        SM.bufferCount = 1;
+      end
+    end
+    
+    function SM = updateSynapses(SM, NM, dt)
+
+#foreach ($s in $state_functions.keySet() )
+    #if ($s == "i")
+     #set ($variable=$state_functions.get($s))
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v()") )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v()") )
+     #foreach ($st in $state.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","SM.$st") )
+     #end
+     #foreach ($par in $parameters.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+
+     #end
+
+     SM.I_syn=$variable;
+    #else
+     #set ($variable=$state_functions.get($s))
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v()") )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v()") )
+     #foreach ($st in $state.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($st)(?![a-zA-Z_0-9])","SM.$st") )
+     #end
+     #foreach ($par in $parameters.keySet() )
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+     #end
+
+     SM.$s=$variable;
+
+
+    #end
+
+#end
+
+#foreach ($d in $dynamics.keySet())
+   #set( $variable = $dynamics.get($d) )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") )
+   #foreach ($s in $state.keySet())
+      #if ($s != $d)
+       #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+      #end
+   #end
+   
+   #foreach ($par in $parameters.keySet() )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+   #end
+
+   #foreach ($stf in $state_functions.keySet())
+    #set( $variable_in=$state_functions.get($stf) )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") ) 
+    #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+     #end
+    #end
+    #foreach ($par in $parameters.keySet() )
+     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+    #end
+    
+    #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($stf)(?![a-zA-Z_0-9])","$variable_in") )
+   #end
+   
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($d)(?![a-zA-Z_0-9])","SM.$d" ) )
+   k$d=$variable;
+#end
+      
+#foreach ($d in $dynamics.keySet())
+   
+ k2$d=SM.$d + 0.5.*dt.*k$d;
+ 
+
+#end
+
+#foreach ($d in $dynamics.keySet() )
+ #set( $variable = $dynamics.get($d) )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+   #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") )
+   #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      
+      #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+     #end
+   #end
+   #foreach ($par in $parameters.keySet() )
+     #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+   #end
+   #foreach ($stf in $state_functions.keySet())
+    #set( $variable_in=$state_functions.get($stf) )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])v(?![a-zA-Z_0-9])","NM.v") )
+    #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])V(?![a-zA-Z_0-9])","NM.v") ) 
+    #foreach ($s in $state.keySet())
+     #if ($s != $d)
+      #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($s)(?![a-zA-Z_0-9])","SM.$s" ) )
+     #end
+    #end
+    #foreach ($par in $parameters.keySet() )
+     #set( $variable_in = $variable_in.replaceAll("(?<![a-zA-Z_0-9])($par)(?![a-zA-Z_0-9])","SM.$par") )
+    #end
+    
+    #set( $variable = $variable.replaceAll("(?<![a-zA-Z_0-9])($stf)(?![a-zA-Z_0-9])","$variable_in") )
+   #end
+   #set ($variable=$variable.replaceAll("(?<![a-zA-Z_0-9])($d)(?![a-zA-Z_0-9])","k2$d") )
+   k$d=$variable;
+
+#end
+
+
+
+
+#foreach ($d in $dynamics.keySet() )
+  SM.$d=SM.$d + dt.*k$d;
+#end
+
+
+    end
+    
+    function SM = bufferIncomingSpikes(SM, synIndeces, weightsToAdd)
+     #foreach ($s in $state.keySet())
+
+      SM.${s}EventBuffer(synIndeces) = ...
+                            SM.${s}EventBuffer(synIndeces) + weightsToAdd;
+    #end
+    end
+    
+    function NM = randomInit(NM, N)
+      %%
+      %%
+    end
+  end % methods
+  
+
+  methods(Static)
+    #set($counter=1)
+    function params = getRequiredParams()
+      params = {#foreach ($par in $parameters.keySet()) #if ($parameters.size()==$counter)'$par'#else '$par', #set($counter=$counter+1)#end #end};
+    end
+    
+  end
+end % classdef
+
+
+
+

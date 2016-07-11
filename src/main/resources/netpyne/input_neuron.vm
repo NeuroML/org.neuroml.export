@@ -1,0 +1,23 @@
+# Input file for Component: $name
+
+print("Loading input file for $name")
+
+#from pyNN.neuron import NativeCellType
+from neuron import h
+
+
+class $name(object):
+     
+    all_inputs = {}
+    parameters = {}
+
+    def __init__(self, **parameters):
+        print("Created instance of $name with params: %s"%parameters)
+        self.parameters = parameters
+
+    def inject_into(self, cells):
+        print("Injecting into: %s"%cells)
+        for id in cells:
+            print("Injecting into: %s"%id)
+            self.all_inputs[id] = h.$name(0.5, sec=id._cell.source_section)
+            h('forall psection()')

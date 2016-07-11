@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * @author matteocantarelli
- *
+ * 
  */
 public class Data
 {
@@ -18,7 +18,7 @@ public class Data
 	private List<Double> _xData;
 	private List<Double> _yData;
 	private String _label;
-	
+
 	/**
 	 * @param x
 	 * @param y
@@ -26,9 +26,9 @@ public class Data
 	 */
 	public Data(List<Double> x, List<Double> y, String label)
 	{
-		_xData=x;
-		_yData=y;
-		_label=label;
+		_xData = x;
+		_yData = y;
+		_label = label;
 	}
 
 	/**
@@ -54,6 +54,5 @@ public class Data
 	{
 		return _label;
 	}
-
 
 }

@@ -1,15 +1,190 @@
 # Main PyNN script for: $name
 
+from pyNN.utility import get_simulator, init_logging
+import numpy as np
+import time
+import sys
 
-from pyNN.utility import get_script_args
+if not 'neuron' in sys.argv and not 'nest' in sys.argv and not 'brian' in sys.argv: 
+    sys.argv.append('neuron')
 
-simulator_name = get_script_args(1)[0]  
-exec("from pyNN.%s import *" % simulator_name)
+if 'nrniv' in sys.argv:
+    sys.argv.remove('nrniv')  # Might be there if run by nrniv -python
+if '-python' in sys.argv:
+    sys.argv.remove('-python')  # Might be there if run by nrniv -python
+if '-mpi' in sys.argv:
+    sys.argv.remove('-mpi')  # Might be there if run by nrniv -python
+
+sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
+                             ("--debug", "Print debugging information"))
+
+if options.debug:
+    init_logging(None, debug=True)
 
 
-tstop = $t_end
+#   ---------------------------------------------
+#   Cell parameters
+#foreach ($pop in $populations.keySet() )
+#foreach ($pop_element in $populations.get($pop).keySet())
+#if ($pop_element=="component")
+#set($component_array=$populations.get($pop).get($pop_element))
+#foreach ($component_element in $component_array.keySet())
+#if ($component_element=="parameters")
+#set($parameters_array=$component_array.get($component_element))
 
-setup(timestep=$dt)
+cell_params_$component_array.name = {
+#foreach($parameter in $parameters_array.keySet())     '$parameter':$parameters_array.get($parameter), 
+#end
+} #end
+#end
+#end
+#end
+#end
 
 
-end()
+#   ---------------------------------------------
+#   Populations
+
+#foreach ($pop in $populations.keySet() )
+#set($pop_size=$populations.get($pop).size)
+#set($pop_component=$populations.get($pop).component.name)
+
+# Population: $pop, size: $pop_size, component: $pop_component
+from ${pop_component}_celldefinition import ${pop_component}Type
+##from ${pop_component}_celldefinition import ${pop_component}
+$pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_component), label="pop_$pop")
+
+#end
+
+
+#   ---------------------------------------------
+#   Projections
+
+#foreach ($proj in $projections.keySet() )
+#set($pre_pop=$projections.get($proj).pre_population)
+#set($post_pop=$projections.get($proj).post_population)
+#set($synapse=$projections.get($proj).synapse)
+
+# Projection: $proj: $pre_pop -> $post_pop with synapse: $synapse
+${proj}__conns = []
+#foreach ($conn in $projections.get($proj).connections )
+# Connection: $conn.name: $pre_pop ($conn.pre_cell_id) -> $post_pop ($conn.post_cell_id); weight = ${conn.weight}; delay = ${conn.delay}ms
+${proj}__conns.append((${conn.pre_cell_id}, ${conn.post_cell_id}, ${conn.weight}, ${conn.delay}))
+#end
+${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=["weight", "delay"])
+$proj = sim.Projection(${pre_pop}, ${post_pop}, connector=${proj}__connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='$synapse')
+print(${proj}.describe())
+#end
+
+
+#   ---------------------------------------------
+#   Inputs
+
+#foreach ($input_ref in $inputs.keySet() )
+#set($input=$inputs.get($input_ref))
+# Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
+from ${input.component.name}_inputdefinition import ${input.component.name}
+${input_ref}_${input.population}_${input.population_index} = ${input.component.name}( #foreach($p in $input.component.parameters.keySet()) $p=$input.component.parameters.get($p), #end )
+${input_ref}_${input.population}_${input.population_index}.inject_into([${input.population}[${input.population_index}]])
+
+#end
+
+
+
+#   ---------------------------------------------
+#   Record values for plotting/saving
+
+#foreach ($d in $display )
+# Display: $d.name
+#foreach ($curve in $d.curves )
+# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
+${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinate}', sampling_interval=$dt)
+#end
+#end
+
+#foreach ($of in $output_file )
+# Output file: $of.file_name
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+${oc.population}[[$oc.population_index]].record('soma(0.5).${oc.variable}', sampling_interval=$dt)
+#end
+#end
+#end
+
+
+#   ---------------------------------------------
+#   Run simulation
+
+sim.tstop = $t_end
+sim.setup(timestep=$dt)
+
+sim_start = time.time()
+print("Running a PyNN based simulation in %s for %sms (dt: %sms) on node %i"%(options.simulator.upper(), sim.tstop, sim.get_time_step(), sim.rank()))
+
+sim.run(sim.tstop)
+
+sim_end = time.time()
+sim_time = sim_end - sim_start
+print("Finished simulation in %f seconds (%f mins) on node %i"%(sim_time, sim_time/60.0, sim.rank()))
+
+
+#   ---------------------------------------------
+#   Saving data
+
+if sim.rank() == 0:
+#foreach ($of in $output_file )
+    print("Saving to file: $of.file_name (ref: $of.name)")
+ 
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+    # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+    ${oc.population}_segment =  ${oc.population}.get_data().segments[0]
+    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
+    ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
+    ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
+#else
+    # Column: $oc.name
+    t = np.arange(0,(sim.tstop+($dt/2))/1000.,$dt/1000.)
+    ${of.name}_data = np.array([t])
+#end
+#end
+    np.savetxt('$of.file_name', ${of.name}_data.T, delimiter='\t',fmt='%s')
+#end
+
+    save_end = time.time()
+    save_time = save_end - sim_end
+    print("Saved data in %f seconds (%f mins) on node %i"%(save_time, save_time/60.0, sim.rank()))
+
+
+#   ---------------------------------------------
+#   Plotting data
+
+if options.plot_figure:
+    import matplotlib.pyplot as plt
+    mp = 'Membrane potential (mV) '
+#foreach ($d in $display )
+    # Display: $d.name: $d.title
+    print("Display ($d.name): $d.title")
+    plt.figure("${d.title}")
+    plt.xlabel('Time (ms)')
+    ylabel = ''
+
+#foreach ($curve in $d.curves )
+    # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
+    segment =  ${curve.population}.get_data().segments[0]
+    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
+#if (${curve.ordinate} == 'v')
+    if not mp in ylabel: ylabel += mp
+#else
+    ylabel += '${curve.ordinate} '
+#end
+    ts = [i*sim.get_time_step() for i in xrange(len(vm))]
+    plt.plot(ts, vm, '-', label='${curve.name}')
+#end
+    plt.ylabel(ylabel)
+    plt.legend()
+#end
+    plt.show()
+
+sim.end()

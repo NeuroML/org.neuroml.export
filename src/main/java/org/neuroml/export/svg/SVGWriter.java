@@ -1,225 +1,467 @@
 package org.neuroml.export.svg;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Hashtable;
-import org.lemsml.export.base.GenerationException;
+import java.io.IOException;
+import java.util.*;
+
+import javax.imageio.ImageIO;
+import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.LEMSException;
-
-
 import org.lemsml.jlems.io.util.FileUtil;
-import org.neuroml.export.ModelFeature;
-import org.neuroml.export.ModelFeatureSupportException;
-import org.neuroml.export.SupportLevelInfo;
-import org.neuroml.export.Utils;
-import org.neuroml.export.base.XMLWriter;
+import org.neuroml.export.base.ANeuroMLXMLWriter;
+import org.neuroml.export.exceptions.GenerationException;
+import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.utils.Format;
+import org.neuroml.export.utils.Utils;
+import org.neuroml.export.utils.support.ModelFeature;
+import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.model.Cell;
+import org.neuroml.model.Cell2CaPools;
+import org.neuroml.model.Instance;
+import org.neuroml.model.Location;
+import org.neuroml.model.Member;
+import org.neuroml.model.Morphology;
+import org.neuroml.model.Network;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
+import org.neuroml.model.Population;
 import org.neuroml.model.Segment;
-
-import org.neuroml.model.Cell;
+import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.util.NeuroMLConverter;
 import org.neuroml.model.util.NeuroMLException;
 
-public class SVGWriter extends XMLWriter {
-
-	String originalFilename;
-	
-	enum Orientation {xy, yz, xz};
+public class SVGWriter extends ANeuroMLXMLWriter
+{
+    public boolean useColor = true;
 
     private final String SVG_NAMESPACE = "http://www.w3.org/2000/svg";
     private final String SVG_VERSION = "1.1";
+    private final int perspectiveMargin = 20;
 
-    int axisWidth = 1;
-	private final String styleXaxis = "stroke:rgb(0,255,0);stroke-width:"+axisWidth;
-	private final String styleYaxis = "stroke:rgb(255,255,0);stroke-width:"+axisWidth;
-	private final String styleZaxis = "stroke:rgb(255,0,0);stroke-width:"+axisWidth;
+    private final String borderStyle = "fill:none;stroke:black;stroke-width:1;";
 
-    public SVGWriter(NeuroMLDocument nmlDocument, String originalFilename) throws ModelFeatureSupportException, LEMSException, NeuroMLException {
-        super(nmlDocument, "SVG");
-        this.originalFilename = originalFilename;
-        lems = Utils.convertNeuroMLToSim(nmlDocument).getLems();
-        sli.checkAllFeaturesSupported(FORMAT, lems);
-	}
-    
-    
-    @Override
-    protected void setSupportedFeatures() {
-        sli.addSupportInfo(FORMAT, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
-        sli.addSupportInfo(FORMAT, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
-        sli.addSupportInfo(FORMAT, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
-        sli.addSupportInfo(FORMAT, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+    private final float RADIUS_DUMMY_CELL = 5; // um
+
+    private Graphics2D graphics2d = null;
+    BufferedImage bufferedImg = null;
+
+    public SVGWriter(NeuroMLDocument nmlDocument, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
+    {
+        super(Utils.convertNeuroMLToSim(nmlDocument).getLems(), nmlDocument, Format.SVG, outputFolder, outputFileName);
     }
 
-	@Override
-	public String getMainScript() throws GenerationException {
+    @Override
+    public void setSupportedFeatures()
+    {
+        sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.MULTI_POPULATION_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_INPUTS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.NETWORK_WITH_PROJECTIONS_MODEL, SupportLevelInfo.Level.NONE);
+        sli.addSupportInfo(format, ModelFeature.MULTICOMPARTMENTAL_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.HH_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+        sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
+    }
 
-        StringBuilder main = new StringBuilder();
-        main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
 
 
-        startElement(main, "svg", "xmlns="+SVG_NAMESPACE, "version="+SVG_VERSION);
-        int spacer = 20;
-        
-        for (Cell cell: nmlDocument.getCell()) {
-            analyseCell(cell);
-        	cellToLines(main, cell, spacer, spacer, Orientation.xy);
-        	cellToLines(main, cell, spacer+spacer+(int)(maxX-minX), spacer, Orientation.xz);
-        	cellToLines(main, cell, spacer, spacer+spacer+(int)(maxY-minY), Orientation.yz);
+    public String getMainScript() throws GenerationException
+    {
+        StringBuilder result = new StringBuilder();
+
+        //Add header
+        result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION);
+
+        render(result, false);
+
+        endElement(result, "svg");
+
+        return result.toString();
+    }
+    
+    public List<Cell> getAllBasedOnCell(NeuroMLDocument nmlDocument) {
+        List<Cell> cells = nmlDocument.getCell();
+        cells.addAll(nmlDocument.getCell2CaPools());
+        return cells;
+    }
+
+    public void render(StringBuilder result, boolean png) {
+
+        if (nmlDocument.getNetwork().isEmpty()) 
+        {
+            for(Cell cell : getAllBasedOnCell(nmlDocument))
+            {
+                //Extract 3d vectors from morphology
+                Network3D cell3D = new Network3D(cell);
+                renderCells(result, cell3D, png);
+            }
         }
-        endElement(main, "svg");
-        //System.out.println(main);
-        return main.toString();
-	}
+        else 
+        {
+            Network3D net3D = new Network3D("View of network");
+            for (Network net: nmlDocument.getNetwork()) 
+            {
+                for (Population pop: net.getPopulation()) 
+                {
+                    String comp = pop.getComponent();
+                    Cell cell = null;
+                    for(Cell nextCell : getAllBasedOnCell(nmlDocument))
+                    {
+                        if (nextCell.getId().equals(comp))
+                            cell = nextCell;
+                    }
+                    if (cell==null) 
+                    {
+                        E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId()+"\n"
+                                +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
+                        cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
+                    }
+                    if (pop.getInstance().isEmpty())
+                    {
+                        for (int i= 0; i<pop.getSize(); i++) {
+                            net3D.addCell(cell, 0, 0, 0);
+                        }
+                    } 
+                    else 
+                    {
+                        for (Instance instance: pop.getInstance())
+                        {
+                            Location loc = instance.getLocation();
+                            net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ());
+                        }
+                    }
 
-	double minX = Double.MAX_VALUE;
-	double maxX = Double.MIN_VALUE;
-	double minY = Double.MAX_VALUE;
-	double maxY = Double.MIN_VALUE;
-	double minZ = Double.MAX_VALUE;
-	double maxZ = Double.MIN_VALUE;
-	
-	private void analyseCell(Cell cell){
-		if (cell.getMorphology() != null) {
-    		Hashtable<Integer, Segment> segs = new Hashtable<Integer, Segment>();
-			for(Segment segment: cell.getMorphology().getSegment()) {
-				Point3DWithDiam dist = segment.getDistal();
-				
-				minX = Math.min(minX, dist.getX());
-				maxX = Math.max(maxX, dist.getX());
-				minY = Math.min(minY, dist.getY());
-				maxY = Math.max(maxY, dist.getY());
-				minZ = Math.min(minZ, dist.getZ());
-				maxZ = Math.max(maxZ, dist.getZ());
-				
-				Point3DWithDiam prox = segment.getProximal();
-				if (prox!=null) {
-					minX = Math.min(minX, prox.getX());
-					maxX = Math.max(maxX, prox.getX());
-					minY = Math.min(minY, prox.getY());
-					maxY = Math.max(maxY, prox.getY());
-					minZ = Math.min(minZ, prox.getZ());
-					maxZ = Math.max(maxZ, prox.getZ());
-				}
-			}
-		}
-	}
-	
-	void cellToLines(StringBuilder main, Cell cell, int xTotOffset, int yTotOffset, Orientation or) {
-		
-		
-		if (cell.getMorphology() != null) {
-    		HashMap<Integer, Segment> segs = new HashMap<Integer, Segment>();
-			for(Segment segment: cell.getMorphology().getSegment()) {
-				int segId = segment.getId();
-				// <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2"/>
-				
-				Point3DWithDiam prox = segment.getProximal();
-				Point3DWithDiam dist = segment.getDistal();
-				if (prox==null) {
-					Segment parent = segs.get(new Integer(segment.getParent().getSegment().intValue()));
-					prox = parent.getDistal();
-				}
-				int avgDiam = (int)Math.round(0.49+ ((prox.getDiameter()+dist.getDiameter())/2) );
-				String style = "stroke:rgb(100,100,100);stroke-width:"+avgDiam;
+                }
+            }
+            renderCells(result, net3D, png);
+        }
+    }
 
-				double x1 = 0;
-				double y1 = 0;
-				double x2 = 0;
-				double y2 = 0;
-				String borderStyle = "fill:none;stroke:black;stroke-width:1;";
+    public void convertToPng(File pngFile, int width, int height) {
 
-				if (or.equals(Orientation.xy)) {
-					x1 = prox.getX()-minX;
-					y1 = prox.getY()-maxY;
-					x2 = dist.getX()-minX;
-					y2 = dist.getY()-maxY;
+        bufferedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
-					//addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleXaxis);
-					//addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleYaxis);
+        graphics2d = bufferedImg.createGraphics();
+        RenderingHints rh = new RenderingHints(
+             RenderingHints.KEY_ANTIALIASING,
+             RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics2d.setRenderingHints(rh);
+        rh = new RenderingHints(
+             RenderingHints.KEY_TEXT_ANTIALIASING,
+             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        graphics2d.setRenderingHints(rh);
 
-					addRect(main, xTotOffset, yTotOffset, 0, 0, (maxX-minX), (maxY-minY), borderStyle);
-					
-				} else if (or.equals(Orientation.xz)) {
-					x1 = prox.getX()-minX;
-					y1 = prox.getZ()-maxZ;
-					x2 = dist.getX()-minX;
-					y2 = dist.getZ()-maxZ;
+        graphics2d.setColor(Color.white);
+        graphics2d.fillRect(0,0, width, height);
 
-					//addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleXaxis);
-					//addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleZaxis);
+        render(null, true);
 
-					addRect(main, xTotOffset, yTotOffset, 0, 0, (maxX-minX), (maxZ-minZ), borderStyle);
-					
-				} else if (or.equals(Orientation.yz)) {
-					x1 = prox.getY()-minY;
-					y1 = prox.getZ()-maxZ;
-					x2 = dist.getY()-minY;
-					y2 = dist.getZ()-maxZ;
+        try {
+            ImageIO.write(bufferedImg, "png", pngFile);
 
-					//addLine(main, xOffset, yOffset, xOffset+100, yOffset, styleYaxis);
-					//addLine(main, xOffset, yOffset, xOffset, yOffset+100, styleZaxis);
-					addRect(main, xTotOffset, yTotOffset, 0, 0, (maxY-minY), (maxZ-minZ), borderStyle);
-				}
-				
-				addLine(main, (x1+xTotOffset), ((-y1)+yTotOffset), (x2+xTotOffset), ((-y2)+yTotOffset), style);
-				
-				
-				segs.put(segId, segment);
-			}
-    	}
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-		//main.append("<circle cx=\""+xTotOffset+"\" cy=\""+yTotOffset+"\" r=\"4\" stroke=\"black\" stroke-width=\"1\" fill=\"red\"/>");
-		//main.append("<circle cx=\""+(minX+xTotOffset)+"\" cy=\""+(minY+yTotOffset)+"\" r=\"4\" stroke=\"black\" stroke-width=\"1\" fill=\"yellow\"/>");
-	}
+    }
 
-	private void addLine(StringBuilder main, double x1, double y1, double x2, double y2, String style) {
-		startEndElement(main,
-                "line", 
-		        "x1="+x1, 
-		        "y1="+y1, 
-		        "x2="+x2, 
-		        "y2="+y2, 
-		        "style="+style);
-	}
-	private void addRect(StringBuilder main, double xOffset, double yOffset, double x, double y, double width, double height, String style) {
-		//<rect x="50" y="20" width="150" height="150" style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9" />
-		startEndElement(main,
-                "rect", 
-		        "x="+(x+xOffset), 
-		        "y="+(y+yOffset), 
-		        "width="+width, 
-		        "height="+height, 
-		        "style="+style);
-	}
-	
-	public static void main(String[] args) throws Exception {
+    private Cell getDummySingleCompCell(String id, float radius)
+    {
+        Cell cell = new Cell();
+        cell.setId(id);
+        Morphology morph = new Morphology();
+        cell.setMorphology(morph);
 
-		String fileName = "../neuroConstruct/osb/cerebellum/cerebellar_nucleus_cell/CerebellarNucleusNeuron/NeuroML2/DCN.nml";
-		fileName = "../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/CA1.nml";
-		fileName = "../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/SupAxAx.nml";
-		//fileName = "../CATMAIDShowcase/NeuroML2/catmaid_skeleton.nml";
-		fileName = "../CATMAIDShowcase/NeuroML2/catmaid_skeleton_x10.nml";
-		NeuroMLConverter nmlc = new NeuroMLConverter();
-    	NeuroMLDocument nmlDocument = nmlc.loadNeuroML(new File(fileName));
+        Segment soma = new Segment();
+        soma.setId(0);
+        soma.setName("soma");
+        Point3DWithDiam p = (new Point3DWithDiam());
+        p.setX(0);
+        p.setY(0);
+        p.setZ(0);
+        p.setDiameter(radius*2);
+        soma.setDistal(p);
+        soma.setProximal(p);
 
-    	SVGWriter svgw = new SVGWriter(nmlDocument, fileName);
-        String svg = svgw.getMainScript();
+        morph.getSegment().add(soma);
+        SegmentGroup sg = new SegmentGroup();
+        sg.setId("soma_group");
+        sg.setNeuroLexId("sao864921383");
+        Member m = new Member();
+        m.setSegment(0);
+        sg.getMember().add(m);
 
-        System.out.println(svg);
+        morph.getSegmentGroup().add(sg);
 
-        File svgFile = new File(fileName.replaceAll("nml", "svg"));
-        System.out.println("Writing file to: "+svgFile.getAbsolutePath());
+        return cell;
+    }
+
+    private void renderCells(StringBuilder result, Network3D net3D, boolean png) 
+    {
+        ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
+
+        //Project 2D views from different perspectives
+
+        net3D.addBoundingBox();
+        float offset = perspectiveMargin/2;
+
+        views.add(net3D.perspectiveView(-10, -20));
+
+        net3D.removeAllAxesIndicators();
+        float scalebar = net3D.addAxes(offset);
+        views.add(net3D.topView());
+        views.add(net3D.sideView());
+        views.add(net3D.frontView());
+
+        //Pack views to minimize occupied area
+        RectanglePacker<Cell2D> packer = packViews(views);
+        boolean legendAdded = false;
+        for(Cell2D cellView : views)
+        {
+            //Find where the view will be drawn
+            RectanglePacker.Rectangle location = packer.findRectangle(cellView);
+
+            String comment = cellView.comment + "\n" + location;
+            //Draw border around perspective
+            if (!png) 
+            {
+                addRect(result, location.x, location.y, 0, 0, location.width, location.height, borderStyle, comment);
+            }
+            else
+            {
+                graphics2d.draw3DRect(location.x, location.y, location.width, location.height, false);
+            }
+
+            if (!cellView.hasBoundingBox() && !legendAdded)
+            {
+                int size = 20;
+                if (scalebar<50)
+                    size = 8;
+                String info = scalebar+" \u03BCm";
+                if (!png) 
+                {
+                    addText(result, location.x+5+perspectiveMargin, location.y+location.height-5-perspectiveMargin, size, info, "black");
+                }
+                else 
+                {
+                    graphics2d.setColor(Color.BLACK);
+                    graphics2d.drawString(info, location.x+5+perspectiveMargin, location.y+location.height-5-perspectiveMargin);
+                }
+                legendAdded = true;
+            }
+
+            //Translate coordinates for the view location
+            ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+20, location.y+20);
+
+            //Write SVG for each line
+            renderLines(result, lines, png);
+        }
+    }
+
+    private Color getColor(String color) {
+        if (color.equals("red")) return Color.RED;
+        else if (color.equals("grey")) return Color.GRAY;
+        else if (color.equals("gray")) return Color.GRAY;
+        else if (color.equals("blue")) return Color.BLUE;
+        else if (color.equals("black")) return Color.BLACK;
+        else if (color.equals("yellow")) return Color.YELLOW;
+        else if (color.equals("green")) return Color.GREEN.darker();
+        else if (color.equals("rgb(100,100,100)")) return new Color(100,100,100);
+        else return Color.MAGENTA;
+    }
+
+    private void renderLines(StringBuilder result, 
+                             ArrayList<Line2D> lines,
+                             boolean png)
+    {
+        for(Line2D line : lines)
+        {
+            if (line.x1 == line.x2 && line.y1 == line.y2) 
+            {
+                if (!png) 
+                {
+                    addCircle(result, line.x1, line.y1, line.diameter, line.color);
+                }
+                else 
+                {
+                    graphics2d.setColor(getColor(line.color));
+                    graphics2d.fillOval((int)(line.x1-line.diameter/2), (int)(line.y1-line.diameter/2), (int)line.diameter, (int)line.diameter);
+                }
+            } 
+            else 
+            {
+                String style = "stroke:"+line.color+";stroke-width:" + line.diameter;
+
+                if (!png) 
+                {
+                    addLine(result, line.x1, line.y1, line.x2, line.y2, style);
+                }
+                else 
+                {
+                    graphics2d.setColor(getColor(line.color));
+                    graphics2d.drawLine((int)line.x1, (int)line.y1, (int)line.x2, (int)line.y2);
+                }
+            }
+        }
+    }
+
+    private RectanglePacker<Cell2D> packViews(ArrayList<Cell2D> views)
+    {
+        //Sort by descending height
+        Collections.sort(views);
+
+        //Find max width/height
+        double maxHeight = views.get(0).height();
+        double maxWidth = views.get(0).width();
+        for(Cell2D view : views)
+        {
+            if(view.height() > maxHeight)
+                maxHeight = view.height();
+
+            if(view.width() > maxWidth)
+                maxWidth = view.width();
+        }
+
+        int scale = 1;
+        boolean doesNotFit;
+        RectanglePacker<Cell2D> packer;
+
+        do
+        {
+            doesNotFit = false;
+
+            //Define the region in which to pack
+            packer = new RectanglePacker<Cell2D>
+            (
+                    (int)(maxWidth * scale),
+                    (int)(maxHeight * scale),
+                    perspectiveMargin //margin
+            );
+
+            //Place the views, starting with largest into packer, and have it recursively try packing
+            //If one does not fit into the current size, increase the region by scaling dimensions
+            for(Cell2D cellView : views)
+            {
+                if(packer.insert((int)cellView.width(), (int)cellView.height(), cellView) == null)
+                {
+                    doesNotFit = true;
+                    break;
+                }
+            }
+
+            scale++;
+        }
+        while (doesNotFit);
+
+        return packer;
+    }
+
+    private void addLine(StringBuilder main, double x1, double y1, double x2, double y2, String style)
+    {
+        startEndElement(main, "line", "x1=" + x1, "y1=" + y1, "x2=" + x2, "y2=" + y2, "style=" + style);
+    }
+
+    private void addCircle(StringBuilder main, double x, double y, double diameter, String color)
+    {
+        // <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+        startEndElement(main, "circle", "cx=" + x, "cy=" + y, "r=" + diameter/2, "stroke-width=0", "fill="+color);
+    }
+
+    private void addRect(StringBuilder main, double xOffset, double yOffset, double x, double y, double width, double height, String style, String comment)
+    {
+        // <rect x="50" y="20" width="150" height="150" style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9" />
+        addComment(main, comment);
+        startEndElement(main, "rect", "x=" + (x + xOffset), "y=" + (y + yOffset), "width=" + width, "height=" + height, "style=" + style);
+    }
+
+    private void addText(StringBuilder main, double x, double y, int size, String text, String color)
+    {
+        startElement(main, "text", "x=" + x, "y=" + y, "fill=" + color, "font-size="+size+"px");
+        main.append(text);
+        endElement(main, "text");
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+
+        //String fileName = 
+        ArrayList<String> fileNames = new ArrayList<String>();
+        fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
+
+        fileNames.add("src/test/resources/examples/L5PC.cell.nml");
+        fileNames.add("src/test/resources/examples/L23PyrRS.nml");
+        fileNames.add("src/test/resources/examples/TwoCell.net.nml");
+        fileNames.add("src/test/resources/examples/MediumNet.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/Golgi_040408_C1.cell.nml");
+        fileNames.add("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/NeuroML2/CerebellarCortex.net.nml");
         
-        FileUtil.writeStringToFile(svg, svgFile);
-        
-	}
-	
+        //fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
+        //fileNames.add("../git/OlfactoryBulbMitralCell/neuroConstruct/generatedNeuroML2/Cell1.cell.nml");/**/
+
+        NeuroMLConverter nmlc = new NeuroMLConverter();
+
+        for (String fileName: fileNames) {
+            File inputFile = new File(fileName);
+
+            boolean inclIncludes = fileName.indexOf("net.nml") >0;
+
+            NeuroMLDocument nmlDocument = nmlc.loadNeuroML(inputFile, inclIncludes, false);
+
+            SVGWriter svgw = new SVGWriter(nmlDocument, inputFile.getParentFile(), inputFile.getName());
+
+            //Color different segment groups differently
+            svgw.useColor = true;
+
+            String svg = svgw.getMainScript();
+
+            File svgFile = new File(fileName.replaceAll("nml", "svg"));
+            System.out.println("Writing file to: " + svgFile.getAbsolutePath());
+
+            FileUtil.writeStringToFile(svg, svgFile);
+
+            File pngFile = new File(fileName.replaceAll("nml", "png"));
+
+            svgw.convertToPng(pngFile, 1600, 1200);
+            System.out.println("Writing file to: " + pngFile.getAbsolutePath());
+
+        }
+
+    }
+
+    @Override
+    public List<File> convert()
+    {
+        List<File> outputFiles = new ArrayList<File>();
+
+        try
+        {
+            String code = this.getMainScript();
+
+            File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
+            FileUtil.writeStringToFile(code, outputFile);
+            outputFiles.add(outputFile);
+        }
+        catch(GenerationException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch(IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return outputFiles;
+    }
 
 }

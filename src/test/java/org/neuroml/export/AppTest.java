@@ -12,6 +12,7 @@ import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.model.IzhikevichCell;
 import org.neuroml.model.NeuroMLDocument;
 
@@ -100,40 +101,14 @@ public class AppTest extends TestCase
 
     public void testVersions() throws IOException
     {
-    	System.out.println("Running a test on version usage, making all references to versions are: v"+Main.ORG_NEUROML_EXPORT_VERSION+"...");
+    	System.out.println("Running a test on version usage, making all references to versions are: v"+Utils.ORG_NEUROML_EXPORT_VERSION+"...");
 
     	String jnmlPom = FileUtil.readStringFromFile(new File("pom.xml"));
 
     	XMLElementReader xer = new XMLElementReader(jnmlPom);
-    	assertEquals(Main.ORG_NEUROML_EXPORT_VERSION, xer.getRootElement().getElement("version").getBody());
+    	assertEquals(Utils.ORG_NEUROML_EXPORT_VERSION, xer.getRootElement().getElement("version").getBody());
     	
     }
 
-
-    public static Lems readLemsFileFromExamples(String exampleFilename) throws LEMSException
-    {
-    	NeuroML2Validator nmlv = new NeuroML2Validator();
-    	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), Main.getLemsExamplesResourcesDir()+"/"+exampleFilename);
-		
-		return Utils.readLemsNeuroMLFile(content).getLems();
-    }
-    public static Lems readNeuroMLFileFromExamples(String exampleFilename) throws LEMSException
-    {
-    	NeuroML2Validator nmlv = new NeuroML2Validator();
-    	
-		String content = JUtil.getRelativeResource(nmlv.getClass(), Main.getNeuroMLExamplesResourcesDir()+"/"+exampleFilename);
-		
-		return Utils.readLemsNeuroMLFile(content).getLems();
-    }
-    
-    public static File getTempDir()
-    {
-	    String tempDirName = System.getProperty("user.dir") + File.separator + "src/test/resources/tmp";
-	    File tempDir = new File(tempDirName);
-	    if (!tempDir.exists())
-	    	tempDir.mkdir();
-	    return tempDir;
-    }
     
 }
