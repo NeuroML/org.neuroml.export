@@ -2,17 +2,17 @@
 
 # See https://github.com/Neurosim-lab/netpyne
 
-from netpyne import sim  # import netpyne sim module
+from netpyne import specs  # import netpyne specs module
+from netpyne import sim    # import netpyne sim module
 
 
 #[[###############################################################################]]#
 # NETWORK PARAMETERS
 #[[###############################################################################]]#
 
-netParams = {}  # dictionary to store sets of network parameters
+netParams = specs.NetParams()   # object of class NetParams to store the network parameters
 
 # Cell properties list
-netParams['cellParams'] = []
 
 next_gid = 0
 gids = {} # Require these in this file for plotting etc.
@@ -26,7 +26,7 @@ gids = {} # Require these in this file for plotting etc.
 #set($parameters_array=$component_array.get($component_element))
 
 # cell params for cell $component_array.name in population $pop
-cellRule = {'label': '$pop', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
+cellRule = {'conds': {'cellType': '$component_array.name'}, 'secs': {}}
 ${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
 ${pop}_soma['pointps']['$component_array.name'] = { 'mod':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
 
@@ -35,14 +35,12 @@ cm = (318309 * ${pop}_soma['pointps']['$component_array.name']['C'] if ${pop}_so
 
 ${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': cm}
 
-cellRule['sections'] = {'soma': ${pop}_soma}  # add sections to dict
-netParams['cellParams'].append(cellRule)  # add dict to list of cell properties
+cellRule['secs'] = {'soma': ${pop}_soma}  # add sections to dict
+netParams.addCellParams('$pop', cellRule)  # add to list of cell properties
 
 #end #end #end #end #end
 
 # Population parameters
-
-netParams['popParams'] = []  # create list of populations - each item will contain dict with pop params
 
 #foreach ($pop in $populations.keySet() )
 #set($pop_size=$populations.get($pop).size)
@@ -51,7 +49,7 @@ netParams['popParams'] = []  # create list of populations - each item will conta
 # Population: $pop, size: $pop_size, component: $pop_component
 
 size_$pop = $pop_size
-netParams['popParams'].append({'popLabel': '$pop', 'cellModel': '$pop', 'cellType': '$pop_component', 'numCells': size_$pop}) # add dict with params for this pop 
+netParams.addPopParams('$pop',{'cellModel': '$pop', 'cellType': '$pop_component', 'numCells': size_$pop}) # add dict with params for this pop 
 gids['$pop'] = [i+next_gid for i in range(size_$pop)]
 next_gid += size_$pop
 
@@ -72,51 +70,51 @@ ${input.population}_soma['pointps']['${input.population}'] = { 'mod':'${input.co
 # SIMULATION PARAMETERS
 ###############################################################################
 
-simConfig = {}  # dictionary to store simConfig
+simConfig = specs.SimConfig()   # object of class SimConfig to store the simulation configuration
 
 # Simulation parameters
-simConfig['duration'] = simConfig['tstop'] = $t_end # Duration of the simulation, in ms
-simConfig['dt'] = $dt # Internal integration timestep to use
-simConfig['randseed'] = 1 # Random seed to use
-simConfig['createNEURONObj'] = 1  # create HOC objects when instantiating network
-simConfig['createPyStruct'] = 1  # create Python structure (simulator-independent) when instantiating network
-simConfig['verbose'] = True  # show detailed messages 
+simConfig.duration = simConfig.tstop = $t_end # Duration of the simulation, in ms
+simConfig.dt = $dt # Internal integration timestep to use
+simConfig.randseed = 1 # Random seed to use
+simConfig.createNEURONObj = 1  # create HOC objects when instantiating network
+simConfig.createPyStruct = 1  # create Python structure (simulator-independent) when instantiating network
+simConfig.verbose = True  # show detailed messages 
 
 # Recording 
-simConfig['recordCells'] = [0]  
-simConfig['recordTraces'] = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
+simConfig.recordCells = [0]  
+simConfig.recordTraces = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
 
-simConfig['plotCells'] = []
+simConfig.plotCells = []
 #foreach ($d in $display )
 # Display id: $d.name
 #foreach ($curve in $d.curves )
 # Line id: $curve.name; displaying ${curve.ordinate} on cell: $curve.population_index in population: $curve.population;
 if '${curve.ordinate}'=='v':
-    simConfig['plotCells'].append(gids['$curve.population'][$curve.population_index]) # plot recorded traces for this list of cells
+    simConfig.plotCells.append(gids['$curve.population'][$curve.population_index]) # plot recorded traces for this list of cells
 #end
 #end
 
-simConfig['recordStim'] = True  # record spikes of cell stims
-simConfig['recordStep'] = simConfig['dt'] # Step size in ms to save data (eg. V traces, LFP, etc)
+simConfig.recordStim = True  # record spikes of cell stims
+simConfig.recordStep = simConfig.dt # Step size in ms to save data (eg. V traces, LFP, etc)
 
 
 
 # Analysis and plotting 
-simConfig['plotRaster'] = True # Whether or not to plot a raster
-simConfig['plotLFPSpectrum'] = False # plot power spectral density
-simConfig['maxspikestoplot'] = 3e8 # Maximum number of spikes to plot
-simConfig['plotConn'] = False # whether to plot conn matrix
-simConfig['plotWeightChanges'] = False # whether to plot weight changes (shown in conn matrix)
-#simConfig['plot3dArch'] = True # plot 3d architecture
+simConfig.plotRaster = True # Whether or not to plot a raster
+simConfig.plotLFPSpectrum = False # plot power spectral density
+simConfig.maxspikestoplot = 3e8 # Maximum number of spikes to plot
+simConfig.plotConn = False # whether to plot conn matrix
+simConfig.plotWeightChanges = False # whether to plot weight changes (shown in conn matrix)
+#simConfig.plot3dArch = True # plot 3d architecture
 
 # Saving
-simConfig['filename'] = '${name}.txt'  # Set file output name
-simConfig['saveFileStep'] = simConfig['dt'] # step size in ms to save data to disk
-simConfig['saveDat'] = True # save to dat file
+simConfig.filename = '${name}.txt'  # Set file output name
+simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
+simConfig.saveDat = True # save to dat file
 
 
-print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig['duration'], simConfig['dt']))
-sim.createAndSimulate(                   
+print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig.duration, simConfig.dt))
+sim.createSimulateAnalyze(                   
     simConfig = simConfig, 
     netParams = netParams)
 
