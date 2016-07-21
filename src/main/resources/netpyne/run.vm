@@ -28,7 +28,7 @@ simConfig.createPyStruct = 1  # create Python structure (simulator-independent) 
 simConfig.verbose = True  # show detailed messages 
 
 # Recording 
-simConfig.recordCells = [0]  
+simConfig.recordCells = ['all']  
 simConfig.recordTraces = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
 
 simConfig.plotCells = ['all']
@@ -52,6 +52,10 @@ simConfig.filename = '${name}.txt'  # Set file output name
 simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
 simConfig.saveDat = True # save to dat file
 
+
+#[[###############################################################################]]#
+# IMPORT & RUN
+#[[###############################################################################]]#
 
 print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig.duration, simConfig.dt))
 
