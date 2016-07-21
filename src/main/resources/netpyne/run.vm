@@ -10,65 +10,12 @@ from netpyne import sim    # import netpyne sim module
 # NETWORK PARAMETERS
 #[[###############################################################################]]#
 
-netParams = specs.NetParams()   # object of class NetParams to store the network parameters
-
-# Cell properties list
-
-next_gid = 0
-gids = {} # Require these in this file for plotting etc.
-
-#foreach ($pop in $populations.keySet() )
-#foreach ($pop_element in $populations.get($pop).keySet())
-#if ($pop_element=="component")
-#set($component_array=$populations.get($pop).get($pop_element))
-#foreach ($component_element in $component_array.keySet())
-#if ($component_element=="parameters")
-#set($parameters_array=$component_array.get($component_element))
-
-# cell params for cell $component_array.name in population $pop
-cellRule = {'conds': {'cellType': '$component_array.name'}, 'secs': {}}
-${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
-${pop}_soma['pointps']['$component_array.name'] = { 'mod':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
-
-# Todo: work this out here from area etc.
-cm = (318309 * ${pop}_soma['pointps']['$component_array.name']['C'] if ${pop}_soma['pointps']['$component_array.name'].has_key('C') else 318.31927 )
-
-${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': cm}
-
-cellRule['secs'] = {'soma': ${pop}_soma}  # add sections to dict
-netParams.addCellParams('$pop', cellRule)  # add to list of cell properties
-
-#end #end #end #end #end
-
-# Population parameters
-
-#foreach ($pop in $populations.keySet() )
-#set($pop_size=$populations.get($pop).size)
-#set($pop_component=$populations.get($pop).component.name)
-
-# Population: $pop, size: $pop_size, component: $pop_component
-
-size_$pop = $pop_size
-netParams.addPopParams('$pop',{'cellModel': '$pop', 'cellType': '$pop_component', 'numCells': size_$pop}) # add dict with params for this pop 
-gids['$pop'] = [i+next_gid for i in range(size_$pop)]
-next_gid += size_$pop
-
-#end
+nml2_file_name = '${name}.net.nml'
 
 
-# Inputs...
-#foreach ($input_ref in $inputs.keySet() )
-#set($input=$inputs.get($input_ref))
-# Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
-
-${input.population}_soma['pointps']['${input.population}'] = { 'mod':'${input.component.name}' } 
-
-#end
-
-
-###############################################################################
+#[[###############################################################################]]#
 # SIMULATION PARAMETERS
-###############################################################################
+#[[###############################################################################]]#
 
 simConfig = specs.SimConfig()   # object of class SimConfig to store the simulation configuration
 
@@ -84,15 +31,8 @@ simConfig.verbose = True  # show detailed messages
 simConfig.recordCells = [0]  
 simConfig.recordTraces = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
 
-simConfig.plotCells = []
-#foreach ($d in $display )
-# Display id: $d.name
-#foreach ($curve in $d.curves )
-# Line id: $curve.name; displaying ${curve.ordinate} on cell: $curve.population_index in population: $curve.population;
-if '${curve.ordinate}'=='v':
-    simConfig.plotCells.append(gids['$curve.population'][$curve.population_index]) # plot recorded traces for this list of cells
-#end
-#end
+simConfig.plotCells = ['all']
+
 
 simConfig.recordStim = True  # record spikes of cell stims
 simConfig.recordStep = simConfig.dt # Step size in ms to save data (eg. V traces, LFP, etc)
@@ -114,8 +54,7 @@ simConfig.saveDat = True # save to dat file
 
 
 print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig.duration, simConfig.dt))
-sim.createSimulateAnalyze(                   
-    simConfig = simConfig, 
-    netParams = netParams)
+
+sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
 
 print("Finished simulation")
