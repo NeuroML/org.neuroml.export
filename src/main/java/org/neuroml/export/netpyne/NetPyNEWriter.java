@@ -141,7 +141,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         return files;
     }
 
-	public String getMainScript() throws GenerationException
+	public String getMainScript() throws GenerationException, LEMSException, NeuroMLException, IOException
 	{
         mainDlemsFile = getOutputFileName()+"_main.json";
         dlemsw.setOutputFileName(mainDlemsFile);
@@ -152,6 +152,33 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
+        String mainNetworkFile = null;
+        
+        for (String included: lems.getAllIncludedFiles()) 
+        {
+            //E.info(">>> Included: "+included);
+            if (included.endsWith(".net.nml")) 
+            {
+                if (mainNetworkFile!=null) 
+                {
+                    throw new GenerationException("Cannot (currently) handle case where 2 or more *.net.nml files are included!");
+                }
+                mainNetworkFile = included;
+            }
+        }
+        if (mainNetworkFile==null) {
+            
+            String nmlString = Utils.convertLemsToNeuroMLLikeXml(lems);
+            System.out.println("nmlString "+nmlString);
+            
+            mainNetworkFile = getOutputFileName().replaceAll("_netpyne.py", ".net.nml").replaceAll("LEMS_", "NET_");
+            
+            File newNet = new File(getOutputFolder(),mainNetworkFile);
+            FileUtil.writeStringToFile(nmlString, newNet);
+            
+            E.info(">>> Written network info to: "+newNet.getAbsolutePath());
+            
+        }
 
 		VelocityUtils.initializeVelocity();
 		VelocityContext context = new VelocityContext();
@@ -168,6 +195,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                 String dlems = FileUtil.readStringFromFile(file);
 
                 DLemsWriter.putIntoVelocityContext(dlems, context);
+                
+                context.internalPut("main_network_file", mainNetworkFile);
 
                 VelocityEngine ve = VelocityUtils.getVelocityEngine();
                 StringWriter sw1 = new StringWriter();
@@ -189,33 +218,39 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
                     {
-
+                        nrnWriter.convertCellWithMorphology(comp);
+                        suffix = ".hoc";
+                        //template = VelocityUtils.neuronCellTemplateFile;
                     }
                     else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE) || file.getName().endsWith(".cell.json"))
                     {
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
-                        suffix = CELL_DEFINITION_SUFFIX;
+                        suffix = CELL_DEFINITION_SUFFIX +".py";
                         template = VelocityUtils.netpyneCellTemplateFile;
                     }
                     else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) || file.getName().endsWith(".input.json"))
                     {
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
-                        suffix = INPUT_DEFINITION_SUFFIX;
+                        suffix = INPUT_DEFINITION_SUFFIX +".py";
                         template = VelocityUtils.netpyneInputNeuronTemplateFile;
                     }
                     else 
                     {
                         throw new NeuroMLException("Cannot determine type of Component: "+comp.summary());
                     }
-                    ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(template));
-                    script.append(sw1);
+                    
+                    if (template!=null) 
+                    {
+                        ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(template));
+                        script.append(sw1);
 
-                    E.info("Writing " + format + " file to: " + file.getAbsolutePath());
-                    File scriptFile = new File(this.getOutputFolder(), name + suffix +".py");
-                    FileUtil.writeStringToFile(script.toString(), scriptFile);
-                    outputFiles.add(scriptFile);
+                        E.info("Writing " + format + " file to: " + file.getAbsolutePath());
+                        File scriptFile = new File(this.getOutputFolder(), name + suffix);
+                        FileUtil.writeStringToFile(script.toString(), scriptFile);
+                        outputFiles.add(scriptFile);
+                    }
                 }
             }
 
@@ -249,7 +284,19 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 	public List<File> convert() throws GenerationException, IOException
 	{
 
-        String code = this.getMainScript();
+        String code;
+        try
+        {
+            code = this.getMainScript();
+        }
+        catch (LEMSException ex)
+        {
+            throw new GenerationException("Error on generation", ex);
+        }
+        catch (NeuroMLException ex)
+        {
+            throw new GenerationException("Error on generation", ex);
+        }
 
         File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
         FileUtil.writeStringToFile(code, outputFile);
@@ -265,10 +312,11 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
         for (File lemsFile : lemsFiles)
         {

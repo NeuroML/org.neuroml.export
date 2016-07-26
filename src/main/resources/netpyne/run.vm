@@ -10,7 +10,7 @@ from netpyne import sim    # import netpyne sim module
 # NETWORK PARAMETERS
 #[[###############################################################################]]#
 
-nml2_file_name = '${name}.net.nml'
+nml2_file_name = '${main_network_file}'
 
 
 #[[###############################################################################]]#

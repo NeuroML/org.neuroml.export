@@ -172,7 +172,6 @@ public class LEMSQuantityPath
             variableParts = new String[parts.length - 3];
             for (int i = 3; i < parts.length; i++)
             {
-
                 variableParts[i - 3] = parts[i];
             }
         }
@@ -180,13 +179,26 @@ public class LEMSQuantityPath
         {
             population = parts[0];
             populationIndex = Integer.parseInt(parts[1]);
-            segmentId = Integer.parseInt(parts[3]);
-            myType = Type.VAR_ON_SEG_IN_CELL_IN_POP_LIST;
-            variableParts = new String[parts.length - 4];
-            for (int i = 4; i < parts.length; i++)
+            try
             {
-                variableParts[i - 4] = parts[i];
+                segmentId = Integer.parseInt(parts[3]);
+                myType = Type.VAR_ON_SEG_IN_CELL_IN_POP_LIST;
+                variableParts = new String[parts.length - 4];
+                for (int i = 4; i < parts.length; i++)
+                {
+                    variableParts[i - 4] = parts[i];
+                }
             }
+            catch (NumberFormatException nfe)
+            {
+                myType = Type.VAR_IN_CELL_IN_POP_LIST;
+                variableParts = new String[parts.length - 3];
+                for (int i = 3; i < parts.length; i++)
+                {
+                    variableParts[i - 3] = parts[i];
+                }
+            }
+            
         }
         else if (parts.length >= 5 && isVariableOnSynapse())
         {

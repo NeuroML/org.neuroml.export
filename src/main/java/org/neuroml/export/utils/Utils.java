@@ -242,6 +242,7 @@ public class Utils
 		Sim sim = new Sim(jrir.read());
 
 		sim.readModel();
+        sim.getLems().setAllIncludedFiles(jrir.getAllIncludedFiles());
 		return sim;
 
 	}
@@ -266,7 +267,40 @@ public class Utils
 		return expression.trim();
 	}
 
-	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp) throws LEMSException, NeuroMLException
+	public static String convertLemsToNeuroMLLikeXml(Lems lems) throws LEMSException, NeuroMLException
+	{
+        StringBuilder compString = new StringBuilder();
+        
+		XMLSerializer xmlSer = XMLSerializer.newInstance();
+        
+        for (Component comp: lems.getComponents()) 
+        {
+            System.out.println("vvv "+comp);
+            if (!comp.getTypeName().equals("Simulation")) 
+            {
+                String knownAs = null;
+                String typeAttribute = null;
+                
+                if (comp.getTypeName().equals("populationList")) 
+                {
+                    knownAs = "population";
+                    typeAttribute = "populationList";
+                }
+                
+                compString.append(xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n");
+            }
+        }
+        
+        String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" 
+                + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+				+ "    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\"\n"
+                + "    id=\"Exported_from_LEMS\">\n\n" + compString + "</neuroml>";
+        
+        
+		return nmlString;
+	}
+
+	public static NeuroMLDocument convertLemsComponentToNeuroMLDocument(Component comp) throws LEMSException, NeuroMLException
 	{
 		XMLSerializer xmlSer = XMLSerializer.newInstance();
 		String compString = xmlSer.writeObject(comp);
@@ -275,7 +309,14 @@ public class Utils
         String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
 				+ "      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\">" + compString + "</neuroml>";
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(nmlString);
-        //System.out.println("............."+nmlString);
+        
+		return nmlDocument;
+	}
+
+	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp) throws LEMSException, NeuroMLException
+	{
+		NeuroMLDocument nmlDocument = convertLemsComponentToNeuroMLDocument(comp);
+        
 		LinkedHashMap<String, Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
 		return els;
 	}

@@ -1295,7 +1295,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if (columnsPostTraces.containsKey(f))
                 {
-                    main.append(bIndent+"for i in range(int(h.tstop * h.steps_per_ms) + 1):\n");
+                    main.append(bIndent+"num_points = len(py_v_time)  # Simulation may have been stopped before tstop...\n\n");
+                    main.append(bIndent+"for i in range(num_points):\n");
                     for(String col : columnsPostTraces.get(f))
                     {
                         main.append(col);
