@@ -60,7 +60,7 @@ simConfig.plotWeightChanges = False # whether to plot weight changes (shown in c
 # Saving
 simConfig.filename = '${name}.txt'  # Set file output name
 simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
-simConfig.saveDat = True # save to dat file
+# simConfig.saveDat = True # save to dat file
 
 
 #[[###############################################################################]]#
@@ -79,9 +79,6 @@ print("Finished simulation")
 #   as specified in the LEMS <Simulation> element)
 #[[###############################################################################]]#
 
-print sim.allSimData.keys()
-print sim.allSimData['Vsoma'].keys()
-print gids
 
 #foreach ($of in $output_file )
 print("Saving to file: $of.file_name (ref: $of.name)")
@@ -96,7 +93,6 @@ col_$oc.name = sim.allSimData['${oc.variable}']['cell_%s'%gids['${oc.population}
 col_$oc.name = [i*simConfig.dt for i in range(int(simConfig.duration/simConfig.dt))]
 
 #end
-
 #end
 
 dat_file_$of.name = open('$of.file_name', 'w')
@@ -104,7 +100,6 @@ for i in range(len(col_t)):
     dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%col_${oc.name}[i] + #end '\n')
 dat_file_${of.name}.close()
 
-
 #end
 
-print("Saved data.")
+print("Saved all data.")
