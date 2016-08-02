@@ -59,6 +59,34 @@ simConfig.saveDat = True # save to dat file
 
 print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig.duration, simConfig.dt))
 
-sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
+gids = sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
 
 print("Finished simulation")
+
+
+#[[###############################################################################]]#
+#   Saving data
+#[[###############################################################################]]#
+
+#foreach ($of in $output_file )
+print("Saving to file: $of.file_name (ref: $of.name)")
+ 
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+
+# {oc.population}_segment =  ${oc.population}.get_data().segments[0]
+# ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
+# ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
+# ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
+
+#else
+# Column: $oc.name
+#t = np.arange(0,(sim.tstop+($dt/2))/1000.,$dt/1000.)
+#${of.name}_data = np.array([t])
+#end
+#end
+#    np.savetxt('$of.file_name', ${of.name}_data.T, delimiter='\t',fmt='%s')
+#end
+
+print("Saved data.")
