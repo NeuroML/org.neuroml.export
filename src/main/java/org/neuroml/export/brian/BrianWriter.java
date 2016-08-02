@@ -114,6 +114,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 			sb.append("from math import *\n");
 			sb.append("import sys\n\n");
+			sb.append("import numpy as np\n\n");
 
 			sb.append("\nif len(sys.argv) > 1 and sys.argv[1] == '-nogui':\n    show_gui = False\nelse:\n    show_gui = True\n\n");
 
@@ -605,10 +606,10 @@ public class BrianWriter extends ANeuroMLBaseWriter
         
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         ///lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
 		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
-		//lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
-		//lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
+		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRose.xml"));
 		//lemsFiles.add(new File("../git/PinskyRinzelModel/NeuroML2/LEMS_Figure3.xml"));
 
         
@@ -619,7 +620,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
             BrianWriter bw = new BrianWriter(lems);
 
-            bw.setBrian2(true);
+            bw.setBrian2(false);
 
             String br = bw.getMainScript();
 

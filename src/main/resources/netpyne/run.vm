@@ -29,7 +29,17 @@ simConfig.verbose = True  # show detailed messages
 
 # Recording 
 simConfig.recordCells = ['all']  
-simConfig.recordTraces = {'Vsoma':{'sec':'soma','loc':0.5,'var':'v'}}
+
+#foreach ($of in $output_file )
+# For saving to file: $of.file_name (ref: $of.name)
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+simConfig.recordTraces = {'$oc.variable':{'sec':'soma','loc':0.5,'var':'$oc.variable'}}
+#end
+#end
+#end
+
 
 simConfig.plotCells = ['all']
 
@@ -65,8 +75,13 @@ print("Finished simulation")
 
 
 #[[###############################################################################]]#
-#   Saving data
+#   Saving data (this ensures the data gets saved in the format/files 
+#   as specified in the LEMS <Simulation> element)
 #[[###############################################################################]]#
+
+print sim.allSimData.keys()
+print sim.allSimData['Vsoma'].keys()
+print gids
 
 #foreach ($of in $output_file )
 print("Saving to file: $of.file_name (ref: $of.name)")
@@ -74,19 +89,22 @@ print("Saving to file: $of.file_name (ref: $of.name)")
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
-
-# {oc.population}_segment =  ${oc.population}.get_data().segments[0]
-# ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
-# ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
-# ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
+col_$oc.name = sim.allSimData['${oc.variable}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
 
 #else
 # Column: $oc.name
-#t = np.arange(0,(sim.tstop+($dt/2))/1000.,$dt/1000.)
-#${of.name}_data = np.array([t])
+col_$oc.name = [i*simConfig.dt for i in range(int(simConfig.duration/simConfig.dt))]
+
 #end
+
 #end
-#    np.savetxt('$of.file_name', ${of.name}_data.T, delimiter='\t',fmt='%s')
+
+dat_file_$of.name = open('$of.file_name', 'w')
+for i in range(len(col_t)):
+    dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%col_${oc.name}[i] + #end '\n')
+dat_file_${of.name}.close()
+
+
 #end
 
 print("Saved data.")
