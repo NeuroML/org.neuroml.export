@@ -69,6 +69,10 @@ public class DLemsWriter extends ABaseWriter
     
     String TIME_DIM = Dimension.getTimeDimension().getName();
     boolean onlyFlattenIfNecessary = false;
+    
+        
+    HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
+    HashMap<String,Set<String>> cellIdsVsSynapses = new HashMap<String, Set<String>>();
 
     public void setPopulationMode(boolean mode)
     {
@@ -189,8 +193,6 @@ public class DLemsWriter extends ABaseWriter
 
         ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
         projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
-        HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
-        HashMap<String,Set<String>> cellIdsVsSynapses = new HashMap<String, Set<String>>();
         
         
         if (pops.size() > 0)
@@ -640,6 +642,24 @@ public class DLemsWriter extends ABaseWriter
                         g.writeStringField(DLemsKeywords.NAME.get(), outputColumn.getID());
                         g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
                         g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
+
+                        if (populationMode) 
+                        {
+                            Component comp = lems.getComponent(cellIdsVsPopulations.get(lqp.getPopulation()));
+                            if (comp.getComponentType().isOrExtends("cell")) {
+                                for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
+                                    if (seg.id.equals(lqp.getSegmentId()+"")) {
+                                        g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
+                                        g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());
+                                    }
+                                }
+                            }
+                            else 
+                            {
+                                g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), "soma");
+                            }
+                        } 
+                        
                         g.writeStringField(DLemsKeywords.VARIABLE.get(), lqp.getVariable());
                         g.writeEndObject();
                     }
