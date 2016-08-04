@@ -260,68 +260,75 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
     
     public String getNeuronVariableReference() throws ContentError, NeuroMLException
     {
-        if (myType == Type.VAR_IN_SINGLE_COMP)
-        {
-            String hoc = getPopulation() + targetComp.getName() + "[i]";
-            String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
-            String varRef = mechRef + "." + getVariable();
-            return varRef;
-        }
-        else if (isVariableOnSynapse())
-        {
-            String varRef = "syn" + "_" + getPopulation() + "_" + getPopulationIndex() + "_" + getSegmentId() + "_" + getSynapseType() + "_" + getSynapseIndex() + "." + getVariableOnSyn();
-            return varRef;
-        }
-        else
-        {
-            if (popComp != null
-                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || 
-                popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+        try {
+            if (myType == Type.VAR_IN_SINGLE_COMP)
             {
-                if (compIdsVsCells.containsKey(popComp.getID()))
-                {
-                    Cell cell = compIdsVsCells.get(popComp.getID());
-                    NamingHelper nh = new NamingHelper(cell);
-                    Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
-                    String varInst = nh.getNrnSectionName(segment);
-
-                    float fract;
-                    if (cell.getMorphology().getSegment().size() == 1)
-                    {
-                        fract = 0.5f;
-                    }
-                    else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst))
-                    {
-                        // No real segment group, segment ids being used for sections...
-                        fract = 0.5f;
-                    }
-                    else
-                    {
-                        fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
-                    }
-
-                    String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
-                    return varRef;
-                }
-                else
-                {
-                    String nrnVar = convertToNeuronVariable();
-                    String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
-
-                    if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE))
-                    { // redundant..?
-                        varRef += "(0.5)";
-                    }
-                    return varRef;
-                }
-            }
-            else
-            {
-                String hoc = population + "[i]";
+                String hoc = getPopulation() + targetComp.getName() + "[i]";
                 String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
                 String varRef = mechRef + "." + getVariable();
                 return varRef;
             }
+            else if (isVariableOnSynapse())
+            {
+                String varRef = "syn" + "_" + getPopulation() + "_" + getPopulationIndex() + "_" + getSegmentId() + "_" + getSynapseType() + "_" + getSynapseIndex() + "." + getVariableOnSyn();
+                return varRef;
+            }
+            else
+            {
+                if (popComp != null
+                    && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || 
+                    popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+                {
+                    if (compIdsVsCells.containsKey(popComp.getID()))
+                    {
+                        Cell cell = compIdsVsCells.get(popComp.getID());
+                        NamingHelper nh = new NamingHelper(cell);
+                        Segment segment = CellUtils.getSegmentWithId(cell, segmentId);
+                        String varInst = nh.getNrnSectionName(segment);
+
+                        float fract;
+                        if (cell.getMorphology().getSegment().size() == 1)
+                        {
+                            fract = 0.5f;
+                        }
+                        else if (!CellUtils.hasSegmentGroup(cell, varInst) && segment.getName().equals(varInst))
+                        {
+                            // No real segment group, segment ids being used for sections...
+                            fract = 0.5f;
+                        }
+                        else
+                        {
+                            fract = (float) CellUtils.getFractionAlongSegGroupLength(cell, varInst, segmentId, 0.5f);
+                        }
+
+                        String varRef = getPopulationArray() + "[" + populationIndex + "]." + varInst + "." + convertToNeuronVariable() + "(" + fract + ")";
+                        return varRef;
+                    }
+                    else
+                    {
+                        String nrnVar = convertToNeuronVariable();
+                        String varRef = getPopulation() + "[" + populationIndex + "]." + nrnVar;
+
+                        if (nrnVar.equals(NRNUtils.NEURON_VOLTAGE))
+                        { // redundant..?
+                            varRef += "(0.5)";
+                        }
+                        return varRef;
+                    }
+                }
+                else
+                {
+                    String hoc = population + "[i]";
+                    String mechRef = compMechNamesHoc.get(hoc).replaceAll("\\[i\\]", "[" + populationIndex + "]");
+                    String varRef = mechRef + "." + getVariable();
+                    return varRef;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw new NeuroMLException("Error converting the path: "+this.getQuantity()+" into the corresponding reference to the NEURON variable.\n"+
+                "Ensure the population id, component id, cell index and variable used in this path are correct!");
         }
     }
 
