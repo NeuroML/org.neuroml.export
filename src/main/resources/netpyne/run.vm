@@ -5,13 +5,14 @@
 from netpyne import specs  # import netpyne specs module
 from netpyne import sim    # import netpyne sim module
 
+from neuron import h
+
 
 #[[###############################################################################]]#
 # NETWORK PARAMETERS
 #[[###############################################################################]]#
 
 nml2_file_name = '${main_network_file}'
-
 
 #[[###############################################################################]]#
 # SIMULATION PARAMETERS
@@ -26,6 +27,9 @@ simConfig.randseed = 1 # Random seed to use
 simConfig.createNEURONObj = 1  # create HOC objects when instantiating network
 simConfig.createPyStruct = 1  # create Python structure (simulator-independent) when instantiating network
 simConfig.verbose = True  # show detailed messages 
+#if ($temperature)
+simConfig.hParams['celsius'] = ($temperature - 273.15)
+#end
 
 # Recording 
 simConfig.recordCells = ['all']  
@@ -35,8 +39,8 @@ simConfig.recordTraces = {}
 # For saving to file: $of.file_name (ref: $of.name)
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
-# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}'] = {'sec':'$oc.segment_name','loc':0.5,'var':'$oc.variable'}
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable ($oc.neuron_variable_name)
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'$oc.segment_name','loc':0.5,'var':'$oc.neuron_variable_name'}
 #end
 #end
 #end
@@ -68,7 +72,7 @@ simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
 # IMPORT & RUN
 #[[###############################################################################]]#
 
-print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig.duration, simConfig.dt))
+print("Running a NetPyNE based simulation for %sms (dt: %sms) at %s degC"%(simConfig.duration, simConfig.dt, h.celsius))
 
 gids = sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
 
@@ -88,7 +92,7 @@ print("Saving to file: $of.file_name (ref: $of.name)")
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
+col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
 
 #else
 # Column: $oc.name
@@ -99,7 +103,7 @@ col_${of.name}_$oc.name = [i*simConfig.dt for i in range(int(simConfig.duration/
 
 dat_file_$of.name = open('$of.file_name', 'w')
 for i in range(len(col_${of.name}_t)):
-    dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/1000) + #end '\n')
+    dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
 dat_file_${of.name}.close()
 
 #end

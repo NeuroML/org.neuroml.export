@@ -326,15 +326,19 @@ public class NRNUtils implements UnitConverter
         return convertToNeuronUnits(siValue, dimensionName);
     }
 
-    protected static float convertToNeuronUnits(float val, String dimensionName)
+    protected static float convertToNeuronUnits(float siVal, String dimensionName)
     {
         float factor = getNeuronUnitFactor(dimensionName);
-        float newVal = val * factor;
+        float newVal = siVal * factor;
+        
+        //if (dimensionName.equals("temperature"))
+        //    newVal = newVal - 273.15f;
+        
         //System.out.println("f "+factor+" val "+val+"  new "+newVal+"; dim "+dimensionName);
         return newVal;
     }
 
-    protected static float getNeuronUnitFactor(String dimensionName)
+    public static float getNeuronUnitFactor(String dimensionName)
     {
 
         if (dimensionName.equals("none"))

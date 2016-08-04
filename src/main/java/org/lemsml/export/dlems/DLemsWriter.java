@@ -45,6 +45,7 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.neuron.LEMSQuantityPathNeuron;
 import org.neuroml.export.neuron.NRNUtils;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.LEMSQuantityPath;
@@ -62,6 +63,7 @@ public class DLemsWriter extends ABaseWriter
     CommonLangWriter writer;
 
     boolean populationMode = false; // quick & dirty hack for multi component export
+    boolean neuronMode = false; // quick & dirty hack for NEURON friendly export
 
     private final List<File> outputFiles = new ArrayList<File>();
     
@@ -77,6 +79,11 @@ public class DLemsWriter extends ABaseWriter
     public void setPopulationMode(boolean mode)
     {
         populationMode = mode;
+    }
+    
+    public void setNeuronMode(boolean mode)
+    {
+        neuronMode = mode;
     }
 
     public void setOnlyFlattenIfNecessary(boolean onlyFlattenIfNecessary)
@@ -202,6 +209,13 @@ public class DLemsWriter extends ABaseWriter
 
             if (populationMode)
             {
+                if (tgtComp.getComponentType().isOrExtends("networkWithTemperature"))
+                {
+                    ParamValue pv = tgtComp.getParamValue("temperature");
+                    g.writeStringField(DLemsKeywords.TEMPERATURE.get(), unitConverter.convert((float)pv.getDoubleValue(),pv.getDimensionName())+"");
+                    
+                }
+                
                 for (Component pop : pops)
                 {
                     String compRef = pop.getStringValue("component");
@@ -626,6 +640,10 @@ public class DLemsWriter extends ABaseWriter
                 
                 g.writeStartObject();
                 g.writeStringField(DLemsKeywords.NAME.get(), "t");
+                if (neuronMode) 
+                {
+                    g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), "1000");
+                }
                 //g.writeStringField(DLemsKeywords., "t");
                 g.writeEndObject();
                         
@@ -657,6 +675,14 @@ public class DLemsWriter extends ABaseWriter
                             else 
                             {
                                 g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), "soma");
+                            }
+                            if (neuronMode) 
+                            {
+                                String nrnVar = LEMSQuantityPathNeuron.convertToNeuronVariable(lqp.getVariableParts(),comp);
+                                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), nrnVar);
+
+                                float conv = NRNUtils.getNeuronUnitFactor(LEMSQuantityPathNeuron.getDimensionOfVariableOnCellInPopComp(lqp.getVariableParts(), comp).getName());
+                                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), conv+"");
                             }
                         } 
                         

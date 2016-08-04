@@ -52,9 +52,12 @@ public enum DLemsKeywords
     POST_CELL_ID, 
     WEIGHT, 
     DELAY, 
-    INPUTS;
+    INPUTS,
     
     
+    TEMPERATURE,
+    NEURON_VARIABLE_NAME,
+    NEURON_VARIABLE_SCALE;
 
 	public String get()
 	{

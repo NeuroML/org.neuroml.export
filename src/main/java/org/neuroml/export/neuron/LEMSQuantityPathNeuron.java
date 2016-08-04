@@ -51,7 +51,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 		// System.out.println("----------------------\nCreated:"+this+"\n----------------------");
     }
 
-    private Exposure getExposure(Component c, String path) throws ContentError
+    private static Exposure getExposure(Component c, String path) throws ContentError
     {
         try
         {
@@ -85,6 +85,13 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         }
 
     }
+    
+    public static Dimension getDimensionOfVariableOnCellInPopComp(String[] variableParts, Component popComp) throws ContentError
+    {
+        String path = getVariablePathInPopComp(variableParts, Type.VAR_IN_CELL_IN_POP_LIST);
+        return getExposure(popComp, path).getDimension();
+        
+    }
 
     public Dimension getDimension() throws ContentError
     {
@@ -115,7 +122,12 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
     }
 
     
-    private String convertToNeuronVariable() throws ContentError
+    private String convertToNeuronVariable() throws ContentError 
+    {
+        return convertToNeuronVariable(variableParts, popComp);
+    }
+    
+    public static String convertToNeuronVariable(String[] variableParts, Component popComp) throws ContentError
     {
         HashMap<String, String> topSubstitutions = new HashMap<String, String>();
         topSubstitutions.put("caConc", "cai");
@@ -176,7 +188,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         }
         if (var.length() == 0)
         {
-            var = getVariable();
+            var = getVariable(variableParts, Type.VAR_IN_CELL_IN_POP_LIST);
         }
 
         for (String key : topSubstitutions.keySet())
@@ -240,7 +252,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
             return null;
         }
 
-        String var = getVariableParts("/");
+        String var = getVariablePartsAsString("/",variableParts);
         return var.substring(var.indexOf("/") + 1);
 
     }
@@ -263,8 +275,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         else
         {
             if (popComp != null
-                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || popComp
-                .getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+                && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || 
+                popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
             {
                 if (compIdsVsCells.containsKey(popComp.getID()))
                 {

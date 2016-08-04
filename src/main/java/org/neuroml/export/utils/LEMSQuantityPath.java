@@ -54,12 +54,18 @@ public class LEMSQuantityPath
         return quantity;
     }
 
-    public String getVariableParts()
+    public static String getVariablePartsAsString(String[] variableParts)
     {
-        return getVariableParts("_");
+        return getVariablePartsAsString("_", variableParts);
+    }
+    
+    
+    public String[] getVariableParts()
+    {
+        return variableParts;
     }
 
-    public String getVariableParts(String separator)
+    public static String getVariablePartsAsString(String separator, String[] variableParts)
     {
         StringBuilder var = new StringBuilder();
         for (String varPart : variableParts)
@@ -69,7 +75,7 @@ public class LEMSQuantityPath
         return var.toString().substring(1);
     }
 
-    public String getVariable()
+    public static String getVariable(String[] variableParts, Type myType)
     {
 
         switch (myType)
@@ -77,29 +83,38 @@ public class LEMSQuantityPath
             case VAR_IN_SINGLE_COMP:
                 return variableParts[0];
             case VAR_IN_CELL_IN_POP:
-                return getVariableParts();
+                return getVariablePartsAsString(variableParts);
             case VAR_IN_CELL_IN_POP_LIST:
-                return getVariableParts();
+                return getVariablePartsAsString(variableParts);
 
             default:
-                return getVariableParts();
+                return getVariablePartsAsString(variableParts);
         }
+    }
+
+    public String getVariable()
+    {
+        return getVariable(variableParts, myType);
     }
 
     public String getVariablePathInPopComp()
     {
+        return getVariablePathInPopComp(variableParts, myType);
+    }
 
+    public static String getVariablePathInPopComp(String[] variableParts, Type myType)
+    {
         switch (myType)
         {
             case VAR_IN_SINGLE_COMP:
                 return variableParts[0];
             case VAR_IN_CELL_IN_POP:
-                return getVariableParts("/");
+                return getVariablePartsAsString("/",variableParts);
             case VAR_IN_CELL_IN_POP_LIST:
-                return getVariableParts("/");
+                return getVariablePartsAsString("/",variableParts);
 
             default:
-                return getVariableParts("/");
+                return getVariablePartsAsString("/",variableParts);
         }
     }
 
@@ -281,7 +296,7 @@ public class LEMSQuantityPath
     {
         return "Original:       " + quantity
             + "\n    " + "Type:           " + myType
-            + "\n    " + "Variable parts: " + getVariableParts()
+            + "\n    " + "Variable parts: " + getVariablePartsAsString(variableParts)
             + "\n    " + "Variable:       " + getVariable()
             + "\n    " + "Is var in pop:  " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "")
             + "\n    " + "Is var in syn:  " + this.isVariableOnSynapse()
