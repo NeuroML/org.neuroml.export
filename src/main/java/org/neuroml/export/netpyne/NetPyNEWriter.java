@@ -323,9 +323,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
         for (File lemsFile : lemsFiles)
         {

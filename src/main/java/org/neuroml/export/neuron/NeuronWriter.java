@@ -604,13 +604,20 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             float threshold;
                             
-                            SpikeThresh st = getMembraneProperties(preCell).getSpikeThresh().get(0);
-                            if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
+                            if (getMembraneProperties(preCell).getSpikeThresh().size()>0)
                             {
-                                throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
-                            }
+                                SpikeThresh st = getMembraneProperties(preCell).getSpikeThresh().get(0);
+                                if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
+                                {
+                                    throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                                }
 
-                            threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                                threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                            }
+                            else
+                            {
+                                threshold = 0;
+                            }
                             main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
                                     threshold, delay, weight));
                         }
@@ -3155,6 +3162,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
+        lemsFiles.add(new File("../git/NML2_Test/AOB_mitral_cell/LEMS_Vm_iMC1_cell_1_origin.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_TestL5PC.xml"));
 
