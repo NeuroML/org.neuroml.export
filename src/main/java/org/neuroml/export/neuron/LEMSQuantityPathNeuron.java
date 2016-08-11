@@ -275,9 +275,12 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
             }
             else
             {
-                if (popComp != null
-                    && (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || 
-                    popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)) && convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
+                if (popComp != null && 
+                    (popComp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE) || 
+                     ((popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) || 
+                       popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL)|| 
+                       popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL)) && 
+                      convertToNeuronVariable().equals(NRNUtils.NEURON_VOLTAGE))))
                 {
                     if (compIdsVsCells.containsKey(popComp.getID()))
                     {

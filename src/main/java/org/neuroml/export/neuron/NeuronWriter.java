@@ -456,9 +456,30 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(bIndent+"    h." + instName + ".L = " + defaultRadius * 2 + "\n");
                     main.append(bIndent+"    h." + instName + "(0.5).diam = " + defaultRadius * 2 + "\n");
 
-                    if(popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
+                    if(popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) ||
+                       popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
                     {
-                        double capTotSI = popComp.getParamValue("C").getDoubleValue();
+                        double capTotSI = -1;
+                        
+                        if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
+                        {
+                            if (popComp.hasParam("refract") && popComp.getParamValue("refract").getDoubleValue()==0) 
+                            {
+                                throw new NeuroMLException("Unfortunately the NEURON export for IaF cells cannot *YET* handle "
+                                    + "cases when refract = 0 (as in cell "+popComp.getID()+")");
+                            }
+                            capTotSI = popComp.getParamValue("C").getDoubleValue();
+                        }
+                        else if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL)) 
+                        {
+                            if (popComp.hasParam("tau_refrac") && popComp.getParamValue("tau_refrac").getDoubleValue()==0) 
+                            {
+                                throw new NeuroMLException("Unfortunately the NEURON export for PyNN cells cannot *YET* handle "
+                                    + "cases when tau_refrac = 0 (as in cell "+popComp.getID()+")");
+                            }
+                            capTotSI = popComp.getParamValue("cm").getDoubleValue() * 1e-9;
+                        }
+                        
                         double area = 4 * Math.PI * defaultRadius * defaultRadius;
                         double specCapNeu = 10e13 * capTotSI / area;
                         main.append(bIndent+"    h." + instName + "(0.5).cm = " + specCapNeu + "\n");
@@ -2182,6 +2203,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         blockBreakpoint.append("\ni = " + NRNUtils.getStateVarName(NRNUtils.NEURON_VOLTAGE) + " * C");
                     }
+                    else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
+                    {
+                        blockBreakpoint.append("\ni = " + NRNUtils.getStateVarName(NRNUtils.NEURON_VOLTAGE) + " * cm");
+                    }
                     else
                     {
                         blockBreakpoint.append("\ni = " + NRNUtils.getStateVarName(NRNUtils.NEURON_VOLTAGE) + "");
@@ -3147,11 +3172,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));
@@ -3160,7 +3187,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
+        /*lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
         lemsFiles.add(new File("../git/NML2_Test/AOB_mitral_cell/LEMS_Vm_iMC1_cell_1_origin.xml"));
         
@@ -3169,7 +3196,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex7_STP.xml"));
         
-        /*lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
@@ -3206,7 +3233,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
 
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
 
         //lemsFiles.add(new File("../git/SpinyStellateNMDA/NeuroML2/LEMS_TestMultiSim.xml"));
