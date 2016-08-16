@@ -275,19 +275,23 @@ public class Utils
         
         for (Component comp: lems.getComponents()) 
         {
-            System.out.println("vvv "+comp);
             if (!comp.getTypeName().equals("Simulation")) 
             {
                 String knownAs = null;
                 String typeAttribute = null;
                 
+                /*
                 if (comp.getTypeName().equals("populationList")) 
                 {
                     knownAs = "population";
                     typeAttribute = "populationList";
-                }
+                }*/
                 
-                compString.append(xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n");
+                String xml = xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n";
+                xml = xml.replaceAll("<populationList ", "<population type=\"populationList\" ");
+                xml = xml.replaceAll("</populationList>", "</population>");
+                compString.append(xml);
+                
             }
         }
         

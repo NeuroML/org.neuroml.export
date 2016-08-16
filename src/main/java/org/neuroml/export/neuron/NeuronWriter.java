@@ -573,11 +573,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         float preFractionAlong = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
 
-                        String comment = String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f)", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong);
-                        //System.out.println("comment@: "+comment);
-                        addComment(main, comment,"        ");
-
-
                         String preSecName;
 
                         if(preCell != null)
@@ -607,8 +602,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(String.format(bIndent+"h(\"objectvar %s\")\n\n", synObjName));
                         segmentSynapseCounts.put(segSynRef, synIndex+1);
 
-                //
-
                         main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new %s(%f)\")\n", postSecName, synObjName, synapse, postFractionAlong));
 
                         String sourceVarToListenFor = "&v("+ preFractionAlong+")";
@@ -620,6 +613,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             weight = Float.parseFloat(conn.getAttributeValue("weight"));
                             delay = NRNUtils.convertToNeuronUnits(conn.getAttributeValue("delay"), lems);
                         }
+                        
+                        String comment = String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f), weight: %s, delay %s", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong, weight, delay);
+                        //System.out.println("comment@: "+comment);
+                        addComment(main, comment,"        ");
 
                         if(preCell != null)
                         {
@@ -649,6 +646,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
                             {
                                 threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("thresh"), lems);
+                            }
+                            else if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
+                            {
+                                threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("v_spike"), lems);
                             }
                             else if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                             {
@@ -3168,7 +3169,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
@@ -3178,7 +3179,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));
