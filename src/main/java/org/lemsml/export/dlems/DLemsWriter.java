@@ -390,31 +390,28 @@ public class DLemsWriter extends ABaseWriter
                 {
                     String synRef = proj.getStringValue("synapse");
                     //System.out.println("-             Adding " + synRef);
-                    if (!written.contains(synRef))
+                    Component synComp = lems.getComponent(synRef);
+                    if (!writtenTypes.contains(synComp.getTypeName()))
                     {
-                        Component synComp = lems.getComponent(synRef);
-                        if (!writtenTypes.contains(synComp.getTypeName()))
-                        {
-                            createFlattenedCompType(synComp);
-                            writtenTypes.add(synComp.getTypeName());
-                        }
-
-                        Component cpFlat = createFlattenedComp(synComp);
-                        StringWriter swComp = new StringWriter();
-                        JsonGenerator gComp = f.createJsonGenerator(swComp);
-                        gComp.useDefaultPrettyPrinter();
-                        gComp.writeStartObject();
-
-                        writeDLemsForComponent(gComp, cpFlat);
-
-                        gComp.writeEndObject();
-                        gComp.close();
-
-                        File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".synapse.json");
-                        FileUtil.writeStringToFile(swComp.toString(), synFile);
-                        outputFiles.add(synFile);
+                        createFlattenedCompType(synComp);
+                        writtenTypes.add(synComp.getTypeName());
                     }
+                    Component cpFlat = createFlattenedComp(synComp);
+                    StringWriter swComp = new StringWriter();
+                    JsonGenerator gComp = f.createJsonGenerator(swComp);
+                    gComp.useDefaultPrettyPrinter();
+                    gComp.writeStartObject();
 
+                    writeDLemsForComponent(gComp, cpFlat);
+
+                    gComp.writeEndObject();
+                    gComp.close();
+
+                    File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".synapse.json");
+                    FileUtil.writeStringToFile(swComp.toString(), synFile);
+                    outputFiles.add(synFile);
+
+                    
                 }
             
                 ArrayList<Component> exInputs = tgtComp.getChildrenAL("explicitInputs");

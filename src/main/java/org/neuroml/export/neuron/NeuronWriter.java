@@ -649,7 +649,21 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             }
                             else if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
                             {
-                                threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("v_spike"), lems);
+                                if ( (preComp.getComponentType().isOrExtends("EIF_cond_alpha_isfa_ista") || preComp.getComponentType().isOrExtends("EIF_cond_exp_isfa_ista")))
+                                {
+                                    if (NRNUtils.convertToNeuronUnits(preComp.getStringValue("delta_T"), lems)==0 ) 
+                                    {
+                                        threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("v_thresh"), lems);
+                                    }
+                                    else
+                                    {
+                                        threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("v_spike"), lems);
+                                    }
+                                }
+                                else
+                                {
+                                    threshold = NRNUtils.convertToNeuronUnits(preComp.getStringValue("v_thresh"), lems);
+                                }
                             }
                             else if(preComp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE))
                             {
