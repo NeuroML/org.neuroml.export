@@ -17,6 +17,7 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
@@ -150,6 +151,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         dlemsw.setUnitConverter(nrnUtils);
         dlemsw.setOnlyFlattenIfNecessary(true);
 		StringBuilder mainRunScript = new StringBuilder();
+        
+        Target target = lems.getTarget();
+        Component simCpt = target.getComponent();
 
 		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
@@ -169,7 +173,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         }
         if (mainNetworkFile==null) {
             
-            String nmlString = Utils.convertLemsToNeuroMLLikeXml(lems);
+            String nmlString = Utils.convertLemsToNeuroMLLikeXml(lems, simCpt.getStringValue("target"));
             System.out.println("nmlString "+nmlString);
             
             mainNetworkFile = getOutputFileName().replaceAll("_netpyne.py", ".net.nml").replaceAll("LEMS_", "NET_");
@@ -322,12 +326,14 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/NeuroML2/pythonScripts/netbuild/LEMS_Figure7AeLoSS.xml"));*/
 

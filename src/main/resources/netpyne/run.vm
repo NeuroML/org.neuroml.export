@@ -39,8 +39,8 @@ simConfig.recordTraces = {}
 # For saving to file: $of.file_name (ref: $of.name)
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
-# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable ($oc.neuron_variable_name)
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'$oc.segment_name','loc':0.5,'var':'$oc.neuron_variable_name','conds':{'popLabel':'$oc.population','cellLabel':$oc.population_index}}
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'popLabel':'$oc.population','cellLabel':$oc.population_index}}
 #end
 #end
 #end

@@ -546,7 +546,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                 }
 
-                addComment(main, String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", projId, prePop, postPop, synapse, number),"        ");
+                addComment(main, String.format("## Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", projId, prePop, postPop, synapse, number),"        ");
 
                 Component synapseComp = projection.getRefComponents().get("synapse");
 
@@ -570,8 +570,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         int preSegmentId = conn.hasAttribute("preSegmentId") ? Integer.parseInt(conn.getAttributeValue("preSegmentId")) : 0;
                         int postSegmentId = conn.hasAttribute("postSegmentId") ? Integer.parseInt(conn.getAttributeValue("postSegmentId")) : 0;
 
-                        float preFractionAlong = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
-                        float postFractionAlong = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
+                        float preFractionAlong0 = conn.hasAttribute("preFractionAlong") ? Float.parseFloat(conn.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong0 = conn.hasAttribute("postFractionAlong") ? Float.parseFloat(conn.getAttributeValue("postFractionAlong")) : 0.5f;
 
                         String preSecName;
 
@@ -601,10 +601,21 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         String synObjName = String.format("%s_%s", segSynRef, synIndex);
                         main.append(String.format(bIndent+"h(\"objectvar %s\")\n\n", synObjName));
                         segmentSynapseCounts.put(segSynRef, synIndex+1);
+                        
+                        float postFract = postFractionAlong0;
+                        if(postCell != null)
+                        {
+                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegmentId, postFractionAlong0);
+                        }
 
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new %s(%f)\")\n", postSecName, synObjName, synapse, postFractionAlong));
-
-                        String sourceVarToListenFor = "&v("+ preFractionAlong+")";
+                        float preFract = preFractionAlong0;
+                        
+                        if(preCell != null)
+                        {
+                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegmentId, preFractionAlong0);
+                        }
+                        
+                        String sourceVarToListenFor = "&v("+ preFract+")";
 
                         float weight = 1;
                         float delay = 0;
@@ -614,9 +625,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             delay = NRNUtils.convertToNeuronUnits(conn.getAttributeValue("delay"), lems);
                         }
                         
-                        String comment = String.format(Locale.US, "Connection %s: %d, seg %d (%f) -> %d, seg %d (%f), weight: %s, delay %s", conn.getID(), preCellId, preSegmentId, preFractionAlong, postCellId, postSegmentId, postFractionAlong, weight, delay);
+                        String comment = String.format(Locale.US, "Connection %s: cell %d, seg %d (%f) [%s on %s] -> cell %d, seg %d (%f) [%s on %s], weight: %s, delay %s", conn.getID(), preCellId, preSegmentId, preFractionAlong0, preFract, preSecName, postCellId, postSegmentId, postFractionAlong0, postFract, postSecName, weight, delay);
                         //System.out.println("comment@: "+comment);
                         addComment(main, comment,"        ");
+
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new %s(%f)\")\n", postSecName, synObjName, synapse, postFract));
 
                         if(preCell != null)
                         {
@@ -868,9 +881,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         int preSegmentId = ec.hasAttribute("preSegmentId") ? Integer.parseInt(ec.getAttributeValue("preSegmentId")) : 0;
                         int postSegmentId = ec.hasAttribute("postSegmentId") ? Integer.parseInt(ec.getAttributeValue("postSegmentId")) : 0;
 
-                        float preFractionAlong = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
-                        float postFractionAlong = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
-
+                        float preFractionAlong0 = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong0 = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
+                        
                         // System.out.println("preCellId: "+preCellId+", preSegmentId: "+preSegmentId+", preFractionAlong: "+preFractionAlong);
 
                         String preSecName;
@@ -895,17 +908,29 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             postSecName = postPop + "[" + postCellId + "]";
                         }
+                        
+                        float postFract = postFractionAlong0;
+                        if(postCell != null)
+                        {
+                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegmentId, postFractionAlong0);
+                        }
 
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapseComp.getID(), preFractionAlong));
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapseComp.getID(), postFractionAlong));
+                        float preFract = preFractionAlong0;
+                        if(preCell != null)
+                        {
+                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegmentId, preFractionAlong0);
+                        }
+
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, synObjNameA, index, synapseComp.getID(), preFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, synObjNameB, index, synapseComp.getID(), postFract));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameA, index, postSecName, postFractionAlong));
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameB, index, preSecName, preFractionAlong));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameA, index, postSecName, postFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", synObjNameB, index, preSecName, preFract));
 
                         index++;
                     }
@@ -972,8 +997,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         int preSegmentId = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
                         int postSegmentId = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
 
-                        float preFractionAlong = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
-                        float postFractionAlong = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
+                        float preFractionAlong0 = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
+                        float postFractionAlong0 = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
 
                         // System.out.println("preCellId: "+preCellId+", preSegmentId: "+preSegmentId+", preFractionAlong: "+preFractionAlong);
 
@@ -999,17 +1024,29 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             postSecName = postPop + "[" + postCellId + "]";
                         }
+                        
+                        float postFract = postFractionAlong0;
+                        if(postCell != null)
+                        {
+                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegmentId, postFractionAlong0);
+                        }
 
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFractionAlong));
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFractionAlong));
+                        float preFract = preFractionAlong0;
+                        if(preCell != null)
+                        {
+                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegmentId, preFractionAlong0);
+                        }
+
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFract));
 
                         // addComment(main, "setpointer elecsyn_NetConn_PrePassiveCG_PostPassiveCG_GapJunc2_A[0].vgap, a_PrePassiveCG[0].Soma.v(0.5)");
 
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFractionAlong));
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", postCompObjName, index, preSecName, preFractionAlong));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", postCompObjName, index, preSecName, preFract));
 
                         index++;
                     }
@@ -3192,7 +3229,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
@@ -3202,7 +3242,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
-        /*lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridSmall.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
         lemsFiles.add(new File("../git/NML2_Test/AOB_mitral_cell/LEMS_Vm_iMC1_cell_1_origin.xml"));
         

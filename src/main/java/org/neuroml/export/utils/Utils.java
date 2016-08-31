@@ -267,7 +267,7 @@ public class Utils
 		return expression.trim();
 	}
 
-	public static String convertLemsToNeuroMLLikeXml(Lems lems) throws LEMSException, NeuroMLException
+	public static String convertLemsToNeuroMLLikeXml(Lems lems, String onlyNetwork) throws LEMSException, NeuroMLException
 	{
         StringBuilder compString = new StringBuilder();
         
@@ -275,7 +275,7 @@ public class Utils
         
         for (Component comp: lems.getComponents()) 
         {
-            if (!comp.getTypeName().equals("Simulation")) 
+            if (!comp.getTypeName().equals("Simulation") && !comp.getTypeName().equals("include")) 
             {
                 String knownAs = null;
                 String typeAttribute = null;
@@ -290,7 +290,17 @@ public class Utils
                 String xml = xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n";
                 xml = xml.replaceAll("<populationList ", "<population type=\"populationList\" ");
                 xml = xml.replaceAll("</populationList>", "</population>");
-                compString.append(xml);
+                
+                boolean include = true;
+                
+                if (comp.getTypeName().equals("network") || comp.getTypeName().equals("networkWithTemperature"))
+                {
+                    if (comp.getID().equals(onlyNetwork)) 
+                        include = true;
+                    else
+                        include = false;
+                }
+                if (include) compString.append(xml);
                 
             }
         }

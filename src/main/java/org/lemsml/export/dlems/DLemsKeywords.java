@@ -57,6 +57,8 @@ public enum DLemsKeywords
     
     TEMPERATURE,
     NEURON_VARIABLE_NAME,
+    NEURON_SECTION_NAME,
+    NEURON_FRACT_ALONG,
     NEURON_VARIABLE_SCALE;
 
 	public String get()
