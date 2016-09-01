@@ -1462,6 +1462,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private void generateHocForInput(StringBuilder main, Component input, Component inputComp, String inputName) throws ContentError,
             NeuroMLException, ParseError {
 
+        String nrnSection = parseInputSecName(input);
         float fractionAlong = parseFractionAlong(input);
 
         addComment(main, "Adding input: " + input, bIndent);
@@ -1470,7 +1471,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         if(!inputComp.getComponentType().isOrExtends("timedSynapticInput")) {
             main.append(String.format("\n"+bIndent+"h(\"objref %s\")\n", inputName));
-            main.append(String.format(bIndent+"h(\"%s { %s = new %s(%f) } \")\n\n", parseInputSecName(input), inputName, safeInputName, fractionAlong));
+            main.append(String.format(bIndent+"h(\"%s { %s = new %s(%f) } \")\n\n", nrnSection, inputName, safeInputName, fractionAlong));
         } else {
             processTimeDependentLiterals(main, input, inputComp);
         }
@@ -1491,12 +1492,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         String secName;
         String cellId = popIdsVsCellIds.get(popName);
         Cell cell = compIdsVsCells.get(cellId);
+        //System.out.println("generateSecName: "+popName+", "+cellNum+", "+segmentId+", "+cell);
         if (cell != null) {
             Segment segment;
             if (segmentId > 0)
+            {
                 segment = CellUtils.getSegmentWithId(cell, segmentId);
+            }
             else
+            {
                 segment = cell.getMorphology().getSegment().get(0);
+            }
+                
             NamingHelper nh0 = new NamingHelper(cell);
             secName = String.format("a_%s[%s].%s", popName, cellNum, nh0.getNrnSectionName(segment));
         } else {
@@ -1505,12 +1512,39 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return secName;
     }
 
-    private float parseFractionAlong(Component input) throws ContentError {
-        return input.hasAttribute("fractionAlong") ? Float.parseFloat(input.getAttributeValue("fractionAlong")) : 0.5f;
+    private float parseFractionAlong(Component input) throws ContentError, NeuroMLException {
+        
+        String targetString = input.getStringValue("target");
+        String popName = Utils.parseCellRefStringForPopulation(targetString);
+        String cellId = popIdsVsCellIds.get(popName);
+        float fractSeg = input.hasAttribute("fractionAlong") ? Float.parseFloat(input.getAttributeValue("fractionAlong")) : 0.5f;
+        Cell cell = compIdsVsCells.get(cellId);
+        if (cell==null)
+            return fractSeg;
+        
+        if (cell.getMorphology().getSegment().size()==1)
+            return fractSeg;
+        NamingHelper nh0 = new NamingHelper(cell);
+        int segmentId = parseSegmentId(input);
+        Segment segment;
+        if (segmentId > 0)
+        {
+            segment = CellUtils.getSegmentWithId(cell, segmentId);
+        }
+        else
+        {
+            segment = cell.getMorphology().getSegment().get(0);
+        }
+        String secName = nh0.getNrnSectionName(segment);
+        
+        
+        float fract = !CellUtils.hasUnbranchedNonOverlappingInfo(cell) ? fractSeg : (float) CellUtils.getFractionAlongSegGroupLength(cell, secName, segmentId, fractSeg);
+        
+        return fract;
     }
 
     private int parseSegmentId(Component input) throws ContentError {
-        return input.hasAttribute("segmentId") ? Integer.parseInt(input.getAttributeValue("segmentId")) : -1;
+        return input.hasAttribute("segmentId") ? Integer.parseInt(input.getAttributeValue("segmentId")) : 0;
     }
 
     private void processTimeDependentLiterals(StringBuilder main, Component input, Component inputComp)
@@ -3233,6 +3267,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
