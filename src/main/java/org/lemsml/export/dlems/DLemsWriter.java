@@ -75,6 +75,7 @@ public class DLemsWriter extends ABaseWriter
     
     String TIME_DIM = Dimension.getTimeDimension().getName();
     boolean onlyFlattenIfNecessary = false;
+    boolean flattenSynapses = true;
     
         
     HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
@@ -93,6 +94,11 @@ public class DLemsWriter extends ABaseWriter
     public void setOnlyFlattenIfNecessary(boolean onlyFlattenIfNecessary)
     {
         this.onlyFlattenIfNecessary = onlyFlattenIfNecessary;
+    }
+
+    public void setFlattenSynapses(boolean flattenSynapses)
+    {
+        this.flattenSynapses = flattenSynapses;
     }
     
     
@@ -248,10 +254,19 @@ public class DLemsWriter extends ABaseWriter
 
                     if (!writtenTypes.contains(synComp.getTypeName()))
                     {
-                        createFlattenedCompType(synComp);
-                        writtenTypes.add(synComp.getTypeName());
+                        if (flattenSynapses)
+                        {
+                            createFlattenedCompType(synComp);
+                            writtenTypes.add(synComp.getTypeName());
+                        }
                     }
-                    Component cpFlat = createFlattenedComp(synComp);
+                    Component cpFlat = null;
+                    
+                    if (flattenSynapses)
+                        cpFlat = createFlattenedComp(synComp);
+                    else
+                        cpFlat = synComp;
+                    
                     if (populationMode)
                     {
                         g.writeObjectFieldStart(synId);
@@ -401,11 +416,18 @@ public class DLemsWriter extends ABaseWriter
                         Component synComp = lems.getComponent(synRef);
                         //System.out.println("-             Adding " + synRef+", "+synComp.getTypeName()+", "+writtenTypes+", "+written);
 
-                        createFlattenedCompType(synComp);
-                        writtenTypes.add(synComp.getTypeName());
+                        if (flattenSynapses) {
+                            createFlattenedCompType(synComp);
+                            writtenTypes.add(synComp.getTypeName());
+                        }
                         
 
-                        Component cpFlat = createFlattenedComp(synComp);
+                        Component cpFlat = null;
+                        if (flattenSynapses)
+                            cpFlat = createFlattenedComp(synComp);
+                        else
+                            cpFlat = synComp;
+                        
                         StringWriter swComp = new StringWriter();
                         JsonGenerator gComp = f.createJsonGenerator(swComp);
                         gComp.useDefaultPrettyPrinter();
@@ -1029,8 +1051,9 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        //
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
@@ -1040,6 +1063,7 @@ public class DLemsWriter extends ABaseWriter
             DLemsWriter dw = new DLemsWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".json"), null, false);
             dw.setPopulationMode(true);
             dw.setOnlyFlattenIfNecessary(true);
+            dw.setFlattenSynapses(false);
 
             NRNUtils nrnUtils = new NRNUtils();
             dw.setUnitConverter(nrnUtils);  

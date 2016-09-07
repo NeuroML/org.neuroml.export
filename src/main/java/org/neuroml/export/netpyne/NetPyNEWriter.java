@@ -151,7 +151,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         NRNUtils nrnUtils = new NRNUtils();
         dlemsw.setUnitConverter(nrnUtils);
         dlemsw.setOnlyFlattenIfNecessary(true);
-		StringBuilder mainRunScript = new StringBuilder();
+        dlemsw.setFlattenSynapses(false);
+		
+        StringBuilder mainRunScript = new StringBuilder();
         
         Target target = lems.getTarget();
         Component simCpt = target.getComponent();
@@ -237,7 +239,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                         //suffix = CELL_DEFINITION_SUFFIX +".py";
                         //template = VelocityUtils.netpyneCellTemplateFile;
                     }
-                    else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) || dlemsFile.getName().endsWith(".input.json"))
+                    else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) 
+                            || dlemsFile.getName().endsWith(".input.json") 
+                            || dlemsFile.getName().endsWith(".synapse.json"))
                     {
                         String mod = nrnWriter.generateModFile(comp);
                         nrnWriter.saveModToFile(comp, mod);
@@ -323,6 +327,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
