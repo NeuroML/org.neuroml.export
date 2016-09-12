@@ -209,6 +209,7 @@ public class DLemsWriter extends ABaseWriter
         ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
 
         ArrayList<Component> projs = tgtComp.getChildrenAL("projections");
+        projs.addAll(tgtComp.getChildrenAL("electricalProjection"));
         projs.addAll(tgtComp.getChildrenAL("synapticConnections"));
         
         
@@ -236,7 +237,8 @@ public class DLemsWriter extends ABaseWriter
             }
             for (Component proj : projs)
             {
-                String synId = proj.getStringValue("synapse");
+                String synId = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
+                
                 String postsynapticPopulation = proj.getStringValue("postsynapticPopulation");
                 String postCell = cellIdsVsPopulations.get(postsynapticPopulation);
                 
@@ -409,7 +411,7 @@ public class DLemsWriter extends ABaseWriter
                 ArrayList<String> handledSyns = new ArrayList<String>();
                 for (Component proj : projs)
                 {
-                    String synRef = proj.getStringValue("synapse");
+                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
                     if (!handledSyns.contains(synRef))
                     {
                         //System.out.println("-             Adding " + synRef);
@@ -528,7 +530,8 @@ public class DLemsWriter extends ABaseWriter
                     g.writeObjectFieldStart(proj.id);
                     g.writeStringField(DLemsKeywords.PRE_POPULATION.get(), proj.getStringValue("presynapticPopulation"));
                     g.writeStringField(DLemsKeywords.POST_POPULATION.get(), proj.getStringValue("postsynapticPopulation"));
-                    g.writeStringField(DLemsKeywords.SYNAPSE.get(), proj.getStringValue("synapse"));
+                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
+                    g.writeStringField(DLemsKeywords.SYNAPSE.get(), synRef);
                     
                     g.writeArrayFieldStart(DLemsKeywords.CONNECTIONS.get());
 
@@ -539,9 +542,9 @@ public class DLemsWriter extends ABaseWriter
                     {
                         g.writeStartObject();
                         g.writeStringField(DLemsKeywords.NAME.get(), conn.id);
-                        String pre = conn.getStringValue("preCellId").substring(3);  // remove ../
+                        String pre = (conn.hasStringValue("preCellId") ? conn.getStringValue("preCellId") : conn.getStringValue("preCell")).substring(3);  // remove ../
                         LEMSQuantityPath lqpPre = new LEMSQuantityPath(pre+"/xxx");
-                        String post = conn.getStringValue("postCellId").substring(3);  // remove ../
+                        String post = (conn.hasStringValue("postCellId") ? conn.getStringValue("postCellId") : conn.getStringValue("postCell")).substring(3);  // remove ../
                         LEMSQuantityPath lqpPost = new LEMSQuantityPath(post+"/xxx");
                         g.writeStringField(DLemsKeywords.PRE_CELL_ID.get(), lqpPre.getPopulationIndex()+"");
                         g.writeStringField(DLemsKeywords.POST_CELL_ID.get(), lqpPost.getPopulationIndex()+"");
@@ -1052,8 +1055,9 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
