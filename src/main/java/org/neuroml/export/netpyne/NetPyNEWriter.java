@@ -220,8 +220,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     StringBuilder script = new StringBuilder();
                     addComment(script, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
         
-                    String name = (String) context.internalGet(DLemsKeywords.NAME.get());
-                    Component comp = lems.components.getByID(name);
+                    //String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+                   // Component comp = lems.components.getByID(name);
+                    Component comp = dlemsw.getOutputFilesComponentMap().get(dlemsFile);
                     E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
                     String template = null;
@@ -253,17 +254,18 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                         throw new NeuroMLException("Cannot determine type of Component: "+comp.summary());
                     }
                     
-                    
-                    if (template!=null) 
-                    {
-                        ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(template));
-                        script.append(sw1);
 
-                        E.info("Writing " + format + " file to: " + dlemsFile.getAbsolutePath());
-                        File scriptFile = new File(this.getOutputFolder(), name + suffix);
-                        FileUtil.writeStringToFile(script.toString(), scriptFile);
-                        outputFiles.add(scriptFile);
-                    }
+                    // This is dead code. Not sure if it was ever used
+//                    if (template!=null) 
+//                    {
+//                        ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(template));
+//                        script.append(sw1);
+//
+//                        E.info("Writing " + format + " file to: " + dlemsFile.getAbsolutePath());
+//                        File scriptFile = new File(this.getOutputFolder(), name + suffix);
+//                        FileUtil.writeStringToFile(script.toString(), scriptFile);
+//                        outputFiles.add(scriptFile);
+//                    }
                     
                     if (cleanup)
                         dlemsFile.deleteOnExit();
