@@ -54,6 +54,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 		super(lems, Format.NETPYNE);
         dlemsw = new DLemsWriter(lems, null, false);
         dlemsw.setPopulationMode(true);
+        dlemsw.setNeuronMode(true);
 		initializeWriter();
 	}
 	
