@@ -194,6 +194,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 		try
 		{
             NeuronWriter nrnWriter = new NeuronWriter(lems,getOutputFolder(),"---");
+            nrnWriter.setParallelMode(true);
             List<File> dlemsFiles = dlemsw.convert();
             
             boolean cleanup = true;

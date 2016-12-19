@@ -24,11 +24,13 @@ import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Exposure;
 import org.lemsml.jlems.core.type.InstanceRequirement;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Property;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.Case;
@@ -94,6 +96,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private final HashMap<String, IntracellularProperties> convertedCells = new HashMap<String, IntracellularProperties>();
     
     private final String bIndent = "        ";
+    
+    private static boolean parallelMode = false; // Some of the mod files etc. will have to be slightly different for Parallel NEURON 
 
     public enum ChannelConductanceOption
     {
@@ -195,6 +199,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private void reset()
     {
         outputFiles.clear();
+    }
+
+    public void setParallelMode(boolean parallel)
+    {
+        parallelMode = parallel;
     }
 
     public void setNoGui(boolean nogui)
@@ -2659,6 +2668,32 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             paramMappingsComp = new HashMap<String, String>();
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
+        
+        for (Property prop: comp.getComponentType().getPropertys()) 
+        {
+            if(comp.getComponentType().isOrExtends(NeuroMLElements.GAP_JUNCTION) ||
+               comp.getComponentType().isOrExtends(NeuroMLElements.BASE_GRADED_SYNAPSE)) // This may be required for other Properties
+            {
+                String mappedName = prefix + prop.getName();
+                rangeVars.add(mappedName);
+                paramMappingsComp.put(prop.getName(), mappedName);
+                
+                String range = "RANGE " + mappedName;
+                while(range.length() < NRNUtils.commentOffset)
+                {
+                    range = range + " ";
+                }
+
+                blockNeuron.append(range + ": property\n");
+                float val = NRNUtils.convertToNeuronUnits(Float.parseFloat(prop.getDefaultValue()), Dimension.NO_DIMENSION);
+                String valS = val + "";
+                if((int) val == val)
+                {
+                    valS = (int) val + "";
+                }
+                blockParameter.append("\n" + mappedName + " = " + valS);
+            }
+        }
 
         for(ParamValue pv : comp.getParamValues())
         {
@@ -3021,7 +3056,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 if(dv.getPath() != null && instanceRequirements.contains(dv.getPath().split("/")[0]))
                 {
-                    blockNeuron.append("POINTER " + dv.getName() + ": derived variable as pointer...\n");
+                    if (!parallelMode)
+                    {
+                        blockNeuron.append("POINTER " + dv.getName() + ": derived variable as pointer...\n");
+                    }
+                    else 
+                    {
+                        blockNeuron.append("RANGE " + dv.getName() + ": derived variable; RANGE, not POINTER for Parallel NEURON...\n");
+                    }
                 }
                 else if(!rangeVars.contains(mappedName))
                 {
@@ -3260,14 +3302,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
+        
+//        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+//        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+//        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+//        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
+//        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
@@ -3308,7 +3352,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/LEMS_L5bPyrCellHayEtAl2011_LowDt.xml"));
