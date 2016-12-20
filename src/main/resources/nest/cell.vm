@@ -2,37 +2,29 @@
 #
 #    PLEASE NOTE: This export is not yet complete
 #
-package codegeneration.${name}_module:
 
 neuron $name:
 
     state:
 #foreach ($s in $state.keySet())##
-        $s real
-#end
-#foreach ($sf in $state_functions.keySet())
-        alias $sf real = $state_functions.get($sf)  
+        $s real = $state.get($s)
 #end
     end
 
-    parameter:
+    parameters:
 #foreach ($p in $parameters.keySet())##
         $p real = $parameters.get($p)
 #end
     end
 
-    input:
-        spikeBuffer <- spike  
-        currentBuffer <- current
-    end
+    equations:
 
-    output: spike
+#foreach ($sf in $state_functions.keySet())
+        $sf real = $state_functions.get($sf)  
+#end
 
-    dynamics timestep(t ms):
-
-        ODE:
 #foreach ($dyn in $dynamics.keySet())##
-            d/dt $dyn := $dynamics.get($dyn)
+        ${dyn}' = $dynamics.get($dyn)
 #end##
 #foreach($ev in $events)
 
@@ -49,9 +41,22 @@ neuron $name:
                 emitSpike()   #  Todo: check for this in event!
             end
 #end##
-        end
 
     end
+
+
+    input:
+        spikeBuffer <- spike  
+        currentBuffer <- current
+    end
+
+    output: spike
+
+    update:
+        integrate_odes()
+
+    end
+
 
 end
 
