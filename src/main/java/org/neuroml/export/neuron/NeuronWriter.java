@@ -554,8 +554,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         number++;
                     }
                 }
-
-                addComment(main, String.format("## Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", projId, prePop, postPop, synapse, number),"        ");
+                info = String.format("Adding projection: %s, from %s to %s with synapse %s, %d connection(s)", projId, prePop, postPop, synapse, number);
+                main.append(bIndent+"print(\""+info+"\")\n");
+                
+                addComment(main, "## "+info,"        ");
 
                 Component synapseComp = projection.getRefComponents().get("synapse");
 
@@ -1295,12 +1297,20 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             {
                                 NamingHelper nh0 = new NamingHelper(srcCell);
                                 srcSecName = String.format("a_%s[%s].%s", srcCellPop, srcCellNum, nh0.getNrnSectionName(srcCell.getMorphology().getSegment().get(0)));
-                                SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
-                                if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
+                                
+                                if (srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().isEmpty()) 
                                 {
-                                    throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                                    threshold = 0;
                                 }
-                                threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                                else
+                                {
+                                    SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                                    if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
+                                    {
+                                        throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                                    }
+                                    threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                                }
                             }
                             else
                             {
@@ -3306,6 +3316,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_Balanced.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
