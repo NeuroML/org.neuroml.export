@@ -23,4 +23,22 @@ public class Line2D extends LineND
 
         return result;
     }
+    
+    public double getMaxX(double previousMax)
+    {
+        if (x1>previousMax)
+            previousMax = x1;
+        if (x2>previousMax)
+            previousMax =x2;
+        return previousMax;
+    }
+    
+    public double getMaxY(double previousMax)
+    {
+        if (y1>previousMax)
+            previousMax = y1;
+        if (y2>previousMax)
+            previousMax =y2;
+        return previousMax;
+    }
 }
