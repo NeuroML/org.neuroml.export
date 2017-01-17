@@ -2,7 +2,9 @@ package org.neuroml.export.svg;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
+//import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -325,7 +327,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 else 
                 {
                     graphics2d.setColor(getColor(line.color));
-                    graphics2d.drawLine((int)line.x1, (int)line.y1, (int)line.x2, (int)line.y2);
+                    //graphics2d.drawLine((int)line.x1, (int)line.y1, (int)line.x2, (int)line.y2);
+                    double theta = Math.atan2(line.y2-line.y1, line.x2-line.x1);
+                    double dx = Math.sin(theta) * line.diameter/2;
+                    double dy = Math.cos(theta) * line.diameter/2;
+                    
+                    int[] xpoints = new int[]{(int)(line.x1-dx),(int)(line.x2-dx),(int)(line.x2+dx),(int)(line.x1+dx)};
+                    int[] ypoints = new int[]{(int)(line.y1+dy),(int)(line.y2+dy),(int)(line.y2-dy),(int)(line.y1-dy)};
+                    /* Better?
+                    Path2D.Double path = new Path2D.Double(perspectiveMargin, perspectiveMargin);
+                    for(int i=0;i<4;i++) {
+                        path.moveTo(xpoints[i], ypoints[i]);
+                    }
+                    */
+                    
+                    Polygon p = new Polygon(xpoints, ypoints, 4);
+                    graphics2d.fill(p);
                 }
             }
         }
