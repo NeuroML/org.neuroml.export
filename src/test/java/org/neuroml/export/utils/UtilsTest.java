@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.xml.bind.JAXBException;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertEquals;
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;

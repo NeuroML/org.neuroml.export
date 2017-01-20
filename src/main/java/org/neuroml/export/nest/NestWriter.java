@@ -51,7 +51,7 @@ public class NestWriter extends ANeuroMLBaseWriter
     public NestWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
         super(lems, Format.NEST, outputFolder, outputFileName);
-        dlemsw = new DLemsWriter(lems, null, false);
+        dlemsw = new DLemsWriter(lems, outputFolder, null, null, false);
         dlemsw.setPopulationMode(true);
         initializeWriter();
     }

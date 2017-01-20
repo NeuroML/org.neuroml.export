@@ -173,6 +173,14 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                 }
                 mainNetworkFile = included;
             }
+            if (included.endsWith(".h5")) 
+            {
+                if (mainNetworkFile!=null) 
+                {
+                    throw new GenerationException("Cannot (currently) handle case where 2 or more *.net.nml/*.h5 files are included!");
+                }
+                mainNetworkFile = included;
+            }
         }
         if (mainNetworkFile==null) {
             
@@ -201,7 +209,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             
             for (File dlemsFile: dlemsFiles) {
                     
-                E.info(">>> Processing DLEMS file: " + dlemsFile.getAbsolutePath());
+                //E.info(">>> Processing DLEMS file: " + dlemsFile.getAbsolutePath());
                     
                 String dlems = FileUtil.readStringFromFile(dlemsFile);
 
@@ -330,12 +338,13 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_SmallNetwork.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
@@ -349,6 +358,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         for (File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            System.out.println("lems c"+lems.components);
             NetPyNEWriter pw = new NetPyNEWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
             
             List<File> files = pw.convert();

@@ -229,15 +229,15 @@ public class Utils
         return newFile;
     }
 
-	public static Sim readLemsNeuroMLFile(File f) throws LEMSException
+	public static Sim readLemsNeuroMLFile(File f) throws LEMSException, NeuroMLException
 	{
-
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPath(f.getParentFile());
+        
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPath(f.getParentFile());
 
 		E.info("Reading from: " + f.getAbsolutePath());
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(f);
+		NeuroMLInclusionReader jrir = new NeuroMLInclusionReader(f);
 
 		Sim sim = new Sim(jrir.read());
 
@@ -425,10 +425,17 @@ public class Utils
 
 			@Override
 			public Sim importFile(File simFile) throws LEMSException {
-				Sim sim;
-                sim = Utils.readLemsNeuroMLFile(simFile);
-                sim.build();
-                return sim;       
+                try 
+                {
+                    Sim sim;
+                    sim = Utils.readLemsNeuroMLFile(simFile);
+                    sim.build();
+                    return sim;  
+                }
+                catch (NeuroMLException e)
+                {
+                    throw new LEMSException(e);
+                }
             }
         };
         
@@ -507,10 +514,14 @@ public class Utils
 	}
         
 
-        public static void main(String args[]) throws ContentError, IOException
-        {
-            File f = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
-            System.out.println("Created: "+f.getAbsolutePath());
-        }
+    public static void main(String args[]) throws ContentError, IOException, LEMSException, NeuroMLException
+    {
+        File f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced.xml");
+        f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml");
+        //f = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml");
+        Sim sim = Utils.readLemsNeuroMLFile(f);
+        Lems lems = sim.getLems();
+        System.out.println("-----------------------\nLEMS:\n"+lems.components.toString());
+    }
 
 }
