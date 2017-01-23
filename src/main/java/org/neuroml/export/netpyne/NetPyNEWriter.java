@@ -231,7 +231,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     Component comp = lems.components.getByID(name);
-                    E.info("Component LEMS: " + comp.summary());
+                    //E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
                     String template = null;
                     
@@ -344,7 +344,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_100_hdf5.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
@@ -357,7 +357,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
         for (File lemsFile : lemsFiles)
         {
-            Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile, false).getLems();
             System.out.println("lems c"+lems.components);
             NetPyNEWriter pw = new NetPyNEWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
             

@@ -11,6 +11,7 @@ import org.neuroml.model.util.hdf5.NeuroMLHDF5Reader;
 
 public class NeuroMLInclusionReader extends JarResourceInclusionReader
 {
+    boolean includeConnectionsFromHDF5 = true;
     
     public NeuroMLInclusionReader(String content)
     {
@@ -21,6 +22,13 @@ public class NeuroMLInclusionReader extends JarResourceInclusionReader
     {
         super(f);
     }
+
+    public void setIncludeConnectionsFromHDF5(boolean includeConnections)
+    {
+        this.includeConnectionsFromHDF5 = includeConnections;
+    }
+    
+    
     
     @Override
     public String getRelativeContent(String attribute, String s) throws ContentError {
@@ -36,7 +44,7 @@ public class NeuroMLInclusionReader extends JarResourceInclusionReader
                 NeuroMLConverter nmlCon = new NeuroMLConverter();
                 NeuroMLHDF5Reader h5Reader;
                 h5Reader = new NeuroMLHDF5Reader();
-                h5Reader.parse(hdf5File, false);
+                h5Reader.parse(hdf5File, this.includeConnectionsFromHDF5);
                 
                 NeuroMLDocument nmlDoc = h5Reader.getNeuroMLDocument();
                 String xml = nmlCon.neuroml2ToXml(nmlDoc);

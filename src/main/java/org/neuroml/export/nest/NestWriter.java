@@ -133,7 +133,7 @@ public class NestWriter extends ANeuroMLBaseWriter
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     Component comp = lems.components.getByID(name);
                     addCommentNestML(script, format + " simulator compliant export for:\n\n" + comp.details("") + "\n\n" + Utils.getHeaderComment(format) + "\n");
-                    E.info("Component LEMS: " + comp.summary());
+                    //E.info("Component LEMS: " + comp.summary());
                     String suffix = ".nestml";
                     String template = VelocityUtils.nestCellTemplateFile;
                     

@@ -16,7 +16,6 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.io.IOUtil;
-import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
@@ -166,13 +165,13 @@ public class Utils
 	public static Sim readLemsNeuroMLFile(String contents) throws LEMSException
 	{
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPathInJar("/examples");
-		JarResourceInclusionReader.addSearchPathInJar("/");
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPathInJar("/examples");
+		NeuroMLInclusionReader.addSearchPathInJar("/");
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(contents);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(contents);
 		JUtil.setResourceRoot(NeuroMLConverter.class);
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
@@ -181,9 +180,14 @@ public class Utils
 
 	public static Sim readNeuroMLFile(File f) throws LEMSException, IOException
 	{
+        return readNeuroMLFile(f, true);
+    }
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPath(f.getParentFile());
+	public static Sim readNeuroMLFile(File f, boolean includeConnectionsFromHDF5) throws LEMSException, IOException
+	{
+        
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPath(f.getParentFile());
 
 		E.info("Reading from: " + f.getAbsolutePath());
 
@@ -191,9 +195,10 @@ public class Utils
 
 		String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(nml);
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(nmlLems);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(nmlLems);
+        nmlIr.setIncludeConnectionsFromHDF5(includeConnectionsFromHDF5);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
@@ -202,13 +207,13 @@ public class Utils
 	public static Sim readNeuroMLFile(String contents) throws LEMSException
 	{
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
 
 		String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(contents);
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(nmlLems);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(nmlLems);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
@@ -230,6 +235,11 @@ public class Utils
     }
 
 	public static Sim readLemsNeuroMLFile(File f) throws LEMSException, NeuroMLException
+    {
+        return readLemsNeuroMLFile(f,true);
+    }
+
+	public static Sim readLemsNeuroMLFile(File f, boolean includeConnectionsFromHDF5) throws LEMSException, NeuroMLException
 	{
         
 		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
@@ -237,12 +247,13 @@ public class Utils
 
 		E.info("Reading from: " + f.getAbsolutePath());
 
-		NeuroMLInclusionReader jrir = new NeuroMLInclusionReader(f);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(f);
+        nmlIr.setIncludeConnectionsFromHDF5(includeConnectionsFromHDF5);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
-        sim.getLems().setAllIncludedFiles(jrir.getAllIncludedFiles());
+        sim.getLems().setAllIncludedFiles(nmlIr.getAllIncludedFiles());
 		return sim;
 
 	}
