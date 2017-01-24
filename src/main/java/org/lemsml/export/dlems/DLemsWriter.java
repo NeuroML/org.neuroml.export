@@ -681,7 +681,7 @@ public class DLemsWriter extends ABaseWriter
                 g.writeStringField(DLemsKeywords.NAME.get(), "t");
                 if (neuronMode) 
                 {
-                    g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), "1000");
+                    g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), "1000.0");
                 }
                 //g.writeStringField(DLemsKeywords., "t");
                 g.writeEndObject();

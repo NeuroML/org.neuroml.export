@@ -1627,7 +1627,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         File modFile = new File(getOutputFolder(), NRNUtils.getSafeName(comp.getID()) + ".mod");
         if(modWritten.containsKey(comp.getID()) && modWritten.get(comp.getID()).equals(mod))
         {
-            E.info("-- Mod file for: " + comp.getID() + " has already been written");
+            E.warning("-- Mod file for: " + comp.getID() + " has already been written");
             return modFile;
         }
         E.info("-- Writing to mod: " + modFile.getAbsolutePath());
