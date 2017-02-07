@@ -86,6 +86,35 @@ public class InfoNode
 		return main.toString();
 	}
 
+	/**
+	 * @param indent
+	 * @return
+	 */
+	public String toDetailString(String indent)
+	{
+
+		StringBuilder main = new StringBuilder();
+		for(String key : _properties.keySet())
+		{
+			Object obj = _properties.get(key);
+			if(obj instanceof InfoNode)
+			{
+				main.append(indent + key + ":\n");
+				main.append(((InfoNode) obj).toDetailString(indent + INDENT));
+			}
+			else if(obj instanceof PlotNode)
+			{
+				// No need to give string for this...
+				main.append(indent + key + ": " + ((PlotNode)obj).toShortString() +" ("+obj.getClass() + ")\n");
+			}
+			else
+			{
+				main.append(indent + key + ": " + obj +" ("+obj.getClass() + ")\n");
+			}
+		}
+		return main.toString();
+	}
+
 	@Override
 	public String toString()
 	{
