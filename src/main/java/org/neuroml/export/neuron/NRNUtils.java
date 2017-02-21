@@ -15,6 +15,7 @@ import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.model.util.NeuroMLElements;
 
 /**
  * @author Boris Marin & Padraig Gleeson
@@ -152,6 +153,35 @@ public class NRNUtils implements UnitConverter
     protected static String checkForBinaryOperators(String expr)
     {
         return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=").replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=").replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
+    }
+    
+    protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError
+    {
+        float threshold = 0;
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+           comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
+        {
+            threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("thresh"), lems);
+        }
+        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
+        {
+            if ( (comp.getComponentType().isOrExtends("EIF_cond_alpha_isfa_ista") || comp.getComponentType().isOrExtends("EIF_cond_exp_isfa_ista")))
+            {
+                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 ) 
+                {
+                    threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
+                }
+                else
+                {
+                    threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_spike"), lems);
+                }
+            }
+            else
+            {
+                threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
+            }
+        }
+        return threshold;
     }
 
     protected static String checkForStateVarsAndNested(String expr, Component comp, HashMap<String, HashMap<String, String>> paramMappings)
