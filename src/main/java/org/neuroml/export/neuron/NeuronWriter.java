@@ -1248,6 +1248,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     columnsPre.get(outfileId).add(bIndent+"h(' objectvar " + spikeVecName + ", t_" + spikeVecName + " ')");
                     columnsPre.get(outfileId).add(bIndent+"h(' { " + spikeVecName + " = new Vector() } ')");
                     columnsPre.get(outfileId).add(bIndent+"h(' { t_" + spikeVecName + " = new Vector() } ')");
+                    
                     columnsPre.get(outfileId).add(bIndent+"h(' objref "+ncName+", nil ')");
 
                     columnsPostSpikes.get(outfileId).add(bIndent+"h(' objref "+ncName+" ')");
@@ -1284,37 +1285,54 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             Cell srcCell = compIdsVsCells.get(popIdsVsCellIds.get(srcCellPop));
                             String srcSecName;
                             float threshold = 0;
-
-                            if(srcCell != null)
+                            Component comp = this.popIdsVsComps.get(srcCellPop);
+                            
+                            if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SPIKE_SOURCE_COMP_TYPE) ||
+                                comp.getComponentType().isOrExtends(NeuroMLElements.BASE_VOLT_DEP_CURR_SRC_SPIKING_COMP_TYPE))
                             {
-                                NamingHelper nh0 = new NamingHelper(srcCell);
-                                srcSecName = String.format("a_%s[%s].%s", srcCellPop, srcCellNum, nh0.getNrnSectionName(srcCell.getMorphology().getSegment().get(0)));
                                 
-                                if (srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().isEmpty()) 
-                                {
-                                    threshold = 0;
-                                }
-                                else
-                                {
-                                    SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
-                                    if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
-                                    {
-                                        throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
-                                    }
-                                    threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
-                                }
+                                String mechName = NRNUtils.getMechanismName(comp, srcCellPop);
+                                
+                                columnsPre.get(outfileId).add(bIndent+"# It's a spike source, will listen to "+mechName+"..." ); 
+                                
+                                columnsPre.get(outfileId).add(bIndent+"h(' "+ncName+" = new NetCon("+mechName+"["+srcCellNum+"], nil) ')");
+
+                                columnsPre.get(outfileId).add(bIndent+"h(' { "+ncName+".record(t_"+spikeVecName+", "+spikeVecName+", "+id+") } ')");
                             }
                             else
                             {
-                                srcSecName = srcCellPop + "[" + srcCellNum + "]";
-                                Component preComp = popIdsVsComps.get(srcCellPop);
-                                
-                                threshold = NRNUtils.getThreshold(preComp, lems);
-                            }
+                                if(srcCell != null)
+                                {
+                                    NamingHelper nh0 = new NamingHelper(srcCell);
+                                    srcSecName = String.format("a_%s[%s].%s", srcCellPop, srcCellNum, nh0.getNrnSectionName(srcCell.getMorphology().getSegment().get(0)));
 
-                            columnsPre.get(outfileId).add(bIndent+"# Column: " + select+" ("+id+") "+srcSecName);
-                            columnsPre.get(outfileId).add(bIndent+"h(' "+srcSecName+" { "+ncName+" = new NetCon(&v(0.5), nil, "+threshold+", 0, 1) } ')");
-                            columnsPre.get(outfileId).add(bIndent+"h(' { "+ncName+".record(t_"+spikeVecName+", "+spikeVecName+", "+id+") } ')");
+                                    if (srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().isEmpty()) 
+                                    {
+                                        threshold = 0;
+                                    }
+                                    else
+                                    {
+                                        SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                                        if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
+                                        {
+                                            throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
+                                        }
+                                        threshold = NRNUtils.convertToNeuronUnits(st.getValue(), lems);
+                                    }
+                                }
+                                else
+                                {
+                                    srcSecName = srcCellPop + "[" + srcCellNum + "]";
+                                    Component preComp = popIdsVsComps.get(srcCellPop);
+
+                                    threshold = NRNUtils.getThreshold(preComp, lems);
+                                }
+
+                                columnsPre.get(outfileId).add(bIndent+"# Column: " + select+" ("+id+") "+srcSecName);
+                                columnsPre.get(outfileId).add(bIndent+"h(' "+srcSecName+" { "+ncName+" = new NetCon(&v(0.5), nil, "+threshold+", 0, 1) } ')");
+
+                                columnsPre.get(outfileId).add(bIndent+"h(' { "+ncName+".record(t_"+spikeVecName+", "+spikeVecName+", "+id+") } ')");
+                            }
 
                         }
                     }
@@ -3334,7 +3352,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_Balanced.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         
