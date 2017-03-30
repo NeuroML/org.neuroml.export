@@ -7,6 +7,7 @@ package org.lemsml.export.dlems;
 public enum DLemsKeywords
 {
 	DT, 
+	SEED, 
     DYNAMICS, 
     EVENTS, 
     CONDITION, 

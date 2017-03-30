@@ -77,6 +77,8 @@ public class DLemsWriter extends ABaseWriter
     boolean onlyFlattenIfNecessary = false;
     boolean flattenSynapses = true;
     
+    public static final int DEFAULT_SEED = 123456789;
+    
         
     HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
     HashMap<String,Set<String>> cellIdsVsSynapses = new HashMap<String, Set<String>>();
@@ -199,6 +201,13 @@ public class DLemsWriter extends ABaseWriter
         Component simCpt = target.getComponent();
 
         g.writeStringField(DLemsKeywords.DT.get(), convertTime(simCpt.getParamValue("step")));
+
+        int seed = DEFAULT_SEED;
+        if (simCpt.hasStringValue("seed"))
+            seed = Integer.parseInt(simCpt.getStringValue("seed"));
+        
+        g.writeStringField(DLemsKeywords.SEED.get(), seed+"");
+
 
         String targetId = simCpt.getStringValue("target");
 

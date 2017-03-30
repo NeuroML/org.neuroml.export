@@ -69,6 +69,7 @@ public class ExportFactory
 				break;
 			case NETPYNE:
 				writer = new NetPyNEWriter(lems);
+				//((NetPyNEWriter)writer).setNoGui(true);
 				break;
 			case NEURON:
 				writer = new NeuronWriter(lems);

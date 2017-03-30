@@ -91,11 +91,73 @@ public class NRNUtils implements UnitConverter
                 "	}\n" +
                 "}\n";
 
-    static final String randomFunctionDefs = "\n: Returns a float between 0 and max\nFUNCTION random_float(max) {\n"
+    static final String randomFunctionDefs = "\n: Returns a float between 0 and max; implementation of random() as used in LEMS\n"
+        + "FUNCTION random_float(max) {\n"
         + "    \n"
-        + "    random_float = scop_random()*max\n"
+        + "    : This is not ideal, getting an exponential dist random number and then turning back to uniform\n"
+        + "    : However this is the easiest what to ensure mod files with random methods fit into NEURON's\n"
+        + "    : internal framework for managing internal number generation.\n"
+        + "    random_float = exp(-1*erand())*max\n"
         + "    \n"
-        + "}\n\n";
+        + "}\n"
+        + ""
+        + "\n:****************************************************\n"
+        + ": Methods copied from netstim.mod in NEURON source"
+        + "\n\n"
+        + " "
+        + "\n" +
+        "PROCEDURE seed(x) {\n" +
+        "	set_seed(x)\n" +
+        "}\n\n"
+        + ""
+        + "VERBATIM\n" +
+        "double nrn_random_pick(void* r);\n" +
+        "void* nrn_random_arg(int argpos);\n" +
+        "ENDVERBATIM\n" +
+        "\n\n" +
+        "FUNCTION erand() {\n" +
+        "VERBATIM\n" +
+        "	if (_p_donotuse) {\n" +
+        "		/*\n" +
+        "		:Supports separate independent but reproducible streams for\n" +
+        "		: each instance. However, the corresponding hoc Random\n" +
+        "		: distribution MUST be set to Random.negexp(1)\n" +
+        "		*/\n" +
+        "		_lerand = nrn_random_pick(_p_donotuse);\n" +
+        "	}else{\n" +
+        "		/* only can be used in main thread */\n" +
+        "		if (_nt != nrn_threads) {\n" +
+        "           hoc_execerror(\"multithread random in NetStim\",\" only via hoc Random\");\n" +
+        "		}\n" +
+        "ENDVERBATIM\n" +
+        "		: the old standby. Cannot use if reproducible parallel sim\n" +
+        "		: independent of nhost or which host this instance is on\n" +
+        "		: is desired, since each instance on this cpu draws from\n" +
+        "		: the same stream\n" +
+        "		erand = exprand(1)\n" +
+        /*"       printf(\"- Calling erand: %g, %g \\n\",erand,exp(-1*erand))\n" +*/
+        "VERBATIM\n" +
+        "	}\n" +
+        "ENDVERBATIM\n" +
+        "}\n" +
+        "\n" +
+        "PROCEDURE noiseFromRandom() {\n" +
+        "VERBATIM\n" +
+        " {\n" +
+        "	void** pv = (void**)(&_p_donotuse);\n" +
+        "	if (ifarg(1)) {\n" +
+        "		*pv = nrn_random_arg(1);\n" +
+        "	}else{\n" +
+        "		*pv = (void*)0;\n" +
+        "	}\n" +
+        " }\n" +
+        "ENDVERBATIM\n" +
+        "}\n\n"
+        + ": End of methods copied from netstim.mod in NEURON source"
+        + ":****************************************************\n"
+        + ""
+        + ""
+        + "\n";
     
     static final String heavisideFunctionDefs = "\n: The Heaviside step function\nFUNCTION H(x) {\n"
         + "    \n"
