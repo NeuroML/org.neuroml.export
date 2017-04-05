@@ -2,6 +2,7 @@
 package org.neuroml.export.utils;
 
 import java.io.File;
+import java.util.ArrayList;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.neuroml.model.NeuroMLDocument;
@@ -44,7 +45,7 @@ public class NeuroMLInclusionReader extends JarResourceInclusionReader
                 NeuroMLConverter nmlCon = new NeuroMLConverter();
                 NeuroMLHDF5Reader h5Reader;
                 h5Reader = new NeuroMLHDF5Reader();
-                h5Reader.parse(hdf5File, this.includeConnectionsFromHDF5);
+                h5Reader.parse(hdf5File, this.includeConnectionsFromHDF5, new ArrayList<String>(fullFilePathsIncluded));
                 
                 NeuroMLDocument nmlDoc = h5Reader.getNeuroMLDocument();
                 String xml = nmlCon.neuroml2ToXml(nmlDoc);

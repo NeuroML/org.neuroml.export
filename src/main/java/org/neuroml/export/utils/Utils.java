@@ -528,7 +528,7 @@ public class Utils
     public static void main(String args[]) throws ContentError, IOException, LEMSException, NeuroMLException
     {
         File f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced.xml");
-        f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml");
+        f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2_hdf5.xml");
         //f = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml");
         Sim sim = Utils.readLemsNeuroMLFile(f);
         Lems lems = sim.getLems();

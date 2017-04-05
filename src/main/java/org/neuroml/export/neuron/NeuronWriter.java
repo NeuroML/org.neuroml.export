@@ -883,8 +883,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             postCellId = Utils.parseCellRefStringForCellNum(ec.getStringValue("postCell"));
                         }
 
-                        int preSegmentId = ec.hasAttribute("preSegmentId") ? Integer.parseInt(ec.getAttributeValue("preSegmentId")) : 0;
-                        int postSegmentId = ec.hasAttribute("postSegmentId") ? Integer.parseInt(ec.getAttributeValue("postSegmentId")) : 0;
+                        int preSegment = ec.hasAttribute("preSegment") ? Integer.parseInt(ec.getAttributeValue("preSegment")) : 0;
+                        int postSegment = ec.hasAttribute("postSegment") ? Integer.parseInt(ec.getAttributeValue("postSegment")) : 0;
 
                         float preFractionAlong0 = ec.hasAttribute("preFractionAlong") ? Float.parseFloat(ec.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong0 = ec.hasAttribute("postFractionAlong") ? Float.parseFloat(ec.getAttributeValue("postFractionAlong")) : 0.5f;
@@ -896,7 +896,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(preCell != null)
                         {
                             NamingHelper nhPre = new NamingHelper(preCell);
-                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegmentId)));
+                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegment)));
                         }
                         else
                         {
@@ -907,7 +907,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(postCell != null)
                         {
                             NamingHelper nhPost = new NamingHelper(postCell);
-                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegmentId)));
+                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegment)));
                         }
                         else
                         {
@@ -917,13 +917,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         float postFract = postFractionAlong0;
                         if(postCell != null)
                         {
-                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegmentId, postFractionAlong0);
+                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegment, postFractionAlong0);
                         }
 
                         float preFract = preFractionAlong0;
                         if(preCell != null)
                         {
-                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegmentId, preFractionAlong0);
+                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegment, preFractionAlong0);
                         }
                         
                         float weight = 1;
@@ -932,7 +932,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             weight = Float.parseFloat(ec.getAttributeValue("weight"));
                         }
                         
-                        String comment = String.format(Locale.US, "Elect Connection %s: cell %d, seg %d (%s) [%s on %s] -> cell %d, seg %d (%s) [%s on %s], weight: %s", ec.getID(), preCellId, preSegmentId, preFractionAlong0, preFract, preSecName, postCellId, postSegmentId, postFractionAlong0, postFract, postSecName, weight);
+                        String comment = String.format(Locale.US, "Elect Connection %s: cell %d, seg %d (%s) [%s on %s] -> cell %d, seg %d (%s) [%s on %s], weight: %s", ec.getID(), preCellId, preSegment, preFractionAlong0, preFract, preSecName, postCellId, postSegment, postFractionAlong0, postFract, postSecName, weight);
                         
                         addComment(main, comment,"        ");
 
@@ -1012,8 +1012,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             preCellId = Utils.parseCellRefStringForCellNum(cc.getStringValue("preCell"));
                             postCellId = Utils.parseCellRefStringForCellNum(cc.getStringValue("postCell"));
                         }
-                        int preSegmentId = cc.hasAttribute("preSegment") ? Integer.parseInt(cc.getAttributeValue("preSegment")) : 0;
-                        int postSegmentId = cc.hasAttribute("postSegment") ? Integer.parseInt(cc.getAttributeValue("postSegment")) : 0;
+                        int preSegment = cc.hasAttribute("preSegment") ? Integer.parseInt(cc.getAttributeValue("preSegment")) : 0;
+                        int postSegment = cc.hasAttribute("postSegment") ? Integer.parseInt(cc.getAttributeValue("postSegment")) : 0;
 
                         float preFractionAlong0 = cc.hasAttribute("preFractionAlong") ? Float.parseFloat(cc.getAttributeValue("preFractionAlong")) : 0.5f;
                         float postFractionAlong0 = cc.hasAttribute("postFractionAlong") ? Float.parseFloat(cc.getAttributeValue("postFractionAlong")) : 0.5f;
@@ -1024,7 +1024,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(preCell != null)
                         {
                             NamingHelper nhPre = new NamingHelper(preCell);
-                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegmentId)));
+                            preSecName = String.format("a_%s[%s].%s", prePop, preCellId, nhPre.getNrnSectionName(CellUtils.getSegmentWithId(preCell, preSegment)));
                         }
                         else
                         {
@@ -1035,7 +1035,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if(postCell != null)
                         {
                             NamingHelper nhPost = new NamingHelper(postCell);
-                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegmentId)));
+                            postSecName = String.format("a_%s[%s].%s", postPop, postCellId, nhPost.getNrnSectionName(CellUtils.getSegmentWithId(postCell, postSegment)));
                         }
                         else
                         {
@@ -1045,13 +1045,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         float postFract = postFractionAlong0;
                         if(postCell != null)
                         {
-                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegmentId, postFractionAlong0);
+                            postFract = !CellUtils.hasUnbranchedNonOverlappingInfo(postCell) ? postFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(postCell, postSecName.split("\\.")[1], postSegment, postFractionAlong0);
                         }
 
                         float preFract = preFractionAlong0;
                         if(preCell != null)
                         {
-                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegmentId, preFractionAlong0);
+                            preFract = !CellUtils.hasUnbranchedNonOverlappingInfo(preCell) ? preFractionAlong0 : (float) CellUtils.getFractionAlongSegGroupLength(preCell, preSecName.split("\\.")[1], preSegment, preFractionAlong0);
                         }
                         
                         float weight = 1;
@@ -1060,7 +1060,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             weight = Float.parseFloat(cc.getAttributeValue("weight"));
                         }
                         
-                        String comment = String.format(Locale.US, "Continuous Connection %s: cell %d, seg %d (%s) [%s on %s] -> cell %d, seg %d (%s) [%s on %s], weight: %s", cc.getID(), preCellId, preSegmentId, preFractionAlong0, preFract, preSecName, postCellId, postSegmentId, postFractionAlong0, postFract, postSecName, weight);
+                        String comment = String.format(Locale.US, "Continuous Connection %s: cell %d, seg %d (%s) [%s on %s] -> cell %d, seg %d (%s) [%s on %s], weight: %s", cc.getID(), preCellId, preSegment, preFractionAlong0, preFract, preSecName, postCellId, postSegment, postFractionAlong0, postFract, postSecName, weight);
                         
                         addComment(main, comment,"        ");
 

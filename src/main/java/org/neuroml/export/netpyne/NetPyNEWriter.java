@@ -393,8 +393,10 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/ghk-nernst/NeuroML2/LEMS_nernst_na_k_ca.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/ghk-nernst/NeuroML2/LEMS_nernst_na_k_ca.xml"));
+        lemsFiles.add(new File("/home/padraig/git/osb-model-validation/utilities/local_test/netpyneshowcase/NeuroML2/scaling/LEMS_Balanced.xml"));
+        //lemsFiles.add(new File("/home/padraig/git/osb-model-validation/utilities/local_test/netpyneshowcase/NeuroML2/scaling/LEMS_Balanced_hdf5.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
@@ -410,13 +412,13 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             System.out.println("lems c"+lems.components);
             NetPyNEWriter pw = new NetPyNEWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
             
-            List<File> files = pw.convert();
+            List<File> files = pw.generateAndRun(true, false, 1);
             for (File f : files)
             {
                 System.out.println("Have created: " + f.getAbsolutePath());
             }
             
-            pw.generateAndRun(true, false, 1);
+            
 
         }
     }
