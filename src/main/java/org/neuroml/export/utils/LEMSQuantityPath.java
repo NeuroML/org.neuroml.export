@@ -7,7 +7,6 @@ import java.util.ArrayList;
  */
 public class LEMSQuantityPath
 {
-
     private final String quantity;
     protected String population;
     protected String scale = "1";
@@ -16,8 +15,11 @@ public class LEMSQuantityPath
 
     protected enum Type
     {
-
-        UNKNOWN, VAR_IN_SINGLE_COMP, VAR_IN_CELL_IN_POP, VAR_IN_CELL_IN_POP_LIST, VAR_ON_SEG_IN_CELL_IN_POP_LIST
+        UNKNOWN, 
+        VAR_IN_SINGLE_COMP, 
+        VAR_IN_CELL_IN_POP, 
+        VAR_IN_CELL_IN_POP_LIST, 
+        VAR_ON_SEG_IN_CELL_IN_POP_LIST
     }
 
     protected Type myType = Type.UNKNOWN;
@@ -77,7 +79,6 @@ public class LEMSQuantityPath
 
     public static String getVariable(String[] variableParts, Type myType)
     {
-
         switch (myType)
         {
             case VAR_IN_SINGLE_COMP:
@@ -295,13 +296,13 @@ public class LEMSQuantityPath
     public String toString()
     {
         return "Original:       " + quantity
-            + "\n    " + "Type:           " + myType
-            + "\n    " + "Variable parts: " + getVariablePartsAsString(variableParts)
-            + "\n    " + "Variable:       " + getVariable()
-            + "\n    " + "Is var in pop:  " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "")
-            + "\n    " + "Is var in syn:  " + this.isVariableOnSynapse()
-            + "\n    " + "Num:            " + populationIndex
-            + "\n    " + "segmentId:      " + segmentId;
+            + "\n    " + "Type:             " + myType
+            + "\n    " + "Variable parts:   " + getVariablePartsAsString(variableParts)
+            + "\n    " + "Variable:         " + getVariable()
+            + "\n    " + "Is var in pop:    " + this.isVariableInPopulation() + (this.isVariableInPopulation() ? " (" + this.getPopulation() + ")" : "")
+            + "\n    " + "Is var in syn:    " + this.isVariableOnSynapse()
+            + "\n    " + "Num in pop:       " + populationIndex
+            + "\n    " + "segmentId:        " + segmentId;
     }
 
     public static void main(String[] args) throws Exception
@@ -320,7 +321,9 @@ public class LEMSQuantityPath
         
         paths.add("pasPop1/0/pasCell/0/synapses:nmdaSyn1:0/g");
         paths.add("pop0/1/MultiCompCell/2/synapses:AMPA:0/g");
-        paths.add("pop0/1/MultiCompCell/synapses:AMPA:0/g");/**/
+        paths.add("pop0/1/MultiCompCell/synapses:AMPA:0/g");
+        paths.add("hhpop/0/hhneuron/biophysics/membraneProperties/kChans/gDensity");
+        paths.add("hhpop/0/hhneuron/IClamp/i");
 
         for (String path : paths)
         {

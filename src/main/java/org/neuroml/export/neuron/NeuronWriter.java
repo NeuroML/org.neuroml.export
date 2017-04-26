@@ -98,6 +98,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private final String bIndent = "        ";
     
     private static boolean parallelMode = false; // Some of the mod files etc. will have to be slightly different for Parallel NEURON 
+    
+    private static int MAX_LENGTH_LINE_MOD_FILE = 300;
+    
+    private final HashMap<String, String> hocRefsVsInputs = new HashMap<String, String>();
 
     public enum ChannelConductanceOption
     {
@@ -1117,10 +1121,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                 String quantity = lineComp.getStringValue("quantity");
                                 String scale = lineComp.getStringValue("scale");
 
-                                LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
+                                LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, hocRefsVsInputs, lems);
                                 
                                 //System.out.println("lqp: "+lqp);
-
+                                
                                 if(plots.get(dispGraph) == null)
                                 {
                                     plots.put(dispGraph, new ArrayList<String>());
@@ -1229,7 +1233,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             String quantity = colComp.getStringValue("quantity");
                             String scale = "1";
 
-                            LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, lems);
+                            LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, hocRefsVsInputs, lems);
                             
                             //System.out.println("lqp: "+lqp);
 
@@ -1534,6 +1538,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         addComment(main, "Adding single input: " + input, bIndent);
 
         String safeInputName = NRNUtils.getSafeName(inputComp.getID());
+        String inputRef = nrnSection+":"+inputComp.getID();
+        hocRefsVsInputs.put(inputRef, inputName);
 
         if(!inputComp.getComponentType().isOrExtends("timedSynapticInput")) {
             main.append(String.format(bIndent+"h(\"objref %s\")\n", inputName));
@@ -2677,8 +2683,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                     {
                                         for(StateAssignment sa : oe.getStateAssignments())
                                         {
-                                            blockNetReceive.append("\n    : paramMappings: "+paramMappings+"\n");
-                                            blockNetReceive.append("?    state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + ", "
+                                            String pm = paramMappings.toString();
+                                            if (pm.length()>MAX_LENGTH_LINE_MOD_FILE-10)
+                                                pm = pm.substring(0,MAX_LENGTH_LINE_MOD_FILE-10)+"...";
+                                            blockNetReceive.append("\n    : paramMappings are: "+pm+"\n");
+                                            blockNetReceive.append("    : state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + ", "
                                                     + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp, paramMappings) + ")\n");
                                             blockNetReceive.append("    " + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp, paramMappings) + " = "
                                                     + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp, paramMappings) + "\n");
@@ -2741,7 +2750,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     for(StateAssignment sa : oe.getStateAssignments())
                     {
-                        blockNetReceive.append("?state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "
+                        String pm = paramMappings.toString();
+                        if (pm.length()>MAX_LENGTH_LINE_MOD_FILE-10)
+                            pm = pm.substring(0,MAX_LENGTH_LINE_MOD_FILE-10)+"...";
+                        blockNetReceive.append("\n: paramMappings . : "+pm+"\n");
+                        blockNetReceive.append(": state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + ", "
                                 + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + ") : From "+comp.id+"\n");
                         blockNetReceive.append("" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), comp, paramMappings) + " = "
                                 + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + " : From "+comp.id+"\n");
@@ -2751,7 +2764,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
         for(Component childComp : comp.getAllChildren())
         {
-            if(childComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PLASTICITY_MECHANISM_COMP_TYPE))
+            if(childComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PLASTICITY_MECHANISM_COMP_TYPE) ||
+               comp.getComponentType().isOrExtends(NeuroMLElements.DOUBLE_SYNAPSE_COMP_TYPE))
             {
                 parseOnEvent(childComp, blockNetReceive, paramMappings);
             }
@@ -2775,7 +2789,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if(comp.getComponentType().isOrExtends(NeuroMLElements.GAP_JUNCTION) ||
                comp.getComponentType().isOrExtends(NeuroMLElements.BASE_GRADED_SYNAPSE)||
                (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE) &&
-                !comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))) // This may be required for other Properties
+                !comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE)) ||
+               comp.getComponentType().isOrExtends(NeuroMLElements.DOUBLE_SYNAPSE_COMP_TYPE)) // This may be required for other Properties
             {
                 String mappedName = prefix + prop.getName();
                 rangeVars.add(mappedName);
@@ -3266,13 +3281,22 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     else
                     {
                         String localVar = dv.getPath().replaceAll("/", "_");
-                        String globalVar = prefix + dv.getPath().replaceAll("/", "_");
 
-                        //TODO: replacewith more thorough check...
-                        if (globalVar.startsWith("synapse_"))
+                        //TODO: replace with more thorough check...
+                        if (localVar.startsWith("synapse_"))
                         {
-                            globalVar = globalVar.replaceFirst("synapse_", comp.getChild("synapse").getID()+"_");
+                            localVar = localVar.replaceFirst("synapse_", comp.getChild("synapse").getID()+"_");
                         }
+                        else if (localVar.startsWith("synapse1_"))
+                        {
+                            localVar = localVar.replaceFirst("synapse1_", comp.getChild("synapse1").getID()+"_");
+                        }
+                        else if (localVar.startsWith("synapse2_"))
+                        {
+                            localVar = localVar.replaceFirst("synapse2_", comp.getChild("synapse2").getID()+"_");
+                        }
+                        
+                        String globalVar = prefix + localVar;
 
                         String eqn = globalVar;
                         String comment = "";
@@ -3311,7 +3335,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         if (comment.length()>0) {
                             block.append(NRNUtils.checkCommentLineLength(comment)+"\n");
                         }
-                        block.append(prefix + dv.getName() + " = " + eqn + " ? path based\n\n");
+                        block.append(prefix + dv.getName() + " = " + eqn + " ? path based, prefix = "+prefix+"\n\n");
                     }
                 }
                 // blockForEqns.insert(0, block);
@@ -3411,10 +3435,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
+        
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));

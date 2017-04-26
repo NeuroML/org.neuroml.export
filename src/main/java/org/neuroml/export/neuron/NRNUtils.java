@@ -153,7 +153,7 @@ public class NRNUtils implements UnitConverter
         " }\n" +
         "ENDVERBATIM\n" +
         "}\n\n"
-        + ": End of methods copied from netstim.mod in NEURON source"
+        + ": End of methods copied from netstim.mod in NEURON source\n"
         + ":****************************************************\n"
         + ""
         + ""
