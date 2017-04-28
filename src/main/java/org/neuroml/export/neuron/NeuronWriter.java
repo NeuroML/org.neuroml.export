@@ -99,7 +99,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     
     private static boolean parallelMode = false; // Some of the mod files etc. will have to be slightly different for Parallel NEURON 
     
-    private static int MAX_LENGTH_LINE_MOD_FILE = 300;
+    private static int MAX_LENGTH_LINE_MOD_FILE = 350;
     
     private final HashMap<String, String> hocRefsVsInputs = new HashMap<String, String>();
 
@@ -2694,6 +2694,32 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                         }
                                     }
                                 }
+                                
+                                // Particularly important for <doubleSynapse>
+                                for(Component childComp2 : childComp.getAllChildren())
+                                {
+                                    if(childComp2.getComponentType().getDynamics()!=null)
+                                    {
+                                        blockNetReceive.append("\n    : Child2: "+childComp2+"\n");
+                                        for(OnEvent oe : childComp2.getComponentType().getDynamics().getOnEvents())
+                                        {
+                                            if(oe.getPortName().equals(NeuroMLElements.SYNAPSE_PORT_IN))
+                                            {
+                                                for(StateAssignment sa : oe.getStateAssignments())
+                                                {
+                                                    String pm = paramMappings.toString();
+                                                    if (pm.length()>MAX_LENGTH_LINE_MOD_FILE-10)
+                                                        pm = pm.substring(0,MAX_LENGTH_LINE_MOD_FILE-10)+"...";
+                                                    blockNetReceive.append("\n    : paramMappings are: "+pm+"\n");
+                                                    blockNetReceive.append("    : state_discontinuity(" + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp2, paramMappings) + ", "
+                                                            + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp2, paramMappings) + ")\n");
+                                                    blockNetReceive.append("    " + NRNUtils.checkForStateVarsAndNested(sa.getStateVariable().getName(), childComp2, paramMappings) + " = "
+                                                            + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), childComp2, paramMappings) + "\n");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             blockNetReceive.append("\n    net_event(t)\n");
                             blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
@@ -2731,7 +2757,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             if(!comp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY)) { // since this will be hard coded as a more efficient impl, see parseOnStart
                 //parseParameters(childComp, prefixNew, prefix, rangeVars, stateVars, blockNeuron, blockParameter, paramMappings);
+                
+                //blockNetReceive.append("\n    : Parsing child: "+childComp+" of "+comp+"\n");
                 parseOnCondition(childComp, prefixNew, blockBreakpoint, blockNetReceive, paramMappings, conditionFlag);
+            }
+            else
+            {
+                //blockNetReceive.append("\n    : Not parsing child: "+childComp+" of "+comp+"\n");
             }
         }
     }
@@ -3440,8 +3472,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
