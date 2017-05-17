@@ -29,7 +29,7 @@ public enum ModelFeature
 
     SINGLE_COMP_MODEL("Model with only a single component (no network)"), 
     NETWORK_MODEL("Network model"), 
-    MULTI_CELL_MODEL("Network model with multiple cells in a population"), 
+    MULTI_CELL_MODEL("Network model with more than one cell in any population"), 
     MULTI_POPULATION_MODEL("Network model with multiple populations of cells"), 
     NETWORK_WITH_INPUTS_MODEL("Network model with external inputs to cells"), 
     NETWORK_WITH_PROJECTIONS_MODEL("Network model with projections between populations"), 
@@ -175,7 +175,6 @@ public enum ModelFeature
             if(populations.size() > 1)
             {
                 addIfNotPresent(mfs, MULTI_POPULATION_MODEL);
-                addIfNotPresent(mfs, MULTI_CELL_MODEL);
             }
             for(Component pop : populations)
             {

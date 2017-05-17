@@ -140,7 +140,7 @@ if sim.rank() == 0:
 #if ($oc.name!="t")
     # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
     ${oc.population}_segment =  ${oc.population}.get_data().segments[0]
-    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
+    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignals if x.name == 'soma(0.5).${oc.variable}'), None)
     ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
     ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
 #else
@@ -173,7 +173,7 @@ if options.plot_figure:
 #foreach ($curve in $d.curves )
     # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
     segment =  ${curve.population}.get_data().segments[0]
-    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
+    vm = next((x for x in segment.analogsignals if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
 #if (${curve.ordinate} == 'v')
     if not mp in ylabel: ylabel += mp
 #else
