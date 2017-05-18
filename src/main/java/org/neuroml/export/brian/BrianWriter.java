@@ -31,7 +31,6 @@ import org.lemsml.jlems.core.type.dynamics.StateAssignment;
 import org.lemsml.jlems.core.type.dynamics.StateVariable;
 import org.lemsml.jlems.core.type.dynamics.TimeDerivative;
 import org.lemsml.jlems.io.util.FileUtil;
-import org.lemsml.jlems.io.xmlio.XMLSerializer;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -122,6 +121,11 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			sb.append("from math import *\n");
 			sb.append("import sys\n\n");
 			sb.append("import numpy as np\n\n");
+            if (this.brian2)
+            {
+                sb.append("# Use numpy as code generation target (i.e. keep in pure Python)");
+                sb.append("prefs.codegen.target = 'numpy'");
+            }
 
 			sb.append("\nif len(sys.argv) > 1 and sys.argv[1] == '-nogui':\n    show_gui = False\nelse:\n    show_gui = True\n\n");
 
@@ -337,7 +341,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 					postRunSave.append("for l in all_" + outComp.id + ":\n");
 					postRunSave.append("    line = ''\n");
 					postRunSave.append("    for c in l: \n");
-					postRunSave.append("        line = line + (' %f'%c if len(line)>0 else '%f'%c)\n");
+					postRunSave.append("        line = line + (' %s'%c if len(line)>0 else '%s'%c)\n");
 					postRunSave.append("    file_" + outComp.id + ".write(line+'\\n')\n");
 					postRunSave.append("file_" + outComp.id + ".close()\n");
 				}
@@ -381,8 +385,12 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 			sb.append(preRunSave);
 
-			sb.append("\nprint(\"Running simulation for %s (dt = %s, # steps = %s)\"%(duration,defaultclock.dt, steps))\n");
-
+            
+            if (this.brian2)
+                sb.append("\nprint(\"Running simulation for %s (dt = %s, #steps = %s, code generation target = %s)\"%(duration,defaultclock.dt, steps, prefs.codegen.target))\n");
+            else
+                sb.append("\nprint(\"Running simulation for %s (dt = %s, #steps = %s)\"%(duration,defaultclock.dt, steps))\n");
+            
 
 			if(dt.endsWith("s")) dt = dt.substring(0, dt.length() - 1) + "*second"; // TODO: Fix!!!
 
