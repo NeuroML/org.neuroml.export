@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1916,11 +1917,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         String blockNetReceiveParams;
         StringBuilder ratesMethod = new StringBuilder("\n");
 
-        HashMap<String, HashMap<String, String>> paramMappings = new HashMap<String, HashMap<String, String>>();
+        LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings = new LinkedHashMap<String, LinkedHashMap<String, String>>();
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
         {
-            HashMap<String, String> paramMappingsComp = new HashMap<String, String>();
+            LinkedHashMap<String, String> paramMappingsComp = new LinkedHashMap<String, String>();
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
 
@@ -2524,11 +2525,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    private void parseOnStart(Component comp, String prefix, StringBuilder blockInitial, StringBuilder blockInitial_v, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, Lems lems)
+    private void parseOnStart(Component comp, String prefix, StringBuilder blockInitial, StringBuilder blockInitial_v, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, Lems lems)
             throws LEMSException
     {
 
-        HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
+        LinkedHashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 
         if(comp.getComponentType().hasDynamics())
         {
@@ -2611,7 +2612,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private static void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
+    private static void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
     {
         if(comp.getComponentType().getDynamics() != null)
         {
@@ -2768,7 +2769,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    private static void parseOnEvent(Component comp, StringBuilder blockNetReceive, HashMap<String, HashMap<String, String>> paramMappings) throws ContentError
+    private static void parseOnEvent(Component comp, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
         // Add appropriate state discontinuities for synaptic events in
         // NET_RECEIVE block. Do this for all child elements as well, in case
@@ -2805,14 +2806,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private static void parseParameters(Component comp, String prefix, String prefixParent, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron,
-            StringBuilder blockParameter, HashMap<String, HashMap<String, String>> paramMappings)
+            StringBuilder blockParameter, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings)
     {
 
-        HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
+        LinkedHashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 
         if(paramMappingsComp == null)
         {
-            paramMappingsComp = new HashMap<String, String>();
+            paramMappingsComp = new LinkedHashMap<String, String>();
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
         
@@ -2939,14 +2940,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private static void parseStateVars(Component comp, String prefix, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron, StringBuilder blockParameter,
-            StringBuilder blockAssigned, StringBuilder blockState, HashMap<String, HashMap<String, String>> paramMappings) throws ContentError
+            StringBuilder blockAssigned, StringBuilder blockState, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
 
-        HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
+        LinkedHashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 
         if(paramMappingsComp == null)
         {
-            paramMappingsComp = new HashMap<String, String>();
+            paramMappingsComp = new LinkedHashMap<String, String>();
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
 
@@ -3026,14 +3027,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private static void parseTimeDerivs(Component comp, String prefix, ArrayList<String> locals, StringBuilder blockDerivative, StringBuilder blockBreakpoint, StringBuilder blockAssigned,
-            StringBuilder ratesMethod, HashMap<String, HashMap<String, String>> paramMappings, String ionSpecies) throws ContentError
+            StringBuilder ratesMethod, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, String ionSpecies) throws ContentError
     {
 
         StringBuilder ratesMethodFinal = new StringBuilder();
 
         if(comp.getComponentType().hasDynamics())
         {
-            HashMap<String, String> rateNameVsRateExpr = new HashMap<String, String>();
+            LinkedHashMap<String, String> rateNameVsRateExpr = new LinkedHashMap<String, String>();
 
             for(TimeDerivative td : comp.getComponentType().getDynamics().getTimeDerivatives())
             {
@@ -3167,13 +3168,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private static void parseDerivedVars(Component comp, String prefix, ArrayList<String> rangeVars, StringBuilder ratesMethod, StringBuilder blockNeuron, StringBuilder blockParameter,
-            StringBuilder blockAssigned, StringBuilder blockBreakpoint, HashMap<String, HashMap<String, String>> paramMappings) throws ContentError
+            StringBuilder blockAssigned, StringBuilder blockBreakpoint, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
 
-        HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
+        LinkedHashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
         if(paramMappingsComp == null)
         {
-            paramMappingsComp = new HashMap<String, String>();
+            paramMappingsComp = new LinkedHashMap<String, String>();
             paramMappings.put(comp.getUniqueID(), paramMappingsComp);
         }
 

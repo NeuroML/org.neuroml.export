@@ -5,6 +5,7 @@ package org.neuroml.export.neuron;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import org.lemsml.export.dlems.UnitConverter;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -246,7 +247,7 @@ public class NRNUtils implements UnitConverter
         return threshold;
     }
 
-    protected static String checkForStateVarsAndNested(String expr, Component comp, HashMap<String, HashMap<String, String>> paramMappings)
+    protected static String checkForStateVarsAndNested(String expr, Component comp, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings)
     {
 
         if (expr == null)
