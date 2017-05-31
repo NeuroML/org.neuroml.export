@@ -856,8 +856,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 addComment(main, "######################   Electrical Projection: "+id,"        ");
                 info = String.format("Adding electrical projection: %s from %s to %s, with %d connection(s)", id, prePop, postPop, number);
                 main.append(bIndent+"print(\""+info+"\")\n\n");
+                
+                ArrayList<Component> connChildren = ep.getChildrenAL("connections");
+                connChildren.addAll(ep.getChildrenAL("connectionInstances"));
 
-                Component synapseComp = ep.getChildrenAL("connections").get(0).getRefComponents().get("synapse");
+                Component synapseComp = connChildren.get(0).getRefComponents().get("synapse");
 
                 generateModForComp(synapseComp);
 
@@ -868,7 +871,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", synObjNameB, number));
 
                 int index = 0;
-                for(Component ec : ep.getChildrenAL("connections"))
+                for(Component ec : connChildren)
                 {
 
                     if(ec.getComponentType().isOrExtends(NeuroMLElements.ELECTRICAL_CONNECTION) ||
@@ -985,9 +988,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 addComment(main, "######################   Continuous Projection: "+id,"        ");
                 info = String.format("Adding continuous projection: %s from %s to %s, with %d connection(s)", id, prePop, postPop, number);
                 main.append(bIndent+"print(\""+info+"\")\n\n");
+                
+                ArrayList<Component> connChildren = ep.getChildrenAL("connections");
+                connChildren.addAll(ep.getChildrenAL("connectionInstances"));
 
-                Component preComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("preComponent");
-                Component postComponent = ep.getChildrenAL("connections").get(0).getRefComponents().get("postComponent");
+                Component preComponent = connChildren.get(0).getRefComponents().get("preComponent");
+                Component postComponent = connChildren.get(0).getRefComponents().get("postComponent");
 
                 generateModForComp(preComponent);
                 generateModForComp(postComponent);
@@ -999,7 +1005,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", postCompObjName, number));
 
                 int index = 0;
-                for(Component cc : ep.getChildrenAL("connections"))
+                for(Component cc : connChildren)
                 {
                     if(cc.getComponentType().isOrExtends(NeuroMLElements.CONTINUOUS_CONNECTION) ||
                        cc.getComponentType().isOrExtends(NeuroMLElements.CONTINUOUS_CONNECTION_INSTANCE))
@@ -2744,6 +2750,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     for(StateAssignment sa : oc.getStateAssignments())
                     {
                         blockNetReceive.append("\n    " + prefix + sa.getStateVariable().getName() + " = " + NRNUtils.checkForStateVarsAndNested(sa.getValueExpression(), comp, paramMappings) + "\n");
+                        
+                        if(sa.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE))
+                        {
+                            blockNetReceive.append("\n    " + prefix + NRNUtils.getStateVarName(sa.getStateVariable().getName()) + " = 0 : Setting rate of change of v to 0\n");
+                        
+                        }
                     }
                     blockNetReceive.append("}\n");
 
@@ -3476,6 +3488,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
@@ -3506,7 +3520,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/GranCellLayer/neuroConstruct/generatedNeuroML2/LEMS_GranCellLayer.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_Soma_Test_HELPER.xml"));
 
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/neuroConstruct/generatedNeuroML2/LEMS_Thalamocortical.xml"));
 
 

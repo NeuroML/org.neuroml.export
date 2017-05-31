@@ -246,7 +246,10 @@ public class DLemsWriter extends ABaseWriter
             }
             for (Component proj : projs)
             {
-                String synId = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
+                ArrayList<Component> connChildren = proj.getChildrenAL("connections");
+                connChildren.addAll(proj.getChildrenAL("connectionInstances"));
+                
+                String synId = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : connChildren.get(0).getStringValue("synapse");
                 
                 String postsynapticPopulation = proj.getStringValue("postsynapticPopulation");
                 String postCell = cellIdsVsPopulations.get(postsynapticPopulation);
@@ -420,7 +423,10 @@ public class DLemsWriter extends ABaseWriter
                 ArrayList<String> handledSyns = new ArrayList<String>();
                 for (Component proj : projs)
                 {
-                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
+                    ArrayList<Component> connChildren = proj.getChildrenAL("connections");
+                    connChildren.addAll(proj.getChildrenAL("connectionInstances"));
+                
+                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : connChildren.get(0).getStringValue("synapse");
                     if (!handledSyns.contains(synRef))
                     {
                         //System.out.println("-             Adding " + synRef);
@@ -536,18 +542,19 @@ public class DLemsWriter extends ABaseWriter
                 g.writeObjectFieldStart(DLemsKeywords.PROJECTIONS.get());
                 for (Component proj: projs)
                 {
+                    ArrayList<Component> connChildren = proj.getChildrenAL("connections");
+                    connChildren.addAll(proj.getChildrenAL("connectionInstances"));
                     g.writeObjectFieldStart(proj.id);
                     g.writeStringField(DLemsKeywords.PRE_POPULATION.get(), proj.getStringValue("presynapticPopulation"));
                     g.writeStringField(DLemsKeywords.POST_POPULATION.get(), proj.getStringValue("postsynapticPopulation"));
-                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : proj.getChildrenAL("connections").get(0).getStringValue("synapse");
+                    String synRef = proj.hasStringValue("synapse") ? proj.getStringValue("synapse") : connChildren.get(0).getStringValue("synapse");
                     g.writeStringField(DLemsKeywords.SYNAPSE.get(), synRef);
                     
                     g.writeArrayFieldStart(DLemsKeywords.CONNECTIONS.get());
 
-                    ArrayList<Component> conns = proj.getChildrenAL("connections");
-                    conns.addAll(proj.getChildrenAL("connectionsWD"));
+                    connChildren.addAll(proj.getChildrenAL("connectionsWD"));
         
-                    for (Component conn: conns)
+                    for (Component conn: connChildren)
                     {
                         g.writeStartObject();
                         g.writeStringField(DLemsKeywords.NAME.get(), conn.id);
