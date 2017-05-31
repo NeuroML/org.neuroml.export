@@ -123,8 +123,8 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			sb.append("import numpy as np\n\n");
             if (this.brian2)
             {
-                sb.append("# Use numpy as code generation target (i.e. keep in pure Python)");
-                sb.append("prefs.codegen.target = 'numpy'");
+                //sb.append("# Use numpy as code generation target (i.e. keep in pure Python)");
+                //sb.append("prefs.codegen.target = 'numpy'");
             }
 
 			sb.append("\nif len(sys.argv) > 1 and sys.argv[1] == '-nogui':\n    show_gui = False\nelse:\n    show_gui = True\n\n");
