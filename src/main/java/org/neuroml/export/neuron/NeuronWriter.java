@@ -2934,7 +2934,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
         }
-        ArrayList<Component> orderedChildren = (ArrayList<Component>)Utils.reorderAlphabetically(comp.getAllChildren(), true);
+        ArrayList<Component> orderedChildren = comp.getAllChildren();
         
         for(Component childComp : orderedChildren)
         {
