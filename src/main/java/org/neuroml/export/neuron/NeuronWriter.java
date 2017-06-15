@@ -542,9 +542,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(bIndent+"    rand = h.Random()\n");
                         main.append(bIndent+"    self.randoms.append(rand)\n");
                         
-                        main.append(bIndent+"    seed_ = self._id32('%d'%self.seed)\n");
-                        main.append(bIndent+"    #print(\"Seeding random generator on "+hocMechName+" (i=%i) with %s from stim seed %s\"%(i, seed_, self.seed))\n");
-                        main.append(bIndent+"    rand.Random123(self.next_global_id, seed_)\n");
+                        main.append(bIndent+"    #print(\"Seeding random generator on "+hocMechName+" (i=%i) with stim seed %s\"%(i, self.seed))\n");
+                        main.append(bIndent+"    self._init_stim_randomizer(rand,\""+popComp.getID()+"\",self.next_global_id, self.seed)\n");
                         main.append(bIndent+"    rand.negexp(1)\n");
                         main.append(bIndent+"    h."+hocMechName+".noiseFromRandom(rand)\n\n");
                         
@@ -1420,6 +1419,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append("    def _id32 (self,obj): \n");
             main.append(bIndent+"return int(hashlib.md5(obj).hexdigest()[0:8],16)  # convert 8 first chars of md5 hash in base 16 to int\n\n\n");
             
+            main.append("    ###############################################################################\n");
+            main.append("    # Initialize the stim randomizer\n");
+            main.append("    # This is copied from NetPyNE: https://github.com/Neurosim-lab/netpyne/blob/master/netpyne/simFuncs.py\n");
+            main.append("    ###############################################################################\n");
+            main.append("    def _init_stim_randomizer(self,rand, stimType, gid, seed): \n");
+            //main.append(bIndent+"print(\"INIT STIM  %s; %s; %s; %s\"%(rand, stimType, gid, seed))\n");
+            main.append(bIndent+"rand.Random123(self._id32(stimType), gid, seed)\n\n\n");
+            
             main.append("    def save_results(self):\n\n");
             main.append(bIndent+"print(\"Saving results at t=%s...\"%h.t)\n\n");
             main.append(bIndent+"if self.sim_end < 0: self.sim_end = time.time()\n\n");
@@ -1559,9 +1566,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 main.append(bIndent+"rand = h.Random()\n");
                 main.append(bIndent+"self.randoms.append(rand)\n");
-                main.append(bIndent+"seed_ = self._id32('%d'%self.seed)\n");
-                main.append(bIndent+"#print(\"Seeding random generator on "+inputName+" with %s from stim seed %s\"%(seed_, self.seed))\n");
-                main.append(bIndent+"rand.Random123(self.next_spiking_input_id, seed_)\n");
+                main.append(bIndent+"#print(\"Seeding random generator on "+inputName+" with stim seed %s\"%(self.seed))\n");
+                main.append(bIndent+"self._init_stim_randomizer(rand,\""+safeInputName+"\",self.next_spiking_input_id, self.seed)\n");
                 main.append(bIndent+"rand.negexp(1)\n");
                 main.append(bIndent+"h."+inputName+".noiseFromRandom(rand)\n");
                 main.append(bIndent+"self.next_spiking_input_id+=1\n");
@@ -3484,6 +3490,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));

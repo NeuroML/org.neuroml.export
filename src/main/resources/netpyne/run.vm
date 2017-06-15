@@ -7,6 +7,8 @@ from netpyne import sim    # import netpyne sim module
 
 from neuron import h
 
+import sys
+
 
 #[[###############################################################################]]#
 # NETWORK PARAMETERS
@@ -45,7 +47,7 @@ simConfig.recordTraces = {}
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'popLabel':'$oc.population','cellLabel':$oc.population_index}}
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
 #end
 #end
 #end
@@ -114,3 +116,6 @@ if sim.rank==0:
 #end
 
     print("Saved all data.")
+
+if '-nogui' in sys.argv:
+    quit()

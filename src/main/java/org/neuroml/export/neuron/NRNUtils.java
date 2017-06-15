@@ -3,6 +3,7 @@
  */
 package org.neuroml.export.neuron;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -421,13 +422,12 @@ public class NRNUtils implements UnitConverter
 
     protected static float convertToNeuronUnits(float siVal, String dimensionName)
     {
-        float factor = getNeuronUnitFactor(dimensionName);
-        float newVal = siVal * factor;
+        BigDecimal factor = new BigDecimal(getNeuronUnitFactor(dimensionName));
+        BigDecimal newValB = new BigDecimal(siVal+"");
+        newValB = newValB.multiply(factor);
         
-        //if (dimensionName.equals("temperature"))
-        //    newVal = newVal - 273.15f;
-        
-        //System.out.println("f "+factor+" val "+val+"  new "+newVal+"; dim "+dimensionName);
+        float newVal = newValB.floatValue();
+        //System.out.println("f "+factor+" val "+siVal+"  new "+newVal+";  new "+newValB+"; dim "+dimensionName);
         return newVal;
     }
 
@@ -545,12 +545,14 @@ public class NRNUtils implements UnitConverter
 	public static void main(String args[])
 	{
 		NRNUtils nu = new NRNUtils();
-        float f = 0.001f;
+        float f = 2.5e-5f;
         
         System.out.println("Converting "+f+" to "+nu.convert(f, "none"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "none"));
         System.out.println("Converting "+f+" to "+nu.convert(f, "voltage"));
+        System.out.println("Converting "+f+" to "+nu.convert(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "voltage"));
+        System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "conductance"));
         
 

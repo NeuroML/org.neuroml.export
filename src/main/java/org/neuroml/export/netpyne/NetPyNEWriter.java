@@ -44,6 +44,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 	String commPost = "'''";
     
     boolean nogui = true;
+    boolean regenerateNeuroMLNet = false;
 
 	private final List<File> outputFiles = new ArrayList<File>();
     private final DLemsWriter dlemsw;
@@ -57,6 +58,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 		super(lems, Format.NETPYNE);
         dlemsw = new DLemsWriter(lems, null, false);
         dlemsw.setPopulationMode(true);
+        dlemsw.setNeuronMode(true);
 		initializeWriter();
 	}
 	
@@ -83,6 +85,12 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 		E.setDebug(false);
 	}
 
+    public void setRegenerateNeuroMLNet(boolean regenerateNeuroMLNet)
+    {
+        this.regenerateNeuroMLNet = regenerateNeuroMLNet;
+    }
+    
+   
 	@Override
 	public void setSupportedFeatures()
 	{
@@ -227,15 +235,22 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             // Assume the only one is the correct file;
             mainNetworkFile = onlyNmlFile;
         }
-        if (mainNetworkFile==null) {
+        if (mainNetworkFile==null || regenerateNeuroMLNet) {
             
             String nmlString = Utils.convertLemsToNeuroMLLikeXml(lems, simCpt.getStringValue("target"));
-            System.out.println("nmlString "+nmlString);
             
-            mainNetworkFile = getOutputFileName().replaceAll("_netpyne.py", ".net.nml").replaceAll("LEMS_", "NET_");
+            if (getOutputFileName().indexOf("_netpyne.py")>0)
+            {
+                mainNetworkFile = getOutputFileName().replaceAll("_netpyne.py", ".net.nml").replaceAll("LEMS_", "NET_");
+            }
+            else
+            {
+                mainNetworkFile = "NET_"+simCpt.getRefComponents().get("target").getID()+".net.nml";
+            }
             
             File newNet = new File(getOutputFolder(),mainNetworkFile);
             FileUtil.writeStringToFile(nmlString, newNet);
+            outputFiles.add(newNet);
             
             E.info(">>> Written network info to: "+newNet.getAbsolutePath());
             
@@ -383,6 +398,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
@@ -395,7 +411,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/ghk-nernst/NeuroML2/LEMS_nernst_na_k_ca.xml"));
-        lemsFiles.add(new File("/home/padraig/git/osb-model-validation/utilities/local_test/netpyneshowcase/NeuroML2/scaling/LEMS_Balanced.xml"));
+        //lemsFiles.add(new File("/home/padraig/git/osb-model-validation/utilities/local_test/netpyneshowcase/NeuroML2/scaling/LEMS_Balanced.xml"));
         //lemsFiles.add(new File("/home/padraig/git/osb-model-validation/utilities/local_test/netpyneshowcase/NeuroML2/scaling/LEMS_Balanced_hdf5.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
@@ -410,7 +426,11 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile, false).getLems();
             System.out.println("lems c"+lems.components);
-            NetPyNEWriter pw = new NetPyNEWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
+            NetPyNEWriter pw = new NetPyNEWriter(lems);
+            pw.setOutputFolder(lemsFile.getParentFile());
+            pw.setOutputFileName(lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
+            
+            pw.setRegenerateNeuroMLNet(true);
             
             List<File> files = pw.generateAndRun(true, false, 1);
             for (File f : files)
