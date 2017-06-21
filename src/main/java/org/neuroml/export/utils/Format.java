@@ -19,7 +19,7 @@ public enum Format
 	NEURON("NEURON", "py"),
 	NEURON_A("NEURONa", "NEURONa"),
 	PYNN("PyNN", "py"),
-	NETPYNE("NetPyNE", "py"),
+	NETPYNE("NETPYNE", "py"),
 	SVG("SVG", "svg"),
 	NINEML("NineML", "9ml"),
 	SPINEML("SpineML", "spineml"),

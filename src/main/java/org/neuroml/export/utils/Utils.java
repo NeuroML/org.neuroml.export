@@ -302,6 +302,9 @@ public class Utils
                 xml = xml.replaceAll("<populationList ", "<population type=\"populationList\" ");
                 xml = xml.replaceAll("</populationList>", "</population>");
                 
+                xml = xml.replaceAll("<networkWithTemperature ", "<network type=\"networkWithTemperature\" ");
+                xml = xml.replaceAll("</networkWithTemperature>", "</network>");
+                
                 boolean include = true;
                 
                 if (comp.getTypeName().equals("network") || comp.getTypeName().equals("networkWithTemperature"))
