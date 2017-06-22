@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.flatten.ComponentFlattener;
-import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.run.ConnectionError;
 import org.lemsml.jlems.core.sim.*;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Constant;
+import org.lemsml.jlems.core.type.DerivedParameter;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.LemsCollection;
@@ -325,11 +325,11 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 							if(!timesAdded)
 							{
-								postRunSave.append(monitor + "." + times + ", ");
+								postRunSave.append(monitor + "." + times + " ");
 								timesAdded = true;
 							}
 
-							if(postRunSave.indexOf("[0]") > 0) postRunSave.append(", ");
+							postRunSave.append(" , ");
 							postRunSave.append(monitor + (brian2 ? "." + l1.getVariable() : "") + "[0] ");
 
 						}
@@ -450,7 +450,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		if(dim.getName().equals("current")) return "amp";
 		if(dim.getName().equals("current")) return "amp";
 		if(dim.getName().equals("volume")) return "meter3";
-		if(dim.getName().equals("concentration")) return "mmole";
+		if(dim.getName().equals("concentration")) return "mole";
 
 		StringBuilder unitInfo = new StringBuilder();
 		appendSIUnit(unitInfo, "kilogram", dim.getM());
@@ -516,6 +516,13 @@ public class BrianWriter extends ANeuroMLBaseWriter
 		{
 			throw new ParseError("Error when flattening component: " + compOrig, e);
 		}
+        
+        /*
+        String typeOut = XMLSerializer.serialize(ctFlat);
+        String cptOut = XMLSerializer.serialize(cpFlat);
+      
+        E.info("--------------------------------------\nFlat type: \n" + typeOut);
+        E.info("--------------------------------------\nFlat cpt: \n" + cptOut);*/
 
 		LemsCollection<Parameter> parameters = ctFlat.getDimParams();
 		/*
@@ -582,6 +589,20 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			}
 		}
 
+		LemsCollection<DerivedParameter> expDevPars = ctFlat.getDerivedParameters();
+		for(DerivedParameter dp : expDevPars)
+		{
+			String units = " " + getBrianSIUnits(dp.getDimension());
+			if(units.contains(Unit.NO_UNIT)) units = " 1";
+
+			String expr = dp.getValueExpression();
+			if(expr.startsWith("0 ")) expr = "(0 *" + units + ") " + expr.substring(2);
+			if(expr.equals("0")) expr = expr + " * " + units;
+			expr = expr.replace("^", "**");
+         
+			compInfo.eqns.append("    " + prefix + dp.getName() + " = " + expr + " : " + units + "\n");
+		}
+
 		LemsCollection<DerivedVariable> expDevVar = dyn.getDerivedVariables();
 		for(DerivedVariable edv : expDevVar)
 		{
@@ -616,24 +637,31 @@ public class BrianWriter extends ANeuroMLBaseWriter
 			if(units.contains(Unit.NO_UNIT)) units = " 1";
 
 			String exprFull = "";
-            String exprDefault = "None";
+            String exprDefault = "";
             String exprFinal="";
+            String defaultCond = "";
+            
             for (Case case_: cdv.cases) {
                 String iftrue = case_.getValueExpression();
                 if(iftrue.startsWith("0 ")) iftrue = "(0 *" + units + ") " + iftrue.substring(2);
                 if(iftrue.equals("0")) iftrue = iftrue + " * " + units;
                 iftrue = iftrue.replace("^", "**");
+                
                 String condition;
                 if (case_.condition!=null) {
-                    condition = formatCondition(case_.condition);
+                    condition = "int("+formatCondition(case_.condition)+")";
+                    defaultCond += "(int("+condition+"==0)) * ";
+                    if (exprFull.length()>0)
+                        exprFull += " + ";
+                    exprFull += " ( "+ condition +" * ("+iftrue+") ) ";
+                    
                 } else {
-                    condition = "True";
+                    exprDefault = iftrue;
                 }
-                exprFull = exprFull+ iftrue +" if "+condition+" else (";
-                exprFinal = exprFinal +")";
+
             }
-            exprFull = exprFull + exprDefault;
-            exprFull = exprFull + exprFinal;
+            if (exprDefault.length()>0)
+                exprFull = exprFull + " + ( "+defaultCond+" "+exprDefault+")";
             
 			compInfo.eqns.append("    " + prefix + cdv.getName() + " = " + exprFull + " : " + units + "\n");
 		}
@@ -676,9 +704,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
 					initVal = Utils.replaceInExpression(initVal, c.getName(), popName + "." + prefix + c.getName());
 				}
                 if (brian2) {
-                    // hhpop.variables['kChans_k_n_q'].set_value(0.5)
                     compInfo.initInfo.append(""+popName + "." + prefix + va.getStateVariable().getName() + " = " + initVal + "\n");
-                    //compInfo.initInfo.append(popName + ".variables['" + prefix + va.getStateVariable().getName() + "'].set_value(" + initVal + ")\n");
                 } else {
                     compInfo.initInfo.append(popName + "." + prefix + va.getStateVariable().getName() + " = " + initVal + "\n");
                 }
@@ -723,17 +749,23 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 		ArrayList<File> lemsFiles = new ArrayList<File>();
         
-		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        ///lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
+		/*lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
 		//lemsFiles.add(new File("../NeuroML2/LEMSexamples/NoInp0.xml"));
 		lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/barnacle/MorrisLecarModel/NeuroML2/Run_MorrisLecarSCell.xml"));
 		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRose.xml"));
 		//lemsFiles.add(new File("../git/PinskyRinzelModel/NeuroML2/LEMS_Figure3.xml"));
-		lemsFiles.add(new File("../neuroConstruct/osb/showcase/BrianShowcase/NeuroML2/LEMS_2007One.xml"));
 		//lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
 		lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
+		lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/interneurons/FergusonEtAl2013-PVFastFiringCell/NeuroML2/LEMS_PVBC.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_OneComp.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_SingleAP.xml"));
+ */    
+		lemsFiles.add(new File("../neuroConstruct/osb/showcase/BrianShowcase/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
 
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         
 		for(File lemsFile : lemsFiles) {
             
