@@ -28,7 +28,8 @@ public enum Format
 	XINEML("Xineml", ""),
 	XPP("Xpp", "ode"),
 	PNG("PNG", "png"),
-	VERTEX("VERTEX", "m");
+	VERTEX("VERTEX", "m"),    
+	JNEUROML("jNeuroML", "xml");
 	
 	private final String label;
 	private final String extension;

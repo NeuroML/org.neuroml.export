@@ -180,6 +180,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
 	public String getMainScript() throws GenerationException, LEMSException, NeuroMLException, IOException
 	{
+        boolean cleanup = true;
         mainDlemsFile = getOutputFileName()+"_main.json";
         dlemsw.setOutputFileName(mainDlemsFile);
         NRNUtils nrnUtils = new NRNUtils();
@@ -265,7 +266,6 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             nrnWriter.setParallelMode(true);
             List<File> dlemsFiles = dlemsw.convert();
             
-            boolean cleanup = true;
             
             for (File dlemsFile: dlemsFiles) {
                     
@@ -422,6 +422,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/NeuroML2/pythonScripts/netbuild/LEMS_Figure7AeLoSS.xml"));*/
 
+		lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
         for (File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile, false).getLems();

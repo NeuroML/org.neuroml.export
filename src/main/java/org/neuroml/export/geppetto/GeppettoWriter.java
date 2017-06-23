@@ -23,6 +23,33 @@ import org.neuroml.model.util.NeuroMLException;
 /**
  *
  * @author padraig
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ *   
+ * 
+ * 
+ *      This has not been tested recently and is quite possiblly not compatible 
+ *      with the latest version of Geppetto
+ * 
+ * 
  */
 public class GeppettoWriter extends AXMLWriter
 {

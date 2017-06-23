@@ -10,6 +10,7 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
@@ -291,13 +292,6 @@ public class Utils
                 String knownAs = null;
                 String typeAttribute = null;
                 
-                /*
-                if (comp.getTypeName().equals("populationList")) 
-                {
-                    knownAs = "population";
-                    typeAttribute = "populationList";
-                }*/
-                
                 String xml = xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n";
                 xml = xml.replaceAll("<populationList ", "<population type=\"populationList\" ");
                 xml = xml.replaceAll("</populationList>", "</population>");
@@ -319,6 +313,22 @@ public class Utils
             }
         }
         
+        Lems standardNml2Lems = getLemsWithNML2CompTypes();
+        
+        for (ComponentType ct: lems.getComponentTypes())
+        {
+            try
+            {
+                standardNml2Lems.getComponentTypeByName(ct.getName());
+            }
+            catch(ContentError ce)  // not a standard nml2 comp type...
+            {
+                String xml = xmlSer.writeObject(ct);
+                compString.append(xml);
+                
+            }
+        }
+        
         String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" 
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
 				+ "    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\"\n"
@@ -326,6 +336,44 @@ public class Utils
         
         
 		return nmlString;
+	}
+
+	public static String extractLemsSimulationXml(Lems lems, String externalFiletoInclude) throws LEMSException, NeuroMLException
+	{
+        StringBuilder compString = new StringBuilder();
+        
+		XMLSerializer xmlSer = XMLSerializer.newInstance();
+        
+        String target = null;
+        for (Component comp: lems.getComponents()) 
+        {
+            if (comp.getTypeName().equals("Simulation")) 
+            {
+                target = comp.getID();
+                String xml = xmlSer.writeObject(comp,null,null)+"\n";
+                
+                compString.append(xml);
+                
+            }
+        }
+        
+        String lemsString = "<Lems> \n";
+        
+        lemsString += "<!-- Specify which component to run -->\n" +
+"    <Target component=\""+target+"\"/>\n" +
+"    \n" +
+"    <!-- Include core NeuroML2 ComponentType definitions -->\n" +
+"    <Include file=\"Cells.xml\"/>\n" +
+"    <Include file=\"Networks.xml\"/>\n" +
+"    <Include file=\"Simulation.xml\"/>\n\n";
+        
+        if (externalFiletoInclude!=null)
+            lemsString += "    <Include file=\""+externalFiletoInclude+"\"/>\n\n";
+            
+        lemsString += compString + "</Lems>";
+        
+        
+		return lemsString;
 	}
 
 	public static NeuroMLDocument convertLemsComponentToNeuroMLDocument(Component comp) throws LEMSException, NeuroMLException

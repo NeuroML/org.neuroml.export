@@ -15,6 +15,7 @@ import org.neuroml.export.cellml.CellMLWriter;
 import org.neuroml.export.dnsim.DNSimWriter;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.graph.GraphWriter;
+import org.neuroml.export.jneuroml.JNeuroMLWriter;
 import org.neuroml.export.nest.NestWriter;
 import org.neuroml.export.netpyne.NetPyNEWriter;
 import org.neuroml.export.neuron.NeuronWriter;
@@ -94,6 +95,8 @@ public class ExportFactory
                 break;
             case XPP:
                 writer = new XppWriter(lems);
+            case JNEUROML:
+                writer = new JNeuroMLWriter(lems);
             default:
                 break;
         }

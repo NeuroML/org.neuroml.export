@@ -325,11 +325,11 @@ public class BrianWriter extends ANeuroMLBaseWriter
 
 							if(!timesAdded)
 							{
-								postRunSave.append(monitor + "." + times + " ");
+								postRunSave.append(monitor + "." + times + "");
 								timesAdded = true;
 							}
 
-							postRunSave.append(" , ");
+							postRunSave.append(", ");
 							postRunSave.append(monitor + (brian2 ? "." + l1.getVariable() : "") + "[0] ");
 
 						}
