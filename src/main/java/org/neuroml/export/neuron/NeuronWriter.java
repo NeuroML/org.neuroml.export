@@ -1168,9 +1168,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     main.append(bIndent+dg + ".size(0,h.tstop,-80.0,50.0)\n");
                     main.append(bIndent+dg + ".view(0, -80.0, h.tstop, 130.0, 80, 330, 330, 250)\n");
                     main.append(bIndent+"h.graphList[0].append(" + dg + ")\n");
-                    for(String plot : plots.get(dg))
+                    if(plots.containsKey(dg))
                     {
-                        main.append(bIndent+plot + "\n");
+                        for(String plot : plots.get(dg))
+                        {
+                            main.append(bIndent+plot + "\n");
+                        }
                     }
                     main.append("\n");
                 }
