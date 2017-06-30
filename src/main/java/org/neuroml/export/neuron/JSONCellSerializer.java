@@ -482,7 +482,7 @@ public class JSONCellSerializer
                         g.writeStringField("variable", inhomogeneousParametersVsVariables.get(vp.getInhomogeneousValue().getInhomogeneousParameter()));
 
                         String convFactor = units.condDensFactor + " * ";
-                        g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
+                        g.writeStringField("inhomogeneousValue", convFactor + "("+vp.getInhomogeneousValue().getValue()+")");
                         g.writeStringField("comment", "Conversion factor of:  (" + convFactor + ") added");
                     }
                 }
