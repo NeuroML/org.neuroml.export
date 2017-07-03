@@ -3205,7 +3205,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             String prefixNew = getPrefix(childComp, prefix);
             parseDerivedVars(childComp, prefixNew, rangeVars, ratesMethod, blockNeuron, blockParameter, blockAssigned, blockBreakpoint, paramMappings);
         }
-
+            
         ArrayList<String> instanceRequirements = new ArrayList<String>();
         for(InstanceRequirement ir : comp.getComponentType().instanceRequirements)
         {
@@ -3350,6 +3350,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             localVar = localVar.replaceFirst("synapse2_", comp.getChild("synapse2").getID()+"_");
                         }
+                        else if (localVar.startsWith("ionChannel_"))
+                        {
+                            localVar = localVar.replaceFirst("ionChannel_", comp.getChild("ionChannel").getID()+"_");
+                        }
                         
                         String globalVar = prefix + localVar;
 
@@ -3487,7 +3491,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
@@ -3590,6 +3594,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Social.xml"));
                 /* */
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/chanDens/LEMS_cck.xml"));
+        
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        
         String testScript = "set -e\n";
 
         NeuronWriter nw;
