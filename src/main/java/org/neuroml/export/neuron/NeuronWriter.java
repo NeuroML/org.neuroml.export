@@ -1222,13 +1222,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     if(columnsPostTraces.get(outfileId) == null)
                     {
                         columnsPostTraces.put(outfileId, new ArrayList<String>());
-                        writingVariables.put(outfileId, new ArrayList<String>());
+                        
                     }
                     if(columnsPost0.get(outfileId) == null)
                     {
                         columnsPost0.put(outfileId, new ArrayList<String>());
                     }
-                    
+                    if (writingVariables.get(outfileId) == null) {
+                        writingVariables.put(outfileId, new ArrayList<String>());
+                    }
 
                     //columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
                     columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t");
