@@ -1477,18 +1477,20 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(col);
                     }
 
-                    main.append("\\n' % (");
+                    if (!f.equals(timeRef)) {
+                        main.append("\\n' % (");
 
-                    if (writingVariables.containsKey(f)) {
-                        for (String writingVar : writingVariables.get(f)) {
-                            main.append(writingVar);
+                        if (writingVariables.containsKey(f)) {
+                            for (String writingVar : writingVariables.get(f)) {
+                                main.append(writingVar);
+                            }
                         }
+
+                        main.append("))");
                     }
 
-                    main.append(")");
-
                     //main.append("+ '\\n\')\n");
-                    main.append(")\n");
+                    main.append("\n");
                 }
                 if (columnsPostSpikes.containsKey(f))
                 {
