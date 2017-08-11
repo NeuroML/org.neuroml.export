@@ -1206,6 +1206,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             columnsPostTraces.get(timeRef).add(bIndent+"    f_" + timeRef + "_f2.write('%f'% py_v_" + timeRef + "[i])  # Save in SI units...");
 
+
+            HashMap<String, ArrayList<String>> writingVariables = new HashMap<String, ArrayList<String>>();            
+
             for(Component ofComp : simCpt.getAllChildren())
             {
                 if(ofComp.getTypeName().equals("OutputFile"))
@@ -1219,13 +1222,19 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     if(columnsPostTraces.get(outfileId) == null)
                     {
                         columnsPostTraces.put(outfileId, new ArrayList<String>());
+                        
                     }
                     if(columnsPost0.get(outfileId) == null)
                     {
                         columnsPost0.put(outfileId, new ArrayList<String>());
                     }
+                    if (writingVariables.get(outfileId) == null) {
+                        writingVariables.put(outfileId, new ArrayList<String>());
+                    }
 
-                    columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
+                    //columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
+                    columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t");
+                    writingVariables.get(outfileId).add("py_v_" + timeRef + "[i], ");
 
                     ArrayList<String> colIds = new ArrayList<String>();
 
@@ -1258,8 +1267,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             columnsPost0.get(outfileId).add(bIndent+
                                     "py_v_" + colId + " = [ float(x " + factor + ") for x in h.v_" + colId + ".to_python() ]  # Convert to Python list for speed, variable has dim: " + lqp.getDimension().getName());
 
-                            columnsPostTraces.get(outfileId).add(
-                                    " + '%e\\t'%(py_v_" + colId + "[i]) ");
+                            /*columnsPostTraces.get(outfileId).add(
+                                    " + '%e\\t'%(py_v_" + colId + "[i]) ");*/
+
+                            columnsPostTraces.get(outfileId).add("%e\\t");
+                            writingVariables.get(outfileId).add("py_v_" + colId + "[i], ");
 
                         }
                     }
@@ -1464,7 +1476,21 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         main.append(col);
                     }
-                    main.append("+ '\\n\')\n");
+
+                    if (!f.equals(timeRef)) {
+                        main.append("\\n' % (");
+
+                        if (writingVariables.containsKey(f)) {
+                            for (String writingVar : writingVariables.get(f)) {
+                                main.append(writingVar);
+                            }
+                        }
+
+                        main.append("))");
+                    }
+
+                    //main.append("+ '\\n\')\n");
+                    main.append("\n");
                 }
                 if (columnsPostSpikes.containsKey(f))
                 {
