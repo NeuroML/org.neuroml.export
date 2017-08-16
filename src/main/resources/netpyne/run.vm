@@ -117,7 +117,6 @@ if sim.rank==0:
 
 #foreach ($of in $spike_file )
     print("Saving spikes to file: $of.file_name (ref: $of.name)")
-    file_format = '$of.spike_file_format'
     to_record = {}
 #foreach ($oc in $of.event_selections )
     # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
@@ -131,10 +130,11 @@ if sim.rank==0:
     to_record_keys = to_record.keys()
     for t, id in zip(sim.allSimData['spkt'],sim.allSimData['spkid']):
         if id in to_record_keys:
-            if file_format=='ID_TIME':
-                spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))
-            elif file_format=='TIME_ID':
-                spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))
+#if ($of.spike_file_format=="ID_TIME")
+            spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
+#else if ($of.spike_file_format=="TIME_ID")
+            spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
+#end
     spike_file_${of.name}.close()
 
 
