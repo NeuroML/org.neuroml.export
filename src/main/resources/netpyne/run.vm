@@ -121,7 +121,9 @@ if sim.rank==0:
     to_record = {}
 #foreach ($oc in $of.event_selections )
     # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+#if ($oc.segment_id)
     assert $oc.segment_id==0 # Only able to record events at soma (seg_id = 0)
+#end
     to_record[gids['${oc.population}'][$oc.population_index]] = $oc.event_selection_id
 #end
 
