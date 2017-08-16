@@ -424,7 +424,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/NeuroML2/pythonScripts/netbuild/LEMS_Figure7AeLoSS.xml"));*/
         
 		//lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/cells/tests/LEMS_axoaxonic.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/chanDens/LEMS_cck.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/chanDens/LEMS_cck.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced.xml"));
 
         for (File lemsFile : lemsFiles)
         {
@@ -434,7 +436,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             pw.setOutputFolder(lemsFile.getParentFile());
             pw.setOutputFileName(lemsFile.getName().replaceAll(".xml", "_netpyne.py"));
             
-            pw.setRegenerateNeuroMLNet(true);
+            //pw.setRegenerateNeuroMLNet(true);
             
             List<File> files = pw.generateAndRun(true, false, 1);
             for (File f : files)

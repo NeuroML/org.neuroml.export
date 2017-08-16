@@ -681,6 +681,44 @@ public class DLemsWriter extends ABaseWriter
             }
         }
         
+        g.writeArrayFieldStart(DLemsKeywords.SPIKE_FILE.get());
+        
+        for (Component outFile : simCpt.getAllChildren())
+        {
+            if (outFile.getTypeName().equals("EventOutputFile"))
+            {
+                g.writeStartObject();
+                g.writeStringField(DLemsKeywords.NAME.get(), outFile.getID());
+                g.writeStringField(DLemsKeywords.FILE_NAME.get(), outFile.getStringValue("fileName"));
+                g.writeStringField(DLemsKeywords.SPIKE_FILE_FORMAT.get(), outFile.getStringValue("format"));
+                        
+                g.writeArrayFieldStart(DLemsKeywords.EVENT_SELECTIONS.get());
+                
+                for (Component outputColumn : outFile.getAllChildren())
+                {
+                    if (outputColumn.getTypeName().equals("EventSelection"))
+                    {
+                        g.writeStartObject();
+                        
+                        g.writeStringField(DLemsKeywords.EVENT_SELECTION_ID.get(), outputColumn.getID());
+                        g.writeStringField(DLemsKeywords.SELECT.get(), outputColumn.getStringValue("select"));
+                        
+                        String quantity = outputColumn.getStringValue("select")+"/spike"; // dummy variable...
+                        
+                        extractQuantityInfo(quantity, g);
+                        
+                        g.writeEndObject();
+                    }
+                }
+                
+                g.writeEndArray();
+                
+                g.writeEndObject();
+                
+            }
+        }
+        g.writeEndArray();
+        
         g.writeArrayFieldStart(DLemsKeywords.OUTPUT_FILE.get());
         
         for (Component outFile : simCpt.getAllChildren())
@@ -707,60 +745,13 @@ public class DLemsWriter extends ABaseWriter
                     if (outputColumn.getTypeName().equals("OutputColumn"))
                     {
                         g.writeStartObject();
+                        
+                        g.writeStringField(DLemsKeywords.NAME.get(), outputColumn.getID());
+                        
                         String quantity = outputColumn.getStringValue("quantity");
                         
-                        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
-
-
-                        g.writeStringField(DLemsKeywords.NAME.get(), outputColumn.getID());
-                        g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
-                        g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
-
-                        if (populationMode) 
-                        {
-                            Component comp = lems.getComponent(cellIdsVsPopulations.get(lqp.getPopulation()));
-                            if (comp.getComponentType().isOrExtends("cell")) {
-                                for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
-                                    if (seg.id.equals(lqp.getSegmentId()+"")) {
-                                        g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
-                                        g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());
-                                    }
-                                }
-                                try
-                                {
-                                    Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
-
-                                    NamingHelper nh = new NamingHelper(cell);
-                                    Segment segment = CellUtils.getSegmentWithId(cell, lqp.getSegmentId());
-                                    String nrnsec = nh.getNrnSectionName(segment);
-                                    float fract = cell.getMorphology().getSegment().size()==1 ? 0.5f : (float) CellUtils.getFractionAlongSegGroupLength(cell, nrnsec, segment.getId(), 0.5f);
-                                    
-                                    g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), nrnsec);
-                                    g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), fract+"");
-                                } 
-                                catch (NeuroMLException nmle) 
-                                {
-                                    throw new LEMSException("Problem building NeuroML for LEMS component: "+comp.summary(), nmle);
-                                }
-                            }
-                            else 
-                            {
-                                g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), "soma");
-                                g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), "soma");
-                                g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), "0.5");
-                            }
-                            if (neuronMode) 
-                            {
-                                String nrnVar = LEMSQuantityPathNeuron.convertToNeuronVariable(lqp.getVariableParts(),comp);
-                                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), nrnVar);
-
-                                float conv = NRNUtils.getNeuronUnitFactor(LEMSQuantityPathNeuron.getDimensionOfVariableOnCellInPopComp(lqp.getVariableParts(), comp).getName());
-                                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), conv+"");
-                                
-                            }
-                        } 
+                        extractQuantityInfo(quantity, g);
                         
-                        g.writeStringField(DLemsKeywords.VARIABLE.get(), lqp.getVariable());
                         g.writeEndObject();
                     }
                 }
@@ -822,6 +813,61 @@ public class DLemsWriter extends ABaseWriter
         }
 
         g.writeEndArray();
+    }
+    
+    private void extractQuantityInfo(String quantity, JsonGenerator g) throws IOException, ContentError, LEMSException
+    {
+        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
+
+
+        g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
+        g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
+
+        if (populationMode) 
+        {
+            Component comp = lems.getComponent(cellIdsVsPopulations.get(lqp.getPopulation()));
+            if (comp.getComponentType().isOrExtends("cell")) {
+                for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
+                    if (seg.id.equals(lqp.getSegmentId()+"")) {
+                        g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
+                        g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());
+                    }
+                }
+                try
+                {
+                    Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
+
+                    NamingHelper nh = new NamingHelper(cell);
+                    Segment segment = CellUtils.getSegmentWithId(cell, lqp.getSegmentId());
+                    String nrnsec = nh.getNrnSectionName(segment);
+                    float fract = cell.getMorphology().getSegment().size()==1 ? 0.5f : (float) CellUtils.getFractionAlongSegGroupLength(cell, nrnsec, segment.getId(), 0.5f);
+
+                    g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), nrnsec);
+                    g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), fract+"");
+                } 
+                catch (NeuroMLException nmle) 
+                {
+                    throw new LEMSException("Problem building NeuroML for LEMS component: "+comp.summary(), nmle);
+                }
+            }
+            else 
+            {
+                g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), "soma");
+                g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), "soma");
+                g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), "0.5");
+            }
+            if (neuronMode && !lqp.getVariable().equals("spike")) 
+            {
+                String nrnVar = LEMSQuantityPathNeuron.convertToNeuronVariable(lqp.getVariableParts(),comp);
+                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), nrnVar);
+
+                float conv = NRNUtils.getNeuronUnitFactor(LEMSQuantityPathNeuron.getDimensionOfVariableOnCellInPopComp(lqp.getVariableParts(), comp).getName());
+                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), conv+"");
+
+            }
+        }
+        
+        g.writeStringField(DLemsKeywords.VARIABLE.get(), lqp.getVariable());
     }
 
     private void writeState(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
@@ -1074,6 +1120,7 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 

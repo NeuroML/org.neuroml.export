@@ -61,13 +61,13 @@ simConfig.recordStep = simConfig.dt # Step size in ms to save data (eg. V traces
 
 
 
-# Analysis and plotting 
-simConfig.plotRaster = True # Whether or not to plot a raster
-simConfig.plotLFPSpectrum = False # plot power spectral density
-simConfig.maxspikestoplot = 3e8 # Maximum number of spikes to plot
-simConfig.plotConn = False # whether to plot conn matrix
-simConfig.plotWeightChanges = False # whether to plot weight changes (shown in conn matrix)
-#simConfig.plot3dArch = True # plot 3d architecture
+# Analysis and plotting, see http://neurosimlab.org/netpyne/reference.html#analysis-related-functions
+simConfig.analysis['plotRaster'] = False  # Plot raster
+simConfig.analysis['plot2Dnet'] = False  # Plot 2D net cells and connections
+simConfig.analysis['plotSpikeHist'] = False # plot spike histogram
+simConfig.analysis['plotConn'] = False # plot network connectivity
+simConfig.analysis['plotSpikePSD'] = False # plot 3d architecture
+simConfig.analysis['plotShape'] = False # plot shape in Neuron
 
 # Saving
 simConfig.filename = '${name}.txt'  # Set file output name
@@ -94,7 +94,7 @@ print("Finished simulation")
 
 if sim.rank==0: 
 #foreach ($of in $output_file )
-    print("Saving to file: $of.file_name (ref: $of.name)")
+    print("Saving traces to file: $of.file_name (ref: $of.name)")
 
  
 #foreach ($oc in $of.output_columns )
@@ -114,6 +114,30 @@ if sim.rank==0:
     dat_file_${of.name}.close()
 
 #end
+
+#foreach ($of in $spike_file )
+    print("Saving spikes to file: $of.file_name (ref: $of.name)")
+    file_format = '$of.spike_file_format'
+    to_record = {}
+#foreach ($oc in $of.event_selections )
+    # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+    assert $oc.segment_id==0 # Only able to record events at soma (seg_id = 0)
+    to_record[gids['${oc.population}'][$oc.population_index]] = $oc.event_selection_id
+#end
+
+    spike_file_$of.name = open('$of.file_name', 'w')
+    to_record_keys = to_record.keys()
+    for t, id in zip(sim.allSimData['spkt'],sim.allSimData['spkid']):
+        if id in to_record_keys:
+            if file_format=='ID_TIME':
+                spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))
+            elif file_format=='TIME_ID':
+                spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))
+    spike_file_${of.name}.close()
+
+
+#end
+
 
     print("Saved all data.")
 
