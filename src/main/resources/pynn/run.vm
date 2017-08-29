@@ -97,7 +97,7 @@ ${input_ref}_${input.population}_${input.population_index}.inject_into([${input.
 #foreach ($d in $display )
 # Display: $d.name
 #foreach ($curve in $d.curves )
-# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.population
+# Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
 ${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinate}', sampling_interval=$dt)
 #end
 #end
@@ -106,8 +106,8 @@ ${curve.population}[[$curve.population_index]].record('soma(0.5).${curve.ordinat
 # Output file: $of.file_name
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
-# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
-${oc.population}[[$oc.population_index]].record('soma(0.5).${oc.variable}', sampling_interval=$dt)
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable; neuron name: $oc.neuron_variable_name
+${oc.population}[[$oc.population_index]].record('soma(0.5).${oc.neuron_variable_name}', sampling_interval=$dt)
 #end
 #end
 #end
@@ -134,13 +134,14 @@ print("Finished simulation in %f seconds (%f mins) on node %i"%(sim_time, sim_ti
 
 if sim.rank() == 0:
 #foreach ($of in $output_file )
+
     print("Saving to file: $of.file_name (ref: $of.name)")
  
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
-    # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
+    # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable; neuron name: $oc.neuron_variable_name
     ${oc.population}_segment =  ${oc.population}.get_data().segments[0]
-    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignals if x.name == 'soma(0.5).${oc.variable}'), None)
+    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignals if x.name == 'soma(0.5).${oc.neuron_variable_name}'), None)
     ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
     ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
 #else

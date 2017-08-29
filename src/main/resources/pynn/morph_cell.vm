@@ -18,8 +18,17 @@ class $name(object):
         h("objectvar mycell_${name}_%i"%instance_count_${name}) 
         h("mycell_${name}_%i = new $name()"%instance_count_${name})
 
+#if ($ca_initial_internal_conc)
+        print("Setting the default initial concentrations for ca")
+        h("cai0_ca_ion = $ca_initial_internal_conc")
+        h("cao0_ca_ion = $ca_initial_external_conc")
+#end
 
         self.soma = h.${name}[instance_count_${name}].soma
+
+        h("proc initialiseV_${name}_%i() { mycell_${name}_%i.set_initial_v()  }"%(instance_count_${name}, instance_count_${name}))
+        h("objref fih_${name}_%i"%instance_count_${name})
+        h('{fih_${name}_%i = new FInitializeHandler(0, "initialiseV_${name}_%i()")}'%(instance_count_${name}, instance_count_${name}))
 
         h(" forall psection() ")
         instance_count_${name}+=1
@@ -87,7 +96,7 @@ class ${name}Type(NativeCellType):
     default_parameters = {#foreach ($param in $parameters.keySet() ) '$param':$parameters.get($param), #end}
     default_initial_values = {}    
     recordable = [#foreach ($s in $state.keySet() ) 'soma(0.5).$s', #end]
-    units = {'soma(0.5).v' : 'mV'}
+    units = {'soma(0.5).v' : 'mV','soma(0.5).cai' : 'mM'}
     # Synapses allowed: $synapses_allowed
     receptor_types = [#foreach ($syn in $synapses_allowed ) '$syn', #end]
     model = $name

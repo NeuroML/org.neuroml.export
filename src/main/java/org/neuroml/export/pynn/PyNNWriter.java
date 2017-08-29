@@ -53,6 +53,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		super(lems, Format.PYNN);
         dlemsw = new DLemsWriter(lems, null, false);
         dlemsw.setPopulationMode(true);
+        dlemsw.setNeuronMode(true);
 		initializeWriter();
 	}
 	
@@ -61,6 +62,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
 		super(lems, Format.PYNN, outputFolder, outputFileName);
         dlemsw = new DLemsWriter(lems, outputFolder, mainDlemsFile, null, false);
         dlemsw.setPopulationMode(true);
+        dlemsw.setNeuronMode(true);
 		initializeWriter();
 	}
     
@@ -272,8 +274,8 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_Deterministic.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/PyNNShowcase/NeuroML2/LEMS_2007One.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_iv_RS.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_SingleAP.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_MuscleStim.xml"));
 
         for (File lemsFile : lemsFiles)
         {
