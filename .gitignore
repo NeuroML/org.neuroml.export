@@ -38,3 +38,5 @@ src/test/resources/examples/*nrn.py
 /src/test/resources/examples/bask.cell.json
 /src/test/resources/examples/pyrComplex.cell.json
 /src/test/resources/examples/pyr_4_sym.cell.json
+/src/test/resources/examples/pyr_4_sym.cell.png
+/libjhdf5.so

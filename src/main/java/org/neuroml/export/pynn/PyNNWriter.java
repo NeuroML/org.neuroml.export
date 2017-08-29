@@ -181,7 +181,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
                     Component comp = lems.components.getByID(name);
                     addComment(script, format + " simulator compliant export for:\n\n" + comp.details("") + "\n\n" + Utils.getHeaderComment(format) + "\n");
-                    E.info("Component LEMS: " + comp.summary());
+                    //E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
                     String template = null;
                     
@@ -267,9 +267,10 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007Cells.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_Complex.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_Deterministic.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/PyNNShowcase/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_iv_RS.xml"));

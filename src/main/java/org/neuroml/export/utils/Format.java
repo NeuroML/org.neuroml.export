@@ -19,7 +19,7 @@ public enum Format
 	NEURON("NEURON", "py"),
 	NEURON_A("NEURONa", "NEURONa"),
 	PYNN("PyNN", "py"),
-	NETPYNE("NetPyNE", "py"),
+	NETPYNE("NETPYNE", "py"),
 	SVG("SVG", "svg"),
 	NINEML("NineML", "9ml"),
 	SPINEML("SpineML", "spineml"),
@@ -28,7 +28,8 @@ public enum Format
 	XINEML("Xineml", ""),
 	XPP("Xpp", "ode"),
 	PNG("PNG", "png"),
-	VERTEX("VERTEX", "m");
+	VERTEX("VERTEX", "m"),    
+	JNEUROML("jNeuroML", "xml");
 	
 	private final String label;
 	private final String extension;

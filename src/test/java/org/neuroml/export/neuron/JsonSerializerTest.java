@@ -66,7 +66,7 @@ public class JsonSerializerTest extends TestCase {
        
     }
     
-    public void testConvertFromLems() throws LEMSException, NeuroMLException, FileNotFoundException {
+    public void testConvertFromLems() throws LEMSException, NeuroMLException, IOException {
         
     	Lems lems = Utils.readLemsNeuroMLFile(new File("src/test/resources/examples/LEMS_SomeCells.xml")).getLems();
         

@@ -347,7 +347,7 @@ public class RectanglePacker<P> {
          */
         public final int height;
 
-        private Rectangle(int x, int y, int width, int height) {
+        public Rectangle(int x, int y, int width, int height) {
             this.x = x;
             this.y = y;
             this.width = width;

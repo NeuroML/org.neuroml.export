@@ -2,8 +2,10 @@ language: java
 
 jdk:
   - openjdk7
-  - openjdk6
+  #- openjdk6    Issues with HDF5 libraries in org.neuroml.model
   - oraclejdk7
+  - oraclejdk8
+
 
 install:
     - export main_repo_branch=$TRAVIS_BRANCH

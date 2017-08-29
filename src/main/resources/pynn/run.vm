@@ -9,12 +9,14 @@ if not 'neuron' in sys.argv and not 'nest' in sys.argv and not 'brian' in sys.ar
     sys.argv.append('neuron')
 
 if 'nrniv' in sys.argv:
-    sys.argv.remove('nrniv')
+    sys.argv.remove('nrniv')  # Might be there if run by nrniv -python
+if '-python' in sys.argv:
+    sys.argv.remove('-python')  # Might be there if run by nrniv -python
+if '-mpi' in sys.argv:
+    sys.argv.remove('-mpi')  # Might be there if run by nrniv -python
 
 sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
-                             ("--debug", "Print debugging information"),
-                             ("-python", "For testing parallel Neuron, may be removed...", {"action": "store_true"}),
-                             ("-mpi", "For testing parallel Neuron, may be removed...", {"action": "store_false"}))
+                             ("--debug", "Print debugging information"))
 
 if options.debug:
     init_logging(None, debug=True)
@@ -66,12 +68,12 @@ $pop = sim.Population($pop_size, ${pop_component}Type(**cell_params_$pop_compone
 # Projection: $proj: $pre_pop -> $post_pop with synapse: $synapse
 ${proj}__conns = []
 #foreach ($conn in $projections.get($proj).connections )
-# Connection: $conn.name: $pre_pop ($conn.pre_cell_id) -> $post_pop ($conn.post_cell_id)
-${proj}__conns.append((${conn.pre_cell_id}, ${conn.post_cell_id}))
+# Connection: $conn.name: $pre_pop ($conn.pre_cell_id) -> $post_pop ($conn.post_cell_id); weight = ${conn.weight}; delay = ${conn.delay}ms
+${proj}__conns.append((${conn.pre_cell_id}, ${conn.post_cell_id}, ${conn.weight}, ${conn.delay}))
 #end
-# ${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=["weight", "delay"])
-${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=[])
+${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=["weight", "delay"])
 $proj = sim.Projection(${pre_pop}, ${post_pop}, connector=${proj}__connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='$synapse')
+print(${proj}.describe())
 #end
 
 
@@ -138,7 +140,7 @@ if sim.rank() == 0:
 #if ($oc.name!="t")
     # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; value: $oc.variable
     ${oc.population}_segment =  ${oc.population}.get_data().segments[0]
-    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignalarrays if x.name == 'soma(0.5).${oc.variable}'), None)
+    ${oc.population}_${oc.variable}_data = next((x for x in ${oc.population}_segment.analogsignals if x.name == 'soma(0.5).${oc.variable}'), None)
     ${of.name}_${oc.name}_${oc.variable} = [${oc.population}_${oc.variable}_data.T[$oc.population_index].simplified] # 'simplified' converts to SI units
     ${of.name}_data = np.concatenate((${of.name}_data, ${of.name}_${oc.name}_${oc.variable}))
 #else
@@ -171,7 +173,7 @@ if options.plot_figure:
 #foreach ($curve in $d.curves )
     # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
     segment =  ${curve.population}.get_data().segments[0]
-    vm = next((x for x in segment.analogsignalarrays if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
+    vm = next((x for x in segment.analogsignals if x.name == 'soma(0.5).${curve.ordinate}'), None).T[$curve.population_index]
 #if (${curve.ordinate} == 'v')
     if not mp in ylabel: ylabel += mp
 #else

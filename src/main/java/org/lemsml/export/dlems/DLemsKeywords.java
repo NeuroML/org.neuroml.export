@@ -7,6 +7,7 @@ package org.lemsml.export.dlems;
 public enum DLemsKeywords
 {
 	DT, 
+	SEED, 
     DYNAMICS, 
     EVENTS, 
     CONDITION, 
@@ -23,6 +24,12 @@ public enum DLemsKeywords
     COMMENT, 
     DUMP_TO_FILE, 
     OUTPUT_FILE, 
+    SPIKE_FILE, 
+    SPIKE_FILE_FORMAT, 
+    EVENT_SELECTIONS, 
+    EVENT_SELECTION_ID, 
+    SELECT, 
+    EVENT_PORT, 
     FILE_NAME, 
     OUTPUT_COLUMNS, 
     VARIABLE, 
@@ -35,6 +42,9 @@ public enum DLemsKeywords
     ORDINATE, 
     POPULATION, 
     POPULATION_INDEX, 
+    SEGMENT_ID, 
+    SEGMENT_NAME, 
+    FRACTION_ALONG, 
     COLOUR, 
     POPULATIONS, 
     SIZE, 
@@ -47,9 +57,16 @@ public enum DLemsKeywords
     CONNECTIONS,
     PRE_CELL_ID, 
     POST_CELL_ID, 
-    INPUTS;
+    WEIGHT, 
+    DELAY, 
+    INPUTS,
     
     
+    TEMPERATURE,
+    NEURON_VARIABLE_NAME,
+    NEURON_SECTION_NAME,
+    NEURON_FRACT_ALONG,
+    NEURON_VARIABLE_SCALE;
 
 	public String get()
 	{

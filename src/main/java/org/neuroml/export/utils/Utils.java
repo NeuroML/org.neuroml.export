@@ -10,13 +10,13 @@ import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.sim.Sim;
 import org.lemsml.jlems.core.type.Component;
+import org.lemsml.jlems.core.type.ComponentType;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.core.type.Unit;
 import org.lemsml.jlems.io.IOUtil;
-import org.lemsml.jlems.io.reader.JarResourceInclusionReader;
 import org.lemsml.jlems.io.util.FileUtil;
 import org.lemsml.jlems.io.util.JUtil;
 import org.lemsml.jlems.io.xmlio.XMLSerializer;
@@ -37,7 +37,7 @@ public class Utils
 
 	private static Lems lemsWithNML2CompTypes;
 
-	public static String ORG_NEUROML_EXPORT_VERSION = "1.4.4";
+	public static String ORG_NEUROML_EXPORT_VERSION = "1.5.3";
 
 	public static final String ARCH_I686 = "i686";
 	public static final String ARCH_I386 = "i386";
@@ -166,13 +166,13 @@ public class Utils
 	public static Sim readLemsNeuroMLFile(String contents) throws LEMSException
 	{
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPathInJar("/examples");
-		JarResourceInclusionReader.addSearchPathInJar("/");
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPathInJar("/examples");
+		NeuroMLInclusionReader.addSearchPathInJar("/");
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(contents);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(contents);
 		JUtil.setResourceRoot(NeuroMLConverter.class);
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
@@ -181,9 +181,14 @@ public class Utils
 
 	public static Sim readNeuroMLFile(File f) throws LEMSException, IOException
 	{
+        return readNeuroMLFile(f, true);
+    }
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPath(f.getParentFile());
+	public static Sim readNeuroMLFile(File f, boolean includeConnectionsFromHDF5) throws LEMSException, IOException
+	{
+        
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPath(f.getParentFile());
 
 		E.info("Reading from: " + f.getAbsolutePath());
 
@@ -191,9 +196,10 @@ public class Utils
 
 		String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(nml);
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(nmlLems);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(nmlLems);
+        nmlIr.setIncludeConnectionsFromHDF5(includeConnectionsFromHDF5);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
@@ -202,31 +208,53 @@ public class Utils
 	public static Sim readNeuroMLFile(String contents) throws LEMSException
 	{
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
 
 		String nmlLems = NeuroMLConverter.convertNeuroML2ToLems(contents);
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(nmlLems);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(nmlLems);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
 		return sim;
 	}
 
-	public static Sim readLemsNeuroMLFile(File f) throws LEMSException
-	{
+    public static File copyFromJarToTempLocation(String filename) throws ContentError, IOException
+    {
+        NeuroML2Validator nmlv = new NeuroML2Validator();
+        String content = JUtil.getRelativeResource(nmlv.getClass(), filename);
+        
+        //File tempDir = Files.createTempDirectory("jNeuroML").toFile();
+        //File newFile = new File(tempDir,(new File(filename)).getName());
+        
+        File newFile = File.createTempFile("jNeuroML", "_"+(new File(filename)).getName());
+        
+        FileUtil.writeStringToFile(content, newFile);
 
-		JarResourceInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
-		JarResourceInclusionReader.addSearchPath(f.getParentFile());
+        return newFile;
+    }
+
+	public static Sim readLemsNeuroMLFile(File f) throws LEMSException, NeuroMLException
+    {
+        return readLemsNeuroMLFile(f,true);
+    }
+
+	public static Sim readLemsNeuroMLFile(File f, boolean includeConnectionsFromHDF5) throws LEMSException, NeuroMLException
+	{
+        
+		NeuroMLInclusionReader.addSearchPathInJar("/NeuroML2CoreTypes");
+		NeuroMLInclusionReader.addSearchPath(f.getParentFile());
 
 		E.info("Reading from: " + f.getAbsolutePath());
 
-		JarResourceInclusionReader jrir = new JarResourceInclusionReader(f);
+		NeuroMLInclusionReader nmlIr = new NeuroMLInclusionReader(f);
+        nmlIr.setIncludeConnectionsFromHDF5(includeConnectionsFromHDF5);
 
-		Sim sim = new Sim(jrir.read());
+		Sim sim = new Sim(nmlIr.read());
 
 		sim.readModel();
+        sim.getLems().setAllIncludedFiles(nmlIr.getAllIncludedFiles());
 		return sim;
 
 	}
@@ -251,7 +279,104 @@ public class Utils
 		return expression.trim();
 	}
 
-	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp) throws LEMSException, NeuroMLException
+	public static String convertLemsToNeuroMLLikeXml(Lems lems, String onlyNetwork) throws LEMSException, NeuroMLException
+	{
+        StringBuilder compString = new StringBuilder();
+        
+		XMLSerializer xmlSer = XMLSerializer.newInstance();
+        
+        for (Component comp: lems.getComponents()) 
+        {
+            if (!comp.getTypeName().equals("Simulation") && !comp.getTypeName().equals("include")) 
+            {
+                String knownAs = null;
+                String typeAttribute = null;
+                
+                String xml = xmlSer.writeObject(comp,knownAs,typeAttribute)+"\n";
+                xml = xml.replaceAll("<populationList ", "<population type=\"populationList\" ");
+                xml = xml.replaceAll("</populationList>", "</population>");
+                
+                xml = xml.replaceAll("<networkWithTemperature ", "<network type=\"networkWithTemperature\" ");
+                xml = xml.replaceAll("</networkWithTemperature>", "</network>");
+                
+                boolean include = true;
+                
+                if (comp.getTypeName().equals("network") || comp.getTypeName().equals("networkWithTemperature"))
+                {
+                    if (comp.getID().equals(onlyNetwork)) 
+                        include = true;
+                    else
+                        include = false;
+                }
+                if (include) compString.append(xml);
+                
+            }
+        }
+        
+        Lems standardNml2Lems = getLemsWithNML2CompTypes();
+        
+        for (ComponentType ct: lems.getComponentTypes())
+        {
+            try
+            {
+                standardNml2Lems.getComponentTypeByName(ct.getName());
+            }
+            catch(ContentError ce)  // not a standard nml2 comp type...
+            {
+                String xml = xmlSer.writeObject(ct);
+                compString.append(xml);
+                
+            }
+        }
+        
+        String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" 
+                + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+				+ "    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\"\n"
+                + "    id=\"Exported_from_LEMS\">\n\n" + compString + "</neuroml>";
+        
+        
+		return nmlString;
+	}
+
+	public static String extractLemsSimulationXml(Lems lems, String externalFiletoInclude) throws LEMSException, NeuroMLException
+	{
+        StringBuilder compString = new StringBuilder();
+        
+		XMLSerializer xmlSer = XMLSerializer.newInstance();
+        
+        String target = null;
+        for (Component comp: lems.getComponents()) 
+        {
+            if (comp.getTypeName().equals("Simulation")) 
+            {
+                target = comp.getID();
+                String xml = xmlSer.writeObject(comp,null,null)+"\n";
+                
+                compString.append(xml);
+                
+            }
+        }
+        
+        String lemsString = "<Lems> \n";
+        
+        lemsString += "<!-- Specify which component to run -->\n" +
+"    <Target component=\""+target+"\"/>\n" +
+"    \n" +
+"    <!-- Include core NeuroML2 ComponentType definitions -->\n" +
+"    <Include file=\"Cells.xml\"/>\n" +
+"    <Include file=\"Networks.xml\"/>\n" +
+"    <Include file=\"Simulation.xml\"/>\n\n";
+        
+        if (externalFiletoInclude!=null)
+            lemsString += "    <Include file=\""+externalFiletoInclude+"\"/>\n\n";
+            
+        lemsString += compString + "</Lems>";
+        
+        
+		return lemsString;
+	}
+
+	public static NeuroMLDocument convertLemsComponentToNeuroMLDocument(Component comp) throws LEMSException, NeuroMLException
 	{
 		XMLSerializer xmlSer = XMLSerializer.newInstance();
 		String compString = xmlSer.writeObject(comp);
@@ -260,7 +385,14 @@ public class Utils
         String nmlString = "<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n" + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
 				+ "      xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 " + NeuroMLElements.LATEST_SCHEMA_LOCATION + "\">" + compString + "</neuroml>";
 		NeuroMLDocument nmlDocument = nmlc.loadNeuroML(nmlString);
-        //System.out.println("............."+nmlString);
+        
+		return nmlDocument;
+	}
+
+	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp) throws LEMSException, NeuroMLException
+	{
+		NeuroMLDocument nmlDocument = convertLemsComponentToNeuroMLDocument(comp);
+        
 		LinkedHashMap<String, Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
 		return els;
 	}
@@ -355,10 +487,17 @@ public class Utils
 
 			@Override
 			public Sim importFile(File simFile) throws LEMSException {
-				Sim sim;
-                sim = Utils.readLemsNeuroMLFile(simFile);
-                sim.build();
-                return sim;       
+                try 
+                {
+                    Sim sim;
+                    sim = Utils.readLemsNeuroMLFile(simFile);
+                    sim.build();
+                    return sim;  
+                }
+                catch (NeuroMLException e)
+                {
+                    throw new LEMSException(e);
+                }
             }
         };
         
@@ -433,9 +572,18 @@ public class Utils
 	public static boolean is64bitPlatform()
 	{
 		return System.getProperty("os.arch").contains("64"); // should be
-																	// enough in
-																	// most
 																	// cases
 	}
+        
+
+    public static void main(String args[]) throws ContentError, IOException, LEMSException, NeuroMLException
+    {
+        File f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced.xml");
+        f = new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2_hdf5.xml");
+        //f = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml");
+        Sim sim = Utils.readLemsNeuroMLFile(f);
+        Lems lems = sim.getLems();
+        System.out.println("-----------------------\nLEMS:\n"+lems.components.toString());
+    }
 
 }

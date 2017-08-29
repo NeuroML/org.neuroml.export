@@ -1,77 +1,247 @@
-# Cell file for Component: $name
-
-print("Loading cell file for $name")
-
-## Bad!!  NEURON specific
-from pyNN.neuron import NativeCellType
-from neuron import h
-from neuron import nrn
+########################################################################
+## Neuron script automatically generated from a NeuroML 2 description ##
+## This is work in progress...                                        ##
+########################################################################
 
 
-class $name(object):
+load_file("subiter.hoc")
 
-    def __init__(self, **parameters):
-        print("Created instance of $name with params: %s"%parameters)
+begintemplate ${id}
 
-        self.soma = nrn.Section('sec_${name}')
-        #h(" forall psection() ")
-
-        self.soma.L = 10.0
-        self.soma(0.5).diam = 10.0
-        self.soma(0.5).cm = 31.831927
-        self.soma.push()
-        self.mechanism = h.$name(0.5, sec=self.soma)
-
-#foreach ($param in $parameters.keySet() )
-        self.mechanism.${param} = parameters['${param}']
-#end
-
-        self.source = self.soma(0.5)._ref_v
-
-        # needed for PyNN
-        self.source_section = self.soma
-        self.parameter_names = (#foreach ($param in $parameters.keySet() ) '$param', #end)
-        self.traces = {}
-        self.recording_time = False
-
-#foreach ($param in $parameters.keySet() )
-    # Getter/setter for $param
-    def _set_${param}(self, value):
-        print("Setting $param in ${name} to %s"%value)
-        self.mechanism.${param} = value
-    def _get_${param}(self):
-        return self.mechanism.${param}
-    ${param} = property(fget=_get_${param}, fset=_set_${param})
-
-#end
-
-    def memb_init(self):
-
-#foreach ($s in $state.keySet() )
-        # Initialising state $s
-#if ($s=="v")
-        for seg in self.soma:
-            seg.$s = self.get_value('$state.get($s)')
-#else
-        self.mechanism.$s = self.get_value('$state.get($s)')
-#end
-#end
-
-    def get_value(self, val_string):
-        if val_string=='v':
-            return self.soma(0.5)._ref_v
-        if val_string.isdigit():
-            return float(val_string) 
-        else:
-            return getattr(self.mechanism,val_string)
+public init, topol, basic_shape, subsets, geom, memb
+public x, y, z, position
 
 
-class ${name}Type(NativeCellType):
+//  Some methods for referencing the cells
 
-    default_parameters = {#foreach ($param in $parameters.keySet() ) '$param':$parameters.get($param), #end}
-    default_initial_values = {}    
-    recordable = ['soma(0.5).v']
-    units = {'soma(0.5).v' : 'mV'}
-    receptor_types = []
-    model = $name
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
+
+
+#foreach ($s in $sections)##
+// Section: $s.name, id: $s.id, parent: $s.parent
+create $s.name
+public $s.name
+#end##
+
+#foreach ($g in $groups)##
+// Group: $g
+objref $g.name
+#end##
+
+objref synlist
+
+proc init() {
+    topol()
+    geom_nseg()
+    subsets()
+    subsets_inhomogeneous()
+    biophys()
+    biophys_inhomogeneous()
+    synlist = new List()
+    x = y = z = 0
+
+}
+
+proc set_initial_v() {
+    // Taken from the initMembPotential value
+#foreach ($imp in $initMembPotential)##
+    forsec $imp.group v = $imp.value  // units: mV
+#end##
+}
+
+
+proc set_initial_ion_properties() {
+    // From species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        ${sp.ion}i = $sp.initialConcentration  // units: mM
+        ${sp.ion}o = $sp.initialExtConcentration  // units: mM
+    }
+#end##
+}
+
+
+proc topol() {
+    basic_shape()
+#foreach ($s in $sections)##
+#if ($s.parent)##
+    connect ${s.name}(0), ${s.parent}(${s.fractionAlong})
+#end##
+#end##
+
+}
+
+#set( $maxcount = 100 )
+#set( $count = 0 )
+#set( $proccount = 0 )
+
+proc basic_shape() {
+
+#foreach ($s in $sections)##
+    // Section: $s.name, id: $s.id, parent: $s.parent (entry count $count/$maxcount)
+    $s.name { pt3dclear() }
+#foreach ($p in $s.points3d)##
+    $s.name { pt3dadd( $p ) }
+#set( $count = $count + 1 )
+#if ($count == $maxcount )##
+
+    // Procedure too big; splitting & calling another procedure...
+    basic_shape_$proccount()
+}
+
+proc basic_shape_$proccount() {
+#set( $proccount = $proccount + 1 )
+#set( $count = 0 )
+#end##
+#end## }
+#end##
+
+}
+
+
+#set( $count = 0 )
+#set( $proccount = 0 )
+proc subsets() { local i
+#foreach ($g in $groups)##
+
+    // Group: $g
+    $g.name = new SectionList()
+#foreach ($s in $g.sections)##
+    $s ${g.name}.append()
+#set( $count = $count + 1 )
+#if ($count == $maxcount )##
+
+    // Procedure too big; splitting & calling another procedure...
+    subsets_$proccount()
+}
+
+proc subsets_$proccount() {
+#set( $proccount = $proccount + 1 )
+#set( $count = 0 )
+#end##
+#end##
+#foreach ($gg in $g.groups)##
+    forsec $gg ${g.name}.append()
+#end##
+#end##
+
+}
+
+#foreach ($g in $groups)##
+#foreach ($ip in $g.inhomogeneousParameters)##
+objref $ip.id // inhomogeneous parameter over $g.name
+#end##
+#end##
+
+proc subsets_inhomogeneous() {
+#foreach ($g in $groups)##
+#foreach ($ip in $g.inhomogeneousParameters)##
+    metric = #if( $ip.metric == 'Path Length from root' )0#{else}???#end
+
+    proximal_style = #if( $ip.proximalTranslationStart ) #if( $ip.proximalTranslationStart == '0' || $ip.proximalTranslationStart == '0.0' )1#{else}???#end #{else}0#end
+
+    distal_style = #if( $ip.distalNormalizationEnd ) #if( $ip.distalNormalizationEnd == '1' || $ip.distalNormalizationEnd == '1.0' )1#{else}???#end #{else}0#end
+
+    $ip.id = new SubsetDomainIterator($g.name, metric, proximal_style, distal_style)
+#end##
+#end##
+}
+
+proc biophys() {
+
+    // Specific capacitance
+#foreach ($sc in $specificCapacitance)##
+    forsec $sc.group cm = $sc.value  // units: uF/cm2
+#end##
+
+    // Specific axial resistance/resistivity
+#foreach ($res in $resistivity)##
+    forsec $res.group Ra = $res.value  // units: ohm cm
+#end##
+
+    // Channel densities
+#foreach ($cd in $channelDensity)##
+    forsec $cd.group {
+        insert $cd.ionChannel
+#if( $cd.erev == 'calculated_by_GHK_equation' )##
+        // current calculated through GHK flux equation
+#if( $cd.permeability )##
+        permeability_$cd.ionChannel = $cd.permeability  // units: cm / s
+#else##
+        // permeability_$cd.ionChannel will be set later...
+#end##
+#else##
+#if( $cd.condDens )##
+        gmax_$cd.ionChannel = $cd.condDens  // units: S cm-2
+#else##
+        // gmax_$cd.ionChannel will be set later...
+#end##
+#if( $cd.ion == 'non_specific' )##
+        e_$cd.ionChannel = $cd.erev  // units: mV
+#else##
+#if( $cd.erev == 'calculated_by_Nernst_equation' )##
+        // erev is calculated by Nernst equation
+#elseif( $cd.erev == 'calculated_by_GHK2_equation' )##
+        // erev is calculated by GHK2 equation
+#else## fixed erev
+        e$cd.ion = $cd.erev  // units: mV
+#end## if( $cd.erev == 'calculated_by_Nernst_equation' )
+#end## if( $cd.ion == 'non_specific' )
+#end## if( $cd.erev == 'calculated_by_GHK_equation' )
+    }
+#end##foreach ($cd in $channelDensity)
+
+    // Concentration models for species
+#foreach ($sp in $species)##
+    // Ion: $sp.ion on group: $sp.group, with concentration model: $sp.concentrationModel
+    forsec $sp.group {
+        insert $sp.concentrationModel
+    }
+#end##
+
+}
+
+func H() { // Heaviside function
+    if ($1>=0) return 1
+    if ($1==0) return 0.5
+    return 0
+}
+
+proc biophys_inhomogeneous() {
+#foreach ($cd in $channelDensity)
+#if( $cd.inhomogeneousValue )##
+
+    ${cd.inhomogeneousParameter}.update()
+    for ${cd.inhomogeneousParameter}.loop() {
+        x = ${cd.inhomogeneousParameter}.x
+        ${cd.variable} = ${cd.inhomogeneousParameter}.p
+        ${cd.parameterName}_${cd.ionChannel}(x) = $cd.inhomogeneousValue
+    }
+#end##
+#end##
+}
+
+proc geom_nseg() {
+    // All sections not mentioned here have nseg = 1
+#foreach ($s in $sections)##
+#if ($s.numberInternalDivisions)##
+    ${s.name} nseg = $s.numberInternalDivisions
+#end##
+#end##
+}
+
+
+proc position() { local i
+    forsec all {
+        for i = 0, n3d()-1 {
+            pt3dchange(i, $1+x3d(i), $2+y3d(i), $3+z3d(i), diam3d(i))
+        }
+    }
+    x = $1  y = $2  z = $3
+}
+
+
+endtemplate ${id}
+
 

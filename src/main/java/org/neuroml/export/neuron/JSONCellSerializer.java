@@ -24,6 +24,7 @@ import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.ChannelDensity;
 import org.neuroml.model.ChannelDensityGHK;
+import org.neuroml.model.ChannelDensityGHK2;
 import org.neuroml.model.ChannelDensityNernst;
 import org.neuroml.model.ChannelDensityNonUniform;
 import org.neuroml.model.ChannelDensityNonUniformGHK;
@@ -90,6 +91,7 @@ public class JSONCellSerializer
             HashMap<Integer, String> idsVsNames = new HashMap<Integer, String>();
             HashMap<SegmentGroup, ArrayList<Integer>> sgVsSegId = CellUtils.getSegmentGroupsVsSegIds(cell);
             HashMap<String, SegmentGroup> namesVsSegmentGroups = CellUtils.getNamesVsSegmentGroups(cell);
+            HashMap<String, String> inhomogeneousParametersVsVariables = new HashMap<String, String>();
 
             boolean foundNeuroLexFlags = false;
 
@@ -340,6 +342,7 @@ public class JSONCellSerializer
                                     g.writeStartObject();
                                     g.writeStringField("id", ih.getId());
                                     g.writeStringField("variable", ih.getVariable());
+                                    inhomogeneousParametersVsVariables.put(ih.getId(), ih.getVariable());
                                     g.writeStringField("metric", ih.getMetric().value());
                                     if(ih.getProximal() != null)
                                     {
@@ -476,9 +479,10 @@ public class JSONCellSerializer
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
                         g.writeStringField("parameterName", "gmax");
+                        g.writeStringField("variable", inhomogeneousParametersVsVariables.get(vp.getInhomogeneousValue().getInhomogeneousParameter()));
 
                         String convFactor = units.condDensFactor + " * ";
-                        g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
+                        g.writeStringField("inhomogeneousValue", convFactor + "("+vp.getInhomogeneousValue().getValue()+")");
                         g.writeStringField("comment", "Conversion factor of:  (" + convFactor + ") added");
                     }
                 }
@@ -549,6 +553,7 @@ public class JSONCellSerializer
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
                         g.writeStringField("parameterName", "gmax");
+                        g.writeStringField("variable", inhomogeneousParametersVsVariables.get(vp.getInhomogeneousValue().getInhomogeneousParameter()));
 
                         String convFactor = units.condDensFactor + " * ";
                         g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
@@ -578,6 +583,24 @@ public class JSONCellSerializer
 
                 g.writeEndObject();
             }
+            for(ChannelDensityGHK2 cdg : mp.getChannelDensityGHK2())
+            {
+                g.writeStartObject();
+                g.writeStringField("id", cdg.getId());
+                g.writeStringField("ionChannel", NRNUtils.getSafeName(cdg.getIonChannel()));
+
+                g.writeStringField("ion", cdg.getIon());
+
+                String group = cdg.getSegmentGroup() == null ? "all" : cdg.getSegmentGroup();
+                g.writeStringField("group", group);
+
+                float valueCondDens = Utils.getMagnitudeInSI(cdg.getCondDensity()) * units.condDensFactor;
+                g.writeStringField("condDens", NeuronWriter.formatDefault(valueCondDens));
+                
+                g.writeStringField("erev", "calculated_by_GHK2_equation");
+
+                g.writeEndObject();
+            }
 
             for(ChannelDensityNonUniformGHK cd : mp.getChannelDensityNonUniformGHK())
             {
@@ -593,6 +616,7 @@ public class JSONCellSerializer
                         g.writeStringField("group", vp.getSegmentGroup());
                         g.writeStringField("inhomogeneousParameter", vp.getInhomogeneousValue().getInhomogeneousParameter());
                         g.writeStringField("parameterName", "permeability");
+                        g.writeStringField("variable", inhomogeneousParametersVsVariables.get(vp.getInhomogeneousValue().getInhomogeneousParameter()));
 
                         String convFactor = units.permeabilityFactor + " * ";
                         g.writeStringField("inhomogeneousValue", convFactor + vp.getInhomogeneousValue().getValue());
@@ -669,10 +693,10 @@ public class JSONCellSerializer
         tests.add("/home/padraig/neuroConstruct/osb/showcase/BlueBrainProjectShowcase/NMC/NeuroML2/cNAC187_L1_HAC_f8c9772d9d_0_0.cell.nml");
         tests.add("/home/padraig/nC_projects/ACnet3/generatedNeuroML2/pyr_4_sym.cell.nml");
         tests.add("/home/padraig/NeuroML2/examples/NML2_SingleCompHHCell.nml");
+        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/L5PC.cell.nml");
         /*tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/bask_soma.cell.nml");
         tests.add("/home/padraig/neuroConstruct/osb/hippocampus/networks/nc_superdeep/neuroConstruct/generatedNeuroML2/pvbasketcell.cell.nml");
         // tests.add("/home/padraig/neuroConstruct/testProjects/TestMorphs/generatedNeuroML2/SampleCell_ca.cell.nml");
-        tests.add("/home/padraig/neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/L5bPyrCellHayEtAl2011/neuroConstruct/generatedNeuroML2/L5PC.cell.nml");
 
         tests.add("/home/padraig/neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/SingleCompMuscle.cell.nml");
         tests.add("/home/padraig/NeuroML2/examples/NML2_SingleCompHHCell.nml");*/

@@ -23,11 +23,12 @@ public class BrianWriterTest extends TestCase
 		generateMainScript(exampleFilename);
 	}
 
-	/*
-	 * public void testHH() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, ConnectionError, RuntimeError {
-	 * 
-	 * String exampleFilename = "LEMS_NML2_Ex1_HH.xml"; generateMainScript(exampleFilename); }
-	 */
+	public void testHH() throws IOException, LEMSException, GenerationException, NeuroMLException 
+    {
+	  
+	  String exampleFilename = "LEMS_NML2_Ex5_DetCell.xml"; 
+      generateMainScript(exampleFilename); 
+    }
 
 	public void testSBML() throws LEMSException, IOException, GenerationException, ModelFeatureSupportException, NeuroMLException
 	{

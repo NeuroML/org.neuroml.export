@@ -2,11 +2,11 @@ package org.neuroml.export.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.xml.bind.JAXBException;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertEquals;
 import junit.framework.TestCase;
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -17,6 +17,8 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.lemsml.jlems.io.util.JUtil;
+import org.neuroml.export.neuron.LEMSQuantityPathNeuron;
+import org.neuroml.model.Cell;
 import org.neuroml.model.IafTauCell;
 import org.neuroml.model.IonChannelHH;
 import org.neuroml.model.NeuroMLDocument;
@@ -44,6 +46,16 @@ public class UtilsTest extends TestCase
         String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + exampleFilename);
 
         return Utils.readNeuroMLFile(content).getLems();
+    }
+
+    public static NeuroMLDocument readNeuroMLDocumentFromExamples(String exampleFilename) throws LEMSException, NeuroMLException, IOException
+    {
+        NeuroML2Validator nmlv = new NeuroML2Validator();
+        NeuroMLConverter nmlc = new NeuroMLConverter();
+        
+        String content = JUtil.getRelativeResource(nmlv.getClass(), Utils.NEUROML_EXAMPLES_RESOURCES_DIR + "/" + exampleFilename);
+
+        return nmlc.loadNeuroML(content);
     }
 
     public static File getTempDir()
@@ -199,5 +211,81 @@ public class UtilsTest extends TestCase
             assertTrue(genFile.length() > 0);
         }
     }
+    
+    public void testLEMSQuantityPath()
+    {
+        ArrayList<String> paths = new ArrayList<String>();
+        paths.add("X1__S");
+        paths.add("hhpop[6]/bioPhys1/membraneProperties/naChans/naChan/m/q");
+        paths.add("fnPop1[0]/V");
+        paths.add("Gran/0/Granule_98/v");
+        paths.add("TestBasket/0/pvbasketcell/v");
+        paths.add("TestBasket/0/pvbasketcell/3/v");
+        paths.add("One_ChannelML/0/OneComp_ChannelML/biophys/membraneProperties/Na_ChannelML_all/Na_ChannelML/m/q");
+        paths.add("One_ChannelML/0/OneComp_ChannelML/4/biophys/membraneProperties/Na_ChannelML_all/Na_ChannelML/m/q");
+        paths.add("pasPop1[0]/synapses:nmdaSyn1:0/g");
+        paths.add("pasPop1/0/pasCell/synapses:nmdaSyn1:0/g");
+        
+        paths.add("pasPop1/0/pasCell/0/synapses:nmdaSyn1:0/g");
+        paths.add("pop0/1/MultiCompCell/2/synapses:AMPA:0/g");
+        paths.add("pop0/1/MultiCompCell/synapses:AMPA:0/g");
+        paths.add("pop0/1/MultiCompCell/synapses:AMPA:0/g");
+        paths.add("hhpop/0/hhneuron/biophysics/membraneProperties/kChans/gDensity");
+        paths.add("hhpop/0/hhneuron/IClamp/i");
+
+        for (String path : paths)
+        {
+            LEMSQuantityPath l1 = new LEMSQuantityPath(path);
+            System.out.println("\n--------\n" + l1);
+        }
+        
+    }
+    
+    
+    public void testLEMSQuantityPathNeuron() throws ContentError, LEMSException, NeuroMLException, IOException
+    {
+        HashMap<String, String> compMechNamesHoc = new HashMap<String, String>();
+        
+        compMechNamesHoc.put("fnPop1[i]", "m_fitzHughNagumoCell[i]");
+        ArrayList<Component> popsOrComponents = new ArrayList<Component>();
+        ArrayList<String> paths = new ArrayList<String>();
+        paths.add("fnPop1[0]/V");
+
+        for (String path : paths)
+        {
+            LEMSQuantityPathNeuron l1 = new LEMSQuantityPathNeuron(path, "1", null, compMechNamesHoc, popsOrComponents, null, null, null);
+            System.out.println("\n--------\n" + l1);
+            assertTrue(l1.valid());
+        }
+        
+        compMechNamesHoc = new HashMap<String, String>();
+        
+        paths = new ArrayList<String>();
+        paths.add("hhpop[0]/v");
+        paths.add("hhpop[0]/bioPhys1/membraneProperties/naChans/gDensity");
+        paths.add("hhpop[0]/bioPhys1/membraneProperties/naChans/naChan/m/q");
+        paths.add("hhpop[0]/bioPhys1/membraneProperties/naChans/iDensity");
+        //paths.add("hhpop/0/hhneuron/IClamp/i");
+        
+        Lems lems = UtilsTest.readLemsFileFromExamples("LEMS_NML2_Ex5_DetCell.xml");
+        NeuroMLDocument nmldoc = readNeuroMLDocumentFromExamples("NML2_SingleCompHHCell.nml");
+        
+        Component hhnet = lems.getComponent("net1");
+        popsOrComponents = hhnet.getChildrenAL("populations");
+        Cell c = nmldoc.getCell().get(0);
+        HashMap<String, Cell> compIdsVsCells = new HashMap<String, Cell>();
+        HashMap<String, String> hocRefsVsInputs = new HashMap<String, String>();
+        
+        for (String path : paths)
+        {
+            LEMSQuantityPathNeuron l1 = new LEMSQuantityPathNeuron(path, "1", hhnet, compMechNamesHoc, popsOrComponents, compIdsVsCells, hocRefsVsInputs, lems);
+            System.out.println("\n===================\n" + l1);
+            assertTrue(l1.valid());
+            
+        }
+        
+    }
+    
+    
 
 }

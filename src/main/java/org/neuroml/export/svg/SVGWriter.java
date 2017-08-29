@@ -2,7 +2,9 @@ package org.neuroml.export.svg;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
+//import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,12 +17,12 @@ import org.lemsml.jlems.io.util.FileUtil;
 import org.neuroml.export.base.ANeuroMLXMLWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
+import org.neuroml.export.svg.RectanglePacker.Rectangle;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
-import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.Instance;
 import org.neuroml.model.Location;
 import org.neuroml.model.Member;
@@ -69,18 +71,25 @@ public class SVGWriter extends ANeuroMLXMLWriter
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
 
-
+    private Rectangle expand(Rectangle r1, Rectangle r2)
+    {
+        return new Rectangle(Math.min(r1.x,r2.x), Math.min(r1.y,r2.y),Math.max(r1.width,r2.width),Math.max(r1.height,r2.height));
+    }
 
     public String getMainScript() throws GenerationException
     {
-        StringBuilder result = new StringBuilder();
+        StringBuilder core = new StringBuilder();
 
+        Rectangle bounds = render(core, false);
+        
+        StringBuilder result = new StringBuilder();
         //Add header
         result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
-        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION);
+        //addComment(result, "Total bounds: "+bounds.toString());
+        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION, "width="+bounds.width, "height="+bounds.height);
 
-        render(result, false);
-
+        result.append(core.toString());
+        
         endElement(result, "svg");
 
         return result.toString();
@@ -92,16 +101,18 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return cells;
     }
 
-    public void render(StringBuilder result, boolean png) {
+    public Rectangle render(StringBuilder result, boolean png) {
 
         if (nmlDocument.getNetwork().isEmpty()) 
         {
+            Rectangle r = new Rectangle(0,0,0,0);
             for(Cell cell : getAllBasedOnCell(nmlDocument))
             {
                 //Extract 3d vectors from morphology
                 Network3D cell3D = new Network3D(cell);
-                renderCells(result, cell3D, png);
+                r = expand(r,renderCells(result, cell3D, png));
             }
+            return r;
         }
         else 
         {
@@ -140,13 +151,16 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
                 }
             }
-            renderCells(result, net3D, png);
+            return renderCells(result, net3D, png);
         }
     }
 
-    public void convertToPng(File pngFile, int width, int height) {
+    public void convertToPng(File pngFile) {
 
-        bufferedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        // One quick run to get bounds...
+        Rectangle bounds = render(new StringBuilder(), false);
+        
+        bufferedImg = new BufferedImage(bounds.width, bounds.height, BufferedImage.TYPE_INT_RGB);
 
         graphics2d = bufferedImg.createGraphics();
         RenderingHints rh = new RenderingHints(
@@ -159,7 +173,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         graphics2d.setRenderingHints(rh);
 
         graphics2d.setColor(Color.white);
-        graphics2d.fillRect(0,0, width, height);
+        graphics2d.fillRect(0,0, bounds.width, bounds.height);
 
         render(null, true);
 
@@ -204,12 +218,13 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return cell;
     }
 
-    private void renderCells(StringBuilder result, Network3D net3D, boolean png) 
+    private Rectangle renderCells(StringBuilder result, Network3D net3D, boolean png) 
     {
         ArrayList<Cell2D> views = new ArrayList<Cell2D>(4);
+        double maxX = -1;
+        double maxY = -1;
 
         //Project 2D views from different perspectives
-
         net3D.addBoundingBox();
         float offset = perspectiveMargin/2;
 
@@ -260,10 +275,15 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
             //Translate coordinates for the view location
             ArrayList<Line2D> lines = cellView.getLinesForSVG(location.x+20, location.y+20);
-
+            for (Line2D line: lines) 
+            {
+                maxX = line.getMaxX(maxX);
+                maxY = line.getMaxY(maxY);
+            }
             //Write SVG for each line
             renderLines(result, lines, png);
         }
+        return new Rectangle(0,0,(int)maxX,(int)maxY);
     }
 
     private Color getColor(String color) {
@@ -307,7 +327,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
                 else 
                 {
                     graphics2d.setColor(getColor(line.color));
-                    graphics2d.drawLine((int)line.x1, (int)line.y1, (int)line.x2, (int)line.y2);
+                    //graphics2d.drawLine((int)line.x1, (int)line.y1, (int)line.x2, (int)line.y2);
+                    double theta = Math.atan2(line.y2-line.y1, line.x2-line.x1);
+                    double dx = Math.sin(theta) * line.diameter/2;
+                    double dy = Math.cos(theta) * line.diameter/2;
+                    
+                    int[] xpoints = new int[]{(int)(line.x1-dx),(int)(line.x2-dx),(int)(line.x2+dx),(int)(line.x1+dx)};
+                    int[] ypoints = new int[]{(int)(line.y1+dy),(int)(line.y2+dy),(int)(line.y2-dy),(int)(line.y1-dy)};
+                    /* Better?
+                    Path2D.Double path = new Path2D.Double(perspectiveMargin, perspectiveMargin);
+                    for(int i=0;i<4;i++) {
+                        path.moveTo(xpoints[i], ypoints[i]);
+                    }
+                    */
+                    
+                    Polygon p = new Polygon(xpoints, ypoints, 4);
+                    graphics2d.fill(p);
                 }
             }
         }
@@ -400,6 +435,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
         fileNames.add("src/test/resources/examples/MediumNet.net.nml");
+        fileNames.add("src/test/resources/examples/pyr_4_sym.cell.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/Golgi_040408_C1.cell.nml");
         fileNames.add("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/NeuroML2/CerebellarCortex.net.nml");
@@ -430,7 +466,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
             File pngFile = new File(fileName.replaceAll("nml", "png"));
 
-            svgw.convertToPng(pngFile, 1600, 1200);
+            svgw.convertToPng(pngFile);
             System.out.println("Writing file to: " + pngFile.getAbsolutePath());
 
         }

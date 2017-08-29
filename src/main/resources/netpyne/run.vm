@@ -1,125 +1,147 @@
 # Main NetPyNE script for: $name
 
 # See https://github.com/Neurosim-lab/netpyne
-from netpyne import init  # import netpyne init module
+
+from netpyne import specs  # import netpyne specs module
+from netpyne import sim    # import netpyne sim module
+
+from neuron import h
+
+import sys
 
 
 #[[###############################################################################]]#
 # NETWORK PARAMETERS
 #[[###############################################################################]]#
 
-netParams = {}  # dictionary to store sets of network parameters
+nml2_file_name = '${main_network_file}'
 
-# Cell properties list
-netParams['cellParams'] = []
-
-next_gid = 0
-gids = {} # Require these in this file for plotting etc.
-
-#foreach ($pop in $populations.keySet() )
-#foreach ($pop_element in $populations.get($pop).keySet())
-#if ($pop_element=="component")
-#set($component_array=$populations.get($pop).get($pop_element))
-#foreach ($component_element in $component_array.keySet())
-#if ($component_element=="parameters")
-#set($parameters_array=$component_array.get($component_element))
-
-# cell params for cell $component_array.name in population $pop
-cellRule = {'label': '$pop', 'conditions': {'cellType': '$component_array.name'}, 'sections': {}}
-${pop}_soma = {'geom': {}, 'topol': {}, 'mechs': {}, 'pointps':{}, 'syns': {}}  #  soma
-${pop}_soma['pointps']['$component_array.name'] = { '_type':'$component_array.name',#foreach($parameter in $parameters_array.keySet()) '$parameter':$parameters_array.get($parameter), #end } 
-
-# Todo: work this out here from area etc.
-cm = (318309 * ${pop}_soma['pointps']['$component_array.name']['C'] if ${pop}_soma['pointps']['$component_array.name'].has_key('C') else 318.31927 )
-
-${pop}_soma['geom'] = {'diam': 10, 'L': 10, 'Ra': 1, 'cm': cm}
-
-cellRule['sections'] = {'soma': ${pop}_soma}  # add sections to dict
-netParams['cellParams'].append(cellRule)  # add dict to list of cell properties
-
-#end #end #end #end #end
-
-# Population parameters
-
-netParams['popParams'] = []  # create list of populations - each item will contain dict with pop params
-
-#foreach ($pop in $populations.keySet() )
-#set($pop_size=$populations.get($pop).size)
-#set($pop_component=$populations.get($pop).component.name)
-
-# Population: $pop, size: $pop_size, component: $pop_component
-
-size_$pop = $pop_size
-netParams['popParams'].append({'popLabel': '$pop', 'cellModel': '$pop', 'cellType': '$pop_component', 'numCells': size_$pop}) # add dict with params for this pop 
-gids['$pop'] = [i+next_gid for i in range(size_$pop)]
-next_gid += size_$pop
-
-#end
-
-
-# Inputs...
-#foreach ($input_ref in $inputs.keySet() )
-#set($input=$inputs.get($input_ref))
-# Input: $input_ref which is ${input.component.name} on cell ${input.population_index} in ${input.population}
-
-${input.population}_soma['pointps']['${input.population}'] = { '_type':'${input.component.name}' } 
-
-#end
-
-
-###############################################################################
+#[[###############################################################################]]#
 # SIMULATION PARAMETERS
-###############################################################################
+#[[###############################################################################]]#
 
-simConfig = {}  # dictionary to store simConfig
+simConfig = specs.SimConfig()   # object of class SimConfig to store the simulation configuration
 
 # Simulation parameters
-simConfig['duration'] = simConfig['tstop'] = $t_end # Duration of the simulation, in ms
-simConfig['dt'] = $dt # Internal integration timestep to use
-simConfig['randseed'] = 1 # Random seed to use
-simConfig['createNEURONObj'] = 1  # create HOC objects when instantiating network
-simConfig['createPyStruct'] = 1  # create Python structure (simulator-independent) when instantiating network
-simConfig['verbose'] = 1  # show detailed messages 
+simConfig.duration = simConfig.tstop = $t_end # Duration of the simulation, in ms
+simConfig.dt = $dt # Internal integration timestep to use
+
+# Seeds for randomizers (connectivity, input stimulation and cell locations)
+# Note: locations and connections should be fully specified by the structure of the NeuroML,
+# so seeds for conn & loc shouldn't affect networks structure/behaviour
+simConfig.seeds = {'conn': 0, 'stim': $seed, 'loc': 0} 
+
+simConfig.createNEURONObj = 1  # create HOC objects when instantiating network
+simConfig.createPyStruct = 1  # create Python structure (simulator-independent) when instantiating network
+simConfig.verbose = False  # show detailed messages 
+#if ($temperature)
+simConfig.hParams['celsius'] = ($temperature - 273.15)
+#end
 
 # Recording 
-simConfig['recordTraces'] = True  # whether to record cell traces or not
+simConfig.recordCells = ['all']  
+simConfig.recordTraces = {}
 
-simConfig['recordDict'] = {'Vsoma':{'sec':'soma','pos':0.5,'var':'v'}}
-
-#foreach ($d in $display )
-# Display id: $d.name
-#foreach ($curve in $d.curves )
-# Line id: $curve.name; displaying ${curve.ordinate} on cell: $curve.population_index in population: $curve.population;
-if '${curve.ordinate}'=='v':
-    simConfig['plotTracesGids'] = [gids['$curve.population'][$curve.population_index]] # plot recorded traces for this list of cells
+#foreach ($of in $output_file )
+# For saving to file: $of.file_name (ref: $of.name)
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
 #end
 #end
-
-simConfig['recordStim'] = True  # record spikes of cell stims
-simConfig['recordStep'] = simConfig['dt'] # Step size in ms to save data (eg. V traces, LFP, etc)
+#end
 
 
+simConfig.plotCells = ['all']
 
-# Analysis and plotting 
-simConfig['plotRaster'] = True # Whether or not to plot a raster
-simConfig['plotLFPSpectrum'] = False # plot power spectral density
-simConfig['maxspikestoplot'] = 3e8 # Maximum number of spikes to plot
-simConfig['plotConn'] = False # whether to plot conn matrix
-simConfig['plotWeightChanges'] = False # whether to plot weight changes (shown in conn matrix)
-simConfig['plot3dArch'] = True # plot 3d architecture
+
+simConfig.recordStim = True  # record spikes of cell stims
+simConfig.recordStep = simConfig.dt # Step size in ms to save data (eg. V traces, LFP, etc)
+
+
+
+# Analysis and plotting, see http://neurosimlab.org/netpyne/reference.html#analysis-related-functions
+simConfig.analysis['plotRaster'] = False  # Plot raster
+simConfig.analysis['plot2Dnet'] = False  # Plot 2D net cells and connections
+simConfig.analysis['plotSpikeHist'] = False # plot spike histogram
+simConfig.analysis['plotConn'] = False # plot network connectivity
+simConfig.analysis['plotSpikePSD'] = False # plot 3d architecture
+simConfig.analysis['plotShape'] = False # plot shape in Neuron
 
 # Saving
-simConfig['filename'] = '${name}.txt'  # Set file output name
-simConfig['saveFileStep'] = simConfig['dt'] # step size in ms to save data to disk
-simConfig['savePickle'] = False # Whether or not to write spikes etc. to a .mat file
-simConfig['saveJson'] = False # Whether or not to write spikes etc. to a .mat file
-simConfig['saveMat'] = False # Whether or not to write spikes etc. to a .mat file
-simConfig['saveTxt'] = True # save spikes and conn to txt file
+simConfig.filename = '${name}.txt'  # Set file output name
+simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
+# simConfig.saveDat = True # save to dat file
 
 
-print("Running a NetPyNE based simulation for %sms (dt: %sms)"%(simConfig['duration'], simConfig['dt']))
-init.createAndSimulate(                   
-    simConfig = simConfig, 
-    netParams = netParams)
+#[[###############################################################################]]#
+# IMPORT & RUN
+#[[###############################################################################]]#
+
+print("Running a NetPyNE based simulation for %sms (dt: %sms) at %s degC"%(simConfig.duration, simConfig.dt, h.celsius))
+
+gids = sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
 
 print("Finished simulation")
+
+
+#[[###############################################################################]]#
+#   Saving data (this ensures the data gets saved in the format/files 
+#   as specified in the LEMS <Simulation> element)
+#[[###############################################################################]]#
+
+
+if sim.rank==0: 
+#foreach ($of in $output_file )
+    print("Saving traces to file: $of.file_name (ref: $of.name)")
+
+ 
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+    # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+    col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
+
+#else
+    # Column: $oc.name
+    col_${of.name}_$oc.name = [i*simConfig.dt for i in range(int(simConfig.duration/simConfig.dt))]
+
+#end
+#end
+    dat_file_$of.name = open('$of.file_name', 'w')
+    for i in range(len(col_${of.name}_t)):
+        dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
+    dat_file_${of.name}.close()
+
+#end
+
+#foreach ($of in $spike_file )
+    print("Saving spikes to file: $of.file_name (ref: $of.name)")
+    to_record = {}
+#foreach ($oc in $of.event_selections )
+    # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+#if ($oc.segment_id)
+    assert $oc.segment_id==0 # Only able to record events at soma (seg_id = 0)
+#end
+    to_record[gids['${oc.population}'][$oc.population_index]] = $oc.event_selection_id
+#end
+
+    spike_file_$of.name = open('$of.file_name', 'w')
+    to_record_keys = to_record.keys()
+    for t, id in zip(sim.allSimData['spkt'],sim.allSimData['spkid']):
+        if id in to_record_keys:
+#if ($of.spike_file_format=="ID_TIME")
+            spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
+#else if ($of.spike_file_format=="TIME_ID")
+            spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
+#end
+    spike_file_${of.name}.close()
+
+
+#end
+
+
+    print("Saved all data.")
+
+if '-nogui' in sys.argv:
+    quit()

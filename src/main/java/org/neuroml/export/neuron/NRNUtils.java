@@ -3,8 +3,10 @@
  */
 package org.neuroml.export.neuron;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import org.lemsml.export.dlems.UnitConverter;
 import org.lemsml.jlems.core.expression.ParseError;
@@ -15,6 +17,7 @@ import org.lemsml.jlems.core.type.DimensionalQuantity;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.neuroml.export.utils.Utils;
+import org.neuroml.model.util.NeuroMLElements;
 
 /**
  * @author Boris Marin & Padraig Gleeson
@@ -69,12 +72,94 @@ public class NRNUtils implements UnitConverter
         + "        }else{\n"
         + "                efun = z/(exp(z) - 1)\n"
         + "        }\n" + "}\n";
+    
+    static final String ghk2FunctionDefs = "\nFUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
+                "        LOCAL nu,f\n" +
+                "\n" +
+                "        f = KTF(celsius)/2\n" +
+                "        nu = v/f\n" +
+                "        ghk2=-f*(1. - (ci/co)*exp(nu))*efun(nu)\n" +
+                "}\n" +
+                "\n" +
+                "FUNCTION KTF(celsius (DegC)) (mV) {\n" +
+                "        KTF = ((25./293.15)*(celsius + 273.15))\n" +
+                "}\n" +
+                "\n" +
+                "FUNCTION efun(z) {\n" +
+                "	if (fabs(z) < 1e-4) {\n" +
+                "		efun = 1 - z/2\n" +
+                "	}else{\n" +
+                "		efun = z/(exp(z) - 1)\n" +
+                "	}\n" +
+                "}\n";
 
-    static final String randomFunctionDefs = "\n: Returns a float between 0 and max\nFUNCTION random_float(max) {\n"
+    static final String randomFunctionDefs = "\n: Returns a float between 0 and max; implementation of random() as used in LEMS\n"
+        + "FUNCTION random_float(max) {\n"
         + "    \n"
-        + "    random_float = scop_random()*max\n"
+        + "    : This is not ideal, getting an exponential dist random number and then turning back to uniform\n"
+        + "    : However this is the easiest what to ensure mod files with random methods fit into NEURON's\n"
+        + "    : internal framework for managing internal number generation.\n"
+        + "    random_float = exp(-1*erand())*max\n"
         + "    \n"
-        + "}\n\n";
+        + "}\n"
+        + ""
+        + "\n:****************************************************\n"
+        + ": Methods copied from netstim.mod in NEURON source"
+        + "\n\n"
+        + " "
+        + "\n" +
+        "PROCEDURE seed(x) {\n" +
+        "	set_seed(x)\n" +
+        "}\n\n"
+        + ""
+        + "VERBATIM\n" +
+        "double nrn_random_pick(void* r);\n" +
+        "void* nrn_random_arg(int argpos);\n" +
+        "ENDVERBATIM\n" +
+        "\n\n" +
+        "FUNCTION erand() {\n" +
+        "VERBATIM\n" +
+        "	if (_p_donotuse) {\n" +
+        "		/*\n" +
+        "		:Supports separate independent but reproducible streams for\n" +
+        "		: each instance. However, the corresponding hoc Random\n" +
+        "		: distribution MUST be set to Random.negexp(1)\n" +
+        "		*/\n" +
+        "		_lerand = nrn_random_pick(_p_donotuse);\n" +
+        "	}else{\n" +
+        "		/* only can be used in main thread */\n" +
+        "		if (_nt != nrn_threads) {\n" +
+        "           hoc_execerror(\"multithread random in NetStim\",\" only via hoc Random\");\n" +
+        "		}\n" +
+        "ENDVERBATIM\n" +
+        "		: the old standby. Cannot use if reproducible parallel sim\n" +
+        "		: independent of nhost or which host this instance is on\n" +
+        "		: is desired, since each instance on this cpu draws from\n" +
+        "		: the same stream\n" +
+        "		erand = exprand(1)\n" +
+        /*"       printf(\"- Calling erand: %g, %g \\n\",erand,exp(-1*erand))\n" +*/
+        "VERBATIM\n" +
+        "	}\n" +
+        "ENDVERBATIM\n" +
+        "}\n" +
+        "\n" +
+        "PROCEDURE noiseFromRandom() {\n" +
+        "VERBATIM\n" +
+        " {\n" +
+        "	void** pv = (void**)(&_p_donotuse);\n" +
+        "	if (ifarg(1)) {\n" +
+        "		*pv = nrn_random_arg(1);\n" +
+        "	}else{\n" +
+        "		*pv = (void*)0;\n" +
+        "	}\n" +
+        " }\n" +
+        "ENDVERBATIM\n" +
+        "}\n\n"
+        + ": End of methods copied from netstim.mod in NEURON source\n"
+        + ":****************************************************\n"
+        + ""
+        + ""
+        + "\n";
     
     static final String heavisideFunctionDefs = "\n: The Heaviside step function\nFUNCTION H(x) {\n"
         + "    \n"
@@ -133,8 +218,37 @@ public class NRNUtils implements UnitConverter
     {
         return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=").replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=").replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
     }
+    
+    protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError
+    {
+        float threshold = 0;
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+           comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
+        {
+            threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("thresh"), lems);
+        }
+        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
+        {
+            if ( (comp.getComponentType().isOrExtends("EIF_cond_alpha_isfa_ista") || comp.getComponentType().isOrExtends("EIF_cond_exp_isfa_ista")))
+            {
+                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 ) 
+                {
+                    threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
+                }
+                else
+                {
+                    threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_spike"), lems);
+                }
+            }
+            else
+            {
+                threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
+            }
+        }
+        return threshold;
+    }
 
-    protected static String checkForStateVarsAndNested(String expr, Component comp, HashMap<String, HashMap<String, String>> paramMappings)
+    protected static String checkForStateVarsAndNested(String expr, Component comp, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings)
     {
 
         if (expr == null)
@@ -149,7 +263,7 @@ public class NRNUtils implements UnitConverter
         // in jLEMS
         newExpr = newExpr.replaceAll("\\.gt\\.", ">");
         newExpr = newExpr.replaceAll("\\.leq\\.", "<=");
-        newExpr = newExpr.replaceAll("\\.lt\\.", "<=");
+        newExpr = newExpr.replaceAll("\\.lt\\.", "<");
         newExpr = newExpr.replaceAll("\\.eq\\.", "==");
         newExpr = newExpr.replaceAll("\\.neq\\.", "!=");
         newExpr = newExpr.replaceAll("\\.and.", "&&");
@@ -274,7 +388,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return "(millijoule / K)";
+            return "(millijoule / K / umol)";
         }
         else if (dimensionName.equals("rho_factor"))
         {
@@ -306,15 +420,18 @@ public class NRNUtils implements UnitConverter
         return convertToNeuronUnits(siValue, dimensionName);
     }
 
-    protected static float convertToNeuronUnits(float val, String dimensionName)
+    protected static float convertToNeuronUnits(float siVal, String dimensionName)
     {
-        float factor = getNeuronUnitFactor(dimensionName);
-        float newVal = val * factor;
-        //System.out.println("f "+factor+" val "+val+"  new "+newVal+"; dim "+dimensionName);
+        BigDecimal factor = new BigDecimal(getNeuronUnitFactor(dimensionName));
+        BigDecimal newValB = new BigDecimal(siVal+"");
+        newValB = newValB.multiply(factor);
+        
+        float newVal = newValB.floatValue();
+        //System.out.println("f "+factor+" val "+siVal+"  new "+newVal+";  new "+newValB+"; dim "+dimensionName);
         return newVal;
     }
 
-    protected static float getNeuronUnitFactor(String dimensionName)
+    public static float getNeuronUnitFactor(String dimensionName)
     {
 
         if (dimensionName.equals("none"))
@@ -391,7 +508,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return 1000f;
+            return 0.001f;
         }
         else if (dimensionName.equals("rho_factor"))
         {
@@ -428,12 +545,14 @@ public class NRNUtils implements UnitConverter
 	public static void main(String args[])
 	{
 		NRNUtils nu = new NRNUtils();
-        float f = 0.001f;
+        float f = 2.5e-5f;
         
         System.out.println("Converting "+f+" to "+nu.convert(f, "none"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "none"));
         System.out.println("Converting "+f+" to "+nu.convert(f, "voltage"));
+        System.out.println("Converting "+f+" to "+nu.convert(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "voltage"));
+        System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "conductance"));
         
 

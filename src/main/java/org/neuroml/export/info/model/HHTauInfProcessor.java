@@ -1,6 +1,7 @@
 package org.neuroml.export.info.model;
 
 import org.neuroml.model.GateHHTauInf;
+import org.neuroml.model.GateHHUndetermined;
 import org.neuroml.model.HHTime;
 import org.neuroml.model.HHVariable;
 
@@ -11,6 +12,12 @@ public class HHTauInfProcessor
 	private ChannelMLHHExpression _inf;
 
 	public HHTauInfProcessor(GateHHTauInf g)
+	{
+		setSteadyState(hhVarToExpr(g.getSteadyState()));
+		setTimeCourse(hhTimeToExpr(g.getTimeCourse()));
+	}
+
+	public HHTauInfProcessor(GateHHUndetermined g)
 	{
 		setSteadyState(hhVarToExpr(g.getSteadyState()));
 		setTimeCourse(hhTimeToExpr(g.getTimeCourse()));

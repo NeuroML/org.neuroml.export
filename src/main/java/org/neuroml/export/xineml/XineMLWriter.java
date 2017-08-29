@@ -109,10 +109,14 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 			StringBuilder abstLayer = new StringBuilder();
 			StringBuilder userNetLayer = new StringBuilder(); // User Layer: 9ml; Network Layer: SpineML
 			StringBuilder expLayer = new StringBuilder();
+			StringBuilder proj = new StringBuilder();
+			StringBuilder metadata = new StringBuilder();
 			int expLayerFlag = 3;
 			int userNetLayerFlag = 4; // User Layer: 9ml; Network Layer: SpineML
 
 			mainFile.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+            
+            boolean inclComments = true;
 
 			String namespace = null;
 			String schema = null;
@@ -131,6 +135,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 				namespace = NAMESPACE_SPINEML_COMP_LAYER;
 				schema = SCHEMA_SPINEML_COMP_LAYER;
 				defaultDimension = "?";
+                inclComments = false; // for the time 
 			}
 
 			String[] attrs = new String[] { "xmlns=" + namespace, extraAttr, "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance", "xsi:schemaLocation=" + namespace + " " + schema };
@@ -141,7 +146,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 			String info = "\n" + Utils.getHeaderComment(format) + "\n" + "\nExport of model:\n" + lems.textSummary(false, false);
 
-			addComment(mainFile, info);
+			if (inclComments) addComment(mainFile, info);
 
 			if(format.equals(Format.SPINEML))
 			{
@@ -152,15 +157,24 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 
 				startElement(expLayer, root, attrs_exp, expLayerFlag);
 
-				addComment(expLayer, info);
+				if (inclComments) addComment(expLayer, info);
 
 				userNetLayer.append("<?xml version='1.0' encoding='UTF-8'?>\n");
 				String[] attrs_net = new String[] { "xmlns=" + NAMESPACE_SPINEML_NET_LAYER, extraAttr, "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-						"xsi:schemaLocation=" + NAMESPACE_SPINEML_NET_LAYER + " " + SCHEMA_SPINEML_NET_LAYER };
+						"xsi:schemaLocation=" + NAMESPACE_SPINEML_NET_LAYER + " " + SCHEMA_SPINEML_NET_LAYER,
+						"xmlns:LL=http://www.shef.ac.uk/SpineMLLowLevelNetworkLayer" };
 
-				startElement(userNetLayer, root, attrs_net, userNetLayerFlag);
+				startElement(userNetLayer, "LL:"+root, attrs_net, userNetLayerFlag);
 
-				addComment(userNetLayer, info);
+				if (inclComments) addComment(userNetLayer, info);
+                
+                
+				proj.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+				//metadata.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+				if (inclComments) addComment(proj, info);
+                
+				startElement(proj, "SpineCreatorProject");
+				startElement(metadata, "modelMetaData");
 			}
 
 			Target target = lems.getTarget();
@@ -208,11 +222,14 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 					onCondNum = onCondNum + type.getDynamics().getOnConditions().size();
 
 					int num = Integer.parseInt(pop.getStringValue("size"));
-					addComment(userNetLayer, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
+					if (inclComments) addComment(userNetLayer, "Population " + pop.getID() + " contains " + num + " instances of components of: " + popComp, true);
 
-					startElement(userNetLayer, "Population", userNetLayerFlag);
+					startElement(userNetLayer, "LL:Population", userNetLayerFlag);
+                    
+                    
+					startEndElement(metadata, "population", "name=" + pop.id);
 
-					startElement(userNetLayer, "Neuron", "name=" + pop.id, "size=" + num, "url=" + this.getOutputFileName(), userNetLayerFlag);
+					startElement(userNetLayer, "LL:Neuron", "name=" + pop.id, "size=" + num, "url=" + this.getOutputFileName(), userNetLayerFlag);
 
 					for(ParamValue pv : popComp.getParamValues())
 					{
@@ -222,9 +239,8 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 						endElement(userNetLayer, "Property", userNetLayerFlag);
 
 					}
-					endElement(userNetLayer, "Neuron", userNetLayerFlag);
-
-					endElement(userNetLayer, "Population", userNetLayerFlag);
+					endElement(userNetLayer, "LL:Neuron", userNetLayerFlag);
+					endElement(userNetLayer, "LL:Population", userNetLayerFlag);
 
 				}
 
@@ -452,12 +468,39 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 				FileUtil.writeStringToFile(expLayer.toString(), expFile);
 				outputFiles.add(expFile);
 
-				endElement(userNetLayer, root, userNetLayerFlag);
+				endElement(userNetLayer, "LL:"+root, userNetLayerFlag);
 				String userFilename = "NetLayer_" + this.getOutputFileName();
 				File netFile = new File(getOutputFolder(), userFilename);
 
 				FileUtil.writeStringToFile(userNetLayer.toString(), netFile);
 				outputFiles.add(netFile);
+
+				endElement(metadata, "modelMetaData");
+				String metadataFilename = this.getOutputFileName().replace(".spineml",".metadata.xml");
+				File mdFile = new File(getOutputFolder(), metadataFilename);
+				FileUtil.writeStringToFile(metadata.toString(), mdFile);
+				outputFiles.add(mdFile);
+                
+				startElement(proj, "Network");
+				startEndElement(proj, "File", "name="+userFilename, "metaFile=metaData.xml");
+				endElement(proj, "Network");
+                
+				startElement(proj, "Components");
+				startEndElement(proj, "File", "name="+this.getOutputFileName());
+				endElement(proj, "Components");
+                
+				startElement(proj, "Experiments");
+				startEndElement(proj, "File", "name="+expFilename);
+				endElement(proj, "Experiments");
+                
+				endElement(proj, "SpineCreatorProject");
+                
+                
+				String projFilename = this.getOutputFileName().replace(".spineml",".proj");
+				File projFile = new File(getOutputFolder(), projFilename);
+				FileUtil.writeStringToFile(proj.toString(), projFile);
+				outputFiles.add(projFile);
+                
 			}
 
 			return mainFile.toString();
@@ -498,7 +541,7 @@ public class XineMLWriter extends ANeuroMLXMLWriter
 		// lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
 		lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex2_Izh.xml"));
-		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"));
+		lemsFiles.add(new File("../git/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRose.xml"));
 		// lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
 		// lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/lobster/PyloricNetwork/neuroConstruct/generatedNeuroML2/LEMS_PyloricPacemakerNetwork.xml"));
 		// lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/LEMS_c302_A.xml"));
