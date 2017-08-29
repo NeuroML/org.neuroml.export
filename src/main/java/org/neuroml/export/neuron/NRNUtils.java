@@ -34,6 +34,7 @@ public class NRNUtils implements UnitConverter
     final static String V_COPY_PREFIX = "copy_";
 
     final static String caConc = "caConc";
+    final static String vShift = "vShift";
 
     final static String comm = "# ";
     final static String commPre = "'''";

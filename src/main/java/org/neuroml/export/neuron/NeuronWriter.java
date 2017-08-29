@@ -1828,7 +1828,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 for(Component channelDensity : mpComp.getChildrenAL("channelDensities"))
                 {
-                    if (channelDensity.getTypeName().equals("channelDensity") || channelDensity.getTypeName().equals("channelDensityNonUniform")){
+                    if (channelDensity.getTypeName().equals("channelDensity") || 
+                        channelDensity.getTypeName().equals("channelDensityNonUniform")|| 
+                        channelDensity.getTypeName().equals("channelDensityVShift")) {
                         ChannelConductanceOption option = ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL;
                         option.erev = NRNUtils.convertToNeuronUnits((float)channelDensity.getParamValue("erev").getDoubleValue(), "voltage");
 
@@ -1971,6 +1973,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<String> locals = new ArrayList<String>();
 
         boolean hasCaDependency = false;
+        boolean hasVShift = false;
         String ionSpecies = "<unknown ion>";
 
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
@@ -1992,6 +1995,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             if(child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_VAR_COMP_TYPE) || child3.getComponentType().isOrExtends(NeuroMLElements.BASE_CONC_DEP_RATE_COMP_TYPE))
                             {
                                 hasCaDependency = true;
+                            }
+                        }
+
+                        for(Requirement r : child2.getComponentType().getRequirements())
+                        {
+                            if(r.getName().equals(NRNUtils.vShift))
+                            {
+                                hasVShift = true;
                             }
                         }
                     }
@@ -2216,7 +2227,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                 locals.add("caConc");
                 ratesMethod.append("caConc = cai\n\n");
-
+            }
+            if(hasVShift)
+            {
+                
+                if(!comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_V_SHIFT_TYPE))
+                {
+                    blockParameter.append("\n"+NRNUtils.vShift + " = 0 "+NRNUtils.getNeuronUnit("voltage")+" ? Will be used in rate expressions\n\n");
+                }
             }
         }
 
@@ -2943,7 +2961,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         for(Requirement req : comp.getComponentType().getRequirements())
         {
             String mappedName = null;
-            if(!req.getName().equals("v") && !req.getName().equals("temperature") && !req.getName().equals("caConc"))
+            if(!req.getName().equals("v") && !req.getName().equals("temperature") && !req.getName().equals("caConc") && !req.getName().equals("vShift"))
             {
                 for (String compid: paramMappings.keySet())
                 {
@@ -3522,16 +3540,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
 
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
@@ -3621,12 +3640,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Syns.xml"));
 
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_B_Social.xml"));
-                /* */
+                /*
         
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/chanDens/LEMS_cck.xml"));
         
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml")); */
         
         String testScript = "set -e\n";
 
