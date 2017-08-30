@@ -177,6 +177,9 @@ proc biophys() {
 #else##
         // gmax_$cd.ionChannel will be set later...
 #end##
+#if( $cd.vShift )##
+        vShift_$cd.ionChannel = $cd.vShift  // units: mV
+#end##
 #if( $cd.ion == 'non_specific' )##
         e_$cd.ionChannel = $cd.erev  // units: mV
 #else##

@@ -621,11 +621,23 @@ public class DLemsWriter extends ABaseWriter
         
         
         if (comp.getComponentType().isOrExtends("cell")) {
-            g.writeStringField(DLemsKeywords.COMMENT.get(), "Not adding rest of cell definition in JSON as it is of type <cell>");
+            g.writeStringField(DLemsKeywords.COMMENT.get(), "Not adding all of cell definition in JSON as it is of type <cell>");
             
             g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
             writeParameters(g, comp);
             g.writeEndObject();
+            
+            for (Component specie: comp.getChild("biophysicalProperties").getChild("intracellularProperties").getChildrenAL("speciesList")) {
+                
+                try{
+                    g.writeStringField(specie.getID()+"_initial_internal_conc", ""+Utils.getMagnitudeInSI(specie.getAttributeValue("initialConcentration")));
+                    g.writeStringField(specie.getID()+"_initial_external_conc", ""+Utils.getMagnitudeInSI(specie.getAttributeValue("initialExtConcentration")));
+                }
+                catch (NeuroMLException ne)
+                {
+                    throw new ContentError("Unabel to parse NeuroML", ne);
+                }
+            }
             
         } else {
             g.writeObjectFieldStart(DLemsKeywords.DYNAMICS.get());

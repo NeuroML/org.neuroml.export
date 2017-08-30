@@ -23,6 +23,7 @@ import org.neuroml.model.BiophysicalProperties2CaPools;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
 import org.neuroml.model.ChannelDensity;
+import org.neuroml.model.ChannelDensityVShift;
 import org.neuroml.model.ChannelDensityGHK;
 import org.neuroml.model.ChannelDensityGHK2;
 import org.neuroml.model.ChannelDensityNernst;
@@ -462,6 +463,36 @@ public class JSONCellSerializer
 
                 float valueErev = Utils.getMagnitudeInSI(cd.getErev()) * units.voltageFactor;
                 g.writeStringField("erev", NeuronWriter.formatDefault(valueErev));
+
+                g.writeEndObject();
+            }
+            for(ChannelDensityVShift cd : mp.getChannelDensityVShift())
+            {
+                g.writeStartObject();
+                g.writeStringField("id", cd.getId());
+
+                g.writeStringField("ionChannel", NRNUtils.getSafeName(cd.getIonChannel()));
+
+                if(cd.getIon() != null)
+                {
+                    g.writeStringField("ion", cd.getIon());
+                }
+                else
+                {
+                    g.writeStringField("ion", "non_specific");
+                }
+
+                String group = cd.getSegmentGroup() == null ? "all" : cd.getSegmentGroup();
+                g.writeStringField("group", group);
+
+                float valueCondDens = Utils.getMagnitudeInSI(cd.getCondDensity()) * units.condDensFactor;
+                g.writeStringField("condDens", NeuronWriter.formatDefault(valueCondDens));
+
+                float valueErev = Utils.getMagnitudeInSI(cd.getErev()) * units.voltageFactor;
+                g.writeStringField("erev", NeuronWriter.formatDefault(valueErev));
+                
+                float valueVshift = Utils.getMagnitudeInSI(cd.getVShift()) * units.voltageFactor;
+                g.writeStringField("vShift", NeuronWriter.formatDefault(valueVshift));
 
                 g.writeEndObject();
             }
