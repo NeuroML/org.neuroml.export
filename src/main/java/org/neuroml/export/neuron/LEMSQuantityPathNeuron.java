@@ -229,8 +229,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         }
 
         String var = getVariable();
-        String synInfoFull = var.split("_")[0];
-        String[] synInfo = synInfoFull.split(":");
+        
+        String[] synInfo = var.split(":");
         return synInfo[1];
     }
 
@@ -243,9 +243,9 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         }
 
         String var = getVariable();
-        String synInfoFull = var.split("_")[0];
-        String[] synInfo = synInfoFull.split(":");
-        return Integer.parseInt(synInfo[2]);
+        String[] synInfo = var.split(":");
+        int index = Integer.parseInt(synInfo[2].split("_")[0]);
+        return index;
     }
 
     
@@ -257,7 +257,8 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         }
 
         String var = getVariable();
-        return var.substring(var.indexOf("_") + 1);
+        String varInfo = var.split(":")[2];
+        return varInfo.substring(varInfo.indexOf("_") + 1);
 
     }
 
@@ -379,7 +380,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         catch (Exception e)
         {
             throw new NeuroMLException("Error converting the path: "+this.getQuantity()+" into the corresponding reference to the NEURON variable.\n"+
-                "Ensure the population id, component id, cell index and variable used in this path are correct!");
+                "Ensure the population id, component id, cell index and variable used in this path are correct!\n"+"Exception: "+e+"\n"+super.toString());
         }
     }
 
@@ -400,12 +401,21 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
             ref = "=== Unable to determine reference: " + ex;
         }
 
-        return super.toString() 
+        ref += super.toString() 
             + "\n    ** Neuron ref:    " + ref
             + "\n    popsOrComponents: " + popsOrComponents 
             + "\n    targetComp:       " + targetComp 
             + "\n    popComp:          " + popComp
             + "\n    hocRefsVsInputs:  " + hocRefsVsInputs;
+        
+        if (this.isVariableOnSynapse())
+        {
+            ref 
+            +="\n    Synapse type:     " + this.getSynapseType()
+            + "\n    Synapse index:    " + this.getSynapseIndex()
+            + "\n    Synapse var:      " + this.getVariableOnSyn();
+        }
+        return ref;
     }
 
     public static void main(String[] args) throws Exception
@@ -434,6 +444,9 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
         paths.add("hhpop/0/hhneuron/biophysics/membraneProperties/naChans/iDensity");
         paths.add("hhpop/0/hhneuron/biophysics/membraneProperties/kChans/gDensity");
         paths.add("hhpop/0/hhneuron/IClamp/i");
+        paths.add("hhpop/0/hhneuron/0/v");
+        paths.add("hhpop/0/hhneuron/0/synapses:AMPA:0/g");
+        paths.add("hhpop/0/hhneuron/0/synapses:bc_syn:0/g");
         
         Lems lems = Utils.readLemsNeuroMLFile(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml")).getLems();
         NeuroMLConverter nmlc = new NeuroMLConverter();
