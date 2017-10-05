@@ -83,6 +83,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     boolean nogui = false;
 
     static boolean debug = false;
+    
+    // if false, generate populations etc. in order found in LEMS/NeuroML (hopefully) 
+    boolean generateAlphabetical = false; 
 
     public static final String NEURON_HOME_ENV_VAR = "NEURON_HOME";
 
@@ -221,6 +224,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return nogui;
     }
 
+    public void setGenerateAlphabetical(boolean generateAlphabetical)
+    {
+        this.generateAlphabetical = generateAlphabetical;
+    }
+    
+    
+
     public List<File> generateMainScriptAndMods() throws LEMSException, GenerationException, NeuroMLException
     {
         File mainFile = new File(this.getOutputFolder(), this.getOutputFileName());
@@ -296,7 +306,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             Component targetComp = simCpt.getRefComponents().get("target");
             
-            main.append(bIndent+"print(\"\\n    Starting simulation in NEURON generated from NeuroML2 model...\\n\")\n\n");
+            main.append(bIndent+"print(\"\\n    Starting simulation in NEURON of %sms generated from NeuroML2 model...\\n\"%tstop)\n\n");
             main.append(bIndent+"self.seed = seed\n");
             main.append(bIndent+"self.randoms = []\n");
             main.append(bIndent+"self.next_global_id = 0  # Used in Random123 classes for elements using random(), etc. \n\n");
@@ -308,7 +318,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             addComment(main, info+"\n", bIndent);
 
-            ArrayList<Component> popsOrComponents = targetComp.getChildrenAL("populations");
+            ArrayList<Component> popsOrComponents = targetComp.getChildrenAL("populations", generateAlphabetical);
 
             //E.info("popsOrComponents: " + popsOrComponents);
 
@@ -362,12 +372,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         {
                             number++;
                             Component loc = instance.getChild(NeuroMLElements.LOCATION);
-                            String location = "("+loc.getAttributeValue(NeuroMLElements.LOCATION_X)
-                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Y)
-                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Z)+")";
-                            String locationStr = "("+loc.getAttributeValue(NeuroMLElements.LOCATION_X)
-                                    +", "+loc.getAttributeValue(NeuroMLElements.LOCATION_Y)
-                                    +" + XXX, "+loc.getAttributeValue(NeuroMLElements.LOCATION_Z)+", 10)";
+                            
+                            String location = "("+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_X))
+                                    +", "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Y))
+                                    +", "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Z))+")";
+                            
+                            String locationStr = "("+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_X))
+                                    +", "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Y))
+                                    +" + XXX, "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Z))+", 10)";
 
                             locations.put(Integer.parseInt(instance.getID()), location);
                             locationStrs.put(Integer.parseInt(instance.getID()), locationStr);
@@ -566,7 +578,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             // / Add projections/connections
             E.info("Adding projections/connections...");
 
-            ArrayList<Component> projections = targetComp.getChildrenAL("projections");
+            ArrayList<Component> projections = targetComp.getChildrenAL("projections", generateAlphabetical);
             
             HashMap<String, Integer> segmentSynapseCounts = new HashMap<String, Integer>();
 
@@ -832,7 +844,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            ArrayList<Component> electricalProjections = targetComp.getChildrenAL(NeuroMLElements.ELECTRICAL_PROJECTION);
+            ArrayList<Component> electricalProjections = targetComp.getChildrenAL(NeuroMLElements.ELECTRICAL_PROJECTION, generateAlphabetical);
 
             for(Component ep : electricalProjections)
             {
@@ -965,7 +977,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            ArrayList<Component> continuousProjections = targetComp.getChildrenAL(NeuroMLElements.CONTINUOUS_PROJECTION);
+            ArrayList<Component> continuousProjections = targetComp.getChildrenAL(NeuroMLElements.CONTINUOUS_PROJECTION, generateAlphabetical);
 
             for(Component ep : continuousProjections)
             {
@@ -1556,7 +1568,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     private void processInputLists(StringBuilder main, Component targetComp) throws LEMSException,
             ContentError, NeuroMLException {
 
-        for(Component inputList : targetComp.getChildrenAL("inputs")) {
+        for(Component inputList : targetComp.getChildrenAL("inputs", generateAlphabetical)) {
 
             addComment(main, "######################   Input List: "+inputList.id,"        ");
             String info = String.format("Adding input list: %s to %s, with %s inputs of type %s", inputList.id, inputList.getStringValue("population"), inputList.getChildrenAL("inputs").size(), inputList.getStringValue("component"));
@@ -3551,6 +3563,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
@@ -3586,7 +3600,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/AllenInstituteNeuroML/CellTypesDatabase/models/NeuroML2/LEMS_SomaTest.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/CA1PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_CA1PyramidalCell.xml"));
 
         /*

@@ -45,7 +45,7 @@ public class NeuroMLInclusionReader extends JarResourceInclusionReader
                 NeuroMLConverter nmlCon = new NeuroMLConverter();
                 NeuroMLHDF5Reader h5Reader;
                 h5Reader = new NeuroMLHDF5Reader();
-                h5Reader.parse(hdf5File, this.includeConnectionsFromHDF5, new ArrayList<String>(fullFilePathsIncluded));
+                h5Reader.parse(hdf5File, this.includeConnectionsFromHDF5, new ArrayList<String>(fullFilePathsIncluded), false);
                 
                 NeuroMLDocument nmlDoc = h5Reader.getNeuroMLDocument();
                 String xml = nmlCon.neuroml2ToXml(nmlDoc);
@@ -89,7 +89,7 @@ public class NeuroMLInclusionReader extends JarResourceInclusionReader
 				
 				String attribute=fullInclusion.substring(0,fullInclusion.indexOf("="));
 				String value = fullInclusion.substring(fullInclusion.indexOf("=")+1).replace("\"", "");
-
+                
 				sfullSB.append(getIncludeContent(attribute,value));
 				stxt = stxt.substring(icb + 2, stxt.length());
 			}
