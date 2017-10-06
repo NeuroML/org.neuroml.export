@@ -555,7 +555,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(bIndent+"    self.randoms.append(rand)\n");
                         
                         main.append(bIndent+"    #print(\"Seeding random generator on "+hocMechName+" (i=%i) with stim seed %s\"%(i, self.seed))\n");
-                        main.append(bIndent+"    self._init_stim_randomizer(rand,\""+popComp.getID()+"\",self.next_global_id, self.seed)\n");
+                        main.append(bIndent+"    self._init_stim_randomizer(rand,\""+popName+"\",i, self.seed)\n");
                         main.append(bIndent+"    rand.negexp(1)\n");
                         main.append(bIndent+"    h."+hocMechName+".noiseFromRandom(rand)\n\n");
                         
@@ -1451,7 +1451,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append("    # This is copied from NetPyNE: https://github.com/Neurosim-lab/netpyne/blob/master/netpyne/simFuncs.py\n");
             main.append("    ###############################################################################\n");
             main.append("    def _init_stim_randomizer(self,rand, stimType, gid, seed): \n");
-            //main.append(bIndent+"print(\"INIT STIM  %s; %s; %s; %s\"%(rand, stimType, gid, seed))\n");
+            main.append(bIndent+"#print(\"INIT STIM  %s; %s; %s; %s\"%(rand, stimType, gid, seed))\n");
             main.append(bIndent+"rand.Random123(self._id32(stimType), gid, seed)\n\n\n");
             
             main.append("    def save_results(self):\n\n");
@@ -1546,8 +1546,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             throws LEMSException, ContentError, NeuroMLException {
         ArrayList<Component> explicitInputs = targetComp.getChildrenAL("explicitInputs");
 
-        for(Component explInput : explicitInputs)
+        for(int i=0; i<explicitInputs.size();i++)
         {
+            Component explInput = explicitInputs.get(i);
             HashMap<String, Component> inputReference = explInput.getRefComponents();
 
             Component inputComp = inputReference.get("input");
@@ -1560,7 +1561,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //            inputName += "_" + popName + "_" + cellNum + "_" + secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
             inputName += secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
 
-            generateHocForInput(main, explInput, inputComp, inputName);
+            generateHocForInput(main, explInput, inputComp, inputName, i);
         }
     }
 
@@ -1576,15 +1577,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             generateModForComp(inputList.getRefComponents().get("component"));
 
-            for(Component input : inputList.getChildrenAL("inputs")) {
+            ArrayList<Component> cl = inputList.getChildrenAL("inputs");
+            for(int i=0; i<cl.size();i++) {
+                Component input = cl.get(i);
                 String inputName = NRNUtils.getSafeName(inputList.getID()) + "_" + input.getID();
                 Component inputComp = inputList.getRefComponents().get("component");
-                generateHocForInput(main, input, inputComp, inputName);
+                generateHocForInput(main, input, inputComp, inputName, i);
             }
         }
     }
 
-    private void generateHocForInput(StringBuilder main, Component input, Component inputComp, String inputName) throws ContentError,
+    private void generateHocForInput(StringBuilder main, Component input, Component inputComp, String inputName, int index) throws ContentError,
             NeuroMLException, ParseError {
 
         String nrnSection = parseInputSecName(input);
@@ -1608,7 +1611,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(bIndent+"rand = h.Random()\n");
                 main.append(bIndent+"self.randoms.append(rand)\n");
                 main.append(bIndent+"#print(\"Seeding random generator on "+inputName+" with stim seed %s\"%(self.seed))\n");
-                main.append(bIndent+"self._init_stim_randomizer(rand,\""+safeInputName+"\",self.next_spiking_input_id, self.seed)\n");
+                main.append(bIndent+"self._init_stim_randomizer(rand,\""+inputName.substring(0,inputName.lastIndexOf("_"))+"\","+index+", self.seed)\n");
                 main.append(bIndent+"rand.negexp(1)\n");
                 main.append(bIndent+"h."+inputName+".noiseFromRandom(rand)\n");
                 main.append(bIndent+"self.next_spiking_input_id+=1\n");
@@ -3566,6 +3569,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
