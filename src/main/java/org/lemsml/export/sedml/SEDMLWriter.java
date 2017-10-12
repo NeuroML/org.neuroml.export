@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lemsml.export.base.AXMLWriter;
+import org.lemsml.jlems.core.logging.E;
+import org.lemsml.jlems.core.logging.MinimalMessageHandler;
 import org.lemsml.jlems.core.sim.ContentError;
 import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
@@ -16,6 +18,7 @@ import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.LEMSQuantityPath;
+import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.model.util.NeuroMLException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
@@ -142,7 +145,7 @@ public class SEDMLWriter extends AXMLWriter
 		{
 			if(dispComp.getTypeName().equals("Display"))
 			{
-				String dispId = dispComp.getID();
+				String dispId = dispComp.getID().replace(" ","_");
 
 				for(Component lineComp : dispComp.getAllChildren())
 				{
@@ -154,10 +157,11 @@ public class SEDMLWriter extends AXMLWriter
 						LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
 						String pop = lqp.getPopulation();
 						String num = lqp.getPopulationIndex() + "";
+						String segid = lqp.getSegmentId()==0 ? "" : ("_"+lqp.getSegmentId());
 						String var = lqp.getVariable();
 
-						String genId = dispId + "_" + lineComp.getID();
-						String varFull = pop + "_" + num + "_" + var;
+						String genId = dispId + "_" + lineComp.getID().replace(" ","_");
+						String varFull = pop + "_" + num+segid + "_" + var;
 
 						startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
 						startElement(main, "listOfVariables");
@@ -183,7 +187,7 @@ public class SEDMLWriter extends AXMLWriter
 		{
 			if(dispComp.getTypeName().equals("Display"))
 			{
-				String dispId = dispComp.getID();
+				String dispId = dispComp.getID().replace(" ","_");
 
 				startElement(main, "plot2D", "id=" + dispId);
 				startElement(main, "listOfCurves");
@@ -197,11 +201,13 @@ public class SEDMLWriter extends AXMLWriter
 						// //String pop = ref.split("/")[0].split("\\[")[0];
 						// //String num = ref.split("\\[")[1].split("\\]")[0];
 						// //String var = ref.split("/")[1];
+                        
+                        String lcid = lineComp.getID().replace(" ","_");
 
-						String genId = dispId + "_" + lineComp.getID();
+						String genId = dispId + "_" + lcid;
 						// String varFull = pop+"_"+num+"_"+var;
 						// <curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
-						startEndElement(main, "curve", "id=" + lineComp.getID(), "logX=false", "logY=false", "xDataReference=time", "yDataReference=" + genId);
+						startEndElement(main, "curve", "id=curve_" + lcid, "logX=false", "logY=false", "xDataReference=time", "yDataReference=" + genId);
 
 					}
 				}
@@ -240,4 +246,39 @@ public class SEDMLWriter extends AXMLWriter
 
 		return outputFiles;
 	}
+    
+    
+    
+    public static void main(String[] args) throws Exception
+    {
+
+        MinimalMessageHandler.setVeryMinimal(true);
+        E.setDebug(false);
+
+        ArrayList<File> lemsFiles = new ArrayList<File>();
+        
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
+
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        
+
+        SEDMLWriter nw;
+        for(File lemsFile : lemsFiles)
+        {
+            Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
+            nw = new SEDMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sedml"), lemsFile.getName());
+
+            List<File> ff = nw.convert();
+            for(File f : ff)
+            {
+                System.out.println("Generated: " + f.getCanonicalPath());
+            }
+
+        }
+        
+        
+    }
 }
