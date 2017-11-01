@@ -41,6 +41,9 @@ simConfig.hParams['celsius'] = ($temperature - 273.15)
 # Recording 
 simConfig.recordCells = ['all']  
 simConfig.recordTraces = {}
+simConfig.saveCellSecs=False
+simConfig.saveCellConns=False
+simConfig.gatherOnlySimData=True 
 
 #foreach ($of in $output_file )
 # For saving to file: $of.file_name (ref: $of.name)

@@ -47,9 +47,11 @@ public class PlotNode extends PlotMetadataNode
 		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Data=" + toTruncatedArray(_data) + "]";
 	}
 
+    @Override
 	public String toShortString()
 	{
-		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Num data points=" + _data.size() + "]";
+		return "PlotNode [Title=" + getPlotTitle() + ", X=" + getXAxisLabel() + ", Y=" + getYAxisLabel() + ", Num data points=" + _data.size() 
+            +(_data.size()>0 ? " (first: "+_data.get(0).getLabel()+", #"+_data.get(0).getXData().size()+")" : "" ) +"]";
 	}
 
 	private String toTruncatedArray(List<Data> _data)
