@@ -28,7 +28,8 @@ public class NRNUtils implements UnitConverter
 
     final static String NEURON_VOLTAGE = "v";
     final static String NEURON_TEMP = "celsius";
-    final static String RESERVED_STATE_SUFFIX = "I";
+    //final static String RESERVED_STATE_SUFFIX = "_";
+    final static String V_CURRENT_SUFFIX = "_I";
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
     final static String V_COPY_PREFIX = "copy_";
@@ -207,7 +208,7 @@ public class NRNUtils implements UnitConverter
     {
         if (sv.equals(NRNUtils.NEURON_VOLTAGE))
         {
-            return NRNUtils.NEURON_VOLTAGE + NRNUtils.RESERVED_STATE_SUFFIX;
+            return NRNUtils.NEURON_VOLTAGE + NRNUtils.V_CURRENT_SUFFIX;
         }
         else
         {

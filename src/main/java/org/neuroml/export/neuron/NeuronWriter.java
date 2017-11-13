@@ -3069,7 +3069,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     bounds = " FROM 0 TO 1";
                 }
 
-                blockState.append(svName +bounds + " "+ dim + " "+"\n");
+                if(!sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
+                {
+                    blockState.append(svName +bounds + " "+ dim + " "+"\n");
+                }
+                else
+                {
+                    blockAssigned.append(svName +bounds + " "+ dim + " "+"\n");
+                }
             }
         }
 
@@ -3137,7 +3144,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String stateVarToUse = NRNUtils.getStateVarName(td.getStateVariable().getName());
 
                     String line = prefix + stateVarToUse + "' = " + rateName;
-
+                    
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
                         td.getStateVariable().getName().equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
                     {
@@ -3571,6 +3578,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
