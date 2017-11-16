@@ -4,6 +4,7 @@ import java.io.*;
 import java.text.*;
 import java.util.ArrayList;
 import java.util.Date;
+import org.codehaus.plexus.util.FileUtils;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -101,10 +102,12 @@ public class ProcessManager
 
         File neuronHome = findNeuronHome();
 
+        File fileToBeCreated = null;
+        
+        String myArch = Utils.getArchSpecificDir();
         try
         {
             String directoryToExecuteIn = modDirectory.getCanonicalPath();
-            File fileToBeCreated = null;
             File otherCheckFileToBeCreated = null; // for now...
 
             E.info("Parent dir: " + directoryToExecuteIn);
@@ -158,7 +161,6 @@ public class ProcessManager
             {
                 E.info("Assuming *nix environment...");
 
-                String myArch = Utils.getArchSpecificDir();
 
                 String backupArchDir = Utils.DIR_64BIT;
 
@@ -290,15 +292,25 @@ public class ProcessManager
                     + "Often, extra packages (e.g. dev packages of ncurses & readline) need to be installed "
                     + "to successfully run nrnivmodl, which compiles mod files\n" + "Go to " + modDirectory
                     + " and try running nrnivmodl";
+                
                 if (Utils.isWindowsBasedPlatform())
                 {
                     linMacWarn = "";
+                }
+                else
+                {
+                    E.info("Deleting generated dir: "+fileToBeCreated.getParentFile().getAbsolutePath());
+                    if (fileToBeCreated.getParentFile().getName().equals(myArch));
+                    {
+                        FileUtils.deleteDirectory(fileToBeCreated.getParentFile());
+                    }
                 }
 
                 E.error("Problem with mod file compilation. File doesn't exist: " + fileToBeCreated.getAbsolutePath() 
                     + "\n" + "(and neither does " + otherCheckFileToBeCreated.getAbsolutePath()
                     + ")\n" + "Please note that Neuron checks every *.mod file in this file's home directory\n" + "(" + modDirectory + ").\n"
                     + "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" + linMacWarn);
+                
                 return false;
             }
 
@@ -311,6 +323,8 @@ public class ProcessManager
             {
                 dirContents = "bin\\neuron.exe";
             }
+            
+            fileToBeCreated.delete();
             throw new NeuroMLException("Error testing: " + modDirectory.getAbsolutePath() + ".\nIs NEURON correctly installed?\n" + "NEURON home dir being used: " + findNeuronHome().getAbsolutePath()
                 + "\n\n", ex);
         }

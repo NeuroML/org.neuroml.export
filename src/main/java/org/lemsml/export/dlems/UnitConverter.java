@@ -5,11 +5,13 @@
  */
 package org.lemsml.export.dlems;
 
+import org.lemsml.jlems.core.sim.LEMSException;
+
 /**
  *
  * @author padraig
  */
 public interface UnitConverter
 {
-    float convert(float siValue, String dimensionName);
+    float convert(float siValue, String dimensionName) throws LEMSException;
 }

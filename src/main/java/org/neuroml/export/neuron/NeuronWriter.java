@@ -122,7 +122,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     public NeuronWriter(Lems lems, File outputFolder, String outputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
         super(lems, Format.NEURON, outputFolder, outputFileName);
-        E.info("Creating NeuronWriter for "+outputFileName);
+        E.info("Creating NeuronWriter to output files to "+outputFolder.getAbsolutePath());
     }
 
     @Override
@@ -143,44 +143,61 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         sli.addSupportInfo(format, ModelFeature.KS_CHANNEL_MODEL, SupportLevelInfo.Level.LOW);
     }
 
-    public List<File> generateAndRun(boolean nogui, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
+    public List<File> generateAndRun(boolean nogui, boolean compileMods, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
     {
 
         this.nogui = nogui;
         List<File> files = generateMainScriptAndMods();
 
-        if(run)
+        if(compileMods || run)
         {
-            E.info("Trying to compile mods in: " + this.getOutputFolder());
-
-            boolean comp = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
-            
-            E.info("Success: " + comp);
-
-            File neuronHome = findNeuronHome();
-            String nrncmd = nogui ? "nrniv" : "nrngui";
-            String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
-                    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
-
-            Runtime rt = Runtime.getRuntime();
-            Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
-            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
-            procOutputMain.start();
-
-            ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
-            procOutputError.start();
-
-            E.info("Have successfully executed command: " + commandToExecute);
-
-            try
+            if (compileMods)
             {
-                currentProcess.waitFor();
+                E.info("Trying to compile mods in: " + this.getOutputFolder());
 
-                E.info("Exit value for running NEURON: " + currentProcess.exitValue());
+                boolean complied = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+
+                E.info("Success in compiling mods: " + complied);
+
+                if (!complied)
+                {
+                    String mods = "";
+                    for (File f: files )
+                    {
+                        if (f.getName().endsWith("mod"))
+                            mods+=f.getAbsolutePath()+"; ";
+                    }
+
+                    throw new NeuroMLException("Error compiling mod files: "+mods);
+                }
             }
-            catch(InterruptedException e)
+            if (run)
             {
-                E.info("Problem executing Neuron " + e);
+                File neuronHome = findNeuronHome();
+                String nrncmd = nogui ? "nrniv" : "nrngui";
+                String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
+                        + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
+
+                Runtime rt = Runtime.getRuntime();
+                Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
+                ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
+                procOutputMain.start();
+
+                ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
+                procOutputError.start();
+
+                E.info("Have successfully executed command: " + commandToExecute);
+
+                try
+                {
+                    currentProcess.waitFor();
+
+                    E.info("Exit value for running NEURON: " + currentProcess.exitValue());
+                }
+                catch(InterruptedException e)
+                {
+                    E.info("Problem executing Neuron " + e);
+                }
             }
         }
         return files;
@@ -1588,7 +1605,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private void generateHocForInput(StringBuilder main, Component input, Component inputComp, String inputName, int index) throws ContentError,
-            NeuroMLException, ParseError {
+            NeuroMLException, ParseError, LEMSException {
 
         String nrnSection = parseInputSecName(input);
         float fractionAlong = parseFractionAlong(input);
@@ -1693,7 +1710,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private void processTimeDependentLiterals(StringBuilder main, Component input, Component inputComp)
-            throws ContentError, NeuroMLException, ParseError {
+            throws ContentError, NeuroMLException, ParseError, LEMSException {
         // TODO Auto-generated method stub
         String inputName = NRNUtils.getSafeName(inputComp.getID());
         addComment(main, "Generating event source for point process " + input, bIndent);
@@ -2886,7 +2903,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     }
 
     private static void parseParameters(Component comp, String prefix, String prefixParent, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron,
-            StringBuilder blockParameter, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings)
+            StringBuilder blockParameter, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws LEMSException
     {
 
         LinkedHashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
@@ -3537,13 +3554,69 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         StringBuilder eqns = new StringBuilder();
         StringBuilder initInfo = new StringBuilder();
     }
+    
+    /*
+    * Can be used to generate Neuron hoc/mod files for cells (with channels) and synapses
+    */
+    public void generateFilesForNeuroMLElements(boolean compileMods) throws LEMSException, NeuroMLException, IOException
+    {
+        boolean foundMods = false;
+        for (Component comp: lems.getComponents())
+        {
+            if (comp.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
+            {
+                convertCellWithMorphology(comp);
+            }
+             // extends baseCell but not Cell
+            else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
+            {
+                generateModForComp(comp);
+                foundMods = true;
+            }
+            else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
+            {
+                generateModForComp(comp);
+                foundMods = true;
+            }
+            // TODO: more..?
+            
+        }
+        if (compileMods && foundMods)
+        {
+            E.info("Trying to compile mods in: " + this.getOutputFolder());
+
+            boolean complied = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+
+            E.info("Success in compiling mods: " + complied);
+
+            if (!complied)
+            {
+
+                throw new NeuroMLException("Error compiling mod files in: "+this.getOutputFolder());
+            }
+        }
+    }
 
     public static void main(String[] args) throws Exception
     {
 
         MinimalMessageHandler.setVeryMinimal(true);
         E.setDebug(false);
-
+        
+        ArrayList<File> nmlFiles = new ArrayList<File>();
+        nmlFiles.add(new File("../NeuroML2/examples/NML2_SingleCompHHCell.nml"));
+        nmlFiles.add(new File("../NeuroML2/examples/NML2_SynapseTypes.nml"));
+        nmlFiles.add(new File("../git/BonoClopath2017/NeuroML2/SimpleNet.net.nml"));
+        
+        for(File nmlFile : nmlFiles)
+        {
+            Lems lems = Utils.readNeuroMLFile(nmlFile.getAbsoluteFile()).getLems();
+            System.out.println("Loading: "+nmlFile);
+            NeuronWriter nw = new NeuronWriter(lems, nmlFile.getParentFile(),"");
+            nw.generateFilesForNeuroMLElements(true);
+        }
+        //System.exit(0);
+        
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
@@ -3552,7 +3625,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
@@ -3570,16 +3643,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
-        
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
-
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+//        
+//        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
+//        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
+//        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
+//        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
+//
+//        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+//        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+//        
+//        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
@@ -3682,7 +3755,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
             nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
-            List<File> ff = nw.generateAndRun(false, false);
+            List<File> ff = nw.generateAndRun(false, false, false);
             for(File f : ff)
             {
                 System.out.println("Generated: " + f.getAbsolutePath());

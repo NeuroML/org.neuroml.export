@@ -606,12 +606,12 @@ public class DLemsWriter extends ABaseWriter
         return sw.toString();
     }
 
-    private void writeDLemsForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+    private void writeDLemsForComponent(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException, LEMSException
     {
         writeDLemsForComponent(g, comp, null);
     }
 
-    private void writeDLemsForComponent(JsonGenerator g, Component comp, HashMap<String, Set<String>> extraParameters) throws ContentError, JsonGenerationException, IOException
+    private void writeDLemsForComponent(JsonGenerator g, Component comp, HashMap<String, Set<String>> extraParameters) throws ContentError, JsonGenerationException, IOException, LEMSException
     {
         if (comp==null)
             return;
@@ -674,7 +674,7 @@ public class DLemsWriter extends ABaseWriter
 
     }
     
-    private String convertTime(ParamValue lemsValue) throws ContentError
+    private String convertTime(ParamValue lemsValue) throws ContentError, LEMSException
     {
         return unitConverter.convert((float)lemsValue.getDoubleValue(),TIME_DIM)+"";
     }
@@ -924,7 +924,7 @@ public class DLemsWriter extends ABaseWriter
         }
     }
 
-    private void writeParameters(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException
+    private void writeParameters(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException, LEMSException
     {
         ComponentType ct = comp.getComponentType();
 

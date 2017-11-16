@@ -11,6 +11,7 @@ import java.util.Set;
 import org.lemsml.export.dlems.UnitConverter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.sim.LEMSException;
 import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.DimensionalQuantity;
@@ -18,6 +19,7 @@ import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.QuantityReader;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.model.util.NeuroMLElements;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * @author Boris Marin & Padraig Gleeson
@@ -221,7 +223,7 @@ public class NRNUtils implements UnitConverter
         return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=").replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=").replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
     }
     
-    protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError
+    protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError, LEMSException
     {
         float threshold = 0;
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
@@ -324,6 +326,10 @@ public class NRNUtils implements UnitConverter
         {
             return "(/mV)";
         }
+        else if (dimensionName.equals("per_voltage2"))
+        {
+            return "(/mV2)";
+        }
         else if (dimensionName.equals("conductance"))
         {
             return "(uS)";
@@ -410,19 +416,19 @@ public class NRNUtils implements UnitConverter
         }
     }
 
-    protected static float convertToNeuronUnits(String neuromlQuantity, Lems lems) throws ParseError, ContentError
+    protected static float convertToNeuronUnits(String neuromlQuantity, Lems lems) throws ParseError, ContentError, LEMSException
     {
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
         return convertToNeuronUnits((float)dq.getDoubleValue(), dq.getDimension().getName());
     }
     
     @Override
-    public float convert(float siValue, String dimensionName) 
+    public float convert(float siValue, String dimensionName) throws LEMSException
     {
         return convertToNeuronUnits(siValue, dimensionName);
     }
 
-    protected static float convertToNeuronUnits(float siVal, String dimensionName)
+    protected static float convertToNeuronUnits(float siVal, String dimensionName) throws LEMSException
     {
         BigDecimal factor = new BigDecimal(getNeuronUnitFactor(dimensionName));
         BigDecimal newValB = new BigDecimal(siVal+"");
@@ -433,7 +439,7 @@ public class NRNUtils implements UnitConverter
         return newVal;
     }
 
-    public static float getNeuronUnitFactor(String dimensionName)
+    public static float getNeuronUnitFactor(String dimensionName) throws LEMSException
     {
 
         if (dimensionName.equals("none"))
@@ -447,6 +453,10 @@ public class NRNUtils implements UnitConverter
         else if (dimensionName.equals("per_voltage"))
         {
             return 0.001f;
+        }
+        else if (dimensionName.equals("per_voltage2"))
+        {
+            return 1e-6f;
         }
         else if (dimensionName.equals("conductance"))
         {
@@ -526,7 +536,7 @@ public class NRNUtils implements UnitConverter
         }
         else
         {
-            return Float.NaN;
+            throw new LEMSException("Dimension "+dimensionName+" is not known to NEURON (add to NRNUtils)");
         }
     }
 
@@ -544,7 +554,7 @@ public class NRNUtils implements UnitConverter
     }
     
     
-	public static void main(String args[])
+	public static void main(String args[]) throws LEMSException
 	{
 		NRNUtils nu = new NRNUtils();
         float f = 2.5e-5f;
