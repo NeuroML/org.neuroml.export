@@ -86,7 +86,11 @@ public class SVGWriter extends ANeuroMLXMLWriter
         //Add header
         result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
         //addComment(result, "Total bounds: "+bounds.toString());
-        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, "version=" + SVG_VERSION, "width="+bounds.width, "height="+bounds.height);
+        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, 
+                                    "version=" + SVG_VERSION, 
+                                    "width="+bounds.width, 
+                                    "height="+bounds.height,
+                                    "viewBox=0 0 "+bounds.width+" "+bounds.height);
 
         result.append(core.toString());
         
