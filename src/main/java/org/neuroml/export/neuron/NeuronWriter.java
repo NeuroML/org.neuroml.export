@@ -175,8 +175,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 File neuronHome = findNeuronHome();
                 String nrncmd = nogui ? "nrniv" : "nrngui";
+                String fullPath = new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath(); 
                 String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
-                        + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
+                        + fullPath;
 
                 Runtime rt = Runtime.getRuntime();
                 Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
@@ -193,6 +194,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     currentProcess.waitFor();
 
                     E.info("Exit value for running NEURON: " + currentProcess.exitValue());
+                    
+                    if (currentProcess.exitValue()!=0)
+                        throw new NeuroMLException("Error, exit value from running "+fullPath+" in NEURON: "+currentProcess.exitValue());
+                        
                 }
                 catch(InterruptedException e)
                 {
