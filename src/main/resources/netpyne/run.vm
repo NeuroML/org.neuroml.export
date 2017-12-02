@@ -135,7 +135,7 @@ if sim.rank==0:
         if id in to_record_keys:
 #if ($of.spike_file_format=="ID_TIME")
             spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
-#else if ($of.spike_file_format=="TIME_ID")
+#else
             spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
 #end
     spike_file_${of.name}.close()

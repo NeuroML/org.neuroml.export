@@ -18,6 +18,8 @@ public class VelocityUtils
 	
 	// public static final String sbmlTemplateFile = "/sbml/template.sbml";
 	
+	public static final String mooseRunTemplateFile = "/moose/run.vm";
+	
 	public static final String nestRunTemplateFile = "/nest/run.vm";
 	public static final String nestCellTemplateFile = "/nest/cell.vm";
 	

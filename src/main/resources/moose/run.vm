@@ -1,0 +1,73 @@
+# Main Moose script for: $name
+
+import moose
+
+import sys
+
+from moose.neuroml2.reader import NML2Reader
+
+reader = NML2Reader(verbose=True)
+
+nml_filename = '${main_network_file}'
+print('Loading: %s'%nml_filename)
+reader.read(nml_filename)
+
+
+simdt = $dt *1e-3
+plotdt = $dt *1e-3
+simtime = $t_end *1e-3
+
+
+#foreach ($of in $output_file )
+print("Saving traces to file: $of.file_name (ref: $of.name)")
+
+#foreach ($oc in $of.output_columns )
+# Column: $oc.name: Pop: $oc.population ; cell: $oc.population_index ; segment id: $oc.segment_id ; segment name: $oc.segment_name; value: $oc.variable
+#if ($oc.variable=="v")
+mcomp = reader.getComp('$oc.population',$oc.population_index,$oc.segment_id)
+var_${of.name}_$oc.name = moose.Table('%s/Vm' % (mcomp.path))
+moose.connect(var_${of.name}_$oc.name, 'requestOut', mcomp, 'getVm')
+#end
+#end
+#end
+
+print("Running a simulation in Moose of %s ms (dt: %sms)"%($t_end,$dt))
+
+if (1):
+    #moose.showmsg( '/clock' )
+    for i in range(8):
+        moose.setClock( i, simdt )
+    moose.setClock( 8, plotdt )
+    moose.reinit()
+else:
+    utils.resetSim([model.path, data.path], simdt, plotdt, simmethod='ee')
+    moose.showmsg( '/clock' )
+
+moose.start(simtime)
+
+print("Finished simulation in Moose of %s ms (dt: %sms)"%($t_end,$dt))
+
+#foreach ($of in $output_file )
+print("Saving traces to file: $of.file_name (ref: $of.name)")
+
+ 
+#foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
+# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+col_${of.name}_$oc.name = var_${of.name}_${oc.name}.vector
+
+#else
+# Column: $oc.name
+col_${of.name}_$oc.name = [i*simdt for i in range(int($t_end/$dt))]
+
+#end
+#end
+dat_file_$of.name = open('$of.file_name', 'w')
+for i in range(len(col_${of.name}_t)):
+    dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]) + #end '\n')
+dat_file_${of.name}.close()
+
+#end
+
+if '-nogui' in sys.argv:
+    quit()
