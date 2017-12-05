@@ -273,7 +273,7 @@ public class NRNUtils implements UnitConverter
         newExpr = newExpr.replaceAll("\\.and.", "&&");
 
         newExpr = newExpr.replaceAll(" ln\\(", " log(");
-        newExpr = newExpr.replaceAll(" random\\(", " random_float(");
+        newExpr = newExpr.replaceAll("random\\(", "random_float(");
 
         HashMap<String, String> paramMappingsComp = paramMappings.get(comp.getUniqueID());
 

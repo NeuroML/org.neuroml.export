@@ -204,6 +204,8 @@ public class MooseWriter extends ANeuroMLBaseWriter
             for (File dlemsFile: dlemsFiles) {
                     
                 String dlems = FileUtil.readStringFromFile(dlemsFile);
+                
+                //mainRunScript.append("'''\n"+dlems+"\n'''\n");
 
                 DLemsWriter.putIntoVelocityContext(dlems, context);
                 
@@ -297,6 +299,10 @@ public class MooseWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/HDF5/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../git/osb-model-validation/utilities/tests/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/MainenEtAl_PyramidalCell/neuroConstruct/generatedNeuroML2/LEMS_OneComp.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACnet2.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
 
         for (File lemsFile : lemsFiles)
         {

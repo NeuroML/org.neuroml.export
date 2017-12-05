@@ -745,6 +745,8 @@ public class DLemsWriter extends ABaseWriter
                 
                 g.writeStartObject();
                 g.writeStringField(DLemsKeywords.NAME.get(), "t");
+                
+                g.writeStringField(DLemsKeywords.VARIABLE.get(), "t");
                 if (neuronMode) 
                 {
                     g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), "1000.0");
@@ -811,10 +813,12 @@ public class DLemsWriter extends ABaseWriter
                         
                         LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
 
+                        g.writeStringField(DLemsKeywords.QUANTITY.get(), quantity);
                         g.writeStringField(DLemsKeywords.ORDINATE.get(), lqp.getVariable());
 
                         g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
                         g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
+                        g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
                         g.writeStringField(DLemsKeywords.COLOUR.get(), lineComp.getStringValue("color"));
                         g.writeEndObject();
                     }
@@ -880,6 +884,7 @@ public class DLemsWriter extends ABaseWriter
         }
         
         g.writeStringField(DLemsKeywords.VARIABLE.get(), lqp.getVariable());
+        g.writeStringField(DLemsKeywords.QUANTITY.get(), quantity);
     }
 
     private void writeState(JsonGenerator g, Component comp) throws ContentError, JsonGenerationException, IOException

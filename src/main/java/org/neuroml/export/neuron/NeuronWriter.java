@@ -2488,7 +2488,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         if (blockInitial.indexOf("random")>0 ||
             blockNetReceive.indexOf("random")>0 ||
-            ratesMethod.indexOf("random")>0)
+            ratesMethod.indexOf("random")>0||
+            blockBreakpoint.indexOf("random")>0)
         {
             blockFunctions.append(NRNUtils.randomFunctionDefs);
             blockNeuron.append(": Based on netstim.mod\nTHREADSAFE : only true if every instance has its own distinct Random\n" +
@@ -3631,6 +3632,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
@@ -3638,7 +3640,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));

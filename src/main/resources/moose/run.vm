@@ -1,10 +1,8 @@
 # Main Moose script for: $name
 
 import moose
-
-import sys
-
 from moose.neuroml2.reader import NML2Reader
+import sys
 
 reader = NML2Reader(verbose=True)
 
@@ -12,21 +10,63 @@ nml_filename = '${main_network_file}'
 print('Loading: %s'%nml_filename)
 reader.read(nml_filename)
 
-
 simdt = $dt *1e-3
 plotdt = $dt *1e-3
 simtime = $t_end *1e-3
 
+rec_tables = {} 
+can_save = {}
+can_display = {}
 
 #foreach ($of in $output_file )
-print("Saving traces to file: $of.file_name (ref: $of.name)")
 
+print("Saving tables to save traces to file: $of.file_name (ref: $of.name)")
+can_save['$of.name'] = False
 #foreach ($oc in $of.output_columns )
+#if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population ; cell: $oc.population_index ; segment id: $oc.segment_id ; segment name: $oc.segment_name; value: $oc.variable
+ref = 'var_${oc.population}_${oc.population_index}_${oc.segment_id}_$oc.variable'
+can_save['$of.name'] = True
+if not ref in rec_tables:
+    mcomp = reader.getComp('$oc.population',$oc.population_index,$oc.segment_id)
 #if ($oc.variable=="v")
-mcomp = reader.getComp('$oc.population',$oc.population_index,$oc.segment_id)
-var_${of.name}_$oc.name = moose.Table('%s/Vm' % (mcomp.path))
-moose.connect(var_${of.name}_$oc.name, 'requestOut', mcomp, 'getVm')
+    rec_tables[ref] = moose.Table('%s/Vm' % (mcomp.path))
+    moose.connect(rec_tables[ref], 'requestOut', mcomp, 'getVm')
+#else
+    variable = '$oc.quantity'  
+    if 'membraneProperties' in variable and 'q' in variable:
+        chan = variable.split('/')[-4]
+        gate = variable.split('/')[-2]
+        path = reader.paths_to_chan_elements['%s/%s'%(chan,gate)]
+        mchan = moose.element('%s/%s' % (mcomp.path, chan))
+        #moose.showfield(mchan, field='*', showtype=True)
+        rec_tables[ref] = moose.Table('%s/%s' % (mchan.path, path.split('gate')[1]))
+        moose.connect(rec_tables[ref], 'requestOut', mchan, 'get%s'%path.split('gate')[1])
+#end
+#end
+#end
+#end
+
+#foreach ($disp in $display )
+print("Saving tables to display traces: $disp.title (ref: $disp.name)")
+#foreach ($curve in $disp.curves )
+# Curve: $curve.name: Pop: $curve.population ; cell: $curve.population_index; segment id: $curve.segment_id; ordinate: $curve.ordinate
+ref = 'var_${curve.population}_${curve.population_index}_${curve.segment_id}_$curve.ordinate'
+if not ref in rec_tables:
+    mcomp = reader.getComp('$curve.population',$curve.population_index,$curve.segment_id)
+#if ($curve.ordinate=="v")
+    rec_tables[ref] = moose.Table('%s/Vm' % (mcomp.path))
+    moose.connect(rec_tables[ref], 'requestOut', mcomp, 'getVm')
+#else
+    variable = '$curve.quantity'  
+    if 'membraneProperties' in variable and 'q' in variable:
+        chan = variable.split('/')[-4]
+        gate = variable.split('/')[-2]
+        path = reader.paths_to_chan_elements['%s/%s'%(chan,gate)]
+        mchan = moose.element('%s/%s' % (mcomp.path, chan))
+        #moose.showfield(mchan, field='*', showtype=True)
+        rec_tables[ref] = moose.Table('%s/%s' % (mchan.path, path.split('gate')[1]))
+        moose.connect(rec_tables[ref], 'requestOut', mchan, 'get%s'%path.split('gate')[1])
 #end
 #end
 #end
@@ -39,6 +79,7 @@ if (1):
         moose.setClock( i, simdt )
     moose.setClock( 8, plotdt )
     moose.reinit()
+    moose.reinit()
 else:
     utils.resetSim([model.path, data.path], simdt, plotdt, simmethod='ee')
     moose.showmsg( '/clock' )
@@ -49,25 +90,57 @@ print("Finished simulation in Moose of %s ms (dt: %sms)"%($t_end,$dt))
 
 #foreach ($of in $output_file )
 print("Saving traces to file: $of.file_name (ref: $of.name)")
-
  
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-col_${of.name}_$oc.name = var_${of.name}_${oc.name}.vector
+
+col_${of.name}_$oc.variable = rec_tables['var_${oc.population}_${oc.population_index}_${oc.segment_id}_$oc.variable'].vector
 
 #else
 # Column: $oc.name
-col_${of.name}_$oc.name = [i*simdt for i in range(int($t_end/$dt))]
+col_${of.name}_$oc.name = [i*simdt for i in range(int(round(simtime/simdt))+1)]
+#end
+#end
+if can_save['$of.name']:
+    dat_file_$of.name = open('$of.file_name', 'w')
+    for i in range(len(col_${of.name}_t)):
+        dat_file_${of.name}.write(#foreach ($oc in $of.output_columns )  '%s\t'%(col_${of.name}_${oc.variable}[i]) + #end '\n')
+    dat_file_${of.name}.close()
 
 #end
+
+if not '-nogui' in sys.argv:
+    import matplotlib.pyplot as plt
+    mp = 'Membrane potential (mV) '
+
+#foreach ($d in $display )
+    # Display: $d.name: $d.title
+    print("Display ($d.name): $d.title")
+    plt.figure("${d.title}")
+    plt.xlabel('Time (ms)')
+    ylabel = ''
+
+#foreach ($curve in $d.curves )
+
+    # Line: $curve.name: Pop: $curve.population; cell: $curve.population_index; value: $curve.ordinate
+    ref = 'var_${curve.population}_${curve.population_index}_${curve.segment_id}_$curve.ordinate'
+    if ref in rec_tables:
+        y = rec_tables[ref].vector
+#if (${curve.ordinate} == 'v')
+        if not mp in ylabel: ylabel += mp
+#else
+        ylabel += '${curve.name} '
 #end
-dat_file_$of.name = open('$of.file_name', 'w')
-for i in range(len(col_${of.name}_t)):
-    dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]) + #end '\n')
-dat_file_${of.name}.close()
+        ts = [i*simdt for i in range(int(round(simtime/simdt))+1)]
+        plt.plot(ts, y, '-', label='${curve.name}')
 
 #end
+    plt.ylabel(ylabel)
+    plt.legend()
+#end
+    plt.show()
+
 
 if '-nogui' in sys.argv:
     quit()

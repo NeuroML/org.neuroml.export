@@ -33,6 +33,7 @@ public enum DLemsKeywords
     FILE_NAME, 
     OUTPUT_COLUMNS, 
     VARIABLE, 
+    QUANTITY, 
     DISPLAY, 
     ABSCISSA_AXIS, 
     MIN, MAX, 
