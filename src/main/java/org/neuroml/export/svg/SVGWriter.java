@@ -22,12 +22,14 @@ import org.neuroml.export.utils.Format;
 import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.model.Annotation;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Instance;
 import org.neuroml.model.Location;
 import org.neuroml.model.Member;
 import org.neuroml.model.Morphology;
 import org.neuroml.model.Network;
+import org.neuroml.model.Property;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Point3DWithDiam;
 import org.neuroml.model.Population;
@@ -138,10 +140,22 @@ public class SVGWriter extends ANeuroMLXMLWriter
                                 +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
                         cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
                     }
+                    String defColor = null;
+                    //System.out.println("----" + pop.getProperty());
+                    for (Property p: pop.getProperty())
+                    {
+                        if (p.getTag().equals("color"))
+                        {
+                            String[] w = p.getValue().split(" ");
+                            defColor = "rgb("+(int)Math.floor(Float.parseFloat(w[0])*255) 
+                                         +","+(int)Math.floor(Float.parseFloat(w[1])*255)
+                                         +","+(int)Math.floor(Float.parseFloat(w[2])*255) +")";
+                        }
+                    }
                     if (pop.getInstance().isEmpty())
                     {
                         for (int i= 0; i<pop.getSize(); i++) {
-                            net3D.addCell(cell, 0, 0, 0);
+                            net3D.addCell(cell, 0, 0, 0, defColor);
                         }
                     } 
                     else 
@@ -149,7 +163,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
                         for (Instance instance: pop.getInstance())
                         {
                             Location loc = instance.getLocation();
-                            net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ());
+                            net3D.addCell(cell, loc.getX(), loc.getY(), loc.getZ(), defColor);
                         }
                     }
 
@@ -298,8 +312,14 @@ public class SVGWriter extends ANeuroMLXMLWriter
         else if (color.equals("black")) return Color.BLACK;
         else if (color.equals("yellow")) return Color.YELLOW;
         else if (color.equals("green")) return Color.GREEN.darker();
-        else if (color.equals("rgb(100,100,100)")) return new Color(100,100,100);
-        else return Color.MAGENTA;
+        else if (color.startsWith("rgb("))
+        {
+            String[] rgb = color.substring(4, color.length()-1).split(",");
+            //System.out.println(color+" -> ("+rgb[0]+","+rgb[1]+","+rgb[2]+")");
+            return new Color(Integer.parseInt(rgb[0]),Integer.parseInt(rgb[1]),Integer.parseInt(rgb[2]));
+            
+        }
+        else return Color.ORANGE;
     }
 
     private void renderLines(StringBuilder result, 
@@ -433,7 +453,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
 
         //String fileName = 
         ArrayList<String> fileNames = new ArrayList<String>();
-        fileNames.add("src/test/resources/examples/ShapedCell.cell.nml");
+        fileNames.add("../git/ca1/NeuroML2/network/PINGNet_0_1.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/PotjansDiesmann2014/NeuroML2/MicrocircuitNoInput.2percent.net.nml");
 
         fileNames.add("src/test/resources/examples/L5PC.cell.nml");
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");

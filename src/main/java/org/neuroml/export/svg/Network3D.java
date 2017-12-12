@@ -22,12 +22,12 @@ public class Network3D
     public Network3D(Cell cell)
     {
         this.comment = "Cell: "+cell.getId();
-        lines = extractLines(cell);
+        lines = extractLines(cell, null);
     }
     
-    public void addCell(Cell cell, float offsetX, float offsetY, float offsetZ)
+    public void addCell(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor)
     {
-        lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ));
+        lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ, defaultColor));
     }
     
     public float addAxes(float offset) 
@@ -201,13 +201,13 @@ public class Network3D
     }
 
     
-    private ArrayList<Line3D> extractLines(Cell cell)
+    private ArrayList<Line3D> extractLines(Cell cell, String defaultColor)
     {
-        return extractLines(cell, 0, 0, 0);
+        return extractLines(cell, 0, 0, 0, defaultColor);
     }
     
     
-    private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ)
+    private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor)
     {
         ArrayList<Line3D> result = new ArrayList<Line3D>();
 
@@ -243,7 +243,11 @@ public class Network3D
             //Gray is default
             String color = "rgb(100,100,100)";
             
-            if(somaSegIds.contains(segment.getId()))
+            if(defaultColor!=null)
+            {
+                color = defaultColor;
+            }
+            else if(somaSegIds.contains(segment.getId()))
             {
                 color = "red";
             }
