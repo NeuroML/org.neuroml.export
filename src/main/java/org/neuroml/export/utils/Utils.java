@@ -574,6 +574,61 @@ public class Utils
 		return System.getProperty("os.arch").contains("64"); // should be
 																	// cases
 	}
+    
+    public static boolean isVersionControlDir(String dirname)
+    {
+        return dirname.equals("CVS") ||  dirname.equals(".svn") ||  dirname.equals("_svn")||  dirname.equals(".git")||  dirname.equals(".hg");
+    }
+
+    public static boolean isVersionControlDir(File dir)
+    {
+        return isVersionControlDir(dir.getName());
+    }
+    
+    public static void removeAllFiles(File directory, boolean removeDirToo, boolean removeVC)
+    {
+        File[] allFiles = directory.listFiles();
+
+        boolean underVersionControl  = false;
+        if (allFiles!=null)
+        {
+            for (File f : allFiles)
+            {
+                if (f.isDirectory())
+                {
+                    underVersionControl = underVersionControl || isVersionControlDir(f.getName());
+                    if (!(isVersionControlDir(f.getName()) && !removeVC))
+                    {
+                        removeAllFiles(f, true, removeVC);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        boolean res = f.delete();
+                        //System.out.println("Deleting: "+ f+": "+ res);
+                        if (!res)
+                        {
+                            f.deleteOnExit();
+                        }
+                    }catch(SecurityException se)
+                    {
+                        se.printStackTrace();;
+                    }
+                }
+            }
+        }
+        if (removeDirToo)
+        {
+            if (! (!removeVC && underVersionControl) ){
+                boolean res = directory.delete();
+                //System.out.println("Deleted: "+ directory+": "+ res);
+                if (!res) directory.deleteOnExit();
+            }
+        }
+
+    }
         
 
     public static void main(String args[]) throws ContentError, IOException, LEMSException, NeuroMLException
@@ -583,9 +638,11 @@ public class Utils
         
         f = new File("../git/ca1/NeuroML2/network/LEMS_PINGNet_0.xml");
         //f = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml");
-        Sim sim = Utils.readLemsNeuroMLFile(f);
-        Lems lems = sim.getLems();
-        System.out.println("-----------------------\nLEMS:\n"+lems.components.toString());
+        //Sim sim = Utils.readLemsNeuroMLFile(f);
+        //Lems lems = sim.getLems();
+        //System.out.println("-----------------------\nLEMS:\n"+lems.components.toString());
+        f = new File("/tmp/tt/NETMORPH2NeuroML/");
+        removeAllFiles(f, true, true);
     }
 
 }

@@ -4,7 +4,6 @@ import java.io.*;
 import java.text.*;
 import java.util.ArrayList;
 import java.util.Date;
-import org.codehaus.plexus.util.FileUtils;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.logging.MinimalMessageHandler;
@@ -302,7 +301,7 @@ public class ProcessManager
                     E.info("Deleting generated dir: "+fileToBeCreated.getParentFile().getAbsolutePath());
                     if (fileToBeCreated.getParentFile().getName().equals(myArch));
                     {
-                        FileUtils.deleteDirectory(fileToBeCreated.getParentFile());
+                        Utils.removeAllFiles(fileToBeCreated.getParentFile(), true, true);
                     }
                 }
 
