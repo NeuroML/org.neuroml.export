@@ -358,6 +358,10 @@ public class NRNUtils implements UnitConverter
         {
             return "(nA / um2)";
         }
+        else if (dimensionName.equals("current_per_time"))
+        {
+            return "(nA / ms)";
+        }
         else if (dimensionName.equals("conductanceDensity"))
         {
             return "(uS / um2)";
@@ -481,6 +485,10 @@ public class NRNUtils implements UnitConverter
         else if (dimensionName.equals("currentDensity"))
         {
             return 1e-3f;
+        }
+        else if (dimensionName.equals("current_per_time"))
+        {
+            return 1e6f;
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
