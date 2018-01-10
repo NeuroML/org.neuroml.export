@@ -212,7 +212,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
                     String destination = explInput.getTextParam("destination");
                     String targetComp = explInput.getAttributeValue("target");
                     
-                    String population = targetComp.split("\\[")[0];
+                    String population = targetComp.contains("[") ? targetComp.split("\\[")[0] : targetComp.split("/")[0];
 
                     addComment(sb, "   Input " + inputComp.getID() + " on: " + destination + " of "+targetComp+": "+inputComp.summary());
 
@@ -427,7 +427,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
         float dur_si = getMagnitudeInSI(inputComp.getAttributeValue("duration"));
 
         String inputMethod = inputsPerPopulation.get(population);
-        String unit = inputMethod.contains("ISyn") ? "1" : "amp";
+        String unit = (inputMethod!=null && inputMethod.contains("ISyn")) ? "1" : "amp";
 
         String inputExpression = inputMethod+" = TimedArray( np.concatenate( ( \n"+
             "         np.repeat(0, int("+del_si+"/defaultclock.dt)) , \n"+
@@ -762,6 +762,7 @@ public class BrianWriter extends ANeuroMLBaseWriter
         
         lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_SingleAP.xml"));
  */    
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
 		lemsFiles.add(new File("../neuroConstruct/osb/showcase/BrianShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex1_HH.xml"));
 
