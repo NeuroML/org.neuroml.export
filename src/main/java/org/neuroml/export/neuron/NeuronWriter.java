@@ -3585,6 +3585,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 generateModForComp(comp);
                 foundMods = true;
             }
+            else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
+            {
+                generateModForComp(comp);
+                foundMods = true;
+            }
+            else if (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_POINT_CURR_COMP_TYPE))
+            {
+                generateModForComp(comp);
+                foundMods = true;
+            }
             // TODO: more..?
             
         }
@@ -3592,7 +3602,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             E.info("Trying to compile mods in: " + this.getOutputFolder());
 
-            boolean complied = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
+            boolean complied = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), true);
 
             E.info("Success in compiling mods: " + complied);
 
