@@ -81,6 +81,7 @@ public class DLemsWriter extends ABaseWriter
     
         
     HashMap<String,String> cellIdsVsPopulations = new HashMap<String, String>();
+    HashMap<String,Component> popIdsVsComponents = new HashMap<String,Component>();
     HashMap<String,Set<String>> cellIdsVsSynapses = new HashMap<String, Set<String>>();
 
     public void setPopulationMode(boolean mode)
@@ -296,8 +297,7 @@ public class DLemsWriter extends ABaseWriter
                 }
 
             }
-            //System.out.println("cellIdsVsPopulations "+cellIdsVsPopulations);
-            //System.out.println("cellIdsVsSynapses "+cellIdsVsSynapses);
+            
 
             if (populationMode)
             {
@@ -336,7 +336,8 @@ public class DLemsWriter extends ABaseWriter
 
                         File compFile = new File(this.getOutputFolder(), popComp.getID() + ".cell.json");
                         FileUtil.writeStringToFile(swComp.toString(), compFile);
-                        outputFiles.add(compFile);
+                        if (!outputFiles.contains(compFile))
+                            outputFiles.add(compFile);
 
                     } 
                     else
@@ -370,7 +371,9 @@ public class DLemsWriter extends ABaseWriter
 
                             File compFile = new File(this.getOutputFolder(), cpFlat.getID() + ".cell.json");
                             FileUtil.writeStringToFile(swComp.toString(), compFile);
-                            outputFiles.add(compFile);
+                            
+                            if (!outputFiles.contains(compFile))
+                                outputFiles.add(compFile);
 
                         } 
                         else
@@ -414,7 +417,7 @@ public class DLemsWriter extends ABaseWriter
                     g.writeEndObject();
                 }
             }
-
+            
             if (populationMode)
             {
 
@@ -457,11 +460,12 @@ public class DLemsWriter extends ABaseWriter
 
                         File synFile = new File(this.getOutputFolder(), cpFlat.getID() + ".synapse.json");
                         FileUtil.writeStringToFile(swComp.toString(), synFile);
-                        outputFiles.add(synFile);
+                        
+                        if (!outputFiles.contains(synFile))
+                            outputFiles.add(synFile);
                         handledSyns.add(synRef);
                     }
                   
-
                     
                 }
             
@@ -529,7 +533,8 @@ public class DLemsWriter extends ABaseWriter
 
                         File inputFile = new File(this.getOutputFolder(), inputCompFlat.getID() + ".input.json");
                         FileUtil.writeStringToFile(swComp.toString(), inputFile);
-                        outputFiles.add(inputFile);
+                        if (!outputFiles.contains(inputFile))
+                            outputFiles.add(inputFile);
 
                     }
                     g.writeEndObject();
@@ -729,6 +734,7 @@ public class DLemsWriter extends ABaseWriter
                 
             }
         }
+        
         g.writeEndArray();
         
         g.writeArrayFieldStart(DLemsKeywords.OUTPUT_FILE.get());
@@ -763,7 +769,6 @@ public class DLemsWriter extends ABaseWriter
                         g.writeStringField(DLemsKeywords.NAME.get(), outputColumn.getID());
                         
                         String quantity = outputColumn.getStringValue("quantity");
-                        
                         extractQuantityInfo(quantity, g);
                         
                         g.writeEndObject();
@@ -831,35 +836,72 @@ public class DLemsWriter extends ABaseWriter
         g.writeEndArray();
     }
     
+    private HashMap<String,HashMap<Integer,String>> cachedNrnSecNames = new HashMap<String,HashMap<Integer,String>>();
+    private HashMap<String,HashMap<Integer,Float>> cachedNrnFracts = new HashMap<String,HashMap<Integer,Float>>();
+    
+    private void addNrnSecNameFract(Component comp, int segId, JsonGenerator g) throws LEMSException, NeuroMLException, IOException
+    {
+        if (!cachedNrnSecNames.containsKey(comp.getID()))
+        {
+            cachedNrnSecNames.put(comp.getID(), new HashMap<Integer,String>());
+        }
+        if (!cachedNrnFracts.containsKey(comp.getID()))
+        {
+            cachedNrnFracts.put(comp.getID(), new HashMap<Integer,Float>());
+        }
+        
+        if(!cachedNrnSecNames.get(comp.getID()).containsKey(segId))
+        {
+            Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
+            
+            NamingHelper nh = new NamingHelper(cell);
+            Segment segment = CellUtils.getSegmentWithId(cell, segId);
+            String nrnsec = nh.getNrnSectionName(segment);
+            float fract = cell.getMorphology().getSegment().size()==1 ? 0.5f : (float) CellUtils.getFractionAlongSegGroupLength(cell, nrnsec, segment.getId(), 0.5f);
+            cachedNrnSecNames.get(comp.getID()).put(segId, nrnsec);
+            cachedNrnFracts.get(comp.getID()).put(segId, fract);
+        }
+        else
+        {
+        }
+        String nrnsec = cachedNrnSecNames.get(comp.getID()).get(segId);
+        float fract  = cachedNrnFracts.get(comp.getID()).get(segId);
+        
+
+        g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), nrnsec);
+        g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), fract+"");
+        
+                    
+    }
+    
     private void extractQuantityInfo(String quantity, JsonGenerator g) throws IOException, ContentError, LEMSException
     {
         LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
-
 
         g.writeStringField(DLemsKeywords.POPULATION.get(), lqp.getPopulation());
         g.writeStringField(DLemsKeywords.POPULATION_INDEX.get(), lqp.getPopulationIndex()+"");
 
         if (populationMode) 
         {
-            Component comp = lems.getComponent(cellIdsVsPopulations.get(lqp.getPopulation()));
+            if (!popIdsVsComponents.containsKey(lqp.getPopulation()))
+            {
+                Component comp = lems.getComponent(cellIdsVsPopulations.get(lqp.getPopulation()));
+                popIdsVsComponents.put(lqp.getPopulation(),comp);
+            }
+            Component comp = popIdsVsComponents.get(lqp.getPopulation());
+            
             if (comp.getComponentType().isOrExtends("cell")) {
                 for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
                     if (seg.id.equals(lqp.getSegmentId()+"")) {
                         g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
                         g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());
+                        break;
                     }
                 }
                 try
                 {
-                    Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
-
-                    NamingHelper nh = new NamingHelper(cell);
-                    Segment segment = CellUtils.getSegmentWithId(cell, lqp.getSegmentId());
-                    String nrnsec = nh.getNrnSectionName(segment);
-                    float fract = cell.getMorphology().getSegment().size()==1 ? 0.5f : (float) CellUtils.getFractionAlongSegGroupLength(cell, nrnsec, segment.getId(), 0.5f);
-
-                    g.writeStringField(DLemsKeywords.NEURON_SECTION_NAME.get(), nrnsec);
-                    g.writeStringField(DLemsKeywords.NEURON_FRACT_ALONG.get(), fract+"");
+                    addNrnSecNameFract(comp, lqp.getSegmentId(), g);
+                    
                 } 
                 catch (NeuroMLException nmle) 
                 {
@@ -1135,9 +1177,9 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
 
