@@ -279,7 +279,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             addComment(main, "Neuron simulator export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
             main.append("\nimport neuron\n");
-            main.append("\nimport time\n");
+            main.append("\nimport time");
+            main.append("\nimport sys\n");
             main.append("\nimport hashlib\n");
             main.append("h = neuron.h\n");
 
@@ -329,6 +330,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             Component targetComp = simCpt.getRefComponents().get("target");
             
             main.append(bIndent+"print(\"\\n    Starting simulation in NEURON of %sms generated from NeuroML2 model...\\n\"%tstop)\n\n");
+            
+            if (target.reportFile!=null)
+            {
+                main.append(bIndent+"self.report_file = open('"+target.reportFile+"','w')\n");
+                main.append(bIndent+"self.report_file.write('# Report of running simulation with %s\\n'%h.nrnversion())\n");
+                main.append(bIndent+"self.report_file.write('SimulationFile=%s\\n'%__file__)\n");
+                main.append(bIndent+"self.report_file.write('PythonVersion=%s\\n'%sys.version.replace('\\n',' '))\n");
+                main.append(bIndent+"self.report_file.write('SimulatorVersion=%s\\n'%h.nrnversion())\n\n");
+                
+            }
+            
             main.append(bIndent+"self.seed = seed\n");
             main.append(bIndent+"self.randoms = []\n");
             main.append(bIndent+"self.next_global_id = 0  # Used in Random123 classes for elements using random(), etc. \n\n");
@@ -1451,8 +1463,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(bIndent+"print(\"Running a simulation of %sms (dt = %sms; seed=%s)\" % (h.tstop, h.dt, self.seed))\n\n");
             main.append(bIndent+"h.run()\n\n");
             main.append(bIndent+"self.sim_end = time.time()\n");
-            main.append(bIndent+"sim_time = self.sim_end - sim_start\n");
-            main.append(bIndent+"print(\"Finished NEURON simulation in %f seconds (%f mins)...\"%(sim_time, sim_time/60.0))\n\n");
+            main.append(bIndent+"self.sim_time = self.sim_end - sim_start\n");
+            main.append(bIndent+"print(\"Finished NEURON simulation in %f seconds (%f mins)...\"%(self.sim_time, self.sim_time/60.0))\n\n");
             main.append(bIndent+"self.save_results()\n\n\n");
             
             main.append("    def advance(self):\n\n");
@@ -1542,6 +1554,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(bIndent+"save_end = time.time()\n");
             main.append(bIndent+"save_time = save_end - self.sim_end\n");
             main.append(bIndent+"print(\"Finished saving results in %f seconds\"%(save_time))\n\n");
+            
+            if (target.reportFile!=null)
+            {
+                main.append(bIndent+"self.report_file.write('RealSimulationTime=%s\\n'%self.sim_time)\n");
+                main.append(bIndent+"self.report_file.write('SimulationSaveTime=%s\\n'%save_time)\n");
+                main.append(bIndent+"self.report_file.close()\n\n");
+                main.append(bIndent+"print(\"Saving report of simulation to %s\"%('"+target.reportFile+"'))\n\n");
+            }
+            
             main.append(bIndent+"print(\"Done\")\n\n");
             if(nogui)
             {
@@ -3063,12 +3084,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 String regimeStateName = NRNUtils.REGIME_PREFIX + regime.name;
                 stateVars.add(regimeStateName);
-                blockState.append(regimeStateName + " (1)\n");
+                blockAssigned.append(regimeStateName + " (1)\n");
             }
 
             for(StateVariable sv : comp.getComponentType().getDynamics().getStateVariables())
             {
-
                 String svName = prefix + NRNUtils.getStateVarName(sv.getName());
                 stateVars.add(svName);
                 String dim = NRNUtils.getNeuronUnit(sv.getDimension().getName());
@@ -3093,13 +3113,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     bounds = " FROM 0 TO 1";
                 }
 
-                if(!sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
+                if(sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
                 {
-                    blockState.append(svName +bounds + " "+ dim + " "+"\n");
+                    blockAssigned.append(svName +bounds + " "+ dim + " "+"\n");
+                }
+                else if(Arrays.asList(NRNUtils.NON_NRN_STATE_VARS).contains(sv.getName()))
+                {
+                    blockAssigned.append(svName +bounds + " "+ dim + "                    : Not a state variable as far as Neuron's concerned..."+"\n");
                 }
                 else
                 {
-                    blockAssigned.append(svName +bounds + " "+ dim + " "+"\n");
+                    blockState.append(svName +bounds + " "+ dim + " "+"\n");
                 }
             }
         }
@@ -3630,7 +3654,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             Lems lems = Utils.readNeuroMLFile(nmlFile.getAbsoluteFile()).getLems();
             System.out.println("Loading: "+nmlFile);
             NeuronWriter nw = new NeuronWriter(lems, nmlFile.getParentFile(),"");
-            nw.generateFilesForNeuroMLElements(true);
+            nw.generateFilesForNeuroMLElements(false);
         }
         //System.exit(0);
         
@@ -3639,15 +3663,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
-        //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
+        //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));*/
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
@@ -3658,7 +3683,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
@@ -3675,7 +3700,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
-//        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
