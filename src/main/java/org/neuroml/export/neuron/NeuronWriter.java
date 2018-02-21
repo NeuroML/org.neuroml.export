@@ -334,9 +334,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if (target.reportFile!=null)
             {
                 main.append(bIndent+"self.report_file = open('"+target.reportFile+"','w')\n");
+                main.append(bIndent+"print('Simulator version:  %s'%h.nrnversion())\n");
                 main.append(bIndent+"self.report_file.write('# Report of running simulation with %s\\n'%h.nrnversion())\n");
                 main.append(bIndent+"self.report_file.write('SimulationFile=%s\\n'%__file__)\n");
                 main.append(bIndent+"self.report_file.write('PythonVersion=%s\\n'%sys.version.replace('\\n',' '))\n");
+                main.append(bIndent+"print('Python version:     %s'%sys.version.replace('\\n',' '))\n");
                 main.append(bIndent+"self.report_file.write('SimulatorVersion=%s\\n'%h.nrnversion())\n\n");
                 
             }
@@ -3666,7 +3668,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));

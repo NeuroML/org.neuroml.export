@@ -34,7 +34,7 @@ public class ProcessManager
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
         String[] knownVersions = new String[]
         {
-            "7.4", "7.3", "7.2", "7.1", "6.2", "6.1", "6.0"
+            "7.5", "7.4", "7.3", "7.2", "7.1", "6.2", "6.1", "6.0"
         };
 
         if (nrnEnvVar != null)
@@ -57,6 +57,7 @@ public class ProcessManager
                 options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
                 options.add("/Applications/NEURON-" + ver + "/nrn/umac");
                 options.add("/Applications/NEURON-" + ver + "/nrn/i386");
+                options.add("/Applications/NEURON-" + ver + "/nrn/x86_64");
             }
 
         }
@@ -81,10 +82,11 @@ public class ProcessManager
         }
 
         throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options
-            + ", NEURON executable sought: " + nrnExe + ". \n\n"
+            + "\nThe NEURON executable which is sought inside this directory is: " + nrnExe + ". \n\n"
             + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
-            + " to the location of your NEURON installation (containing bin), e.g.\n\n"
-            + "  export " + NeuronWriter.NEURON_HOME_ENV_VAR + "=/home/myuser/nrn7/x86_64\n", null);
+            + " to the location of your NEURON installation (up to but not including bin), e.g.\n\n"
+            + "  export " + NeuronWriter.NEURON_HOME_ENV_VAR + "=/home/myuser/nrn7/x86_64\n\n"+
+            "Currently " + NeuronWriter.NEURON_HOME_ENV_VAR + " is set to: "+nrnEnvVar+"\n", null);
 
     }
 
