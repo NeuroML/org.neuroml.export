@@ -2294,6 +2294,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 if(!comp.getComponentType().isOrExtends(NeuroMLElements.ION_CHANNEL_V_SHIFT_TYPE))
                 {
                     blockParameter.append("\n"+NRNUtils.vShift + " = 0 "+NRNUtils.getNeuronUnit("voltage")+" ? Will be used in rate expressions\n\n");
+                    
+                    blockNeuron.append("RANGE "+NRNUtils.vShift + "                            : Can be set externally\n");
                 }
             }
         }
@@ -3703,6 +3705,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/cells/RS/LEMS_RS.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
