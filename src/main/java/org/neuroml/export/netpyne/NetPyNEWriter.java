@@ -431,9 +431,10 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/HDF5/LEMS_SpikingNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/olfactorybulb/networks/MiglioreEtAl14_OlfactoryBulb3D/NeuroML2/Channels/test/LEMS_OlfactoryTest_12.xml"));
-        //lemsFiles.add(new File("../git/multi/temp/LEMS_ISN_net.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/olfactorybulb/networks/MiglioreEtAl14_OlfactoryBulb3D/NeuroML2/Channels/test/LEMS_OlfactoryTest_12.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
+        lemsFiles.add(new File("../git/multi/temp/LEMS_ISN_net.xml"));
 
         for (File lemsFile : lemsFiles)
         {

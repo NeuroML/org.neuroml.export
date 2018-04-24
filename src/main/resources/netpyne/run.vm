@@ -50,9 +50,13 @@ simConfig.gatherOnlySimData=True
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
 # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
+#if ($oc.neuron_mechanism_name)
+simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['stim'] = '${oc.neuron_mechanism_name}'
 #end
 #end
+#end
+
 #end
 
 
@@ -102,7 +106,7 @@ if sim.rank==0:
 #foreach ($oc in $of.output_columns )
 #if ($oc.name!="t")
     # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-    col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.neuron_variable_name}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
+    col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
 
 #else
     # Column: $oc.name

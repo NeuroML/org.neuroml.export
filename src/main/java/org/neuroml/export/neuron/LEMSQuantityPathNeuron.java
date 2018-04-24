@@ -59,8 +59,29 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
                 }
             }
         }
+    }
+    public LEMSQuantityPathNeuron(String q, 
+                                  String s, 
+                                  Lems lems) throws ContentError
+    {
+        super(q, s);
+        this.targetComp = null;
+        this.compMechNamesHoc = new HashMap<String, String>();
+        this.popsOrComponents = new ArrayList<Component>();
+        this.compIdsVsCells = new HashMap<String, Cell>();
+        this.hocRefsVsInputs = new HashMap<String, String>();
+        this.lems = lems;
 
-		// System.out.println("----------------------\nCreated:"+this+"\n----------------------");
+        if (myType != Type.VAR_IN_SINGLE_COMP)
+        {
+            for (Component popsOrComponent : popsOrComponents)
+            {
+                if (popsOrComponent.getID().equals(population))
+                {
+                    popComp = popsOrComponent.getRefComponents().get("component");
+                }
+            }
+        }
     }
 
     private static Exposure getExposure(Component c, String path) throws ContentError
@@ -98,9 +119,14 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 
     }
     
-    public static Dimension getDimensionOfVariableOnCellInPopComp(String[] variableParts, Component popComp) throws ContentError
+    public Dimension getDimensionOfVariableOnCellInPopComp(String[] variableParts, Component popComp) throws ContentError
     {
         String path = getVariablePathInPopComp(variableParts, Type.VAR_IN_CELL_IN_POP_LIST);
+        // TODO: this is quick & dirty to handle inputs!! Replace!
+        if (path.endsWith("/i"))
+        {
+            return lems.getDimensions().getByName("current");
+        }
         return getExposure(popComp, path).getDimension();
         
     }

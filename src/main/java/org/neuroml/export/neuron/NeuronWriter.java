@@ -558,7 +558,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                     else
                     {
-                        main.append(bIndent+"    h." + instName + "(0.5).cm = 318.31927\n");
+                        // See https://github.com/NeuroML/org.neuroml.export/issues/60
+                        main.append(bIndent+"    h." + instName + "(0.5).cm = 318.31\n");
                     }
 
                     main.append(bIndent+"    h." + instName + ".push()\n");

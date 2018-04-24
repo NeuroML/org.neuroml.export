@@ -917,10 +917,23 @@ public class DLemsWriter extends ABaseWriter
             if (neuronMode && !lqp.getVariable().equals("spike")) 
             {
                 String nrnVar = LEMSQuantityPathNeuron.convertToNeuronVariable(lqp.getVariableParts(),comp);
-                g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), nrnVar);
-
-                float conv = NRNUtils.getNeuronUnitFactor(LEMSQuantityPathNeuron.getDimensionOfVariableOnCellInPopComp(lqp.getVariableParts(), comp).getName());
+                
+                LEMSQuantityPathNeuron lqpn = new LEMSQuantityPathNeuron(quantity, "1", lems);
+                
+                // TODO: make more general
+                if (nrnVar.endsWith("_i"))
+                {
+                    g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), "i");
+                    g.writeStringField(DLemsKeywords.NEURON_MECHANISM_NAME.get(), nrnVar.substring(0,nrnVar.lastIndexOf("_")));
+                }
+                else
+                {
+                    g.writeStringField(DLemsKeywords.NEURON_VARIABLE_NAME.get(), nrnVar);
+                    
+                }
+                float conv = NRNUtils.getNeuronUnitFactor(lqpn.getDimensionOfVariableOnCellInPopComp(lqp.getVariableParts(), comp).getName());
                 g.writeStringField(DLemsKeywords.NEURON_VARIABLE_SCALE.get(), conv+"");
+                
 
             }
         }
