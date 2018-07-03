@@ -596,7 +596,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         main.append(bIndent+"    rand.negexp(1)\n");
                         main.append(bIndent+"    h."+hocMechName+".noiseFromRandom(rand)\n\n");
                         
+                    }                    
+                    
+                    if(popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_RATE_UNIT))
+                    {
+                        main.append(bIndent+"    # use internal i_cap to gather info on incoming currents\n");
+                        main.append(bIndent+"    h(\"setpointer " + NRNUtils.getMechanismName(popComp, popName) + "[%i].isyn_in, "+popName+"[%i].i_cap(0.5)\"%(i,i))\n\n");
                     }
+                    
                     main.append(bIndent+"    h.pop_section()\n\n");
                     main.append(bIndent+"    self.next_global_id+=1\n\n");
                     
@@ -1132,11 +1139,25 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d].weight = %s }\")\n", postSecName, postCompObjName, index, weight));
                         }
 
+                        String peerVar = "v";
+                        String prePrefix = "";
+                        String postPrefix = "";
+                        String preArg = "("+preFract+")";
+                        String postArg = "("+postFract+")";
+                        
+                        if(postComponent.getComponentType().getName().toLowerCase().contains("rate"))
+                        {
+                            peerVar = "r";
+                            prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
+                            postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
+                            preArg = "";
+                            postArg = "";
+                        }
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n", preCompObjName, index, postSecName, postFract));
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].vpeer, %s.v(%f)\")\n\n", postCompObjName, index, preSecName, preFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s - %s\n", preCompObjName, index, peerVar, postPrefix, postSecName, peerVar, postArg, preComponent, postComponent));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\")\n\n", postCompObjName, index, peerVar, prePrefix, preSecName, peerVar, preArg));
 
                         index++;
                     }
@@ -2238,7 +2259,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             blockAssigned.append("v (mV)\n");
         }
-
+        
         if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
         {
             blockAssigned.append("? Standard Assigned variables with baseSynapse\n");
@@ -2250,6 +2271,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         else
         {
             blockNetReceiveParams = "flag";
+        }
+        
+        if(comp.getComponentType().isOrExtends("baseRateUnit"))
+        {
+            blockNeuron.append("? Add pointer for incoming current\n");
+            blockNeuron.append("POINTER isyn_in\n\n");
+            blockAssigned.append("? Pointer for incoming current\n");
+            blockAssigned.append("isyn_in (nA)\n\n");
+            
         }
 
         String prefix = "";
@@ -3478,7 +3508,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         String eqn = globalVar;
                         String comment = "";
-                        if(globalVar.contains("[*]") && globalVar.contains("syn"))
+                        
+                        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_RATE_UNIT) && globalVar.toLowerCase().contains("syn"))
+                        {
+                            eqn = "isyn_in * 3.14159 ? Using this value, which comes from i_cap on the cell via a pointer, for the synaptic current" ; 
+                        }
+                        else if(globalVar.contains("[*]") && globalVar.contains("syn"))
                         {
                             eqn = "0 ? Was: " + localVar + " but insertion of currents from external attachments not yet supported";
                         }
@@ -3668,18 +3703,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex12_Net2.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
         //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));*/
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         
         //
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
@@ -3688,7 +3723,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/neocortical_pyramidal_neuron/SmithEtAl2013-L23DendriticSpikes/NeuroML2/LEMS_L23_Stim.xml"));
         
@@ -3705,8 +3740,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/cells/RS/LEMS_RS.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
+       // lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/cells/RS/LEMS_RS.xml"));
+        lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_slow.xml"));
+        lemsFiles.add(new File("../git/del-Molino2017/NeuroML/Fig1/LEMS_RateBased_low_baseline.xml"));
+        //lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_driven.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
