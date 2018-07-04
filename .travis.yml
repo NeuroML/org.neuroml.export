@@ -1,12 +1,13 @@
-dist: precise
+dist: trusty
+sudo: false
 
 language: java
 
 jdk:
   - openjdk7
-  #- openjdk6    Issues with HDF5 libraries in org.neuroml.model
-  - oraclejdk7
+  - openjdk8
   - oraclejdk8
+  # - oraclejdk9
 
 
 install:
