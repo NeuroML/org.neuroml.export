@@ -3659,6 +3659,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 generateModForComp(comp);
                 foundMods = true;
             }
+            else if (comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE))
+            {
+                generateModForComp(comp);
+                foundMods = true;
+            }
             // TODO: more..?
             
         }
