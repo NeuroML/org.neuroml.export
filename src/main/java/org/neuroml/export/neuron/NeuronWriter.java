@@ -2817,7 +2817,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             if(debug)
                             {
                                 blockNetReceive.append("    printf(\"Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
-                                        + ", satisfied at time: %g, v: %g\\n\", t, v)\n");
+                                        + ", satisfied in " + comp.getTypeName() + " at time: %g, v: %g\\n\", t, v)\n");
                             }
                             for(StateAssignment sa : oc.getStateAssignments())
                             {
@@ -2875,6 +2875,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                     }
                                 }
                             }
+                            if(debug)
+                            {
+                                //int y = 9; 
+                                //if (comp.getTypeName().indexOf("Syn")<0 && !comp.getTypeName().equals("spikeGenerator"))
+                                //blockNetReceive.append("    printf(\"End Condition (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + "), " + conditionFlag
+                                //        + ", satisfied in " + comp.getTypeName() + " at time: %g, v: %g, isi: %g, tnext: %g\\n\", t, v, isi, tnext)\n");
+                            }
+                            
                             blockNetReceive.append("\n    net_event(t)\n");
                             blockNetReceive.append("    WATCH (" + NRNUtils.checkForStateVarsAndNested(cond, comp, paramMappings) + ") " + conditionFlag + "\n");
                             blockNetReceive.append("\n}\n");
@@ -3704,6 +3712,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //System.exit(0);
         
         ArrayList<File> lemsFiles = new ArrayList<File>();
+        
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs0.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
@@ -3747,8 +3757,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex14_PyNN.xml"));
        // lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/cells/RS/LEMS_RS.xml"));
-        lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_slow.xml"));
-        lemsFiles.add(new File("../git/del-Molino2017/NeuroML/Fig1/LEMS_RateBased_low_baseline.xml"));
+        //lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_slow.xml"));
+        //lemsFiles.add(new File("../git/del-Molino2017/NeuroML/Fig1/LEMS_RateBased_low_baseline.xml"));
         //lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_driven.xml"));
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
