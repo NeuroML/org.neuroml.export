@@ -2276,6 +2276,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(comp.getComponentType().isOrExtends("baseRateUnit"))
         {
             blockNeuron.append("? Add pointer for incoming current\n");
+            blockNeuron.append("THREADSAFE\n");
             blockNeuron.append("POINTER isyn_in\n\n");
             blockAssigned.append("? Pointer for incoming current\n");
             blockAssigned.append("isyn_in (nA)\n\n");
@@ -3759,7 +3760,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
        // lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/cells/RS/LEMS_RS.xml"));
         //lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_slow.xml"));
         //lemsFiles.add(new File("../git/del-Molino2017/NeuroML/Fig1/LEMS_RateBased_low_baseline.xml"));
-        //lemsFiles.add(new File("../git/WilsonCowan/NeuroML2/LEMS_WC_driven.xml"));
+          lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/WilsonCowan/NeuroML2/LEMS_WC_driven.xml"));
+          lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/MejiasEtAl2016/NeuroML2/LEMS_Test.xml"));
+          
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
