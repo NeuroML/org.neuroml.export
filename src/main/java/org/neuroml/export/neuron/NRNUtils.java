@@ -4,10 +4,13 @@
 package org.neuroml.export.neuron;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.lemsml.export.dlems.UnitConverter;
 import org.lemsml.jlems.core.expression.ParseError;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -562,6 +565,66 @@ public class NRNUtils implements UnitConverter
         {
             return unit.replaceAll("\\)", "/ms)");
         }
+    }
+    
+    public static boolean isPlottingSavingSynVariables(Component simCpt, boolean nogui)
+    {
+        boolean ipssv = false;
+        if (!nogui)
+        {
+            for (Component dispComp : simCpt.getAllChildren())
+            {
+                if (dispComp.getTypeName().equals("Display"))
+                {
+
+                    for (Component lineComp : dispComp.getAllChildren())
+                    {
+                        if (lineComp.getTypeName().equals("Line"))
+                        {
+                            try
+                            {
+                                String quantity = lineComp.getStringValue("quantity");
+                                if (quantity.indexOf(':') > 0)
+                                {
+                                    ipssv = true;
+                                }
+                            }
+                            catch (ContentError ex)
+                            {
+                                //
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Component ofComp : simCpt.getAllChildren())
+        {
+            if (ofComp.getTypeName().equals("OutputFile"))
+            {
+
+                for (Component colComp : ofComp.getAllChildren())
+                {
+                    if (colComp.getTypeName().equals("OutputColumn"))
+                    {
+                        try
+                        {
+                            String quantity = colComp.getStringValue("quantity");
+                            if (quantity.indexOf(':') > 0)
+                            {
+                                ipssv = true;
+                            }
+                        }
+                        catch (ContentError ex)
+                        {
+                            //
+                        }
+                    }
+                }
+            }
+        }
+        return ipssv;
     }
     
     
