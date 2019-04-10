@@ -1859,6 +1859,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
+    public HashMap<String, Integer> modWarnings = new HashMap<String, Integer>();
 
     private void generateModForComp(Component comp) throws LEMSException, ContentError {
         if(comp.getComponentType().isOrExtends("timedSynapticInput")) {
@@ -1868,7 +1869,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
         if(modWritten.containsKey(comp.getID()))
         {
-            E.info("-- Mod file for: " + comp.getID() + " has already been created");
+            int warns = modWarnings.containsKey(comp.getID()) ? modWarnings.get(comp.getID()) : 0;
+            if (warns<=5)
+            {
+                E.info("-- Mod file for: " + comp.getID() + " has already been created"+(warns==5?" (supressing further warnings)":""));
+                modWarnings.put(comp.getID(),warns+1);
+            }
             return;
         }
         
@@ -1887,6 +1893,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
+    
     public File saveModToFile(Component comp, String mod) throws ContentError
     {
         File modFile = new File(getOutputFolder(), NRNUtils.getSafeName(comp.getID()) + ".mod");
