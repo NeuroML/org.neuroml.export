@@ -122,15 +122,21 @@ public class JSONCellSerializer
                         if(seg.getParent() != null && seg.getParent().getSegment() != null)
                         {
                             parentSegment = idsVsSegments.get(seg.getParent().getSegment());
-
                         }
                         // System.out.println("  Next segment: "+seg.getId()+", parent: "+ (parentSegment!=null?parentSegment.getId():"<none>")+", lastSegId: "+lastSegId);
 
                         Point3DWithDiam prox = null;
 
-                        if(parentSegment == null || !segsHere.contains(parentSegment.getId()))
+                        if(parentSegment == null)
                         {
                             prox = seg.getProximal();
+                            g.writeString(getPt3dString(prox));
+                        }                        
+                        else if (!segsHere.contains(parentSegment.getId()))
+                        {
+                            prox = seg.getProximal();
+                            if (prox==null && lastSegId == -1) // Should be there, but if it's missing...
+                                prox = parentSegment.getDistal();
                             g.writeString(getPt3dString(prox));
                         }
                         else
