@@ -1526,11 +1526,35 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(bIndent+"self.initialized = True\n");
             main.append(bIndent+"sim_start = time.time()\n");
             main.append(bIndent+"print(\"Running a simulation of %sms (dt = %sms; seed=%s)\" % (h.tstop, h.dt, self.seed))\n\n");
-            main.append(bIndent+"h.run()\n\n");
+            main.append(bIndent+"try:\n");
+            main.append(bIndent+"    h.run()\n");
+            main.append(bIndent+"except Exception as e:\n");
+            main.append(bIndent+"    print(\"Exception running NEURON: %s\" % (e))\n");
+            if(nogui)
+            {
+                main.append(bIndent+"    quit()\n\n\n");
+            }
+            else
+            {
+                main.append(bIndent+"    return\n\n\n");
+            }
+            
             main.append(bIndent+"self.sim_end = time.time()\n");
             main.append(bIndent+"self.sim_time = self.sim_end - sim_start\n");
             main.append(bIndent+"print(\"Finished NEURON simulation in %f seconds (%f mins)...\"%(self.sim_time, self.sim_time/60.0))\n\n");
-            main.append(bIndent+"self.save_results()\n\n\n");
+            
+            main.append(bIndent+"try:\n");
+            main.append(bIndent+"    self.save_results()\n");
+            main.append(bIndent+"except Exception as e:\n");
+            main.append(bIndent+"    print(\"Exception saving results of NEURON simulation: %s\" % (e))\n");
+            if(nogui)
+            {
+                main.append(bIndent+"    quit()\n\n\n");
+            }
+            else
+            {
+                main.append(bIndent+"    return\n\n\n");
+            }
             
             main.append("    def advance(self):\n\n");
             main.append(bIndent+"if not self.initialized:\n");
@@ -3793,7 +3817,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         ArrayList<File> lemsFiles = new ArrayList<File>();
         
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs0.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs0.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_golgi_cell/SolinasEtAl-GolgiCell/NeuroML2/LEMS_KAHP_Test.xml"));
@@ -3801,7 +3825,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
@@ -3811,8 +3835,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         //lemsFiles.add(new File("../NeuroMLlite/neuromllite/LEMS_Sim_ten_cells_spikes_nest.xml"));
-        lemsFiles.add(new File("../NeuroMLlite/examples/test_files/test_inputs/LEMS_InputTest.xml"));
-        lemsFiles.add(new File("../NeuroMLlite/neuromllite/LEMS_Sim_NML2_300_pointneurons.xml"));
+        //lemsFiles.add(new File("../NeuroMLlite/examples/test_files/test_inputs/LEMS_InputTest.xml"));
+        //lemsFiles.add(new File("../NeuroMLlite/neuromllite/LEMS_Sim_NML2_300_pointneurons.xml"));
         
         //
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex26_Weights.xml"));
@@ -3855,7 +3879,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_StimuliTest.xml"));
         //lemsFiles.add(new File("../git/alex-neuroml-test/LEMS_sim.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex6_NMDA.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_M1.xml"));
