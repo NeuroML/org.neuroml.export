@@ -145,6 +145,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public List<File> generateAndRun(boolean nogui, boolean compileMods, boolean run) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
     {
+        return generateAndRun(nogui, compileMods, run, true);
+    }
+
+    public List<File> generateAndRun(boolean nogui, boolean compileMods, boolean run, boolean useNrnivForNoGui) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
+    {
 
         this.nogui = nogui;
         List<File> files = generateMainScriptAndMods();
@@ -174,10 +179,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if (run)
             {
                 File neuronHome = findNeuronHome();
+                
                 String nrncmd = nogui ? "nrniv" : "nrngui";
                 String fullPath = new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath(); 
+                
                 String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
                         + fullPath;
+                
+                if (nogui && !useNrnivForNoGui)
+                {
+                    commandToExecute = "python " + fullPath;
+                }
 
                 Runtime rt = Runtime.getRuntime();
                 Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
@@ -3968,7 +3980,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
             nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
-            List<File> ff = nw.generateAndRun(false, false, false);
+            //List<File> ff = nw.generateAndRun(false, false, false);
+            List<File> ff = nw.generateAndRun(true, true, true, false);
             for(File f : ff)
             {
                 System.out.println("Generated: " + f.getAbsolutePath());
