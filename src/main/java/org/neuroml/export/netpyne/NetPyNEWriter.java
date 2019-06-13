@@ -285,7 +285,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     mainRunScript.append(sw1);
                     
                     if (cleanup)
-                        dlemsFile.deleteOnExit();
+                        dlemsFile.delete();
                 }
                 else 
                 {
@@ -338,7 +338,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     }
                     
                     if (cleanup)
-                        dlemsFile.deleteOnExit();
+                        dlemsFile.delete();
                 }
             }
 
