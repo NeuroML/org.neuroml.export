@@ -339,6 +339,11 @@ public class Utils
 	}
 
 	public static String extractLemsSimulationXml(Lems lems, String externalFiletoInclude) throws LEMSException, NeuroMLException
+    {
+        return extractLemsSimulationXml(lems, externalFiletoInclude, null);
+    }
+
+	public static String extractLemsSimulationXml(Lems lems, String externalFiletoInclude, String reportFile) throws LEMSException, NeuroMLException
 	{
         StringBuilder compString = new StringBuilder();
         
@@ -358,12 +363,14 @@ public class Utils
         }
         
         String lemsString = "<Lems> \n";
+        String report = reportFile==null ? "" : " reportFile=\""+reportFile+"\"";
         
         lemsString += "<!-- Specify which component to run -->\n" +
-"    <Target component=\""+target+"\"/>\n" +
+"    <Target component=\""+target+"\""+report+"/>\n" +
 "    \n" +
 "    <!-- Include core NeuroML2 ComponentType definitions -->\n" +
 "    <Include file=\"Cells.xml\"/>\n" +
+"    <Include file=\"PyNN.xml\"/>\n" +
 "    <Include file=\"Networks.xml\"/>\n" +
 "    <Include file=\"Simulation.xml\"/>\n\n";
         
@@ -481,7 +488,7 @@ public class Utils
 		loadLemsFile(f, true, showGui);
 	}
 
-	public static void loadLemsFile(File f, boolean run, boolean showGui) throws LEMSException, ModelFeatureSupportException, NeuroMLException
+	public static void loadLemsFile(File lemsFile, boolean run, boolean showGui) throws LEMSException, ModelFeatureSupportException, NeuroMLException
 	{
 		ControlPanel cp = new ControlPanel("jNeuroML", showGui) {
 
@@ -501,10 +508,10 @@ public class Utils
             }
         };
         
-        Sim sim = cp.initialise(f);
+        Sim sim = cp.initialise(lemsFile);
         
         if(sim == null) {
-        	E.info(String.format("Control Panel Initialisation : Failed to read and build simulation from file %s", f.getName()));
+        	E.info(String.format("Control Panel Initialisation : Failed to read and build simulation from file %s", lemsFile.getName()));
         	return;
         }
 
@@ -513,7 +520,7 @@ public class Utils
 			SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
 			sli.checkConversionSupported(Format.LEMS, sim.getLems());
 			sim.run();
-			IOUtil.saveReportAndTimesFile(sim);
+			IOUtil.saveReportAndTimesFile(sim, lemsFile);
 			E.info("Finished reading, building, running and displaying LEMS model");
 		}
 		else

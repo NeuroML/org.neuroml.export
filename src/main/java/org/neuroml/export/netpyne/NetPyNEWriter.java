@@ -400,7 +400,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
 		//lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
@@ -422,9 +422,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/NeuroML2/pythonScripts/netbuild/LEMS_Figure7AeLoSS.xml"));*/
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         
 		//lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/cells/tests/LEMS_axoaxonic.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/chanDens/LEMS_cck.xml"));
@@ -433,8 +433,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/HDF5/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/olfactorybulb/networks/MiglioreEtAl14_OlfactoryBulb3D/NeuroML2/Channels/test/LEMS_OlfactoryTest_12.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
-        lemsFiles.add(new File("../git/multi/temp/LEMS_ISN_net.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
+        //lemsFiles.add(new File("../git/multi/temp/LEMS_ISN_net.xml"));
 
         for (File lemsFile : lemsFiles)
         {
@@ -446,7 +446,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             
             //pw.setRegenerateNeuroMLNet(true);
             
-            List<File> files = pw.generateAndRun(true, false, 1);
+            List<File> files = pw.generateAndRun(true, true, 1);
             for (File f : files)
             {
                 System.out.println("Have created: " + f.getAbsolutePath());

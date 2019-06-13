@@ -292,6 +292,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             main.append("\nimport neuron\n");
             main.append("\nimport time");
+            main.append("\nimport datetime");
             main.append("\nimport sys\n");
             main.append("\nimport hashlib\n");
             main.append("h = neuron.h\n");
@@ -342,17 +343,19 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             Component targetComp = simCpt.getRefComponents().get("target");
             
             main.append(bIndent+"print(\"\\n    Starting simulation in NEURON of %sms generated from NeuroML2 model...\\n\"%tstop)\n\n");
-            main.append(bIndent+"setup_start = time.time()\n");
+            main.append(bIndent+"self.setup_start = time.time()\n");
             
             if (target.reportFile!=null)
             {
                 main.append(bIndent+"self.report_file = open('"+target.reportFile+"','w')\n");
                 main.append(bIndent+"print('Simulator version:  %s'%h.nrnversion())\n");
                 main.append(bIndent+"self.report_file.write('# Report of running simulation with %s\\n'%h.nrnversion())\n");
+                main.append(bIndent+"self.report_file.write('Simulator=NEURON\\n')\n");
+                main.append(bIndent+"self.report_file.write('SimulatorVersion=%s\\n'%h.nrnversion())\n\n");
                 main.append(bIndent+"self.report_file.write('SimulationFile=%s\\n'%__file__)\n");
                 main.append(bIndent+"self.report_file.write('PythonVersion=%s\\n'%sys.version.replace('\\n',' '))\n");
                 main.append(bIndent+"print('Python version:     %s'%sys.version.replace('\\n',' '))\n");
-                main.append(bIndent+"self.report_file.write('SimulatorVersion=%s\\n'%h.nrnversion())\n\n");
+                main.append(bIndent+"self.report_file.write('NeuroMLExportVersion="+Utils.ORG_NEUROML_EXPORT_VERSION+"\\n')\n");
                 
             }
             
@@ -1523,9 +1526,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(bIndent+"self.sim_end = -1 # will be overwritten\n\n");
             
             main.append(bIndent+"setup_end = time.time()\n");
-            main.append(bIndent+"self.setup_time = setup_end - setup_start\n");
+            main.append(bIndent+"self.setup_time = setup_end - self.setup_start\n");
             //setup_time = save_end - self.sim_end
-            main.append(bIndent+"print(\"Set up network to simulate in %f seconds\"%(self.setup_time))\n\n");
+            main.append(bIndent+"print(\"Setting up the network to simulate took %f seconds\"%(self.setup_time))\n\n");
 
 
             if(!nogui)
@@ -1658,6 +1661,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             
             if (target.reportFile!=null)
             {
+                main.append(bIndent+"self.report_file.write('StartTime=%s\\n'%datetime.datetime.fromtimestamp(self.setup_start).strftime('%Y-%m-%d %H:%M:%S'))\n");
                 main.append(bIndent+"self.report_file.write('SetupTime=%s\\n'%self.setup_time)\n");
                 main.append(bIndent+"self.report_file.write('RealSimulationTime=%s\\n'%self.sim_time)\n");
                 main.append(bIndent+"self.report_file.write('SimulationSaveTime=%s\\n'%save_time)\n");

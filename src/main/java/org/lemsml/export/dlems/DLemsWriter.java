@@ -214,6 +214,12 @@ public class DLemsWriter extends ABaseWriter
 
         Component tgtComp = lems.getComponent(targetId);
         
+        
+        if (target.reportFile!=null)
+        {
+            g.writeStringField(DLemsKeywords.REPORT_FILE.get(), target.reportFile);
+        }
+        
         g.writeStringField(DLemsKeywords.NAME.get(), targetId);
 
         ArrayList<Component> pops = tgtComp.getChildrenAL("populations");
@@ -603,6 +609,8 @@ public class DLemsWriter extends ABaseWriter
 
         writeSimulationInfo(g, simCpt);
         g.writeStringField(DLemsKeywords.COMMENT.get(), Utils.getHeaderComment(format));
+        
+        g.writeStringField(DLemsKeywords.EXPORT_LIBRARY_VERSION.get(), Utils.ORG_NEUROML_EXPORT_VERSION);
 
         g.writeEndObject();
 
@@ -1189,8 +1197,8 @@ public class DLemsWriter extends ABaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/scaling/LEMS_Balanced_0.2.xml"));
         

@@ -73,7 +73,7 @@ ${proj}__conns.append((${conn.pre_cell_id}, ${conn.post_cell_id}, ${conn.weight}
 #end
 ${proj}__connector = sim.FromListConnector(${proj}__conns, column_names=["weight", "delay"])
 $proj = sim.Projection(${pre_pop}, ${post_pop}, connector=${proj}__connector, synapse_type=sim.StaticSynapse(weight=1, delay=0), receptor_type='$synapse')
-print(${proj}.describe())
+# print(${proj}.describe())
 #end
 
 
