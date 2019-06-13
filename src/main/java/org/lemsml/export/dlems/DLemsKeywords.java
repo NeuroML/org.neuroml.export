@@ -8,6 +8,7 @@ public enum DLemsKeywords
 {
 	DT, 
 	SEED, 
+	REPORT_FILE, 
     DYNAMICS, 
     EVENTS, 
     CONDITION, 
@@ -68,7 +69,9 @@ public enum DLemsKeywords
     NEURON_MECHANISM_NAME,
     NEURON_SECTION_NAME,
     NEURON_FRACT_ALONG,
-    NEURON_VARIABLE_SCALE;
+    NEURON_VARIABLE_SCALE,
+    
+    EXPORT_LIBRARY_VERSION;
 
 	public String get()
 	{

@@ -88,12 +88,13 @@ public class JNeuroMLWriter extends ABaseWriter
 
             Component tgtNet = lems.getComponent(targetId);
             String netFileName = "NET_" + tgtNet.getID() + ".net.nml";
+            String reportFileName = "report.txt";
 
             File netFile = new File(this.getOutputFolder(), netFileName);
             FileUtil.writeStringToFile(Utils.convertLemsToNeuroMLLikeXml(lems, tgtNet.getID()), netFile);
             outputFiles.add(netFile);
 
-            sb.append(Utils.extractLemsSimulationXml(lems, netFileName));
+            sb.append(Utils.extractLemsSimulationXml(lems, netFileName, reportFileName));
         }
         catch (IOException ex)
         {
