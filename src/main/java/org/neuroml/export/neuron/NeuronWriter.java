@@ -1582,7 +1582,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append("    # This is copied from NetPyNE: https://github.com/Neurosim-lab/netpyne/blob/master/netpyne/simFuncs.py\n");
             main.append("    ###############################################################################\n");
             main.append("    def _id32 (self,obj): \n");
-            main.append(bIndent+"return int(hashlib.md5(obj).hexdigest()[0:8],16)  # convert 8 first chars of md5 hash in base 16 to int\n\n\n");
+            main.append(bIndent+"return int(hashlib.md5(obj.encode('utf-8')).hexdigest()[0:8],16)  # convert 8 first chars of md5 hash in base 16 to int\n\n\n");
             
             main.append("    ###############################################################################\n");
             main.append("    # Initialize the stim randomizer\n");
@@ -3859,7 +3859,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+         lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
