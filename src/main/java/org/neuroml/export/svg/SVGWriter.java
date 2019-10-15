@@ -136,9 +136,21 @@ public class SVGWriter extends ANeuroMLXMLWriter
                     }
                     if (cell==null) 
                     {
-                        E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId()+"\n"
-                                +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
-                        cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
+                        for (Property p: pop.getProperty())
+                        {
+                            if (p.getTag().equals("radius"))
+                            {
+                                float r = Float.parseFloat(p.getValue());
+                                E.info("Using a \"cell\" for population "+pop.getId()+" with radius "+r);
+                                cell = getDummySingleCompCell("CellFor_"+comp, r);
+                            }
+                        }
+                        if (cell==null) // still..
+                        {
+                            E.warning("Cell: "+comp+" not found for population: "+pop.getId()+" in network "+net.getId()+"\n"
+                                    +"Using dummy cell with radius "+RADIUS_DUMMY_CELL);
+                            cell = getDummySingleCompCell("DummyCellFor_"+comp, RADIUS_DUMMY_CELL);
+                        }
                     }
                     String defColor = null;
                     //System.out.println("----" + pop.getProperty());
@@ -454,8 +466,8 @@ public class SVGWriter extends ANeuroMLXMLWriter
         //String fileName = 
         ArrayList<String> fileNames = new ArrayList<String>();
         fileNames.add("../git/ca1/NeuroML2/network/PINGNet_0_1.net.nml");
-        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/PotjansDiesmann2014/NeuroML2/MicrocircuitNoInput.2percent.net.nml");
-
+        //fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/PotjansDiesmann2014/NeuroML2/MicrocircuitNoInput.2percent.net.nml");
+        /*
         fileNames.add("src/test/resources/examples/L5PC.cell.nml");
         fileNames.add("src/test/resources/examples/L23PyrRS.nml");
         fileNames.add("src/test/resources/examples/TwoCell.net.nml");
@@ -463,7 +475,9 @@ public class SVGWriter extends ANeuroMLXMLWriter
         fileNames.add("src/test/resources/examples/pyr_4_sym.cell.nml");
         fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/MediumNet.net.nml");
         fileNames.add("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/Golgi_040408_C1.cell.nml");
-        fileNames.add("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/NeuroML2/CerebellarCortex.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebellum/networks/Cerebellum3DDemo/NeuroML2/CerebellarCortex.net.nml");*/
+        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/MejiasEtAl2016/NeuroML2/Interareal_3.net.nml");
+        fileNames.add("../neuroConstruct/osb/cerebral_cortex/networks/MejiasEtAl2016/NeuroML2/Interareal_30.net.nml");
         
         //fileNames.add("../git/WeilerEtAl08-LaminarCortex/NeuroML2/CortexDemo.net.nml");
         //fileNames.add("../git/OlfactoryBulbMitralCell/neuroConstruct/generatedNeuroML2/Cell1.cell.nml");/**/
