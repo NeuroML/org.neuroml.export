@@ -37,7 +37,7 @@ public class Utils
 
 	private static Lems lemsWithNML2CompTypes;
 
-	public static String ORG_NEUROML_EXPORT_VERSION = "1.5.5";
+	public static String ORG_NEUROML_EXPORT_VERSION = "1.6.0";
 
 	public static final String ARCH_I686 = "i686";
 	public static final String ARCH_I386 = "i386";
