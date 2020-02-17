@@ -1,5 +1,6 @@
 package org.neuroml.export.graph;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -127,9 +128,30 @@ public class GraphWriter extends ANeuroMLBaseWriter
 				{
 					String compRef = pop.getStringValue("component");
 					Component popComp = lems.getComponent(compRef);
-
+                    String color = "white";
+                    String fontcolor = "black";
 					addComment(net, "   Population " + pop.getID() + " contains components of: " + popComp + " ");
-					net.append("    node [shape=" + popShape + "]; " + pop.getID() + ";\n");
+                    for (Component cc: pop.getChildrenAL("property"))
+                    {
+                        if (cc.getStringValue("tag").equals("color"))
+                        {
+                            String colorRgb = cc.getStringValue("value");
+                            String[] w = colorRgb.split(" ");
+                            Color c = new Color((int)Math.floor(Float.parseFloat(w[0])*255),
+                                                (int)Math.floor(Float.parseFloat(w[1])*255), 
+                                                (int)Math.floor(Float.parseFloat(w[2])*255));
+                            int totDark = c.getRed()+c.getBlue()+c.getGreen();
+                            if (totDark<600)
+                                fontcolor = "white";
+                            color = Integer.toHexString(c.getRGB() & 0xffffff);
+                            
+                            while (color.length() < 6) {
+                                color = "0" + color;
+                            }
+                            color = "#"+color;
+                        }
+                    }
+					net.append("    node [shape=" + popShape + ",color=\""+color+"\",fontcolor=\""+fontcolor+"\"]; " + pop.getID() + ";    \n");
 					net.append("    "+tgtNet.getID() + " -> " + pop.getID() + " [len=1.00, arrowhead=" + childLink + "]\n\n");
 
 					addCompAndChildren(popComp, pop.getID(), pop.getStringValue("size"));
@@ -590,6 +612,9 @@ public class GraphWriter extends ANeuroMLBaseWriter
 		File xml = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml");
         //xml = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml");
         xml = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
+        xml = new File("../NeuroMLlite/examples/LEMS_SimExample9.xml");
+        xml = new File("../NeuroMLlite/examples/LEMS_SimExample4.xml");
+        xml = new File("../NeuroMLlite/examples/LEMS_SimExample6_PyNN.xml");
         //xml = new File("../neuroConstruct/osb/showcase/PsyNeuLinkShowcase/NeuroML2/LEMS_FitzHughNagumo.xml");
         //xml = new File("../NeuroMLlite/examples/LEMS_SimExample10.xml");
         //xml = new File("../NeuroMLlite/examples/LEMS_SimExample6_PyNN.xml");
