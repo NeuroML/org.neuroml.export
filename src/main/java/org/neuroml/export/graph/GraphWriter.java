@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.lemsml.jlems.core.expression.Valued;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -27,7 +28,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
 {
 
 	String netShape = "rectangle";
-	String popShape = "diamond";
+	String popShape = "ellipse";
 	String compShape = "ellipse";
 	String compTypeShape = "box";
 
@@ -141,7 +142,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
                                                 (int)Math.floor(Float.parseFloat(w[1])*255), 
                                                 (int)Math.floor(Float.parseFloat(w[2])*255));
                             int totDark = c.getRed()+c.getBlue()+c.getGreen();
-                            if (totDark<600)
+                            if (totDark<250)
                                 fontcolor = "white";
                             color = Integer.toHexString(c.getRGB() & 0xffffff);
                             
@@ -245,6 +246,8 @@ public class GraphWriter extends ANeuroMLBaseWriter
         if (dim.equals("none")) return "";
         else return " ("+dim+")"; 
     }
+    
+    
 
 	protected String getCompTypeInfo(ComponentType compType) throws ContentError
 	{
@@ -276,8 +279,28 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 		for(Constant c : compType.getConstants())
 		{
-			label = label + "<tr><td><font color=\"#662211\">" + c.getName() + getDimensionString(c.getDimension().getName()) + " = " + c.getValue() + "</font></td></tr>";
+			//label = label + "<tr><td><font color=\"#662211\">" + c.getName() + getDimensionString(c.getDimension().getName()) + " = " + c.getValue() + "</font></td></tr>";
 		}
+        
+        count = 0;
+        if(compType.getConstants().size() > 0) label = label + "<tr><td><font color=\"#662211\">Consts: ";
+
+        for(Constant c : compType.getConstants())
+        {
+            if(count > 0) label = label + ", ";
+
+            if(count == maxLine)
+            {
+                label = label + "<br/>";
+                count = 0;
+            }
+            String vu = getValAndUnit(c.getValue(), c.getDimension().getName());
+            label = label + "" + c.getName() + " = " + vu;
+
+            count++;
+        }
+        if(compType.getConstants().size() > 0) label = label + " </font></td></tr>";
+            
 
 		for(Requirement r : compType.getRequirements())
 		{
@@ -499,6 +522,21 @@ public class GraphWriter extends ANeuroMLBaseWriter
     }
     
     ArrayList<String> addedCompToCompTypes = new ArrayList<String>();
+    
+    protected String getValAndUnit(double value, String dimName) throws ContentError
+    {
+        String unit = "";
+		Dimension d = lems.getDimensions().getByName(dimName);
+		if(d != null && Dimension.getSIUnit(d).length() > 0) unit = " " + Dimension.getSIUnit(d);
+                    
+        unit = getUnitSubstitution(unit);
+
+	    String val = value +"";
+
+		if(val.endsWith(".0")) val = val.substring(0, val.length() - 2);
+        
+        return val + unit;
+    }
 
 	protected void addCompAndChildren(Component comp, String parent, String arrowLabel) throws ContentError
 	{
@@ -535,17 +573,10 @@ public class GraphWriter extends ANeuroMLBaseWriter
 						label = label + "<br/>";
 						count = 0;
 					}
-					String unit = "";
-					Dimension d = lems.getDimensions().getByName(pv.getDimensionName());
-					if(d != null && Dimension.getSIUnit(d).length() > 0) unit = " " + Dimension.getSIUnit(d);
+					
+                    String vu = getValAndUnit(pv.getDoubleValue(), pv.getDimensionName());
                     
-                    unit = getUnitSubstitution(unit);
-
-					String val = (float) pv.getDoubleValue() + "";
-
-					if(val.endsWith(".0")) val = val.substring(0, val.length() - 2);
-
-					label = label + "" + pv.getName() + " = " + val + unit;
+					label = label + "" + pv.getName() + " = " + vu;
 					count++;
 				}
 			}
@@ -614,7 +645,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
         xml = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml");
         xml = new File("../NeuroMLlite/examples/LEMS_SimExample9.xml");
         xml = new File("../NeuroMLlite/examples/LEMS_SimExample4.xml");
-        xml = new File("../NeuroMLlite/examples/LEMS_SimExample6_PyNN.xml");
+        //xml = new File("../NeuroMLlite/examples/LEMS_SimExample6_PyNN.xml");
         //xml = new File("../neuroConstruct/osb/showcase/PsyNeuLinkShowcase/NeuroML2/LEMS_FitzHughNagumo.xml");
         //xml = new File("../NeuroMLlite/examples/LEMS_SimExample10.xml");
         //xml = new File("../NeuroMLlite/examples/LEMS_SimExample6_PyNN.xml");
