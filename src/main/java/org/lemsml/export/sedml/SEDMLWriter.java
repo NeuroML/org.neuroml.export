@@ -26,259 +26,276 @@ import org.neuroml.export.utils.support.SupportLevelInfo;
 public class SEDMLWriter extends AXMLWriter
 {
 
-	public static final String PREF_SEDML_SCHEMA = "http://sourceforge.net/apps/trac/neuroml/export/1021/NeuroML2/Schemas/SED-ML/sed-ml-L1-V1.xsd";
+    public static final int SEDML_LEVEL = 1;
+    public static final int SEDML_VERSION = 2;
+    public static final String PREF_SEDML_SCHEMA = "https://raw.githubusercontent.com/SED-ML/sed-ml/master/schema/level"+SEDML_LEVEL+"/version"+SEDML_VERSION+"/sed-ml-L"+SEDML_LEVEL+"-V"+SEDML_VERSION+".xsd";
 
-	public static final String GLOBAL_TIME_SBML = "t";
-	public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
+    public static final String GLOBAL_TIME_SBML = "t";
+    public static final String GLOBAL_TIME_SBML_MATHML = "<csymbol encoding=\"text\" definitionURL=\"http://www.sbml.org/sbml/symbols/time\"> time </csymbol>";
 
-	private String inputFileName = "";
-	private Format modelFormat;
+    private String inputFileName = "";
+    private Format modelFormat;
 
-	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Format modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
-	{
-		super(lems, Format.SEDML, outputFolder, outputFileName);
-		this.inputFileName = inputFileName;
-		this.modelFormat = modelFormat;
-	}
-	
-	public SEDMLWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
-	{
-		super(lems, Format.SEDML);
-	}
-	
-	public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
-	{
-		this(lems, outputFolder, outputFileName, inputFileName, Format.NEUROML2);
-	}
+    public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Format modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+    {
+        super(lems, Format.SEDML, outputFolder, outputFileName);
+        this.inputFileName = inputFileName;
+        this.modelFormat = modelFormat;
+    }
 
-	public void setSupportedFeatures()
-	{
-		sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
-	}
+    public SEDMLWriter(Lems lems) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+    {
+        super(lems, Format.SEDML);
+    }
 
-	public String getMainScript() throws ContentError
-	{
+    public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName) throws ModelFeatureSupportException, NeuroMLException, LEMSException
+    {
+        this(lems, outputFolder, outputFileName, inputFileName, Format.NEUROML2);
+    }
 
-		StringBuilder main = new StringBuilder();
-		main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+    public void setSupportedFeatures()
+    {
+        sli.addSupportInfo(format, ModelFeature.ALL, SupportLevelInfo.Level.HIGH);
+    }
 
-		String[] attrs = new String[] { "xmlns=http://sed-ml.org/", "level=1", "version=1", "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
-				"xsi:schemaLocation=http://sed-ml.org/   " + PREF_SEDML_SCHEMA };
+    public String getMainScript() throws ContentError
+    {
 
-		startElement(main, "sedML", attrs);
-		startElement(main, "notes");
-		startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
-		main.append("\n" + format + " export for:\n" + lems.textSummary(false, false) + "\n");
-		endElement(main, "p");
-		endElement(main, "notes");
+        StringBuilder main = new StringBuilder();
+        main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+        String[] attrs = new String[] { "xmlns=http://sed-ml.org/sed-ml/level"+SEDML_LEVEL+"/version"+SEDML_VERSION, "level="+SEDML_LEVEL, "version="+SEDML_VERSION+"", "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation=http://sed-ml.org/sed-ml/level"+SEDML_LEVEL+"/version"+SEDML_VERSION+"   " + PREF_SEDML_SCHEMA };
 
-		Target target = lems.getTarget();
+        startElement(main, "sedML", attrs);
+        startElement(main, "notes");
+        startElement(main, "p", "xmlns=http://www.w3.org/1999/xhtml");
+        main.append("\n" + format + " export for:\n" + lems.textSummary(false, false) + "\n");
+        endElement(main, "p");
+        endElement(main, "notes");
 
-		Component simCpt = target.getComponent();
-        
-		String simId = simCpt.getID();
+        Target target = lems.getTarget();
 
-		String targetId = simCpt.getStringValue("target");
+        Component simCpt = target.getComponent();
 
-		Component tgtNet = lems.getComponent(targetId);
-		addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
+        String simId = simCpt.getID();
 
-		String netId = tgtNet.getID();
+        String targetId = simCpt.getStringValue("target");
 
-		startElement(main, "listOfSimulations");
-		main.append("\n");
-		int numPts = (int) Math.ceil(simCpt.getParamValue("length").getDoubleValue() / simCpt.getParamValue("step").getDoubleValue());
-		startElement(main, "uniformTimeCourse", "id = " + simId, "initialTime=0", "outputStartTime=0", "outputEndTime=" + simCpt.getParamValue("length").getDoubleValue(), "numberOfPoints=" + numPts);
+        Component tgtNet = lems.getComponent(targetId);
+        addComment(main, "Adding simulation " + simCpt + " of network: " + tgtNet.summary() + "", true);
 
-		startEndElement(main, "algorithm", "kisaoID=KISAO:0000030");
+        String netId = tgtNet.getID();
 
-		endElement(main, "uniformTimeCourse");
-		main.append("\n");
-		endElement(main, "listOfSimulations");
+        startElement(main, "listOfSimulations");
+        main.append("\n");
+        int numPts = (int) Math.ceil(simCpt.getParamValue("length").getDoubleValue() / simCpt.getParamValue("step").getDoubleValue());
+        startElement(main, "uniformTimeCourse", "id = " + simId, "initialTime=0", "outputStartTime=0", "outputEndTime=" + simCpt.getParamValue("length").getDoubleValue(), "numberOfPoints=" + numPts);
 
-		main.append("\n");
+        startEndElement(main, "algorithm", "kisaoID=KISAO:0000019");
 
-		startElement(main, "listOfModels");
+        endElement(main, "uniformTimeCourse");
+        main.append("\n");
+        endElement(main, "listOfSimulations");
 
-		if(modelFormat == Format.NEUROML2)
-		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + inputFileName);
-		}
-		else if(modelFormat == Format.SBML)
-		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:sbml", "source=" + inputFileName.replaceAll(".xml", ".sbml"));
-		}
-		else if(modelFormat == Format.CELLML)
-		{
-			startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:cellml", "source=" + inputFileName.replaceAll(".xml", ".cellml"));
-		}
+        main.append("\n");
 
-		endElement(main, "listOfModels");
-		main.append("\n");
+        startElement(main, "listOfModels");
 
-		startElement(main, "listOfTasks");
+        if(modelFormat == Format.NEUROML2)
+        {
+            startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + inputFileName);
+        }
+        else if(modelFormat == Format.SBML)
+        {
+            startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:sbml", "source=" + inputFileName.replaceAll(".xml", ".sbml"));
+        }
+        else if(modelFormat == Format.CELLML)
+        {
+            startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:cellml", "source=" + inputFileName.replaceAll(".xml", ".cellml"));
+        }
 
-		// <task simulationReference="Sim_45" id="RUN_Sim_45" modelReference="Ex1_Simple"/>
-		String taskId = simId + "_" + netId;
-		startEndElement(main, "task", "id=" + taskId, "simulationReference=" + simId, "modelReference=" + netId);
+        endElement(main, "listOfModels");
+        main.append("\n");
 
-		endElement(main, "listOfTasks");
-		main.append("\n");
+        startElement(main, "listOfTasks");
 
-		startElement(main, "listOfDataGenerators");
-		/*
-		 * <dataGenerator id="time" name="time"> <listOfVariables> <variable id="var_time_0" taskReference="task1" symbol="urn:sedml:symbol:time" /> </listOfVariables> <math
-		 * xmlns="http://www.w3.org/1998/Math/MathML"> <ci> var_time_0 </ci> </math> </dataGenerator>
-		 */
+        // <task simulationReference="Sim_45" id="RUN_Sim_45" modelReference="Ex1_Simple"/>
+        String taskId = simId + "_" + netId;
+        startEndElement(main, "task", "id=" + taskId, "simulationReference=" + simId, "modelReference=" + netId);
 
-		startElement(main, "dataGenerator", "id=time", "name=time");
-		startElement(main, "listOfVariables");
-		startEndElement(main, "variable", "id=var_time_0", "taskReference=" + taskId, "symbol=urn:sedml:symbol:time");
-		endElement(main, "listOfVariables");
+        endElement(main, "listOfTasks");
+        main.append("\n");
 
-		startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
-		addTextElement(main, "ci", " var_time_0 ");
-		endElement(main, "math");
-		endElement(main, "dataGenerator");
+        startElement(main, "listOfDataGenerators");
+        /*
+         * <dataGenerator id="time" name="time"> <listOfVariables> <variable id="var_time_0" taskReference="task1" symbol="urn:sedml:symbol:time" /> </listOfVariables> <math
+         * xmlns="http://www.w3.org/1998/Math/MathML"> <ci> var_time_0 </ci> </math> </dataGenerator>
+         */
 
-		for(Component dispComp : simCpt.getAllChildren())
-		{
-			if(dispComp.getTypeName().equals("Display"))
-			{
-				String dispId = dispComp.getID().replace(" ","_");
+        startElement(main, "dataGenerator", "id=time", "name=time");
+        startElement(main, "listOfVariables");
+        startEndElement(main, "variable", "id=var_time_0", "taskReference=" + taskId, "symbol=urn:sedml:symbol:time");
+        endElement(main, "listOfVariables");
 
-				for(Component lineComp : dispComp.getAllChildren())
-				{
-					if(lineComp.getTypeName().equals("Line"))
-					{
-						// trace=StateMonitor(hhpop,'v',record=[0])
+        startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
+        addTextElement(main, "ci", " var_time_0 ");
+        endElement(main, "math");
+        endElement(main, "dataGenerator");
 
-						String quantity = lineComp.getStringValue("quantity");
-						LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
-						String pop = lqp.getPopulation();
-						String num = lqp.getPopulationIndex() + "";
-						String segid = lqp.getSegmentId()==0 ? "" : ("_"+lqp.getSegmentId());
-						String var = lqp.getVariable();
+        for(Component dispComp : simCpt.getAllChildren())
+        {
+            if(dispComp.getTypeName().equals("Display"))
+            {
+                String dispId = dispComp.getID().replace(" ","_");
 
-						String genId = dispId + "_" + lineComp.getID().replace(" ","_");
-						String varFull = pop + "_" + num+segid + "_" + var;
+                for(Component lineComp : dispComp.getAllChildren())
+                {
+                    if(lineComp.getTypeName().equals("Line"))
+                    {
+                        // trace=StateMonitor(hhpop,'v',record=[0])
 
-						startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
-						startElement(main, "listOfVariables");
-						startEndElement(main, "variable", "id=" + varFull, "taskReference=" + taskId, "target=" + quantity);
-						endElement(main, "listOfVariables");
+                        String quantity = lineComp.getStringValue("quantity");
+                        LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
+                        String pop = lqp.getPopulation();
+                        String num = lqp.getPopulationIndex() + "";
+                        String segid = lqp.getSegmentId()==0 ? "" : ("_"+lqp.getSegmentId());
+                        String var = lqp.getVariable();
 
-						startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
-						addTextElement(main, "ci", varFull);
-						endElement(main, "math");
-						endElement(main, "dataGenerator");
+                        String genId = dispId + "_" + lineComp.getID().replace(" ","_");
+                        String varFull = pop + "_" + num+segid + "_" + var;
 
-					}
-				}
-			}
-		}
+                        startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
+                        startElement(main, "listOfVariables");
+                        String targ = "???";
 
-		endElement(main, "listOfDataGenerators");
-		main.append("\n");
+                        if(modelFormat == Format.NEUROML2)
+                        {
+                            targ = quantity;
+                        }
+                        else if(modelFormat == Format.SBML)
+                        {
+                            targ = "/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='"+var+"']";
+                        }
+                        else if(modelFormat == Format.CELLML)
+                        {
+                            targ = quantity;
+                        }
 
-		startElement(main, "listOfOutputs");
+                        startEndElement(main, "variable", "id=" + varFull, "taskReference=" + taskId, "target=" + targ);
+                        endElement(main, "listOfVariables");
 
-		for(Component dispComp : simCpt.getAllChildren())
-		{
-			if(dispComp.getTypeName().equals("Display"))
-			{
-				String dispId = dispComp.getID().replace(" ","_");
+                        startElement(main, "math", "xmlns=http://www.w3.org/1998/Math/MathML");
+                        addTextElement(main, "ci", varFull);
+                        endElement(main, "math");
+                        endElement(main, "dataGenerator");
 
-				startElement(main, "plot2D", "id=" + dispId);
-				startElement(main, "listOfCurves");
+                    }
+                }
+            }
+        }
 
-				for(Component lineComp : dispComp.getAllChildren())
-				{
-					if(lineComp.getTypeName().equals("Line"))
-					{
-						// trace=StateMonitor(hhpop,'v',record=[0])
-						// //String ref = lineComp.getStringValue("quantity");
-						// //String pop = ref.split("/")[0].split("\\[")[0];
-						// //String num = ref.split("\\[")[1].split("\\]")[0];
-						// //String var = ref.split("/")[1];
-                        
+        endElement(main, "listOfDataGenerators");
+        main.append("\n");
+
+        startElement(main, "listOfOutputs");
+
+        for(Component dispComp : simCpt.getAllChildren())
+        {
+            if(dispComp.getTypeName().equals("Display"))
+            {
+                String dispId = dispComp.getID().replace(" ","_");
+
+                startElement(main, "plot2D", "id=" + dispId);
+                startElement(main, "listOfCurves");
+
+                for(Component lineComp : dispComp.getAllChildren())
+                {
+                    if(lineComp.getTypeName().equals("Line"))
+                    {
+                        // trace=StateMonitor(hhpop,'v',record=[0])
+                        // //String ref = lineComp.getStringValue("quantity");
+                        // //String pop = ref.split("/")[0].split("\\[")[0];
+                        // //String num = ref.split("\\[")[1].split("\\]")[0];
+                        // //String var = ref.split("/")[1];
+
                         String lcid = lineComp.getID().replace(" ","_");
 
-						String genId = dispId + "_" + lcid;
-						// String varFull = pop+"_"+num+"_"+var;
-						// <curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
-						startEndElement(main, "curve", "id=curve_" + lcid, "logX=false", "logY=false", "xDataReference=time", "yDataReference=" + genId);
+                        String genId = dispId + "_" + lcid;
+                        // String varFull = pop+"_"+num+"_"+var;
+                        // <curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
+                        startEndElement(main, "curve", "id=curve_" + lcid, "logX=false", "logY=false", "xDataReference=time", "yDataReference=" + genId);
 
-					}
-				}
-				endElement(main, "listOfCurves");
+                    }
+                }
+                endElement(main, "listOfCurves");
 
-				endElement(main, "plot2D");
-			}
-		}
+                endElement(main, "plot2D");
+            }
+        }
 
-		endElement(main, "listOfOutputs");
-		main.append("\n");
+        endElement(main, "listOfOutputs");
+        main.append("\n");
 
-		endElement(main, "sedML");
-		// System.out.println(main);
-		return main.toString();
-	}
+        endElement(main, "sedML");
+        // System.out.println(main);
+        return main.toString();
+    }
 
-	@Override
-	public List<File> convert() throws IOException, GenerationException
-	{
-		List<File> outputFiles = new ArrayList<File>();
+    @Override
+    public List<File> convert() throws IOException, GenerationException
+    {
+        List<File> outputFiles = new ArrayList<File>();
 
-		try
-		{
-			String code = this.getMainScript();
+        try
+        {
+            String code = this.getMainScript();
 
-			File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
-			FileUtil.writeStringToFile(code, outputFile);
-			outputFiles.add(outputFile);
+            File outputFile = new File(this.getOutputFolder(), this.getOutputFileName());
+            FileUtil.writeStringToFile(code, outputFile);
+            outputFiles.add(outputFile);
 
-		}
-		catch(ContentError e)
-		{
-			throw new GenerationException("Issue when converting files", e);
-		}
+        }
+        catch(ContentError e)
+        {
+            throw new GenerationException("Issue when converting files", e);
+        }
 
-		return outputFiles;
-	}
-    
-    
-    
-    public static void main(String[] args) throws Exception
+        return outputFiles;
+    }
+
+
+
+    public static void main(String[] args) throws Exception, ModelFeatureSupportException
     {
 
         MinimalMessageHandler.setVeryMinimal(true);
         E.setDebug(false);
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
-        
-        
+
+
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
-        
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/SBMLShowcase/NeuroML2/LEMS_NML2_Ex9_FN.xml"));
+
 
         SEDMLWriter nw;
         for(File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
-            nw = new SEDMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sedml"), lemsFile.getName());
+            nw = new SEDMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sedml"), lemsFile.getName(), Format.SBML);
 
             List<File> ff = nw.convert();
             for(File f : ff)
             {
-                System.out.println("Generated: " + f.getCanonicalPath());
+                System.out.println("Generated sed-ml: " + f.getCanonicalPath());
             }
 
         }
-        
-        
+
+
     }
 }
