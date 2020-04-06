@@ -5,9 +5,9 @@ import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.lemsml.export.vhdl.edlems.EDComponent;
 import org.lemsml.export.vhdl.edlems.EDConditionalDerivedVariable;
 import org.lemsml.export.vhdl.edlems.EDDerivedVariable;
