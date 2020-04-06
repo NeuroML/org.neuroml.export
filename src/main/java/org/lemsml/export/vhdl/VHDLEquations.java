@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.lemsml.export.vhdl.VHDLUtilComparator;
 import org.lemsml.export.vhdl.edlems.EDDynamic;
 import org.lemsml.export.vhdl.edlems.EDExponential;
