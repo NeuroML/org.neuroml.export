@@ -3,8 +3,9 @@ package org.lemsml.export.vhdl;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.lemsml.export.vhdl.edlems.EDComponent;
 import org.lemsml.export.vhdl.edlems.EDDerivedParameter;
 import org.lemsml.export.vhdl.edlems.EDParameter;
