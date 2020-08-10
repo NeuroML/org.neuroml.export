@@ -37,6 +37,7 @@ install:
     - cd jLEMS
     - git checkout $main_repo_branch
     - mvn install
+    - mvn dependency:tree
     - cd ..
 
 
