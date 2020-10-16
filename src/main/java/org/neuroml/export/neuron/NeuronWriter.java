@@ -101,7 +101,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     
     private final String bIndent = "        ";
     
-    private static boolean parallelMode = false; // Some of the mod files etc. will have to be slightly different for Parallel NEURON 
+    private boolean parallelMode = false; // Some of the mod files etc. will have to be slightly different for Parallel NEURON 
     
     private static int MAX_LENGTH_LINE_MOD_FILE = 350;
     
@@ -283,6 +283,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     public String getMainScript() throws GenerationException, NeuroMLException
     {
+        this.setParallelMode(false);
+
         try
         {
             reset();
@@ -344,9 +346,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             
             main.append(bIndent+"print(\"\\n    Starting simulation in NEURON of %sms generated from NeuroML2 model...\\n\"%tstop)\n\n");
             main.append(bIndent+"self.setup_start = time.time()\n");
+            main.append(bIndent+"self.seed = seed\n");
             
             if (target.reportFile!=null)
             {
+                main.append(bIndent+"import socket\n");
                 main.append(bIndent+"self.report_file = open('"+target.reportFile+"','w')\n");
                 main.append(bIndent+"print('Simulator version:  %s'%h.nrnversion())\n");
                 main.append(bIndent+"self.report_file.write('# Report of running simulation with %s\\n'%h.nrnversion())\n");
@@ -356,10 +360,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(bIndent+"self.report_file.write('PythonVersion=%s\\n'%sys.version.replace('\\n',' '))\n");
                 main.append(bIndent+"print('Python version:     %s'%sys.version.replace('\\n',' '))\n");
                 main.append(bIndent+"self.report_file.write('NeuroMLExportVersion="+Utils.ORG_NEUROML_EXPORT_VERSION+"\\n')\n");
+                main.append(bIndent+"self.report_file.write('SimulationSeed=%s\\n'%self.seed)\n");
+                main.append(bIndent+"self.report_file.write('Hostname=%s\\n'%socket.gethostname())\n");
                 
             }
             
-            main.append(bIndent+"self.seed = seed\n");
             main.append(bIndent+"self.randoms = []\n");
             main.append(bIndent+"self.next_global_id = 0  # Used in Random123 classes for elements using random(), etc. \n\n");
             main.append(bIndent+"self.next_spiking_input_id = 0  # Used in Random123 classes for elements using random(), etc. \n\n");
@@ -2885,7 +2890,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private static void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
+    private void parseOnCondition(Component comp, String prefix, StringBuilder blockBreakpoint, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, int conditionFlag) throws ContentError
     {
         if(comp.getComponentType().getDynamics() != null)
         {
@@ -3056,7 +3061,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    private static void parseOnEvent(Component comp, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
+    private void parseOnEvent(Component comp, StringBuilder blockNetReceive, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
         // Add appropriate state discontinuities for synaptic events in
         // NET_RECEIVE block. Do this for all child elements as well, in case
@@ -3092,7 +3097,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    private static void parseParameters(Component comp, String prefix, String prefixParent, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron,
+    private void parseParameters(Component comp, String prefix, String prefixParent, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron,
             StringBuilder blockParameter, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws LEMSException
     {
 
@@ -3228,7 +3233,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
     }
 
-    private static void parseStateVars(Component comp, String prefix, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron, StringBuilder blockParameter,
+    private void parseStateVars(Component comp, String prefix, ArrayList<String> rangeVars, ArrayList<String> stateVars, StringBuilder blockNeuron, StringBuilder blockParameter,
             StringBuilder blockAssigned, StringBuilder blockState, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
 
@@ -3325,7 +3330,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         return prefixNew;
     }
 
-    private static void parseTimeDerivs(Component comp, String prefix, ArrayList<String> locals, StringBuilder blockDerivative, StringBuilder blockBreakpoint, StringBuilder blockAssigned,
+    private void parseTimeDerivs(Component comp, String prefix, ArrayList<String> locals, StringBuilder blockDerivative, StringBuilder blockBreakpoint, StringBuilder blockAssigned,
             StringBuilder ratesMethod, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings, String ionSpecies) throws ContentError
     {
 
@@ -3466,7 +3471,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
     }
 
-    private static void parseDerivedVars(Component comp, String prefix, ArrayList<String> rangeVars, StringBuilder ratesMethod, StringBuilder blockNeuron, StringBuilder blockParameter,
+    private void parseDerivedVars(Component comp, String prefix, ArrayList<String> rangeVars, StringBuilder ratesMethod, StringBuilder blockNeuron, StringBuilder blockParameter,
             StringBuilder blockAssigned, StringBuilder blockBreakpoint, LinkedHashMap<String, LinkedHashMap<String, String>> paramMappings) throws ContentError
     {
 
@@ -3859,7 +3864,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19_GapJunctions.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex23_Spiketimes.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-         lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
+         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex27_MultiSynapses.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial2/NeuroML2/LEMS_HHTutorial.xml"));
@@ -3872,7 +3877,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 //
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
+        //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
 //        
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
