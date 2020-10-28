@@ -3,11 +3,11 @@ dist: xenial
 language: java
 
 jdk:
-  - oraclejdk11
+  #- oraclejdk11
   
   - openjdk8
   #- openjdk10 # Some non deterministic recurring error in jlems with jdk10...
-  - openjdk11
+  #- openjdk11
 
 
 install:
