@@ -42,3 +42,4 @@ src/test/resources/examples/*nrn.py
 /libjhdf5.so
 /Test.gv
 /Test.png
+/src/test/resources/examples/report*.txt

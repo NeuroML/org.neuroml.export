@@ -138,6 +138,16 @@ public class NeuronWriterTest extends TestCase {
 
     	testLocalLEMS("LEMS_SomeCells.xml");
 	}
+    
+    public void testSpikePass() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
+
+    	testLocalLEMS("LEMS_SpikePass.xml");
+	}
+    
+    public void testSpikePass2() throws LEMSException, IOException, GenerationException, JAXBException, NeuroMLException, ModelFeatureSupportException {
+
+    	testLocalLEMS("LEMS_SpikePass2.xml");
+	}
 
     public void testLocalLEMS(String exampleFilename) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 

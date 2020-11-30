@@ -691,7 +691,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 NamingHelper nhPre = new NamingHelper(preCell);
                 NamingHelper nhPost = new NamingHelper(postCell);
 
-                int index = 0;
+                int connIndex = 0;
                 for(Component conn : projection.getAllChildren())
                 {
                     if(conn.getComponentType().isOrExtends(NeuroMLElements.CONNECTION))
@@ -734,11 +734,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         String synObjName = null;
                         if (synArrayFormat)
                         {
-                            synObjName = String.format("%s[%s]", synObjArrayName, index);
+                            synObjName = String.format("%s[%s]", synObjArrayName, connIndex);
                         }
                         else
                         {
-                            synObjName = String.format("%s_%s", segSynRef, synIndex);
+                            synObjName = String.format("%s_%s", segSynRef, connIndex);
                         }
                         segmentSynapseCounts.put(segSynRef, synIndex+1);
                         
@@ -793,8 +793,15 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             {
                                 threshold = 0;
                             }
-                            main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %s, %s, %s))\")\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
+                            if(postCell != null)
+                            {
+                                main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %s, %s, %s))\") # *->cell\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName,
                                     threshold, delay, weight));
+                            }
+                            else
+                            {
+                                main.append(String.format(bIndent+"h(\"%s %s[%d] = new NetCon(%s, %s, %g, %g, %g)\")  # cell->abst\n\n", preSecName, netConnObjArrayName, connIndex, sourceVarToListenFor, synObjName, threshold, delay, weight));
+                            }
                         }
                         else
                         {
@@ -808,17 +815,17 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             
                             if (synArrayFormat)
                             {
-                                main.append(String.format(Locale.US, bIndent+"h(\"%s %s[%d] = new NetCon(%s, %s, %s, %s, %s)\")  \n\n", preSecName, netConnObjArrayName, index, sourceVarToListenFor, synObjName, threshold, delay, weight));
+                                main.append(String.format(Locale.US, bIndent+"h(\"%s %s[%d] = new NetCon(%s, %s, %s, %s, %s)\")  \n\n", preSecName, netConnObjArrayName, connIndex, sourceVarToListenFor, synObjName, threshold, delay, weight));
                             }
                             else
                             { 
-                                String netConnName = String.format("nc_%s_%d", synObjName, index);
+                                String netConnName = String.format("nc_%s_%d", synObjName, connIndex);
                                 main.append(String.format(bIndent+"h(\"objectvar %s\")\n", netConnName));
                                 main.append(String.format(Locale.US, bIndent+"h(\"%s %s = new NetCon(%s, %s, %s, %s, %s)\")  \n\n", preSecName, netConnName, sourceVarToListenFor, synObjName, threshold, delay, weight));
                             }
                             
                            }
-                        index++;
+                        connIndex++;
                     }
                 }
 
@@ -921,7 +928,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             String hocMechName = NRNUtils.getMechanismName(fromComp, prePop) + "["+preCellId+"]";
                             sourceVarToListenFor = hocMechName;
                         }
-
+                        
                         main.append(String.format(bIndent+"h(\"%s a_%s[%d].synlist.append(new NetCon(%s, %s, %g, %g, %g))\") # ...\n\n", preSecName, postPop, postCellId, sourceVarToListenFor, synObjName, threshold, delay, weight));
                     }
                     else
@@ -1114,7 +1121,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n", preCompObjName, number));
                 main.append(String.format(bIndent+"h(\"objectvar %s[%d]\")\n\n", postCompObjName, number));
 
-                int index = 0;
+                int contConnIndex = 0;
                 for(Component cc : connChildren)
                 {
                     if(cc.getComponentType().isOrExtends(NeuroMLElements.CONTINUOUS_CONNECTION) ||
@@ -1185,13 +1192,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         
                         addComment(main, comment,"        ");
 
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, index, preComponent.getID(), preFract));
-                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, index, postComponent.getID(), postFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", preSecName, preCompObjName, contConnIndex, preComponent.getID(), preFract));
+                        main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d] = new %s(%f) }\")\n", postSecName, postCompObjName, contConnIndex, postComponent.getID(), postFract));
 
                         if (weight!=1)
                         {
-                            main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d].weight = %s }\")\n", preSecName, preCompObjName, index, weight));
-                            main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d].weight = %s }\")\n", postSecName, postCompObjName, index, weight));
+                            main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d].weight = %s }\")\n", preSecName, preCompObjName, contConnIndex, weight));
+                            main.append(String.format(Locale.US, bIndent+"h(\"%s { %s[%d].weight = %s }\")\n", postSecName, postCompObjName, contConnIndex, weight));
                         }
 
                         String peerVar = "v";
@@ -1211,10 +1218,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s - %s\n", preCompObjName, index, peerVar, postPrefix, postSecName, peerVar, postArg, preComponent, postComponent));
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\")\n\n", postCompObjName, index, peerVar, prePrefix, preSecName, peerVar, preArg));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s - %s\n", preCompObjName, contConnIndex, peerVar, postPrefix, postSecName, peerVar, postArg, preComponent, postComponent));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\")\n\n", postCompObjName, contConnIndex, peerVar, prePrefix, preSecName, peerVar, preArg));
 
-                        index++;
+                        contConnIndex++;
                     }
                 }
             }
@@ -3825,7 +3832,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> nmlFiles = new ArrayList<File>();
         nmlFiles.add(new File("../NeuroML2/examples/NML2_SingleCompHHCell.nml"));
         nmlFiles.add(new File("../NeuroML2/examples/NML2_SynapseTypes.nml"));
-        nmlFiles.add(new File("../git/BonoClopath2017/NeuroML2/SimpleNet.net.nml"));
+        //nmlFiles.add(new File("../git/BonoClopath2017/NeuroML2/SimpleNet.net.nml"));
         
         for(File nmlFile : nmlFiles)
         {
@@ -3847,6 +3854,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../org.neuroml.export/src/test/resources/examples/LEMS_SpikePass2.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
@@ -3990,7 +3998,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
             //List<File> ff = nw.generateAndRun(false, false, false);
-            List<File> ff = nw.generateAndRun(true, true, true, false);
+            List<File> ff = nw.generateAndRun(true, false, false, false);
             for(File f : ff)
             {
                 System.out.println("Generated: " + f.getAbsolutePath());
