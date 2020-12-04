@@ -103,8 +103,8 @@ public class ProcessManager
 
         File neuronHome = findNeuronHome();
 
-        File fileToBeCreated = null;
-        
+        ArrayList<File> filesToBeCreated = new ArrayList<File> ();
+
         String myArch = Utils.getArchSpecificDir();
         try
         {
@@ -119,7 +119,7 @@ public class ProcessManager
 
                 String filename = directoryToExecuteIn + System.getProperty("file.separator") + "nrnmech.dll";
 
-                fileToBeCreated = new File(filename);
+                filesToBeCreated.add(new File(filename));
 
                 String binExe = neuronHome + "\\bin\\sh.exe";
                 if (!(new File(binExe)).exists())
@@ -135,7 +135,9 @@ public class ProcessManager
                     binExe = neuronHome + "\\mingw64\\bin\\sh.exe";
                 }
 
-                E.info("Name of file to be created: " + fileToBeCreated.getAbsolutePath());
+                E.info("Name of file(s) to be created: ");
+                for (File f : filesToBeCreated)
+                    E.info(f.getAbsolutePath());
 
                 File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
@@ -170,10 +172,20 @@ public class ProcessManager
                     backupArchDir = Utils.DIR_I686;
                 }
 
-                String filename = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.la";
+                String filename = "";
+                filename = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.la";
+                filesToBeCreated.add(new File(filename));
+                filename = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.so";
+                filesToBeCreated.add(new File(filename));
 
                 // In case, e.g. a 32 bit JDK is used on a 64 bit system
-                String backupFilename = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.la";
+                filename = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.la";
+                E.info("Name of file to be created: " + filename);
+                filesToBeCreated.add(new File(filename));
+                // In case, e.g. a 32 bit JDK is used on a 64 bit system
+                filename = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.so";
+                E.info("Name of file to be created: " + filename);
+                filesToBeCreated.add(new File(filename));
 
                 /**
                  * @todo Needs checking on Mac/powerpc/i686
@@ -181,37 +193,31 @@ public class ProcessManager
                 if (Utils.isMacBasedPlatform())
                 {
                     filename = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created: " + filename);
+                    filesToBeCreated.add(new File(filename));
 
-                    backupFilename = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
+                    filename = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created: " + filename);
+                    filesToBeCreated.add(new File(filename));
 
                 }
 
-                E.info("Name of file to be created: " + filename);
-                E.info("Backup file to check for success: " + backupFilename);
-
-                fileToBeCreated = new File(filename);
-                otherCheckFileToBeCreated = new File(backupFilename);
-
                 commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + "nrnivmodl";
-
                 E.info("commandToExecute: " + commandToExecute);
 
             }
 
+            /* force recompile? */
             if (!forceRecompile)
             {
                 File fileToCheck = null;
-
-                if (fileToBeCreated.exists())
+                for (File fn: filesToBeCreated)
                 {
-                    fileToCheck = fileToBeCreated;
+                    if (fn.exists())
+                    {
+                        fileToCheck = fn;
+                    }
                 }
-
-                if (otherCheckFileToBeCreated != null && otherCheckFileToBeCreated.exists())
-                {
-                    fileToCheck = otherCheckFileToBeCreated;
-                }
-
                 E.info("Going to check if mods in " + modDirectory + "" + " are newer than " + fileToCheck);
 
                 if (fileToCheck != null)
@@ -246,13 +252,17 @@ public class ProcessManager
                 E.info("Forcing recompile...");
             }
 
-            E.info("Trying to delete any previous: " + fileToBeCreated.getAbsolutePath());
-
-            if (fileToBeCreated.exists())
+            E.info("Trying to delete any previously created files: ");
+            for (File f: filesToBeCreated)
             {
-                fileToBeCreated.delete();
+                E.info(f.getAbsolutePath());
 
-                E.info("Deleted.");
+                if (f.exists())
+                {
+                    f.delete();
+
+                    E.info("Deleted.");
+                }
             }
 
             E.info("directoryToExecuteIn: " + directoryToExecuteIn);
@@ -264,55 +274,72 @@ public class ProcessManager
             ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NMODL Error   >> ");
             procOutputError.start();
 
-            E.info("Have successfully executed command: " + commandToExecute);
 
             currentProcess.waitFor();
+            int retVal = currentProcess.exitValue();
 
-            if (fileToBeCreated.exists() || otherCheckFileToBeCreated.exists())
+            String linMacWarn = "   NOTE: make sure you can compile NEURON mod files on your system!\n\n"
+                + "Often, extra packages (e.g. dev packages of ncurses & readline) need to be installed "
+                + "to successfully run nrnivmodl, which compiles mod files\n" + "Go to " + modDirectory
+                + " and try running nrnivmodl";
+
+            E.info("Executed command " + commandToExecute);
+            if (retVal == 0)
             {
-                // In case, e.g. a 32 bit JDK is used on a 64 bit system
-                File createdFile = fileToBeCreated;
-                if (!createdFile.exists())
+                /* Check if the necessary file was created to confirm compilation succeded */
+                File createdFile = null;
+                for (File f: filesToBeCreated)
                 {
-                    createdFile = otherCheckFileToBeCreated;
+                    if (f.exists())
+                    {
+                        createdFile = f;
+                        E.info("Successful compilation");
+
+                        return true;
+                    }
+                    else
+                    {
+                        E.info("Compilation failed. Unable to find necessary file(s)." +
+                                " Please note that Neuron checks every *.mod file in this file's parent directory\n" +
+                                "(" + modDirectory + ").\n" +
+                                "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" +
+                                linMacWarn);
+
+                        for (File f1: filesToBeCreated)
+                        {
+                            E.info(f1.getAbsolutePath());
+                        }
+
+                        if (Utils.isWindowsBasedPlatform())
+                        {
+                            linMacWarn = "";
+                        }
+                        else
+                        {
+                            E.info("Deleting generated dir(s): ");
+                            for (File f2: filesToBeCreated)
+                            {
+                                E.info(f2.getParentFile().getAbsolutePath());
+                                if (f.getParentFile().getName().equals(myArch));
+                                {
+                                    Utils.removeAllFiles(f.getParentFile(), true, true);
+                                }
+                            }
+                        }
+                        return false;
+                    }
                 }
-
-                E.info("Successful compilation");
-
-                return true;
-            }
-            else if (Utils.isMacBasedPlatform())
-            {
-                return true;
             }
             else
             {
-                E.info("Unsuccessful compilation. File doesn't exist: " + fileToBeCreated.getAbsolutePath() + " (and neither does " + otherCheckFileToBeCreated.getAbsolutePath() + ")");
+                E.info("Unsuccessful compilation of NEURON mod files.");
+                E.info(linMacWarn);
 
-                String linMacWarn = "   NOTE: make sure you can compile NEURON mod files on your system!\n\n"
-                    + "Often, extra packages (e.g. dev packages of ncurses & readline) need to be installed "
-                    + "to successfully run nrnivmodl, which compiles mod files\n" + "Go to " + modDirectory
-                    + " and try running nrnivmodl";
-                
-                if (Utils.isWindowsBasedPlatform())
+                /* Ignoring Mac errors? */
+                if (Utils.isMacBasedPlatform())
                 {
-                    linMacWarn = "";
+                    return true;
                 }
-                else
-                {
-                    E.info("Deleting generated dir: "+fileToBeCreated.getParentFile().getAbsolutePath());
-                    if (fileToBeCreated.getParentFile().getName().equals(myArch));
-                    {
-                        Utils.removeAllFiles(fileToBeCreated.getParentFile(), true, true);
-                    }
-                }
-
-                E.error("Problem with mod file compilation. File doesn't exist: " + fileToBeCreated.getAbsolutePath() 
-                    + "\n" + "(and neither does " + otherCheckFileToBeCreated.getAbsolutePath()
-                    + ")\n" + "Please note that Neuron checks every *.mod file in this file's home directory\n" + "(" + modDirectory + ").\n"
-                    + "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" + linMacWarn);
-                
-                return false;
             }
 
         }
@@ -324,12 +351,14 @@ public class ProcessManager
             {
                 dirContents = "bin\\neuron.exe";
             }
-            
-            fileToBeCreated.delete();
+            for (File f: filesToBeCreated)
+            {
+                f.delete();
+            }
             throw new NeuroMLException("Error testing: " + modDirectory.getAbsolutePath() + ".\nIs NEURON correctly installed?\n" + "NEURON home dir being used: " + findNeuronHome().getAbsolutePath()
                 + "\n\n", ex);
         }
-
+        return true;
     }
 
     public static void main(String args[]) throws IOException
