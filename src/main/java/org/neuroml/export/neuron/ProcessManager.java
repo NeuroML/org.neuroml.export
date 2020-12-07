@@ -172,27 +172,38 @@ public class ProcessManager
                     backupArchDir = Utils.DIR_I686;
                 }
 
-                String filename = "";
-                filename = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.la";
-                filesToBeCreated.add(new File(filename));
-                filename = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.so";
-                filesToBeCreated.add(new File(filename));
+                /* *.la */
+                String filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.la";
+                filesToBeCreated.add(new File(filename1));
+                E.info("Name of file to be created: " + filename1);
 
                 // In case, e.g. a 32 bit JDK is used on a 64 bit system
-                filename = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.la";
-                E.info("Name of file to be created: " + filename);
-                filesToBeCreated.add(new File(filename));
+                String filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.la";
+                /* Only add if it does not already exist: prevent duplication */
+                if (!filename1.equals(filename2)){
+                    filesToBeCreated.add(new File(filename2));
+                    E.info("Name of file to be created: " + filename2);
+                }
+
+                /* *.so */
+                filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.so";
+                filesToBeCreated.add(new File(filename1));
+                E.info("Name of file to be created: " + filename1);
+
                 // In case, e.g. a 32 bit JDK is used on a 64 bit system
-                filename = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.so";
-                E.info("Name of file to be created: " + filename);
-                filesToBeCreated.add(new File(filename));
+                filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.so";
+                /* Only add if it does not already exist: prevent duplication */
+                if (!filename1.equals(filename2)){
+                    filesToBeCreated.add(new File(filename2));
+                    E.info("Name of file to be created: " + filename2);
+                }
 
                 /**
                  * @todo Needs checking on Mac/powerpc/i686
                  */
                 if (Utils.isMacBasedPlatform())
                 {
-                    filename = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
+                    String filename = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
                     E.info("Name of file to be created: " + filename);
                     filesToBeCreated.add(new File(filename));
 
