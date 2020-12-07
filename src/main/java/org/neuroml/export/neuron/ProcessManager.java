@@ -207,45 +207,40 @@ public class ProcessManager
 
             }
 
-            /* force recompile? */
+            /* If libnrnmech.* already exists but newer mod files exist, check if we need to recompile */
             if (!forceRecompile)
             {
                 File fileToCheck = null;
+                boolean newerModExists = false;
                 for (File fn: filesToBeCreated)
                 {
                     if (fn.exists())
                     {
                         fileToCheck = fn;
-                    }
-                }
-                E.info("Going to check if mods in " + modDirectory + "" + " are newer than " + fileToCheck);
+                        E.info("Going to check if mods in " + modDirectory + "" + " are newer than " + fileToCheck);
 
-                if (fileToCheck != null)
-                {
-                    DateFormat df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-
-                    boolean newerModExists = false;
-                    File[] allMods = modDirectory.listFiles();
-                    for (File f : allMods)
-                    {
-                        if (f.getName().endsWith(".mod") && f.lastModified() > fileToCheck.lastModified())
+                        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+                        File[] allMods = modDirectory.listFiles();
+                        for (File f : allMods)
                         {
-                            newerModExists = true;
-                            E.info("File " + f + " (" + df.format(new Date(f.lastModified())) + ") was modified later than " + fileToCheck + " (" + df.format(new Date(fileToCheck.lastModified()))
-                                + ")");
+                            if (f.getName().endsWith(".mod") && f.lastModified() > fileToCheck.lastModified())
+                            {
+                                newerModExists = true;
+                                E.info("File " + f + " (" + df.format(new Date(f.lastModified())) + ") was modified later than " + fileToCheck + " (" + df.format(new Date(fileToCheck.lastModified()))
+                                    + ")");
+                            }
                         }
                     }
-                    if (!newerModExists)
-                    {
-                        E.info("Not being asked to recompile, and no mod files exist in " + modDirectory + "" + " which are newer than " + fileToCheck);
-                        return true;
-                    }
-                    else
-                    {
-                        E.info("Newer mod files exist!");
-                    }
                 }
-
+                if (!newerModExists)
+                {
+                    E.info("Not being asked to recompile, and no mod files exist in " + modDirectory + "" + " which are newer than " + fileToCheck);
+                    return true;
+                }
+                else
+                {
+                    E.info("Newer mod files exist! Will recompile.");
+                }
             }
             else
             {
