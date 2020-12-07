@@ -290,44 +290,48 @@ public class ProcessManager
                 File createdFile = null;
                 for (File f: filesToBeCreated)
                 {
+                    E.info("Verifying mod file compilation: looking for file: " + f.getAbsolutePath());
                     if (f.exists())
                     {
                         createdFile = f;
-                        E.info("Successful compilation");
-
+                        E.info(createdFile + " found. Compilation successful.");
                         return true;
                     }
                     else
                     {
-                        E.info("Compilation failed. Unable to find necessary file(s)." +
-                                " Please note that Neuron checks every *.mod file in this file's parent directory\n" +
-                                "(" + modDirectory + ").\n" +
-                                "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" +
-                                linMacWarn);
+                        E.info(f.getAbsolutePath() + " not found.");
+                    }
+                }
+                /* If a generated file is not found */
+                if (createdFile == null)
+                {
+                    E.info("Compilation failed. Unable to find necessary file(s)." +
+                            " Please note that Neuron checks every *.mod file in this file's parent directory\n" +
+                            "(" + modDirectory + ").\n" +
+                            "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" +
+                            linMacWarn);
 
-                        for (File f1: filesToBeCreated)
-                        {
-                            E.info(f1.getAbsolutePath());
-                        }
+                    /* Print list of files we look for */
+                    for (File f1: filesToBeCreated)
+                    {
+                        E.info(f1.getAbsolutePath());
+                    }
 
-                        if (Utils.isWindowsBasedPlatform())
+                    /* TODO: what are we doing here? */
+                    /* Only delete on non-Windows machines? */
+                    if (!Utils.isWindowsBasedPlatform())
+                    {
+                        E.info("Deleting generated dir(s): ");
+                        for (File f2: filesToBeCreated)
                         {
-                            linMacWarn = "";
-                        }
-                        else
-                        {
-                            E.info("Deleting generated dir(s): ");
-                            for (File f2: filesToBeCreated)
+                            E.info(f2.getParentFile().getAbsolutePath());
+                            if (f2.getParentFile().getName().equals(myArch));
                             {
-                                E.info(f2.getParentFile().getAbsolutePath());
-                                if (f.getParentFile().getName().equals(myArch));
-                                {
-                                    Utils.removeAllFiles(f.getParentFile(), true, true);
-                                }
+                                Utils.removeAllFiles(f2.getParentFile(), true, true);
                             }
                         }
-                        return false;
                     }
+                    return false;
                 }
             }
             else
@@ -335,13 +339,12 @@ public class ProcessManager
                 E.info("Unsuccessful compilation of NEURON mod files.");
                 E.info(linMacWarn);
 
-                /* Ignoring Mac errors? */
+                /* TODO: Ignoring Mac errors? */
                 if (Utils.isMacBasedPlatform())
                 {
                     return true;
                 }
             }
-
         }
         catch (Exception ex)
         {
