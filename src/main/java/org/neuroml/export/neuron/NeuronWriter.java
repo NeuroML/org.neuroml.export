@@ -200,15 +200,19 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 procOutputError.start();
 
                 E.info("Have successfully executed command: " + commandToExecute);
+                E.info("with: " + Utils.sysEnvInfo("  "));
 
                 try
                 {
                     currentProcess.waitFor();
 
                     E.info("Exit value for running NEURON: " + currentProcess.exitValue());
-                    
+                    String err = "Error, exit value from running "+fullPath
+                                +" in NEURON: "+currentProcess.exitValue()+"\n";
+                            
+                    err += Utils.sysEnvInfo("  ");
                     if (currentProcess.exitValue()!=0)
-                        throw new NeuroMLException("Error, exit value from running "+fullPath+" in NEURON: "+currentProcess.exitValue());
+                        throw new NeuroMLException(err);
                         
                 }
                 catch(InterruptedException e)
@@ -3853,7 +3857,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex16_Inputs.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../org.neuroml.export/src/test/resources/examples/LEMS_SpikePass2.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
@@ -3998,7 +4002,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             nw = new NeuronWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_nrn.py"));
 
             //List<File> ff = nw.generateAndRun(false, false, false);
-            List<File> ff = nw.generateAndRun(true, false, false, false);
+            List<File> ff = nw.generateAndRun(true, true, true, false);
             for(File f : ff)
             {
                 System.out.println("Generated: " + f.getAbsolutePath());

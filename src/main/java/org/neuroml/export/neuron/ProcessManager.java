@@ -80,13 +80,15 @@ public class ProcessManager
                 return new File(option);
             }
         }
+        
+        String env = Utils.sysEnvInfo("  ");
 
         throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options
             + "\nThe NEURON executable which is sought inside this directory is: " + nrnExe + ". \n\n"
             + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
             + " to the location of your NEURON installation (up to but not including bin), e.g.\n\n"
             + "  export " + NeuronWriter.NEURON_HOME_ENV_VAR + "=/home/myuser/nrn7/x86_64\n\n"+
-            "Currently " + NeuronWriter.NEURON_HOME_ENV_VAR + " is set to: "+nrnEnvVar+"\n", null);
+            "Currently " + NeuronWriter.NEURON_HOME_ENV_VAR + " is set to: "+nrnEnvVar+"\n"+env, null);
 
     }
 

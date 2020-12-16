@@ -3,7 +3,12 @@ package org.neuroml.export.utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.lemsml.jlems.core.logging.E;
 import org.lemsml.jlems.core.sim.ContentError;
@@ -637,6 +642,36 @@ public class Utils
 
     }
         
+	public static String sysEnvInfo(String indent)
+	{
+        String err = indent+"Environment variables:\n";
+        
+        Map<String,String> envProps = System.getenv();
+        Set<String> set = envProps.keySet();
+        List allEnv = new ArrayList<String>(set);
+        
+        java.util.Collections.sort(allEnv, new Comparator()
+        { 
+            public int compare(Object o1, Object o2) {
+              return o1.toString().compareToIgnoreCase(o2.toString());}
+        });
+        
+        int idealPropNameWidth =30;
+        for(Object prop: allEnv)
+        {
+            Object val = envProps.get((String)prop);
+            String propName = prop.toString();
+            if (propName.length()<=idealPropNameWidth)
+            {
+                for (int i = propName.length(); i <= idealPropNameWidth ; i++)
+                {
+                        propName = propName + " ";
+                }
+            }
+            err += indent+"  "+propName + " = " +val + "\n";
+        }
+        return err;
+	}
 
     public static void main(String args[]) throws ContentError, IOException, LEMSException, NeuroMLException
     {
@@ -647,9 +682,9 @@ public class Utils
         //f = new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml");
         //Sim sim = Utils.readLemsNeuroMLFile(f);
         //Lems lems = sim.getLems();
-        //System.out.println("-----------------------\nLEMS:\n"+lems.components.toString());
         f = new File("/tmp/tt/NETMORPH2NeuroML/");
-        removeAllFiles(f, true, true);
+        System.out.println("-----------------------\n"+sysEnvInfo("  "));
+        //removeAllFiles(f, true, true);
     }
 
 }
