@@ -218,44 +218,60 @@ public class ProcessManager
 
             }
 
-            /* If libnrnmech.* already exists but newer mod files exist, check if we need to recompile */
-            if (!forceRecompile)
+            /* Check if libnrnmech.* already exists */
+            File createdFile = null;
+            for (File f: filesToBeCreated)
             {
-                File fileToCheck = null;
-                boolean newerModExists = false;
-                for (File fn: filesToBeCreated)
+                if (f.exists())
                 {
-                    if (fn.exists())
+                    createdFile = f;
+                    E.info("Found previously compiled file: " + f.getAbsolutePath());
+                    break;
+                }
+            }
+            /* If it exists check if we were asked to force recompile etc. */
+            if (createdFile != null)
+            {
+                /* We were asked to force recompile */
+                if (forceRecompile)
+                {
+                    E.info("Forcing recompile...");
+                }
+                /* We weren't asked to recompile, so we check if there are newer mod files which will require compilation */
+                else
+                {
+                    File fileToCheck = null;
+                    boolean newerModExists = false;
+                    for (File fn: filesToBeCreated)
                     {
-                        fileToCheck = fn;
-                        E.info("Going to check if mods in " + modDirectory + "" + " are newer than " + fileToCheck);
-
-                        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-                        File[] allMods = modDirectory.listFiles();
-                        for (File f : allMods)
+                        if (fn.exists())
                         {
-                            if (f.getName().endsWith(".mod") && f.lastModified() > fileToCheck.lastModified())
+                            fileToCheck = fn;
+                            E.info("Going to check if mods in " + modDirectory + "" + " are newer than " + fileToCheck);
+
+                            DateFormat df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+                            File[] allMods = modDirectory.listFiles();
+                            for (File f : allMods)
                             {
-                                newerModExists = true;
-                                E.info("File " + f + " (" + df.format(new Date(f.lastModified())) + ") was modified later than " + fileToCheck + " (" + df.format(new Date(fileToCheck.lastModified()))
-                                    + ")");
+                                if (f.getName().endsWith(".mod") && f.lastModified() > fileToCheck.lastModified())
+                                {
+                                    newerModExists = true;
+                                    E.info("File " + f + " (" + df.format(new Date(f.lastModified())) + ") was modified later than " + fileToCheck + " (" + df.format(new Date(fileToCheck.lastModified()))
+                                            + ")");
+                                }
                             }
                         }
                     }
+                    if (!newerModExists)
+                    {
+                        E.info("Not being asked to recompile, and no mod files exist in " + modDirectory + "" + " which are newer than " + fileToCheck);
+                        return true;
+                    }
+                    else
+                    {
+                        E.info("Newer mod files exist! Will recompile.");
+                    }
                 }
-                if (!newerModExists)
-                {
-                    E.info("Not being asked to recompile, and no mod files exist in " + modDirectory + "" + " which are newer than " + fileToCheck);
-                    return true;
-                }
-                else
-                {
-                    E.info("Newer mod files exist! Will recompile.");
-                }
-            }
-            else
-            {
-                E.info("Forcing recompile...");
             }
 
             E.info("Trying to delete any previously created files: ");
