@@ -63,6 +63,7 @@ public class ProcessManager
         }
         else if (Utils.isLinuxBasedPlatform())
         {
+            options.add("/usr");
             options.add("/usr/local");
             options.add("/usr/local/nrn/x86_64");
         }
