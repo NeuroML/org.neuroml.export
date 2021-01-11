@@ -309,7 +309,7 @@ public class ProcessManager
             if (retVal == 0)
             {
                 /* Check if the necessary file was created to confirm compilation succeded */
-                File createdFile = null;
+                createdFile = null;
                 for (File f: filesToBeCreated)
                 {
                     E.info("Verifying mod file compilation: looking for file: " + f.getAbsolutePath());
