@@ -6,6 +6,7 @@
 /src/test/resources/examples/ShapedCell.cell.png
 /src/test/resources/examples/TwoCell.net.png
 /src/test/resources/examples/*.svg
+runclass.sh
 
 /src/test/resources/*.svg
 
