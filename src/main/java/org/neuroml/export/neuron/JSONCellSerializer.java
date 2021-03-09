@@ -52,7 +52,7 @@ import org.neuroml.model.util.NeuroMLException;
 import org.w3c.dom.Element;
 
 /**
- * @author Boris Marin & Padraig Gleeson
+ * @author Boris Marin, Padraig Gleeson
  *
  */
 public class JSONCellSerializer
