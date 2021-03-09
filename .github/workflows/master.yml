@@ -1,0 +1,48 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Build tests and javadoc generation
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 11.0.x, 11.0.3, 12, 13 ]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+        java-package: jdk
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install GH import
+      run: |
+        python -m pip install --upgrade pip
+        pip install ghp-import
+
+    - name: Test build
+      run: |
+        mvn install
+
+    - name: Build docs
+      run: |
+        mvn javadocs:javadocs
+
+    - name: Publish documentation on GH pages
+      run: |
+        ghp-import -f -m "Regenerate documentation" -b gh-pages -n -p target/site/apidocs
+
