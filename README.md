@@ -1,10 +1,10 @@
 Export from NeuroML & LEMS
 ==========================
 
-[![Travis CI](https://travis-ci.com/NeuroML/org.neuroml.model.export.svg?branch=master)](https://travis-ci.com/NeuroML/org.neuroml.model.export)
-[![GitHub](https://img.shields.io/github/license/NeuroML/org.neuroml.model.export)](https://github.com/NeuroML/org.neuroml.model.export/blob/master/LICENSE.lesser)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/org.neuroml.model.export)](https://github.com/NeuroML/org.neuroml.model.export/pulls)
-[![GitHub issues](https://img.shields.io/github/issues/NeuroML/org.neuroml.model.export)](https://github.com/NeuroML/org.neuroml.model.export/issues)
+[![Travis CI](https://travis-ci.com/NeuroML/org.neuroml.export.svg?branch=master)](https://travis-ci.com/NeuroML/org.neuroml.export)
+[![GitHub](https://img.shields.io/github/license/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/blob/master/LICENSE.lesser)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/issues)
 [![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social)](https://github.com/NeuroML)
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 
