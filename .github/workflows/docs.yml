@@ -39,6 +39,14 @@ jobs:
         ref: development
         path: NeuroML2
 
+    - name: Checkout org.lemsml
+      uses: actions/checkout@v2
+      with:
+        repository: LEMS/jLEMS
+        ref: development
+        path: jLEMS
+
+
     - name: Checkout org.neuroml.model.injectingplugin
       uses: actions/checkout@v2
       with:
@@ -46,12 +54,25 @@ jobs:
         ref: development
         path: org.neuroml.model.injectingplugin
 
+    - name: Checkout org.neuroml.model
+      uses: actions/checkout@v2
+      with:
+        repository: NeuroML/org.neuroml.model
+        ref: development
+        path: org.neuroml.model
+
     - name: Install NeuroML deps
       run: |
+        pushd jLEMS
+        mvn install
+        popd
         pushd NeuroML2
         mvn install
         popd
         pushd org.neuroml.model.injectingplugin
+        mvn install
+        popd
+        pushd org.neuroml.model
         mvn install
         popd
 
