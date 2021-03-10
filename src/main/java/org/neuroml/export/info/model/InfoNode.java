@@ -36,7 +36,6 @@ public class InfoNode
 
 	/**
 	 * @param properties
-	 * @return
 	 */
 	public void putAll(Map<String, Object> properties)
 	{
