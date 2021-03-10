@@ -40,7 +40,7 @@ public class ChannelMLHHExpression
 	}
 
 	/**
-	 * @param _expression
+	 * @param expression
 	 *            the _expression to set
 	 */
 	public void setExpression(IPlottableExpression expression)
