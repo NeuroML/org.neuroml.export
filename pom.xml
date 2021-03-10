@@ -45,7 +45,7 @@
                 <configuration>
                     <source>8</source>
                     <top>
-                            &lt;br /&gt;&emsp;Learn more about NeuroML at &lt;a href=&quot;neuroml.org&quot; target=&quot;_blank&quot;&gt;NeuroML.org&lt;/a&gt;
+                            &lt;br /&gt;&emsp;Learn more about NeuroML at &lt;a href=&quot;http://neuroml.org&quot; target=&quot;_blank&quot;&gt;NeuroML.org&lt;/a&gt;
                             &lt;br /&gt;
                             &lt;br /&gt;
                     </top>
