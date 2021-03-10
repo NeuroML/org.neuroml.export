@@ -19,8 +19,6 @@ and find the range of export formats currently supported with:
 
     jnml -help
         
-[![Build Status](https://travis-ci.com/NeuroML/org.neuroml.export.png)](https://travis-ci.com/NeuroML/org.neuroml.export)
-
 This code is distributed under the terms of the GNU Lesser General Public License.
 
 The API documentation can be found [here](http://neuroml.github.io/org.neuroml.export/)
