@@ -117,7 +117,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 				addComment(main, "GraphViz compliant export for:" + tgtNet.summary() + "\n");
 
-				main.append("digraph " + simCpt.getID() + " {\n");
+				main.append("digraph " + simCpt.getID().replaceAll("-", "_") + " {\n");
 				main.append("fontsize=10;\n\n");
 				if(rankdirLR) main.append("rankdir=\"LR\"\n");
 

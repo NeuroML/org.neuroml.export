@@ -6,6 +6,7 @@
 /src/test/resources/examples/ShapedCell.cell.png
 /src/test/resources/examples/TwoCell.net.png
 /src/test/resources/examples/*.svg
+runclass.sh
 
 /src/test/resources/*.svg
 
@@ -42,3 +43,4 @@ src/test/resources/examples/*nrn.py
 /libjhdf5.so
 /Test.gv
 /Test.png
+/src/test/resources/examples/report*.txt

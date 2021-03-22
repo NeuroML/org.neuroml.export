@@ -1,13 +1,13 @@
-dist: trusty
-sudo: false
+dist: xenial
 
 language: java
 
 jdk:
-  - openjdk7
+  - oraclejdk11
+  
   - openjdk8
-  - oraclejdk8
-  # - oraclejdk9
+  #- openjdk10 # Some non deterministic recurring error in jlems with jdk10...?
+  - openjdk11
 
 
 install:
@@ -37,6 +37,7 @@ install:
     - cd jLEMS
     - git checkout $main_repo_branch
     - mvn install
+    - mvn dependency:tree
     - cd ..
 
 

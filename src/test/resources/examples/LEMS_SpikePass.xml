@@ -1,0 +1,66 @@
+<Lems>
+    
+    <!-- 
+
+        This LEMS file has been automatically generated using PyNeuroML v0.5.7 (libNeuroML v0.2.53)
+
+     -->
+    
+    <!-- Specify which component to run -->
+    <Target component="Sim_SpikePass" reportFile="report.spike.txt"/>
+
+    <!-- Include core NeuroML2 ComponentType definitions -->
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+    <Include file="Soma_AllCML.cell.nml"/>
+    
+    
+    <iafRefCell id="iafRef" leakConductance="0.2nS" leakReversal="-53mV"
+                thresh="-55mV" reset="-70mV" C="3.2pF" refract="5ms"/>
+    
+    <pulseGenerator id="pulseGen0" delay="100ms" duration="300ms" amplitude="0.035nA"/>
+    
+    
+
+    <expTwoSynapse id="SimpleSynapse" gbase="0.2nS" erev="0mV"
+                   tauRise="1ms" tauDecay="2ms" >
+        <notes>A biexponential synapse.</notes>
+    </expTwoSynapse>
+    
+    <network id="net1" type="networkWithTemperature" temperature="32 degC">
+        <population id="iafRefPop" component="iafRef" size="2" />
+        <population id="somaCellPop" component="Soma_AllCML" size="2" />
+        
+        <synapticConnection from="iafRefPop[0]" to="somaCellPop[0]"
+			    synapse="SimpleSynapse"
+			    destination="synapses"/>
+        
+        <synapticConnection from="somaCellPop[0]" to="iafRefPop[0]"
+			    synapse="SimpleSynapse"
+			    destination="synapses"/>
+        
+        <explicitInput target="somaCellPop[0]" input="pulseGen0"
+		       destination="synapses"/>
+        
+        <explicitInput target="somaCellPop[1]" input="pulseGen0"
+		       destination="synapses"/>
+    </network>
+   
+    <Simulation id="Sim_SpikePass" length="500ms" step="0.025ms" target="net1" seed="12345">  <!-- Note seed: ensures same random numbers used every run -->
+        
+        <Display id="DispPop0" title="Membrane potentials 0" timeScale="1ms" xmin="-50.0" xmax="550.0" ymin="-90" ymax="50">
+            <Line id="iafRefPop[0]: v" quantity="iafRefPop[0]/v" scale="1mV" color="#d54f33" timeScale="1ms"/>
+            <Line id="iafRefPop[1]: v" quantity="iafRefPop[1]/v" scale="1mV" color="#0534e4" timeScale="1ms"/>
+        </Display>
+        
+        <Display id="DispPop1" title="Membrane potentials 1" timeScale="1ms" xmin="-50.0" xmax="550.0" ymin="-90" ymax="50">
+            <Line id="somaCellPop[0]: v" quantity="somaCellPop[0]/v" scale="1mV" color="#d54f33" timeScale="1ms"/>
+            <Line id="somaCellPop[1]: v" quantity="somaCellPop[1]/v" scale="1mV" color="#0534e4" timeScale="1ms"/>
+        </Display>
+        
+        
+    </Simulation>
+
+</Lems>
+
