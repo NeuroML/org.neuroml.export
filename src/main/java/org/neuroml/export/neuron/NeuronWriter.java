@@ -1349,7 +1349,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 if(ofComp.getTypeName().equals("OutputFile"))
                 {
-                    String outfileId = ofComp.getID().replaceAll(" ", "_");
+                    String outfileId = ofComp.getID().replaceAll("[\\s\\[\\]]", "_");
                     outfiles.put(outfileId, ofComp.getTextParam("fileName"));
                     if(columnsPre.get(outfileId) == null)
                     {
@@ -1378,7 +1378,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         if(colComp.getTypeName().equals("OutputColumn"))
                         {
-                            String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
+                            /* replace white spaces, [, ] to _ */
+                            String colId = colComp.getID().replaceAll("[\\s\\[\\]]", "_") + "_" + outfileId;
                             while(colIds.contains(colId))
                             {
                                 colId += "_";
@@ -1414,7 +1415,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 if(ofComp.getTypeName().equals("EventOutputFile"))
                 {
-                    String outfileId = ofComp.getID().replaceAll(" ", "_");
+                    String outfileId = ofComp.getID().replaceAll("[\\s\\[\\]]", "_");
                     outfiles.put(outfileId, ofComp.getTextParam("fileName"));
                     String eofFormat = ofComp.getTextParam("format");
                     if(columnsPre.get(outfileId) == null)
@@ -1460,7 +1461,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     {
                         if(colComp.getTypeName().equals("EventSelection"))
                         {
-                            String colId = colComp.getID().replaceAll(" ", "_") + "_" + outfileId;
+                            String colId = colComp.getID().replaceAll("[\\s\\[\\]]", "_") + "_" + outfileId;
                             while(colIds.contains(colId))
                             {
                                 colId += "_";
@@ -1724,7 +1725,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             String secName = parseInputSecName(explInput);
 //            inputName += "_" + popName + "_" + cellNum + "_" + secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
-            inputName += secName.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\.", "_");
+            inputName += secName.replaceAll("[\\s\\[\\]]", "_").replaceAll("\\.", "_");
 
             generateHocForInput(main, explInput, inputComp, inputName, i);
         }
