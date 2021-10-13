@@ -27,7 +27,7 @@ jobs:
         distribution: 'adopt'
     - name: Install org.neuroml.model.injectingplugin
       run: |
-        export main_repo_branch=${GITHUB_REF##*/}
+        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
         echo Using branch $main_repo_branch
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
@@ -36,7 +36,7 @@ jobs:
         cd ..
     - name: Install NeuroML2
       run: |
-        export main_repo_branch=${GITHUB_REF##*/}
+        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
         echo Using branch $main_repo_branch
         git clone https://github.com/NeuroML/NeuroML2.git
         cd NeuroML2
@@ -45,7 +45,7 @@ jobs:
         cd ..
     - name: Install jLEMS
       run: |
-        export main_repo_branch=${GITHUB_REF##*/}
+        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
         echo Using branch $main_repo_branch
         git clone https://github.com/LEMS/jLEMS.git
         cd jLEMS
@@ -54,7 +54,7 @@ jobs:
         cd ..
     - name: Install org.neuroml.model
       run: |
-        export main_repo_branch=${GITHUB_REF##*/}
+        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
         echo Using branch $main_repo_branch
         git clone https://github.com/NeuroML/org.neuroml.model.git
         cd org.neuroml.model
