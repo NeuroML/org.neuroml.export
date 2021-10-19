@@ -1,7 +1,7 @@
 Export from NeuroML & LEMS
 ==========================
 
-[![Travis CI](https://travis-ci.com/NeuroML/org.neuroml.export.svg?branch=master)](https://travis-ci.com/NeuroML/org.neuroml.export)
+[![Java CI with Maven](https://github.com/NeuroML/org.neuroml.export/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/org.neuroml.export/actions/workflows/ci.yml)
 [![GitHub](https://img.shields.io/github/license/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/blob/master/LICENSE.lesser)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/pulls)
 [![GitHub issues](https://img.shields.io/github/issues/NeuroML/org.neuroml.export)](https://github.com/NeuroML/org.neuroml.export/issues)
