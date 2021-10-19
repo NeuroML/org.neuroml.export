@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: ${{ matrix.Java }}
-        distribution: 'adopt'
+        distribution: 'temurin'
     - name: Install org.neuroml.model.injectingplugin
       run: |
         export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
