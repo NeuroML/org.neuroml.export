@@ -200,7 +200,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 procOutputError.start();
 
                 E.info("Have successfully executed command: " + commandToExecute);
-                E.info("with: " + Utils.sysEnvInfo("  "));
 
                 try
                 {
@@ -217,7 +216,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 catch(InterruptedException e)
                 {
-                    E.info("Problem executing Neuron " + e);
+                    E.error("Problem executing Neuron " + e);
+                    E.error("with: " + Utils.sysEnvInfo("  "));
                 }
             }
         }
