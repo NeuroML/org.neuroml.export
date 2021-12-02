@@ -25,42 +25,37 @@ jobs:
       with:
         java-version: ${{ matrix.Java }}
         distribution: 'temurin'
-    - name: Install org.neuroml.model.injectingplugin
+        
+    - name: Install all
       run: |
-        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
+        export main_repo_branch=${{env.main_repo_branch}}
+        if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
         echo Using branch $main_repo_branch
+        
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
         git checkout $main_repo_branch
         mvn install
         cd ..
-    - name: Install NeuroML2
-      run: |
-        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
-        echo Using branch $main_repo_branch
+        
         git clone https://github.com/NeuroML/NeuroML2.git
         cd NeuroML2
         git checkout $main_repo_branch
         mvn install
         cd ..
-    - name: Install jLEMS
-      run: |
-        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
-        echo Using branch $main_repo_branch
+
         git clone https://github.com/LEMS/jLEMS.git
         cd jLEMS
         git checkout $main_repo_branch
         mvn install
         cd ..
-    - name: Install org.neuroml.model
-      run: |
-        export main_repo_branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
-        echo Using branch $main_repo_branch
+
         git clone https://github.com/NeuroML/org.neuroml.model.git
         cd org.neuroml.model
         git checkout $main_repo_branch
         mvn install
         cd ..
+        
     - name: Test with Maven
       run: |
          pwd
