@@ -103,7 +103,7 @@ public class SEDMLWriter extends AXMLWriter
 
         if(modelFormat == Format.NEUROML2)
         {
-            startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:neuroml2", "source=" + inputFileName);
+            startEndElement(main, "model", "id=" + netId, "language=urn:sedml:language:lems", "source=" + inputFileName);
         }
         else if(modelFormat == Format.SBML)
         {
