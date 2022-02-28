@@ -12,12 +12,14 @@ on:
 jobs:
   build_and_test:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     strategy:
+      fail-fast: false
       matrix:
         java: [ '8', '11', '16', '17']
+        runs-on: [ubuntu-latest, macos-11, windows-2019 ]
 
-    name: Test on Java ${{ matrix.Java }}
+    name: Test on Java ${{ matrix.Java }} on ${{ matrix.runs-on }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK ${{ matrix.Java }}
@@ -25,19 +27,20 @@ jobs:
       with:
         java-version: ${{ matrix.Java }}
         distribution: 'temurin'
-        
-    - name: Install all
+
+    - name: Install and test (non Win)
+      if: ${{ matrix.runs-on != 'windows-2019' }}
       run: |
         export main_repo_branch=${{env.main_repo_branch}}
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
         echo Using branch $main_repo_branch
-        
+
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
         git checkout $main_repo_branch
         mvn install
         cd ..
-        
+
         git clone https://github.com/NeuroML/NeuroML2.git
         cd NeuroML2
         git checkout $main_repo_branch
@@ -55,13 +58,48 @@ jobs:
         git checkout $main_repo_branch
         mvn install
         cd ..
-        
-    - name: Test with Maven
-      run: |
-         pwd
-         mvn install
-    - name: Further tests
-      run: |
+
+        # Install this package and test with Maven
         pwd
-        ls -alt
+        mvn install
+        mvn dependency:tree
+
+    - name: Install and test (Win)
+      if: ${{ matrix.runs-on == 'windows-2019' }}
+      run: |
+        # Install org.neuroml.model.injectingplugin
+
+        $env:main_repo_branch=$env:GITHUB_REF_NAME
+        if ( $env:main_repo_branch -ne "master" -and $env:main_repo_branch -ne "development" -and $env:main_repo_branch -ne "experimental" -and $env:main_repo_branch -notlike '*osb*' ) { $env:main_repo_branch="development" }
+        echo "Using branch $env:main_repo_branch..."
+
+        git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
+        cd org.neuroml.model.injectingplugin
+        git checkout $env:main_repo_branch
+        mvn install
+        cd ..
+
+        # Install NeuroML2
+        echo Using branch $env:GITHUB_REF_NAME
+        git clone https://github.com/NeuroML/NeuroML2.git
+        cd NeuroML2
+        git checkout $env:main_repo_branch
+        mvn install
+        cd ..
+
+        git clone https://github.com/LEMS/jLEMS.git
+        cd jLEMS
+        git checkout $env:main_repo_branch
+        mvn install
+        cd ..
+
+        git clone https://github.com/NeuroML/org.neuroml.model.git
+        cd org.neuroml.model
+        git checkout $env:main_repo_branch
+        mvn install
+        cd ..
+
+        # Install this package and test with Maven
+        pwd
+        mvn install
         mvn dependency:tree
