@@ -48,6 +48,7 @@ public class EDENWriter extends ANeuroMLBaseWriter
 	public EDENWriter(Lems lems, File lemsFile, File outputFolder, String outputFileName) throws ModelFeatureSupportException, LEMSException, NeuroMLException
 	{
 		super(lems, Format.EDEN, outputFolder, outputFileName);
+		this.lemsFile = lemsFile;
 		initializeWriter();
 	}
 
