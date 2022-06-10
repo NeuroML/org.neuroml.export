@@ -81,7 +81,7 @@ public class ProcessManager
                 return new File(option);
             }
         }
-        
+
         String env = Utils.sysEnvInfo("  ");
 
         throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options
@@ -144,7 +144,7 @@ public class ProcessManager
 
                 File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
-                String shFriendlyPath = 
+                String shFriendlyPath =
                     modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
 
                 if (binExe.indexOf("mingw") > 0)
@@ -187,9 +187,14 @@ public class ProcessManager
                     filesToBeCreated.add(new File(filename2));
                     E.info("Name of file to be created: " + filename2);
                 }
-
+                
                 /* *.so */
                 filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.so";
+                filesToBeCreated.add(new File(filename1));
+                E.info("Name of file to be created: " + filename1);
+
+                /* *.so in .libs */
+                filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + ".libs" + System.getProperty("file.separator") + "libnrnmech.so";
                 filesToBeCreated.add(new File(filename1));
                 E.info("Name of file to be created: " + filename1);
 
