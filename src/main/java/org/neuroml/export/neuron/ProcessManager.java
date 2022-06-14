@@ -187,11 +187,19 @@ public class ProcessManager
                     filesToBeCreated.add(new File(filename2));
                     E.info("Name of file to be created: " + filename2);
                 }
-                
+
                 /* *.so */
                 filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + "libnrnmech.so";
                 filesToBeCreated.add(new File(filename1));
                 E.info("Name of file to be created: " + filename1);
+
+                // In case, e.g. a 32 bit JDK is used on a 64 bit system
+                filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.so";
+                /* Only add if it does not already exist: prevent duplication */
+                if (!filename1.equals(filename2)){
+                    filesToBeCreated.add(new File(filename2));
+                    E.info("Name of file to be created: " + filename2);
+                }
 
                 /* *.so in .libs */
                 filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + ".libs" + System.getProperty("file.separator") + "libnrnmech.so";
@@ -199,7 +207,7 @@ public class ProcessManager
                 E.info("Name of file to be created: " + filename1);
 
                 // In case, e.g. a 32 bit JDK is used on a 64 bit system
-                filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + "libnrnmech.so";
+                filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + ".libs" + System.getProperty("file.separator") + "libnrnmech.so";
                 /* Only add if it does not already exist: prevent duplication */
                 if (!filename1.equals(filename2)){
                     filesToBeCreated.add(new File(filename2));
