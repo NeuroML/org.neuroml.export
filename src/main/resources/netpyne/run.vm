@@ -140,12 +140,13 @@ class NetPyNESimulation():
 
           from netpyne.sim.save import saveData
 
-          saveData(filename=self.nml2_file_name.replace(".nml",""), include=["simConfig", "netParams", "net"])
+          json_filename=__file__.replace(".py","")
+          saveData(filename=json_filename, include=["simConfig", "netParams", "net"])
+          real_json_filename='%s_data.json'%json_filename
 
-          probable_filenames = [self.nml2_file_name.replace(".nml","")+"_data.json"] # may change in netpyne core...
-          print("Finished NetPyNE JSON")
+          print("Finished exoprting NetPyNE JSON to %s"%real_json_filename)
 
-          return probable_filenames
+          return real_json_filename
 
 
     def save_results(self):
