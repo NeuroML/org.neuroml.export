@@ -32,18 +32,18 @@ public class SBMLWriterTest extends TestCase
 
 	}/*
 	 * public void testGetMainScript2() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError, GenerationException {
-	 * 
+	 *
 	 * String exampleFilename = "/home/padraig/git/HindmarshRose1984/NeuroML2/Run_Regular_HindmarshRose.xml"; Lems lems = Utils.readLemsNeuroMLFile(new File(exampleFilename)).getLems();
 	 * generateSBMLAndTestScript(lems, "Run_Regular_HindmarshRose.xml");
-	 * 
+	 *
 	 * }
-	 * 
+	 *
 	 * public void testGetMainScript3() throws ContentError, ParseError, ParseException, BuildException, XMLException, IOException, SAXException, ConnectionError, RuntimeError {
-	 * 
+	 *
 	 * String exampleFilename = "LEMS_NML2_Ex0_IaF.xml"; Lems lems = AppTest.readLemsFileFromExamples(exampleFilename);
-	 * 
+	 *
 	 * generateSBMLAndTestScript(lems, exampleFilename);
-	 * 
+	 *
 	 * }
 	 */
 
@@ -52,10 +52,10 @@ public class SBMLWriterTest extends TestCase
 
 		SBMLWriter sbmlw = new SBMLWriter(lems, UtilsTest.getTempDir(), exampleFileName.replaceAll("xml", "sbml"));
 		List<File> outputFiles = sbmlw.convert();
-        
+
 		UtilsTest.checkConvertedFiles(outputFiles);
 
-		NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
+		//NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
 
 		File testSbmlFile = new File(UtilsTest.getTempDir(), exampleFileName.replaceAll("xml", "sh"));
 
