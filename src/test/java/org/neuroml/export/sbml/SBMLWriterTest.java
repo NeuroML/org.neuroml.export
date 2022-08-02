@@ -55,7 +55,7 @@ public class SBMLWriterTest extends TestCase
 
 		UtilsTest.checkConvertedFiles(outputFiles);
 
-		//NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
+		NeuroML2Validator.testValidity(outputFiles.get(0), LOCAL_SBML_SCHEMA);
 
 		File testSbmlFile = new File(UtilsTest.getTempDir(), exampleFileName.replaceAll("xml", "sh"));
 
