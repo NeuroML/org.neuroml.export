@@ -25,7 +25,7 @@ import org.neuroml.model.util.NeuroMLElements;
 import org.neuroml.model.util.NeuroMLException;
 
 /**
- * @author Boris Marin & Padraig Gleeson
+ * @author Boris Marin, Padraig Gleeson
  *
  */
 public class NRNUtils implements UnitConverter

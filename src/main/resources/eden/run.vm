@@ -1,0 +1,17 @@
+# Main EDEN script for: $name
+
+import eden_simulator
+import sys
+
+filename = '${main_lems_file}'
+print(
+    "Running a simulation of %s in EDEN v%s"
+    % (
+        filename,
+        eden_simulator.__version__ if hasattr(eden_simulator, "__version__") else "???",
+    )
+)
+
+results = eden_simulator.runEden(filename)
+
+print("Completed simulation in EDEN, saved results: %s"%(results.keys()))

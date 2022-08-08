@@ -12,170 +12,234 @@ import sys
 import time
 import datetime
 
-setup_start = time.time()
-#if ($report_file)
-report_file = open('$report_file','w')
-report_file.write('# Report of running simulation with NetPyNE v%s\n'%version)
-report_file.write('Simulator=NetPyNE\n')
-report_file.write('SimulatorVersion=%s\n'%version)
-report_file.write('SimulationFile=%s\n'%__file__)
-report_file.write('PythonVersion=%s\n'%sys.version.replace('\n',' '))
-report_file.write('NeuronVersion=%s\n'%h.nrnversion())
-report_file.write('NeuroMLExportVersion=$export_library_version\n')
-#end
+class NetPyNESimulation():
+
+    def __init__(self, tstop=$t_end, dt=$dt, seed=123456789, save_json=False):
+
+        self.setup_start = time.time()
+        #if ($report_file)
+
+        self.report_file = open('$report_file','w')
+        self.report_file.write('# Report of running simulation with NetPyNE v%s\n'%version)
+        self.report_file.write('Simulator=NetPyNE\n')
+        self.report_file.write('SimulatorVersion=%s\n'%version)
+        self.report_file.write('SimulationFile=%s\n'%__file__)
+        self.report_file.write('PythonVersion=%s\n'%sys.version.replace('\n',' '))
+        self.report_file.write('NeuronVersion=%s\n'%h.nrnversion())
+        self.report_file.write('NeuroMLExportVersion=$export_library_version\n')
+        self.report_file.close()
+        #end
 
 
-#[[###############################################################################]]#
-# NETWORK PARAMETERS
-#[[###############################################################################]]#
+        #[[###############################################################################]]#
+        # NETWORK PARAMETERS
+        #[[###############################################################################]]#
 
-nml2_file_name = '${main_network_file}'
+        self.nml2_file_name = '${main_network_file}'
 
-#[[###############################################################################]]#
-# SIMULATION PARAMETERS
-#[[###############################################################################]]#
+        #[[###############################################################################]]#
+        # SIMULATION PARAMETERS
+        #[[###############################################################################]]#
 
-simConfig = specs.SimConfig()   # object of class SimConfig to store the simulation configuration
+        self.simConfig = specs.SimConfig()   # object of class SimConfig to store the simulation configuration
 
-# Simulation parameters
-simConfig.duration = simConfig.tstop = $t_end # Duration of the simulation, in ms
-simConfig.dt = $dt # Internal integration timestep to use
+        # Simulation parameters
+        self.simConfig.duration = self.simConfig.tstop = tstop # Duration of the simulation, in ms
+        self.simConfig.dt = dt # Internal integration timestep to use
 
-# Seeds for randomizers (connectivity, input stimulation and cell locations)
-# Note: locations and connections should be fully specified by the structure of the NeuroML,
-# so seeds for conn & loc shouldn't affect networks structure/behaviour
-simConfig.seeds = {'conn': 0, 'stim': $seed, 'loc': 0} 
+        # Seeds for randomizers (connectivity, input stimulation and cell locations)
+        # Note: locations and connections should be fully specified by the structure of the NeuroML,
+        # so seeds for conn & loc shouldn't affect networks structure/behaviour
+        self.simConfig.seeds = {'conn': 0, 'stim': $seed, 'loc': 0}
 
-simConfig.createNEURONObj = 1  # create HOC objects when instantiating network
-simConfig.createPyStruct = 1  # create Python structure (simulator-independent) when instantiating network
-simConfig.verbose = False  # show detailed messages 
-#if ($temperature)
-simConfig.hParams['celsius'] = ($temperature - 273.15)
-#end
+        self.simConfig.createNEURONObj = 1  # create HOC objects when instantiating network
+        self.simConfig.createPyStruct = 1  # create Python structure (simulator-independent) when instantiating network
+        self.simConfig.verbose = False  # show detailed messages
+        #if ($temperature)
 
-# Recording 
-simConfig.recordCells = ['all']  
-simConfig.recordTraces = {}
-simConfig.saveCellSecs=False
-simConfig.saveCellConns=False
-simConfig.gatherOnlySimData=True 
+        self.simConfig.hParams['celsius'] = ($temperature - 273.15)
+        #end
 
-#foreach ($of in $output_file )
-# For saving to file: $of.file_name (ref: $of.name)
-#foreach ($oc in $of.output_columns )
-#if ($oc.name!="t")
-# Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
-#if ($oc.neuron_mechanism_name)
-simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['stim'] = '${oc.neuron_mechanism_name}'
-#end
-#end
-#end
+        # Recording
+        self.simConfig.recordCells = ['all']
+        self.simConfig.recordTraces = {}
+        self.simConfig.saveCellSecs=False
+        self.simConfig.saveCellConns=False
+        self.simConfig.gatherOnlySimData=True
 
-#end
+        #foreach ($of in $output_file )
+        # For saving to file: $of.file_name (ref: $of.name)
+        #foreach ($oc in $of.output_columns )
+        #if ($oc.name!="t")
 
+        # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; Neuron loc: ${oc.neuron_section_name}(${oc.neuron_fract_along}); value: $oc.variable ($oc.neuron_variable_name)
+        self.simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}'] = {'sec':'${oc.neuron_section_name}','loc':${oc.neuron_fract_along},'var':'$oc.neuron_variable_name','conds':{'pop':'$oc.population','cellLabel':$oc.population_index}}
+        #if ($oc.neuron_mechanism_name)
 
-simConfig.plotCells = ['all']
+        self.simConfig.recordTraces['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['stim'] = '${oc.neuron_mechanism_name}'
+        #end
+        #end
+        #end
 
+        #end
 
-simConfig.recordStim = True  # record spikes of cell stims
-simConfig.recordStep = simConfig.dt # Step size in ms to save data (eg. V traces, LFP, etc)
+        self.simConfig.plotCells = ['all']
 
+        self.simConfig.recordStim = True  # record spikes of cell stims
+        self.simConfig.recordStep = self.simConfig.dt # Step size in ms to save data (eg. V traces, LFP, etc)
 
+        # Analysis and plotting, see http://neurosimlab.org/netpyne/reference.html#analysis-related-functions
+        self.simConfig.analysis['plotRaster'] = False  # Plot raster
+        self.simConfig.analysis['plot2Dnet'] = False  # Plot 2D net cells and connections
+        self.simConfig.analysis['plotSpikeHist'] = False # plot spike histogram
+        self.simConfig.analysis['plotConn'] = False # plot network connectivity
+        self.simConfig.analysis['plotSpikePSD'] = False # plot 3d architecture
 
-# Analysis and plotting, see http://neurosimlab.org/netpyne/reference.html#analysis-related-functions
-simConfig.analysis['plotRaster'] = False  # Plot raster
-simConfig.analysis['plot2Dnet'] = False  # Plot 2D net cells and connections
-simConfig.analysis['plotSpikeHist'] = False # plot spike histogram
-simConfig.analysis['plotConn'] = False # plot network connectivity
-simConfig.analysis['plotSpikePSD'] = False # plot 3d architecture
-
-# Saving
-simConfig.filename = '${name}.txt'  # Set file output name
-simConfig.saveFileStep = simConfig.dt # step size in ms to save data to disk
-# simConfig.saveDat = True # save to dat file
-
-
-#[[###############################################################################]]#
-# IMPORT & RUN
-#[[###############################################################################]]#
-
-print("Running a NetPyNE based simulation for %sms (dt: %sms) at %s degC"%(simConfig.duration, simConfig.dt, simConfig.hParams['celsius']))
-
-setup_sim_start = time.time()
-gids = sim.importNeuroML2SimulateAnalyze(nml2_file_name,simConfig)
-
-sim_end = time.time()
-setup_sim_time = sim_end - setup_sim_start
-print("Finished NetPyNE simulation in %f seconds (%f mins)..."%(setup_sim_time, setup_sim_time/60.0))
+        # Saving
+        self.simConfig.filename = '${name}.txt'  # Set file output name
+        self.simConfig.saveFileStep = self.simConfig.dt # step size in ms to save data to disk
+        # self.simConfig.saveDat = True # save to dat file
+        self.simConfig.saveJson = save_json # save to json file
 
 
-#[[###############################################################################]]#
-#   Saving data (this ensures the data gets saved in the format/files 
-#   as specified in the LEMS <Simulation> element)
-#[[###############################################################################]]#
+    def run(self):
+
+        #[[###############################################################################]]#
+        # IMPORT & RUN
+        #[[###############################################################################]]#
+
+        print("Running a NetPyNE based simulation for %sms (dt: %sms) at %s degC"%(self.simConfig.duration, self.simConfig.dt, self.simConfig.hParams['celsius']))
+
+        self.setup_sim_start = time.time()
+        self.gids = sim.importNeuroML2SimulateAnalyze(self.nml2_file_name,self.simConfig)
+
+        self.sim_end = time.time()
+        self.setup_sim_time = self.sim_end - self.setup_sim_start
+        print("Finished NetPyNE simulation in %f seconds (%f mins)..."%(self.setup_sim_time, self.setup_sim_time/60.0))
+
+        try:
+            self.save_results()
+        except Exception as e:
+            print("Exception saving results of NetPyNE simulation: %s" % (e))
+            return
+
+    def generate_json_only(self):
+
+          #[[###############################################################################]]#
+          # GENERATE NETPYNE JSON REPRESENTATION OF NETWORK
+          #[[###############################################################################]]#
+
+          print("Generating NetPyNE JSON (and mod files)")
+
+          self.simConfig.saveJson = True # save to json file
+          from netpyne.conversion.neuromlFormat import importNeuroML2
+          self.gids = sim.importNeuroML2(self.nml2_file_name,
+                                         self.simConfig,
+                                         simulate=False,
+                                         analyze=False)
+
+          from netpyne.sim.save import saveData
+
+          json_filename=__file__.replace(".py","")
+          saveData(filename=json_filename, include=["simConfig", "netParams", "net"])
+          real_json_filename='%s_data.json'%json_filename
+
+          print("Finished exoprting NetPyNE JSON to %s"%real_json_filename)
+
+          return real_json_filename
 
 
-if sim.rank==0: 
-#foreach ($of in $output_file )
-    print("Saving traces to file: $of.file_name (ref: $of.name)")
+    def save_results(self):
 
- 
-#foreach ($oc in $of.output_columns )
-#if ($oc.name!="t")
-    # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-    col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['cell_%s'%gids['${oc.population}'][$oc.population_index]]
+        #[[###############################################################################]]#
+        #   Saving data (this ensures the data gets saved in the format/files
+        #   as specified in the LEMS <Simulation> element)
+        #[[###############################################################################]]#
 
-#else
-    # Column: $oc.name
-    col_${of.name}_$oc.name = [i*simConfig.dt for i in range(int(simConfig.duration/simConfig.dt))]
+        if sim.rank==0:
+        #foreach ($of in $output_file )
 
-#end
-#end
-    dat_file_$of.name = open('$of.file_name', 'w')
-    for i in range(len(col_${of.name}_t)):
-        dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
-    dat_file_${of.name}.close()
+            print("Saving traces to file: $of.file_name (ref: $of.name)")
 
-#end
+        #foreach ($oc in $of.output_columns )
+        #if ($oc.name!="t")
 
-#foreach ($of in $spike_file )
-    print("Saving spikes to file: $of.file_name (ref: $of.name)")
-    to_record = {}
-#foreach ($oc in $of.event_selections )
-    # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
-#if ($oc.segment_id)
-    assert $oc.segment_id==0 # Only able to record events at soma (seg_id = 0)
-#end
-    to_record[gids['${oc.population}'][$oc.population_index]] = $oc.event_selection_id
-#end
+            # Column: $oc.name: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+            col_${of.name}_$oc.name = sim.allSimData['${of.name}_${oc.population}_${oc.population_index}_${oc.segment_name}_${oc.variable}']['cell_%s'%self.gids['${oc.population}'][$oc.population_index]]
+        #else
 
-    spike_file_$of.name = open('$of.file_name', 'w')
-    to_record_keys = to_record.keys()
-    for t, id in zip(sim.allSimData['spkt'],sim.allSimData['spkid']):
-        if id in to_record_keys:
-#if ($of.spike_file_format=="ID_TIME")
-            spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
-#else
-            spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
-#end
-    spike_file_${of.name}.close()
+            # Column: $oc.name
+            col_${of.name}_$oc.name = [i*self.simConfig.dt for i in range(int(self.simConfig.duration/self.simConfig.dt))]
+        #end
+        #end
+
+            dat_file_$of.name = open('$of.file_name', 'w')
+            for i in range(len(col_${of.name}_t)):
+                dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
+            dat_file_${of.name}.close()
+
+        #end
+
+        #foreach ($of in $spike_file )
+
+            print("Saving spikes to file: $of.file_name (ref: $of.name)")
+            to_record = {}
+        #foreach ($oc in $of.event_selections )
+
+            # $oc.event_selection_id: Pop: $oc.population; cell: $oc.population_index; segment id: $oc.segment_id; segment name: $oc.segment_name; value: $oc.variable
+        #if ($oc.segment_id)
+
+            assert $oc.segment_id==0 # Only able to record events at soma (seg_id = 0)
+        #end
+
+            to_record[self.gids['${oc.population}'][$oc.population_index]] = $oc.event_selection_id
+        #end
+
+            spike_file_$of.name = open('$of.file_name', 'w')
+            to_record_keys = to_record.keys()
+            for t, id in zip(sim.allSimData['spkt'],sim.allSimData['spkid']):
+                if id in to_record_keys:
+        #if ($of.spike_file_format=="ID_TIME")
+
+                    spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
+        #else
+
+                    spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
+        #end
+
+            spike_file_${of.name}.close()
+
+        #end
+
+            save_end = time.time()
+            save_time = save_end - self.sim_end
+            print("Finished saving results in %f seconds"%(save_time))
 
 
-#end
+        #if ($report_file)
 
-    save_end = time.time()
-    save_time = save_end - sim_end
-    print("Finished saving results in %f seconds"%(save_time))
+            self.report_file = open('$report_file','a')
+            self.report_file.write('StartTime=%s\n'%datetime.datetime.fromtimestamp(self.setup_start).strftime('%Y-%m-%d %H:%M:%S'))
+            self.report_file.write('RealSetupAndSimulationTime=%s\n'%self.setup_sim_time)
+            self.report_file.write('SimulationSaveTime=%s\n'%save_time)
+            self.report_file.close()
+            print("Saving report of simulation to %s"%('$report_file'))
+        #end
 
+if __name__ == '__main__':
 
-#if ($report_file)    
-    report_file.write('StartTime=%s\n'%datetime.datetime.fromtimestamp(setup_start).strftime('%Y-%m-%d %H:%M:%S'))
-    report_file.write('RealSetupAndSimulationTime=%s\n'%setup_sim_time)
-    report_file.write('SimulationSaveTime=%s\n'%save_time)
-    report_file.close()
-    print("Saving report of simulation to %s"%('$report_file'))
-#end
+    save_json = '-json' in sys.argv
+    no_run = '-norun' in sys.argv
 
-if '-nogui' in sys.argv:
-    quit()
+    ns = NetPyNESimulation(tstop=$t_end, dt=$dt, seed=$seed, save_json=save_json)
+
+    if not no_run:
+      ns.run()
+    else:
+      if save_json:
+        fn = ns.generate_json_only()
+        print("Generated: %s"%fn)
+        quit()
+
+    if '-nogui' in sys.argv:
+        quit()

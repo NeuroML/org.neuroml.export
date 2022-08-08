@@ -52,7 +52,7 @@ import org.neuroml.model.util.NeuroMLException;
 import org.w3c.dom.Element;
 
 /**
- * @author Boris Marin & Padraig Gleeson
+ * @author Boris Marin,  Padraig Gleeson
  *
  */
 public class JSONCellSerializer
@@ -131,7 +131,7 @@ public class JSONCellSerializer
                         {
                             prox = seg.getProximal();
                             g.writeString(getPt3dString(prox));
-                        }                        
+                        }
                         else if (!segsHere.contains(parentSegment.getId()))
                         {
                             prox = seg.getProximal();
@@ -186,12 +186,12 @@ public class JSONCellSerializer
                             {
                                 // System.out.println("parent? SG "+sgPar.getId()+" ("+sgPar.getNeuroLexId()+", "+CellUtils.isUnbranchedNonOverlapping(sgPar)+"): "+sgVsSegId.get(sgPar));
                                 ArrayList<Integer> segsPar = sgVsSegId.get(sgPar);
-                                
+
                                 if( (fract != 0 && fract != 1) && segsPar.size()>1)
                                 {
                                     throw new NeuroMLException("Cannot yet handle fractionAlong being neither 0 or 1 (it's " + fract + " in seg " + firstSeg + ") when there are >1 segments in parent segmentGroup...");
                                 }
-                        
+
                                 if(CellUtils.isUnbranchedNonOverlapping(sgPar) && segsPar.contains(parentId))
                                 {
                                     if(fract == 1 && segsPar.get(segsPar.size() - 1) == parentId)
@@ -496,7 +496,7 @@ public class JSONCellSerializer
 
                 float valueErev = Utils.getMagnitudeInSI(cd.getErev()) * units.voltageFactor;
                 g.writeStringField("erev", NeuronWriter.formatDefault(valueErev));
-                
+
                 float valueVshift = Utils.getMagnitudeInSI(cd.getVShift()) * units.voltageFactor;
                 g.writeStringField("vShift", NeuronWriter.formatDefault(valueVshift));
 
@@ -633,7 +633,7 @@ public class JSONCellSerializer
 
                 float valueCondDens = Utils.getMagnitudeInSI(cdg.getCondDensity()) * units.condDensFactor;
                 g.writeStringField("condDens", NeuronWriter.formatDefault(valueCondDens));
-                
+
                 g.writeStringField("erev", "calculated_by_GHK2_equation");
 
                 g.writeEndObject();
