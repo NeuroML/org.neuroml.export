@@ -219,14 +219,17 @@ public class ProcessManager
                  */
                 if (Utils.isMacBasedPlatform())
                 {
-                    String filename = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename);
-                    filesToBeCreated.add(new File(filename));
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
 
-                    filename = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename);
-                    filesToBeCreated.add(new File(filename));
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
 
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.dylib";
+                    E.info("Name of file to be created: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
                 }
 
                 commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + "nrnivmodl";
