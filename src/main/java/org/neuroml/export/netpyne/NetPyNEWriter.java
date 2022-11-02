@@ -143,9 +143,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
 						if (json)
 						{
-								runAndOrJson.add(" -json");
+								runAndOrJson.add("-json");
 						};
-						if (!runNrn) {runAndOrJson.add(" -norun");};
+						if (!runNrn) {runAndOrJson.add("-norun");};
 
             if (np==1)
             {
@@ -175,7 +175,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 						String[] commandToExecuteArr = new String[ commandToExecute.size() ];
 						commandToExecute.toArray( commandToExecuteArr );
             Process currentProcess = rt.exec(commandToExecuteArr, null, this.getOutputFolder());
-            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
+            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NetPyNE Output >>");
             procOutputMain.start();
 
             ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
@@ -424,10 +424,10 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
         //lemsFiles.add(new File("../git/GoC_Varied_Inputs/Tests/single_cell/LEMS_sim_test_sim.xml"));
-		//lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
+		    //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
@@ -471,7 +471,12 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
             //pw.setRegenerateNeuroMLNet(true);
 
-            List<File> files = pw.generateAndRun(true, false, 1, false);
+						boolean nogui = true;
+						boolean runNrn = false;
+						int np = 1;
+						boolean json = true;
+
+            List<File> files = pw.generateAndRun(nogui, runNrn, np, json);
             for (File f : files)
             {
                 System.out.println("Have created: " + f.getAbsolutePath());
