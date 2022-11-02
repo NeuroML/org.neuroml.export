@@ -1496,13 +1496,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                                     NamingHelper nh0 = new NamingHelper(srcCell);
                                     srcSecName = String.format("a_%s[%s].%s", srcCellPop, srcCellNum, nh0.getNrnSectionName(srcCell.getMorphology().getSegment().get(0)));
 
-                                    if (srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().isEmpty())
+                                    if (getMembraneProperties(srcCell).getSpikeThresh().isEmpty())
                                     {
                                         threshold = 0;
                                     }
                                     else
                                     {
-                                        SpikeThresh st = srcCell.getBiophysicalProperties().getMembraneProperties().getSpikeThresh().get(0);
+                                        SpikeThresh st = getMembraneProperties(srcCell).getSpikeThresh().get(0);
                                         if (!st.getSegmentGroup().equals(NeuroMLElements.SEGMENT_GROUP_ALL))
                                         {
                                             throw new NeuroMLException("Cannot yet handle <spikeThresh> when it is not on segmentGroup all");
