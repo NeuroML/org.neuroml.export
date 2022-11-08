@@ -2298,7 +2298,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
             }
 
-            blockNeuron.append("\nRANGE gion                           ");
+            blockNeuron.append("\nRANGE gion");
+            blockNeuron.append("\nRANGE i__" + mechName + " : a copy of the variable for current which makes it easier to access from outside the mod file");
 
             if(condOption == null || condOption.equals(ChannelConductanceOption.FIXED_REVERSAL_POTENTIAL) || condOption.equals(ChannelConductanceOption.USE_NERNST))
             {
@@ -2347,6 +2348,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             blockAssigned.append(""+ion+"i (mM)\n");
             blockAssigned.append(""+ion+"o (mM)\n");
             blockAssigned.append("i"+ion+" (mA/cm2)\n");
+            blockAssigned.append("i__"+mechName+" (mA/cm2)\n");
             blockAssigned.append("diam (um)\n");
             blockAssigned.append("area (um2)\n");
 
@@ -2441,11 +2443,13 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             {
                 blockAssigned.append("e (mV)\n");
                 blockAssigned.append("i (mA/cm2)\n");
+                blockAssigned.append("i__"+mechName+" (mA/cm2)\n");
             }
             else
             {
                 blockAssigned.append("e" + species + " (mV)\n");
                 blockAssigned.append("i" + species + " (mA/cm2)\n");
+                blockAssigned.append("i__"+mechName+" (mA/cm2)\n");
             }
             blockAssigned.append("\n");
             if(hasCaDependency)
@@ -2491,6 +2495,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if(species == null || species.equals("non_specific"))
             {
                 blockBreakpoint.append("i = gion * (v - e)\n");
+                blockBreakpoint.append("i__" + mechName + " = i  : set this variable to the current also\n");
             }
             else
             {
@@ -2506,6 +2511,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     blockBreakpoint.append("i" + species + " = gion * ghk2(v, cai, cao)\n");
                 }
+                blockBreakpoint.append("i__" + mechName + " = i" + species + " : set this variable to the current also\n");
             }
         }
 //        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))

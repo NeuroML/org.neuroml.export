@@ -38,8 +38,8 @@ public class NRNUtils implements UnitConverter
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
     final static String V_COPY_PREFIX = "copy_";
-    
-    final static String[] NON_NRN_STATE_VARS 
+
+    final static String[] NON_NRN_STATE_VARS
         = new String[]{"weightFactor","isi","nextIsi","lastSpikeTime","nextSpikeTemp","nextSpike"};
 
     final static String caConc = "caConc";
@@ -82,7 +82,7 @@ public class NRNUtils implements UnitConverter
         + "        }else{\n"
         + "                efun = z/(exp(z) - 1)\n"
         + "        }\n" + "}\n";
-    
+
     static final String ghk2FunctionDefs = "\nFUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
                 "        LOCAL nu,f\n" +
                 "\n" +
@@ -170,7 +170,7 @@ public class NRNUtils implements UnitConverter
         + ""
         + ""
         + "\n";
-    
+
     static final String heavisideFunctionDefs = "\n: The Heaviside step function\nFUNCTION H(x) {\n"
         + "    \n"
         + "    if (x < 0) { H = 0 }\n"
@@ -203,15 +203,15 @@ public class NRNUtils implements UnitConverter
         return id + suffix;
     }
 
-    protected static String checkCommentLineLength(String comment) 
+    protected static String checkCommentLineLength(String comment)
     {
         int maxLength = 500;
-        if (comment.length()<=maxLength) 
+        if (comment.length()<=maxLength)
             return comment;
         else
             return comment.substring(0,maxLength-3)+"...";
     }
-    
+
     protected static String getStateVarName(String sv)
     {
         if (sv.equals(NRNUtils.NEURON_VOLTAGE))
@@ -228,11 +228,11 @@ public class NRNUtils implements UnitConverter
     {
         return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=").replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=").replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
     }
-    
+
     protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError, LEMSException
     {
         float threshold = 0;
-        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) ||
            comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
         {
             threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("thresh"), lems);
@@ -241,7 +241,7 @@ public class NRNUtils implements UnitConverter
         {
             if ( (comp.getComponentType().isOrExtends("EIF_cond_alpha_isfa_ista") || comp.getComponentType().isOrExtends("EIF_cond_exp_isfa_ista")))
             {
-                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 ) 
+                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 )
                 {
                     threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
                 }
@@ -431,7 +431,7 @@ public class NRNUtils implements UnitConverter
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
         return convertToNeuronUnits((float)dq.getDoubleValue(), dq.getDimension().getName());
     }
-    
+
     @Override
     public float convert(float siValue, String dimensionName) throws LEMSException
     {
@@ -443,7 +443,7 @@ public class NRNUtils implements UnitConverter
         BigDecimal factor = new BigDecimal(getNeuronUnitFactor(dimensionName));
         BigDecimal newValB = new BigDecimal(siVal+"");
         newValB = newValB.multiply(factor);
-        
+
         float newVal = newValB.floatValue();
         //System.out.println("f "+factor+" val "+siVal+"  new "+newVal+";  new "+newValB+"; dim "+dimensionName);
         return newVal;
@@ -566,7 +566,7 @@ public class NRNUtils implements UnitConverter
             return unit.replaceAll("\\)", "/ms)");
         }
     }
-    
+
     public static boolean isPlottingSavingSynVariables(Component simCpt, boolean nogui)
     {
         boolean ipssv = false;
@@ -626,13 +626,13 @@ public class NRNUtils implements UnitConverter
         }
         return ipssv;
     }
-    
-    
+
+
 	public static void main(String args[]) throws LEMSException
 	{
 		NRNUtils nu = new NRNUtils();
         float f = 2.5e-5f;
-        
+
         System.out.println("Converting "+f+" to "+nu.convert(f, "none"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "none"));
         System.out.println("Converting "+f+" to "+nu.convert(f, "voltage"));
@@ -640,7 +640,7 @@ public class NRNUtils implements UnitConverter
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "voltage"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "conductance"));
-        
+
 
 	}
 

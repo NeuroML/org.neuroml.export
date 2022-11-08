@@ -211,7 +211,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
                             {
                                 if (c.getID().equals(channelDensId))
                                 {
-                                    var = "i" + c.getStringValue("ion");
+                                    var = "i__" + c.getStringValue("ionChannel") + "_" + c.getStringValue("ionChannel");
                                 }
                             }
                         }
