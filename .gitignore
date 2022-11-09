@@ -44,3 +44,6 @@ src/test/resources/examples/*nrn.py
 /Test.gv
 /Test.png
 /src/test/resources/examples/report*.txt
+/.classpath
+/.project
+/.settings
