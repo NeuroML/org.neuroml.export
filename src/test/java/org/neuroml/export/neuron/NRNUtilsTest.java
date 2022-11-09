@@ -29,7 +29,7 @@ public class NRNUtilsTest extends TestCase {
         assertEquals(x, NRNUtils.convertToNeuronUnits(x, "none"));
 
 
-        List<String> nrnVals = Arrays.asList("1mV","1ms","1per_mV","1per_ms");
+        List<String> nrnVals = Arrays.asList("1mV","1ms","1per_mV","1per_ms","1uS","1um","1nA");
 
         for (String nrnVal : nrnVals) {
           float si = Utils.getMagnitudeInSI(nrnVal);

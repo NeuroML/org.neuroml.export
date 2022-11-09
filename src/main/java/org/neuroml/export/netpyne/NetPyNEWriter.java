@@ -472,9 +472,9 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             //pw.setRegenerateNeuroMLNet(true);
 
 						boolean nogui = true;
-						boolean runNrn = false;
+						boolean runNrn = true;
 						int np = 1;
-						boolean json = true;
+						boolean json = false;
 
             List<File> files = pw.generateAndRun(nogui, runNrn, np, json);
             for (File f : files)
