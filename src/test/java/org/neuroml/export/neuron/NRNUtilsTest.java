@@ -25,20 +25,18 @@ public class NRNUtilsTest extends TestCase {
 
     public void testUnits() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
-        float x= 1f;
-        assertEquals(x, NRNUtils.convertToNeuronUnits(x, "none"));
 
-
-        List<String> nrnVals = Arrays.asList("1mV","1ms","1per_mV","1per_ms","1uS","1um","1nA");
+        List<String> nrnVals = Arrays.asList("1", "1mV","1ms","1per_mV","1per_ms","1uS","1um","1nA","1S_per_cm2","1mA_per_cm2");
 
         for (String nrnVal : nrnVals) {
           float si = Utils.getMagnitudeInSI(nrnVal);
           String dim = Utils.getDimension(nrnVal).getName();
           float nrnSi = NRNUtils.convertToNeuronUnits(1, dim);
+          float exp = 1/si;
 
-          System.out.println("Checking "+nrnVal+" = "+si+" "+dim+" in SI; so 1 in SI = "+nrnSi+" "+NRNUtils.getNeuronUnit(dim));
+          System.out.println("Checking "+nrnVal+" = "+si+" "+dim+" in SI; so 1 in SI should be "+exp+", is "+nrnSi+" "+NRNUtils.getNeuronUnit(dim));
 
-          assertEquals(x/si, nrnSi, 0.0001);
+          assertEquals(exp, nrnSi, nrnSi*0.0001);
         }
 
 

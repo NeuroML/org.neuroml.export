@@ -604,7 +604,9 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     LemsCollection<ParamValue> pvs = popComp.getParamValues();
                     for(ParamValue pv : pvs)
                     {
-                        main.append(bIndent+"    h." + hocMechName + "." + pv.getName() + " = " + NRNUtils.convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName()) + "\n");
+                        main.append(bIndent+"    h." + hocMechName + "." + pv.getName()
+                                    + " = " + NRNUtils.convertToNeuronUnits((float) pv.getDoubleValue(), pv.getDimensionName())
+                                    + " # NRN unit is: "+NRNUtils.getNeuronUnit(pv.getDimensionName())+"\n");
                     }
 
                     if (!popComp.getComponentType().isOrExtends(NeuroMLElements.SPIKE_ARRAY) &&
@@ -2495,7 +2497,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if(species == null || species.equals("non_specific"))
             {
                 blockBreakpoint.append("i = gion * (v - e)\n");
-                blockBreakpoint.append("i__" + mechName + " = i  : set this variable to the current also\n");
+                blockBreakpoint.append("i__" + mechName + " = -1 * i  : set this variable to the current also\n");
             }
             else
             {
@@ -2511,7 +2513,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     blockBreakpoint.append("i" + species + " = gion * ghk2(v, cai, cao)\n");
                 }
-                blockBreakpoint.append("i__" + mechName + " = i" + species + " : set this variable to the current also\n");
+                blockBreakpoint.append("i__" + mechName + " =  -1 * i" + species + " : set this variable to the current also\n");
             }
         }
 //        else if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE))
