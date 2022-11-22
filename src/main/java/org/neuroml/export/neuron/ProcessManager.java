@@ -40,7 +40,7 @@ public class ProcessManager
         };
 
         /* If NEURON_HOME is defined, it gets priority */
-        if (nrnEnvVar != null)
+        if (nrnEnvVar != null && nrnEnvVar.length()>0)
         {
             options.add(nrnEnvVar);
         }
@@ -73,6 +73,7 @@ public class ProcessManager
         }
         else if (Utils.isLinuxBasedPlatform())
         {
+
             /* Check folders in PATH */
             for (String folder: System.getenv("PATH").split(";")) {
                 options.add(folder);
@@ -100,7 +101,7 @@ public class ProcessManager
 
         String env = Utils.sysEnvInfo("  ");
 
-        throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options
+        throw new NeuroMLException("Could not find NEURON home directory! Options tried here: " + options
             + "\nThe NEURON executable which is sought inside this directory is: " + nrnExe + ". \n\n"
             + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
             + " to the location of your NEURON installation (up to but not including bin), e.g.\n\n"
