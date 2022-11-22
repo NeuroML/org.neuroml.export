@@ -34,7 +34,9 @@ public class ProcessManager
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
         String[] knownVersions = new String[]
         {
-            "7.5", "7.4", "7.3", "7.2", "7.1", "6.2", "6.1", "6.0"
+            "8.2.1", "8.2.0", "8.1.0", "8.0.2", "8.0.1", "8.0.0",
+            "7.8.2", "7.8.1", "7.7.1", "7.6.7", "7.5", "7.4", "7.3", "7.2", "7.1",
+            "6.2", "6.1", "6.0"
         };
 
         if (nrnEnvVar != null)
