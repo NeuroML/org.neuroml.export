@@ -39,10 +39,12 @@ public class ProcessManager
             "6.2", "6.1", "6.0"
         };
 
+        /* If NEURON_HOME is defined, it gets priority */
         if (nrnEnvVar != null)
         {
             options.add(nrnEnvVar);
         }
+        /* If NEURON_HOME is not defined, check all the usual suspects */
         else if (Utils.isWindowsBasedPlatform())
         {
             for (String ver : knownVersions)
@@ -54,6 +56,12 @@ public class ProcessManager
         }
         else if (Utils.isMacBasedPlatform())
         {
+            /* Check folders in PATH */
+            for (String folder: System.getenv("PATH").split(";")) {
+                options.add(folder);
+            }
+
+            /* Other possible folders */
             for (String ver : knownVersions)
             {
                 options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
@@ -65,6 +73,12 @@ public class ProcessManager
         }
         else if (Utils.isLinuxBasedPlatform())
         {
+            /* Check folders in PATH */
+            for (String folder: System.getenv("PATH").split(";")) {
+                options.add(folder);
+            }
+
+            /* Other possible folders */
             options.add("/usr");
             options.add("/usr/local");
             options.add("/usr/local/nrn/x86_64");
