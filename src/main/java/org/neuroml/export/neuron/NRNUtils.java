@@ -362,7 +362,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return "(nA / um2)";
+            return "(mA / cm2)";
         }
         else if (dimensionName.equals("current_per_time"))
         {
@@ -370,7 +370,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
-            return "(uS / um2)";
+            return "(S / cm2)";
         }
         else if (dimensionName.equals("length"))
         {
@@ -490,7 +490,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return 1e-3f;
+            return 0.1f;
         }
         else if (dimensionName.equals("current_per_time"))
         {
@@ -498,7 +498,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
-            return 1e-6f;
+            return 1e-4f;
         }
         else if (dimensionName.equals("time"))
         {

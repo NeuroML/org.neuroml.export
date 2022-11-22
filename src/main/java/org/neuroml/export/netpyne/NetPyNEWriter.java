@@ -19,6 +19,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.lemsml.jlems.io.IOUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -217,7 +218,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         Target target = lems.getTarget();
         Component simCpt = target.getComponent();
 
-		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
+				addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
         String mainNetworkFile = null;
         String onlyNmlFile = null;
@@ -301,10 +302,18 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
                 context.internalPut("main_network_file", mainNetworkFile);
 
+								String reportFileOrig = (String) context.internalGet(DLemsKeywords.REPORT_FILE.get());
+								if (reportFileOrig!=null)
+								{
+									String reportFile = IOUtil.getCompleteReportFileName(reportFileOrig, "NetPyNE", null);
+									context.internalPut(DLemsKeywords.REPORT_FILE.get(), reportFile);
+								}
+
                 VelocityEngine ve = VelocityUtils.getVelocityEngine();
                 StringWriter sw1 = new StringWriter();
 
                 if (dlemsFile.getName().equals(mainDlemsFile)) {
+
                     ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.netpyneRunTemplateFile));
                     mainRunScript.append(sw1);
 
@@ -317,6 +326,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     addComment(script, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+
+
                     Component comp = lems.components.getByID(name);
                     //E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
@@ -425,7 +436,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../git/GoC_Varied_Inputs/Tests/single_cell/LEMS_sim_test_sim.xml"));
 		    //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
