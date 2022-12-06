@@ -159,7 +159,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             if (compileMods)
             {
-                E.info("Trying to compile mods in: " + this.getOutputFolder());
+                E.info("Trying to compile all the mods in: " + this.getOutputFolder());
 
                 boolean complied = ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
 
@@ -210,14 +210,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
                 procOutputError.start();
 
-                E.info("Have successfully executed command: " + commandToExecute);
+                E.info("Have successfully executed NEURON command: " + commandToExecute);
 
                 try
                 {
                     currentProcess.waitFor();
 
                     E.info("Exit value for running NEURON: " + currentProcess.exitValue());
-                    String err = "Error, exit value from running: ["+commandToExecute
+                    String err = "Error, exit value from running this command: ["+commandToExecute
                                 +"] in NEURON: "+currentProcess.exitValue()+"\n";
 
                     err += Utils.sysEnvInfo("  ");
