@@ -184,16 +184,26 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 String nrncmd = nogui ? "nrniv" : "nrngui";
                 String fullPath = new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
 
-                String commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd + " -python "
-                        + fullPath;
+                List<String> commandToExecute = new ArrayList<String>();
+
+
+                commandToExecute.add(neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + nrncmd);
+                commandToExecute.add("-python");
+                commandToExecute.add(fullPath);
+
 
                 if (nogui && !useNrnivForNoGui)
                 {
-                    commandToExecute = "python " + fullPath;
+                    commandToExecute.add("python");
+                    commandToExecute.add(fullPath);
                 }
 
                 Runtime rt = Runtime.getRuntime();
-                Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
+                //Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
+                String[] commandToExecuteArr = new String[ commandToExecute.size() ];
+    						commandToExecute.toArray( commandToExecuteArr );
+                Process currentProcess = rt.exec(commandToExecuteArr, null, this.getOutputFolder());
+
                 ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
                 procOutputMain.start();
 
@@ -207,8 +217,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     currentProcess.waitFor();
 
                     E.info("Exit value for running NEURON: " + currentProcess.exitValue());
-                    String err = "Error, exit value from running "+fullPath
-                                +" in NEURON: "+currentProcess.exitValue()+"\n";
+                    String err = "Error, exit value from running: ["+commandToExecute
+                                +"] in NEURON: "+currentProcess.exitValue()+"\n";
 
                     err += Utils.sysEnvInfo("  ");
                     if (currentProcess.exitValue()!=0)
