@@ -75,7 +75,7 @@ public class ProcessManager
         {
 
             /* Check folders in PATH */
-            for (String folder: System.getenv("PATH").split(";")) {
+            for (String folder: System.getenv("PATH").split(":")) {
                 options.add(folder);
             }
 
