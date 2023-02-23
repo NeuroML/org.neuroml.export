@@ -237,15 +237,19 @@ public class ProcessManager
                 if (Utils.isMacBasedPlatform())
                 {
                     filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename1);
+                    E.info("Name of file to be created 1: " + filename1);
                     filesToBeCreated.add(new File(filename1));
 
                     filename1 = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename1);
+                    E.info("Name of file to be created 2: " + filename1);
                     filesToBeCreated.add(new File(filename1));
 
                     filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.dylib";
-                    E.info("Name of file to be created: " + filename1);
+                    E.info("Name of file to be created 3: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
+
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + "arm64" + System.getProperty("file.separator") + "libnrnmech.dylib";
+                    E.info("Name of file to be created 4: " + filename1);
                     filesToBeCreated.add(new File(filename1));
                 }
 
@@ -365,8 +369,7 @@ public class ProcessManager
                 {
                     E.info("Compilation failed. Unable to find necessary file(s)." +
                             " Please note that Neuron checks every *.mod file in this file's parent directory\n" +
-                            "(" + modDirectory + ").\n" +
-                            "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" +
+                            "(" + modDirectory + ").\n\n" +
                             linMacWarn);
 
                     /* Print list of files we look for */
