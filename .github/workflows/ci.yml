@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         java: [ '8', '11', '16', '17', '19']
-        runs-on: [ubuntu-latest, macos-latest, windows-latest ]
+        runs-on: [ubuntu-latest, macos-latest, windows-2019 ]
 
     name: Test on Java ${{ matrix.Java }} on ${{ matrix.runs-on }}
     steps:
@@ -29,7 +29,7 @@ jobs:
         distribution: 'temurin'
 
     - name: Install and test (non Win)
-      if: ${{ matrix.runs-on != 'windows-latest' }}
+      if: ${{ matrix.runs-on != 'windows-2019' }}
       run: |
         export main_repo_branch=${{env.main_repo_branch}}
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
@@ -65,7 +65,7 @@ jobs:
         mvn dependency:tree
 
     - name: Install and test (Win)
-      if: ${{ matrix.runs-on == 'windows-latest' }}
+      if: ${{ matrix.runs-on == 'windows-2019' }}
       run: |
         # Install org.neuroml.model.injectingplugin
 
