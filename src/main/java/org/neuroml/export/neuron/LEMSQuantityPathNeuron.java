@@ -86,6 +86,10 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
 
     private static Exposure getExposure(Component c, String path) throws ContentError
     {
+        if (c == null)
+        {
+            throw (new ContentError("Component is null, remaining path is: " + path));
+        }
         try
         {
             Exposure e = c.getComponentType().getExposure(path);
