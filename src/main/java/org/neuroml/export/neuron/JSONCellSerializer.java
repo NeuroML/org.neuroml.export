@@ -300,72 +300,73 @@ public class JSONCellSerializer
             boolean foundAll = false;
             for(SegmentGroup grp : morph.getSegmentGroup())
             {
-                if(!grp.getId().equals("all"))    // I'll calculate this here...
+                if(grp.getId().equals("all"))    // I'll calculate this here...
                 {
-                    if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
-                    {
-                        g.writeStartObject();
-                        g.writeStringField("name", grp.getId());
+                    foundAll = true;
+                }
+                if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
+                {
+                    g.writeStartObject();
+                    g.writeStringField("name", grp.getId());
 
-                            if(!grp.getMember().isEmpty())
+                        if(!grp.getMember().isEmpty())
+                        {
+                            g.writeArrayFieldStart("segments");
+                            for(Member m : grp.getMember())
                             {
-                                g.writeArrayFieldStart("segments");
-                                for(Member m : grp.getMember())
-                                {
-                                    g.writeString(idsVsNames.get(m.getSegment()));
-                                }
-                                g.writeEndArray();
+                                g.writeString(idsVsNames.get(m.getSegment()));
                             }
-                            if(!grp.getInclude().isEmpty())
+                            g.writeEndArray();
+                        }
+                        if(!grp.getInclude().isEmpty())
+                        {
+                            g.writeArrayFieldStart("groups");
+                            for(org.neuroml.model.Include inc : grp.getInclude())
                             {
-                                g.writeArrayFieldStart("groups");
-                                for(org.neuroml.model.Include inc : grp.getInclude())
+                                boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                                if(!isSection)
                                 {
-                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                                    if(!isSection)
-                                    {
-                                        g.writeString(inc.getSegmentGroup());
-                                    }
+                                    g.writeString(inc.getSegmentGroup());
                                 }
-                                g.writeEndArray();
-                                g.writeArrayFieldStart("sections");
-                                for(org.neuroml.model.Include inc : grp.getInclude())
-                                {
-                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                                    if(isSection)
-                                    {
-                                        g.writeString(inc.getSegmentGroup());
-                                    }
-                                }
-                                g.writeEndArray();
                             }
-                            // System.out.println("+++ " +grp.getInhomogeneousParameter());
-                            // System.out.println("--  " +ChannelDensity.class.getSimpleName());
-                            if(!grp.getInhomogeneousParameter().isEmpty())
+                            g.writeEndArray();
+                            g.writeArrayFieldStart("sections");
+                            for(org.neuroml.model.Include inc : grp.getInclude())
                             {
-                                g.writeArrayFieldStart("inhomogeneousParameters");
-                                for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
+                                boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                                if(isSection)
                                 {
-                                    g.writeStartObject();
-                                    g.writeStringField("id", ih.getId());
-                                    g.writeStringField("variable", ih.getVariable());
-                                    inhomogeneousParametersVsVariables.put(ih.getId(), ih.getVariable());
-                                    g.writeStringField("metric", ih.getMetric().value());
-                                    if(ih.getProximal() != null)
-                                    {
-                                        g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
-                                    }
-                                    if(ih.getDistal() != null)
-                                    {
-                                        g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
-                                    }
-                                    g.writeEndObject();
+                                    g.writeString(inc.getSegmentGroup());
                                 }
-                                g.writeEndArray();
                             }
+                            g.writeEndArray();
+                        }
+                        // System.out.println("+++ " +grp.getInhomogeneousParameter());
+                        // System.out.println("--  " +ChannelDensity.class.getSimpleName());
+                        if(!grp.getInhomogeneousParameter().isEmpty())
+                        {
+                            g.writeArrayFieldStart("inhomogeneousParameters");
+                            for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
+                            {
+                                g.writeStartObject();
+                                g.writeStringField("id", ih.getId());
+                                g.writeStringField("variable", ih.getVariable());
+                                inhomogeneousParametersVsVariables.put(ih.getId(), ih.getVariable());
+                                g.writeStringField("metric", ih.getMetric().value());
+                                if(ih.getProximal() != null)
+                                {
+                                    g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
+                                }
+                                if(ih.getDistal() != null)
+                                {
+                                    g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
+                                }
+                                g.writeEndObject();
+                            }
+                            g.writeEndArray();
+                        }
 
-                        g.writeEndObject();
-                    }
+                    g.writeEndObject();
                 }
             }
             if(!foundAll)
