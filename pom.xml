@@ -4,7 +4,7 @@
     <groupId>org.neuroml.export</groupId>
     <artifactId>org.neuroml.export</artifactId>
     <packaging>bundle</packaging>
-    <version>1.9.1</version>
+    <version>1.9.0</version>
     <name>org.neuroml.export</name>
     <url>http://maven.apache.org</url>
 
