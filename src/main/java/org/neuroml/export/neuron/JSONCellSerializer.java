@@ -379,10 +379,19 @@ public class JSONCellSerializer
             g.writeStartObject();
             g.writeStringField("name", "all");
             g.writeArrayFieldStart("sections");
+
+            ArrayList<String> includedSections = new ArrayList<String>();
             for(Segment seg : morph.getSegment())
             {
                 String name = nh.getNrnSectionName(seg);
-                g.writeString(name);
+                if (includedSections.contains(name)) {
+                    continue;
+                }
+                else {
+                    System.out.println("Adding segment: " + name);
+                    g.writeString(name);
+                    includedSections.add(name);
+                }
             }
             g.writeEndArray();
             g.writeEndObject();
