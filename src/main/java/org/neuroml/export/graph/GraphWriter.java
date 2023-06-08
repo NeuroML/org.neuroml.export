@@ -119,6 +119,7 @@ public class GraphWriter extends ANeuroMLBaseWriter
 
 				main.append("digraph " + simCpt.getID().replaceAll("-", "_") + " {\n");
 				main.append("fontsize=10;\n\n");
+				main.append("overlap=false;\n\n");
 				if(rankdirLR) main.append("rankdir=\"LR\"\n");
 
 				net.append("    node [shape=" + netShape + "]; " + tgtNet.getID() + ";\n");
