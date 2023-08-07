@@ -298,15 +298,16 @@ public class JSONCellSerializer
 
             g.writeArrayFieldStart("groups");
             /* Convert all segment groups.
-             * Note that the "nrn_all" segment group/section list id is reserved.
-             * We use it to keep a list of all segments/sections
+             * Note that the "all" segment group/section list id is reserved.
+             * We use it to keep a list of all segments/sections.
+             * A validation step will check to see if the "all" group does have all segments, and throw an error if not.
              */
             for(SegmentGroup grp : morph.getSegmentGroup())
             {
-                /* Ask the user not to use nrn_all as a segment group id */
-                if(grp.getId().equals("nrn_all"))
+                /* Do not handle it here, we populate it with all segments later */
+                if(grp.getId().equals("all"))
                 {
-                    throw new NeuroMLException("A segment group named \"nrn_all\" was found. Please use another id for the segment group. The \"nrn_all\" group is reserved");
+                    continue;
                 }
                 if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
                 {
@@ -374,14 +375,23 @@ public class JSONCellSerializer
                 }
             }
 
-            /* Create the nrn_all section list that contains all sections */
+            /* Create the "all" section list that contains all sections */
             g.writeStartObject();
-            g.writeStringField("name", "nrn_all");
+            g.writeStringField("name", "all");
             g.writeArrayFieldStart("sections");
+
+            ArrayList<String> includedSections = new ArrayList<String>();
             for(Segment seg : morph.getSegment())
             {
                 String name = nh.getNrnSectionName(seg);
-                g.writeString(name);
+                if (includedSections.contains(name)) {
+                    continue;
+                }
+                else {
+                    System.out.println("Adding segment: " + name);
+                    g.writeString(name);
+                    includedSections.add(name);
+                }
             }
             g.writeEndArray();
             g.writeEndObject();
