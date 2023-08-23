@@ -228,7 +228,7 @@ public class SBMLWriter extends ANeuroMLXMLWriter
 					for(DerivedVariable dv : type.getDynamics().getDerivedVariables())
 					{
 						startElement(main, "assignmentRule", "variable=" + dv.getName());
-                        System.out.println(dv.getName()+" = "+dv.getFunc());
+                        //System.out.println(dv.getName()+" = "+dv.getFunc());
 						processMathML(main, dv.getParseTree());
 						endElement(main, "assignmentRule");
 					}

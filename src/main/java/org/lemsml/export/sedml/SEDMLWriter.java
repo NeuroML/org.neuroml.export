@@ -22,6 +22,7 @@ import org.neuroml.export.utils.Utils;
 import org.neuroml.export.utils.support.ModelFeature;
 import org.neuroml.model.util.NeuroMLException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
+import org.neuroml.export.sbml.SBMLWriter;
 
 public class SEDMLWriter extends AXMLWriter
 {
@@ -274,24 +275,31 @@ public class SEDMLWriter extends AXMLWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
 
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/SBMLShowcase/NeuroML2/LEMS_NML2_Ex9_FN.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRose.xml"));
 
 
         SEDMLWriter nw;
         for(File lemsFile : lemsFiles)
         {
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile.getAbsoluteFile()).getLems();
-            nw = new SEDMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sedml"), lemsFile.getName(), Format.SBML);
 
+            SBMLWriter sbmlw = new SBMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sbml"));
+            for(File genFile : sbmlw.convert())
+            {
+                System.out.println("Generated SBML: " + genFile.getAbsolutePath());
+            }
+
+            nw = new SEDMLWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", ".sedml"), lemsFile.getName(), Format.SBML);
             List<File> ff = nw.convert();
             for(File f : ff)
             {
-                System.out.println("Generated sed-ml: " + f.getCanonicalPath());
+                System.out.println("Generated SED-ML: " + f.getCanonicalPath());
             }
 
         }
