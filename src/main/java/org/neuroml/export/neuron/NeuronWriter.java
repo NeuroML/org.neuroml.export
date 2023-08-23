@@ -34,6 +34,7 @@ import org.lemsml.jlems.core.type.ParamValue;
 import org.lemsml.jlems.core.type.Property;
 import org.lemsml.jlems.core.type.Requirement;
 import org.lemsml.jlems.core.type.Target;
+import org.lemsml.jlems.core.type.Meta;
 import org.lemsml.jlems.core.type.dynamics.Case;
 import org.lemsml.jlems.core.type.dynamics.ConditionalDerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
@@ -329,7 +330,6 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
 
             Target target = lems.getTarget();
-
             Component simCpt = target.getComponent();
 
             String len = simCpt.getStringValue("length");
@@ -340,21 +340,49 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 len = "" + Float.parseFloat(len) * 1000;
             }
 
-            String dt = simCpt.getStringValue("step");
-            dt = dt.replaceAll("ms", "").trim();
-            if(dt.indexOf("s") > 0)
+            /* cvode usage:
+             * https://nrn.readthedocs.io/en/latest/hoc/simctrl/cvode.html
+             * - we do not currently support the local variable time step method
+             */
+            boolean nrn_cvode = false;
+            String dt = "";
+            /* defaults from NEURON */
+            String abs_tol = "1e-2";
+            String rel_tol = "0";
+            LemsCollection<Meta> metas = simCpt.metas;
+            for(Meta m : metas)
             {
-                dt = dt.replaceAll("s", "").trim();
-                dt = "" + Float.parseFloat(dt) * 1000;
+                HashMap<String, String> attributes = m.getAttributes();
+                if (attributes.getOrDefault("for", "").equals("neuron"))
+                {
+                    if (attributes.getOrDefault("method", "").equals("cvode"))
+                    {
+                        nrn_cvode = true;
+                        abs_tol = attributes.getOrDefault("abs_tolerance", abs_tol);
+                        rel_tol = attributes.getOrDefault("rel_tolerance", rel_tol);
+                        E.info("CVode with abs_tol="+abs_tol+" , rel_tol="+rel_tol+" selected for NEURON simulation");
+                    }
+                }
+
             }
 
+            if (nrn_cvode == false)
+            {
+                dt = simCpt.getStringValue("step");
+                dt = dt.replaceAll("ms", "").trim();
+                if(dt.indexOf("s") > 0)
+                {
+                    dt = dt.replaceAll("s", "").trim();
+                    dt = "" + Float.parseFloat(dt) * 1000;
+                }
+            }
 
             main.append("class NeuronSimulation():\n\n");
             int seed = DLemsWriter.DEFAULT_SEED;
             if (simCpt.hasStringValue("seed"))
                 seed = Integer.parseInt(simCpt.getStringValue("seed"));
 
-            main.append("    def __init__(self, tstop, dt, seed="+seed+"):\n\n");
+            main.append("    def __init__(self, tstop, dt, seed="+seed+", abs_tol="+abs_tol+", rel_tol="+rel_tol+"):\n\n");
 
 
             Component targetComp = simCpt.getRefComponents().get("target");
@@ -1306,8 +1334,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(toRec);
 
             main.append(bIndent+"h.tstop = tstop\n\n");
-            main.append(bIndent+"h.dt = dt\n\n");
-            main.append(bIndent+"h.steps_per_ms = 1/h.dt\n\n");
+            if (nrn_cvode == false) {
+                main.append(bIndent+"h.dt = dt\n\n");
+                main.append(bIndent+"h.steps_per_ms = 1/h.dt\n\n");
+            }
+            else {
+                main.append(bIndent+"cvode = h.CVode()\n");
+                main.append(bIndent+"cvode.active(1)\n");
+                main.append(bIndent+"cvode.atol(abs_tol)\n");
+                main.append(bIndent+"cvode.rtol(rel_tol)\n");
+            }
 
             if(!nogui)
             {
