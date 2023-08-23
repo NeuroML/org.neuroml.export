@@ -345,7 +345,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
              * - we do not currently support the local variable time step method
              */
             boolean nrn_cvode = false;
-            String dt = "";
+            String dt = "0.01";
             /* defaults from NEURON */
             String abs_tol = "1e-2";
             String rel_tol = "0";
