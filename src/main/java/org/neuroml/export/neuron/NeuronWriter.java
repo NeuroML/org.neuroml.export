@@ -382,7 +382,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             if (simCpt.hasStringValue("seed"))
                 seed = Integer.parseInt(simCpt.getStringValue("seed"));
 
-            main.append("    def __init__(self, tstop, dt, seed="+seed+", abs_tol="+abs_tol+", rel_tol="+rel_tol+"):\n\n");
+            main.append("    def __init__(self, tstop, dt=None, seed="+seed+", abs_tol=None, rel_tol=None):\n\n");
 
 
             Component targetComp = simCpt.getRefComponents().get("target");
@@ -390,6 +390,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(bIndent+"print(\"\\n    Starting simulation in NEURON of %sms generated from NeuroML2 model...\\n\"%tstop)\n\n");
             main.append(bIndent+"self.setup_start = time.time()\n");
             main.append(bIndent+"self.seed = seed\n");
+            main.append(bIndent+"self.abs_tol = abs_tol\n");
+            main.append(bIndent+"self.rel_tol = rel_tol\n");
 
             if (target.reportFile!=null)
             {
@@ -1334,16 +1336,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             main.append(toRec);
 
             main.append(bIndent+"h.tstop = tstop\n\n");
-            if (nrn_cvode == false) {
-                main.append(bIndent+"h.dt = dt\n\n");
-                main.append(bIndent+"h.steps_per_ms = 1/h.dt\n\n");
-            }
-            else {
-                main.append(bIndent+"cvode = h.CVode()\n");
-                main.append(bIndent+"cvode.active(1)\n");
-                main.append(bIndent+"cvode.atol(abs_tol)\n");
-                main.append(bIndent+"cvode.rtol(rel_tol)\n");
-            }
+            main.append(bIndent+"if self.abs_tol is not None and self.rel_tol is not None:\n");
+            main.append(bIndent+"    cvode = h.CVode()\n");
+            main.append(bIndent+"    cvode.active(1)\n");
+            main.append(bIndent+"    cvode.atol(self.abs_tol)\n");
+            main.append(bIndent+"    cvode.rtol(self.rel_tol)\n");
+            main.append(bIndent+"else:\n");
+            main.append(bIndent+"    h.dt = dt\n");
+            main.append(bIndent+"    h.steps_per_ms = 1/h.dt\n\n");
 
             if(!nogui)
             {
@@ -1607,7 +1607,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             main.append(bIndent+"self.initialized = True\n");
             main.append(bIndent+"sim_start = time.time()\n");
-            main.append(bIndent+"print(\"Running a simulation of %sms (dt = %sms; seed=%s)\" % (h.tstop, h.dt, self.seed))\n\n");
+
+            main.append(bIndent+"if self.abs_tol is not None and self.rel_tol is not None:\n");
+            main.append(bIndent+"    print(\"Running a simulation of %sms (cvode abs_tol = %sms, rel_tol = %sms; seed=%s)\" % (h.tstop, self.abs_tol, self.rel_tol, self.seed))\n");
+            main.append(bIndent+"else:\n");
+            main.append(bIndent+"    print(\"Running a simulation of %sms (dt = %sms; seed=%s)\" % (h.tstop, h.dt, self.seed))\n\n");
+
             main.append(bIndent+"try:\n");
             main.append(bIndent+"    h.run()\n");
             main.append(bIndent+"except Exception as e:\n");
@@ -1745,7 +1750,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             main.append("if __name__ == '__main__':\n\n");
 
-            main.append("    ns = NeuronSimulation(tstop="+len+", dt="+dt+", seed="+seed+")\n\n");
+            main.append("    ns = NeuronSimulation(tstop="+len+", dt="+dt+", seed="+seed+", abs_tol="+abs_tol+", rel_tol="+rel_tol+")\n\n");
 
             main.append("    ns.run()\n\n");
 
