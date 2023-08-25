@@ -347,8 +347,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             boolean nrn_cvode = false;
             String dt = "0.01";
             /* defaults from NEURON */
-            String abs_tol = "1e-2";
-            String rel_tol = "0";
+            String abs_tol = "None";
+            String rel_tol = "None";
             LemsCollection<Meta> metas = simCpt.metas;
             for(Meta m : metas)
             {
@@ -1386,7 +1386,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             columnsPre.get(timeRef).add(bIndent+"h(' objectvar v_" + timeRef + " ')");
             columnsPre.get(timeRef).add(bIndent+"h(' { v_" + timeRef + " = new Vector() } ')");
             columnsPre.get(timeRef).add(bIndent+"h(' { v_" + timeRef + ".record(&t) } ')");
-            columnsPre.get(timeRef).add(bIndent+"h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
+            columnsPre.get(timeRef).add(bIndent+"if self.abs_tol is None or self.rel_tol is None:\n");
+            columnsPre.get(timeRef).add(bIndent+"    h.v_" + timeRef + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
             columnsPost0.get(timeRef).add(bIndent+"py_v_" + timeRef + " = [ t/1000 for t in h.v_" + timeRef + ".to_python() ]  # Convert to Python list for speed...");
 
