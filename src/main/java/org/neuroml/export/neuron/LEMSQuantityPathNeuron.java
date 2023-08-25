@@ -427,7 +427,7 @@ public class LEMSQuantityPathNeuron extends LEMSQuantityPath
             ref = "=== Unable to determine reference: " + ex;
         }
 
-        ref += super.toString()
+        ref += "\n" + super.toString()
             + "\n    ** Neuron ref:    " + ref
             + "\n    popsOrComponents: " + popsOrComponents
             + "\n    targetComp:       " + targetComp
