@@ -1447,7 +1447,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             columnsPre.get(outfileId).add(bIndent+"h(' objectvar v_" + colId + " ')");
                             columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + " = new Vector() } ')");
                             columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + ".record(&" + lqp.getNeuronVariableReference() + ") } ')");
-                            columnsPre.get(outfileId).add(bIndent+"h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
+                            columnsPre.get(outfileId).add(bIndent+"if self.abs_tol is None or self.rel_tol is None:\n");
+                            columnsPre.get(outfileId).add(bIndent+"    h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
                             float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
                             String factor = (conv == 1) ? "" : " / " + conv;
