@@ -1277,6 +1277,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             processInputLists(main, targetComp);
             processExplicitInputs(main, targetComp);
 
+            E.info("Setting up recorders...");
             main.append(bIndent+"trec = h.Vector()\n");
             main.append(bIndent+"trec.record(h._ref_t)\n\n");
 
@@ -1439,28 +1440,43 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             String quantity = colComp.getStringValue("quantity");
                             String scale = "1";
 
-                            LEMSQuantityPathNeuron lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, hocRefsVsInputs, lems);
+                            LEMSQuantityPathNeuron lqp = null;
+                            try
+                            {
+                                lqp = new LEMSQuantityPathNeuron(quantity, scale, targetComp, compMechNamesHoc, popsOrComponents, compIdsVsCells, hocRefsVsInputs, lems);
 
-                            //System.out.println("lqp: "+lqp);
+                                //System.out.println("lqp: "+lqp);
 
-                            columnsPre.get(outfileId).add(bIndent+"# Column: " + lqp.getQuantity());
-                            columnsPre.get(outfileId).add(bIndent+"h(' objectvar v_" + colId + " ')");
-                            columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + " = new Vector() } ')");
-                            columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + ".record(&" + lqp.getNeuronVariableReference() + ") } ')");
-                            columnsPre.get(outfileId).add(bIndent+"if self.abs_tol is None or self.rel_tol is None:\n");
-                            columnsPre.get(outfileId).add(bIndent+"    h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
+                                columnsPre.get(outfileId).add(bIndent+"# Column: " + lqp.getQuantity());
+                                columnsPre.get(outfileId).add(bIndent+"h(' objectvar v_" + colId + " ')");
+                                columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + " = new Vector() } ')");
+                                columnsPre.get(outfileId).add(bIndent+"h(' { v_" + colId + ".record(&" + lqp.getNeuronVariableReference() + ") } ')");
+                                columnsPre.get(outfileId).add(bIndent+"if self.abs_tol is None or self.rel_tol is None:\n");
+                                columnsPre.get(outfileId).add(bIndent+"    h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
-                            float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
-                            String factor = (conv == 1) ? "" : " / " + conv;
+                                float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
+                                String factor = (conv == 1) ? "" : " / " + conv;
 
-                            columnsPost0.get(outfileId).add(bIndent+
-                                    "py_v_" + colId + " = [ float(x " + factor + ") for x in h.v_" + colId + ".to_python() ]  # Convert to Python list for speed, variable has dim: " + lqp.getDimension().getName());
+                                columnsPost0.get(outfileId).add(bIndent+
+                                        "py_v_" + colId + " = [ float(x " + factor + ") for x in h.v_" + colId + ".to_python() ]  # Convert to Python list for speed, variable has dim: " + lqp.getDimension().getName());
 
-                            /*columnsPostTraces.get(outfileId).add(
-                                    " + '%e\\t'%(py_v_" + colId + "[i]) ");*/
+                                /*columnsPostTraces.get(outfileId).add(
+                                        " + '%e\\t'%(py_v_" + colId + "[i]) ");*/
 
-                            columnsPostTraces.get(outfileId).add("%e\\t");
-                            writingVariables.get(outfileId).add("py_v_" + colId + "[i], ");
+                                columnsPostTraces.get(outfileId).add("%e\\t");
+                                writingVariables.get(outfileId).add("py_v_" + colId + "[i], ");
+                            }
+                            catch(NullPointerException e){
+                                String err = "Error processing outputfile quantity: " + quantity + "\n";
+                                try {
+                                    err += "Reference: " + lqp + "\n";
+                                    throw new ContentError(err + e);
+                                }
+                                catch(NullPointerException ex)
+                                {
+                                    throw new ContentError(err + ex);
+                                }
+                            }
 
                         }
                     }
