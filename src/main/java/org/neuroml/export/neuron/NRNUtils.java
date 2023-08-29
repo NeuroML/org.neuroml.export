@@ -51,6 +51,10 @@ public class NRNUtils implements UnitConverter
 
     static final int commentOffset = 40;
 
+    static final String LEN_UNIT = "um";
+    static final float LEN_CONVERSION = 1e6f;
+
+
     static final String generalUnits = "\n(nA) = (nanoamp)\n"
         + "(uA) = (microamp)\n"
         + "(mA) = (milliamp)\n"
@@ -374,15 +378,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("length"))
         {
-            return "(um)";
+            return "("+LEN_UNIT+")";
         }
         else if (dimensionName.equals("area"))
         {
-            return "(um2)";
+            return "("+LEN_UNIT+"2)";
         }
         else if (dimensionName.equals("volume"))
         {
-            return "(um3)";
+            return "("+LEN_UNIT+"3)";
         }
         else if (dimensionName.equals("resistivity"))
         {
@@ -506,15 +510,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("length"))
         {
-            return 1000000f;
+            return LEN_CONVERSION;
         }
         else if (dimensionName.equals("area"))
         {
-            return 1e12f;
+            return LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("volume"))
         {
-            return 1e18f;
+            return LEN_CONVERSION * LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("resistance"))
         {
