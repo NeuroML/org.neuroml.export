@@ -26,7 +26,7 @@ public class NRNUtilsTest extends TestCase {
     public void testUnits() throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException {
 
 
-        List<String> nrnVals = Arrays.asList("1", "1mV","1ms","1per_mV","1per_ms","1uS","1um","1um2","1um3","1nA","1S_per_cm2","1mA_per_cm2");
+        List<String> nrnVals = Arrays.asList("1", "1mV","1ms","1per_mV","1per_ms","1uS","1um","1um2","1um3","1nA","1S_per_cm2","1mA_per_cm2", "1nF");
 
         for (String nrnVal : nrnVals) {
           float si = Utils.getMagnitudeInSI(nrnVal);

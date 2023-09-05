@@ -1642,7 +1642,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             for(String f : refList)
             {
-                addComment(main, "######################   File to save: " + outfiles.get(f)+" ("+f+")",bIndent);
+                addComment(main, "######################   File to save: " + outfiles.get(f)+" ("+f+"). Note, saving in SI units",bIndent);
                 for(String col : columnsPost0.get(f))
                 {
                     main.append(col + "\n");
@@ -2681,7 +2681,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 if(sv.getName().equals(NRNUtils.NEURON_VOLTAGE))
                 {
 
-                    blockBreakpoint.append("\n" + NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " = " + NRNUtils.NEURON_VOLTAGE);
+                    ////////////blockBreakpoint.append("\n" + NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " = " + NRNUtils.NEURON_VOLTAGE);
 
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
                     {
@@ -3212,7 +3212,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     range = range + " ";
                 }
-                blockNeuron.append("\n"+range + ": exposure\n");
+                blockNeuron.append(range + ": exposure\n");
 
                 if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_SYNAPSE_COMP_TYPE) &&
                    exp.getName().equals(NeuroMLElements.POINT_CURR_CURRENT) &&
@@ -3263,10 +3263,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             }
         }
 
-        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
+        /*if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_COMP_TYPE))
         {
             blockNeuron.append("\nRANGE " + NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + "                            : copy of v on section\n");
-        }
+        }*/
 
     }
 
@@ -3307,11 +3307,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 {
                     blockNeuron.append("\n\nNONSPECIFIC_CURRENT i                   : To ensure v of section follows " + svName + "\n");
                     blockAssigned.append("v (mV)\n");
-                    blockAssigned.append("i (nA)  : point process current \n\n");
+                    blockAssigned.append("i (nA)                                 : the point process current \n\n");
+                    //blockAssigned.append("i (mA/cm2)  : point process current \n\n");
 
-                    blockAssigned.append(NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " (mV)\n\n");
+                    //blockAssigned.append(NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " (mV)\n\n");
 
-                    dim = "(nA)";
+                    dim = "(mV/ms)                             : for rate of change of voltage";
                 }
                 String bounds = "";
                 if (comp.getComponentType().isOrExtends(NeuroMLElements.KS_STATE_COMP_TYPE)) {
@@ -3328,7 +3329,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else
                 {
-                    blockState.append(svName +bounds + " "+ dim + " "+"\n");
+                    blockState.append(svName +bounds + " "+ dim + " : dimension: "+sv.getDimension().getName()+"\n");
                 }
             }
         }
@@ -3876,6 +3877,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
         lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/interneurons/WangBuzsaki1996/NeuroML2/LEMS_ComponentType/LEMS_WangBuzsaki.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/generic/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRoseNML.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs0.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
@@ -3886,11 +3888,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex15_CaDynamics.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../org.neuroml.export/src/test/resources/examples/LEMS_SpikePass2.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));
         //lemsFiles.add(new File("../git/TestHippocampalNetworks/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));*/
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
@@ -3933,7 +3935,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
-        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));

@@ -37,7 +37,7 @@ public class NRNUtils implements UnitConverter
     final static String V_CURRENT_SUFFIX = "_I";
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
-    final static String V_COPY_PREFIX = "copy_";
+    //final static String V_COPY_PREFIX = "copy_";
 
     final static String[] NON_NRN_STATE_VARS
         = new String[]{"weightFactor","isi","nextIsi","lastSpikeTime","nextSpikeTemp","nextSpike"};
@@ -62,6 +62,7 @@ public class NRNUtils implements UnitConverter
         + "(mV) = (millivolt)\n"
         + "(mS) = (millisiemens)\n"
         + "(uS) = (microsiemens)\n"
+        + "(nF) = (nanofarad)\n"
         + "(molar) = (1/liter)\n"
         + "(kHz) = (kilohertz)\n"
         + "(mM) = (millimolar)\n"
@@ -346,7 +347,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return "(microfarads)";
+            return "(nF)";
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -478,7 +479,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return 1e6f;
+            return 1e9f;
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -564,6 +565,10 @@ public class NRNUtils implements UnitConverter
         if (unit.equals(""))
         {
             return "(/ms)";
+        }
+        if (dimensionName.equals("voltage"))  // special case... for rate to calculate neuron voltage/current from abstract cell
+        {
+            return "(mV/ms)";
         }
         else
         {
