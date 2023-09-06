@@ -452,7 +452,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                             String locationStr = "("+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_X))
                                     +", "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Y))
-                                    +" + XXX, "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Z))+", 10)";
+                                    +" + HALF_LENGTH, "+Float.parseFloat(loc.getAttributeValue(NeuroMLElements.LOCATION_Z))+", DIAMETER)";
 
                             locations.put(Integer.parseInt(instance.getID()), location);
                             locationStrs.put(Integer.parseInt(instance.getID()), locationStr);
@@ -562,8 +562,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     String instName = popName + "[i]";
                     // main.append(instName + " = h.Section()\n");
                     double defaultRadius = 5;
-                    main.append(bIndent+"    h." + instName + ".L = " + defaultRadius * 2 + "\n");
-                    main.append(bIndent+"    h." + instName + "(0.5).diam = " + defaultRadius * 2 + "\n");
+                    double length = defaultRadius * 2;
+                    double diameter = defaultRadius * 2;
 
                     if(popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) ||
                        popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
@@ -572,6 +572,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
                         {
+                            //main.append(bIndent+"    #...\n");
+                            if (popComp.hasParam("length"))
+                            {
+                                length = popComp.getParamValue("length").getDoubleValue() * 1e6;
+                            }
+                            if (popComp.hasParam("diameter"))
+                            {
+                                diameter = popComp.getParamValue("diameter").getDoubleValue() * 1e6;
+                            }
+
                             if (popComp.hasParam("refract") && popComp.getParamValue("refract").getDoubleValue()==0)
                             {
                                 throw new NeuroMLException("Unfortunately the NEURON export for IaF cells cannot *YET* handle "
@@ -589,15 +599,18 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             capTotSI = popComp.getParamValue("cm").getDoubleValue() * 1e-9;
                         }
 
-                        double area = 4 * Math.PI * defaultRadius * defaultRadius;
+                        double area = Math.PI * length * diameter;
                         double specCapNeu = 10e13 * capTotSI / area;
-                        main.append(bIndent+"    h." + instName + "(0.5).cm = " + specCapNeu + "\n");
+                        main.append(bIndent+"    h." + instName + "(0.5).cm = " + specCapNeu + "   # Computed from area "+area+"\n");
                     }
                     else
                     {
                         // See https://github.com/NeuroML/org.neuroml.export/issues/60
                         main.append(bIndent+"    h." + instName + "(0.5).cm = 318.31\n");
                     }
+
+                    main.append(bIndent+"    h." + instName + ".L = " + length + "               # length to use for section in Neuron\n");
+                    main.append(bIndent+"    h." + instName + "(0.5).diam = " + diameter + "       # diameter to use for section in Neuron\n");
 
                     main.append(bIndent+"    h." + instName + ".push()\n");
                     main.append(bIndent+"    h(\" " + instName.replaceAll("\\[i\\]", "[%i]") + "  { " + mechName + "[%i] = new " + popComp.getID() + "(0.5) } \"%(i,i))\n\n");
@@ -649,8 +662,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     for (Integer cell_id: locationStrs.keySet()) {
                         main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dclear() } \")\n");
-                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("XXX","(5)")+" } \")\n");
-                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("XXX","(-5)")+" } \")\n");
+                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("HALF_LENGTH","("+length/2.+")").replace("DIAMETER","("+diameter+")")+" } \")\n");
+                        main.append(bIndent+"h(\" " + popName + "["+cell_id+"] { pt3dadd"+locationStrs.get(cell_id).replace("HALF_LENGTH","("+length/-2.+")").replace("DIAMETER","("+diameter+")")+" } \")\n");
                     }
                     main.append("\n");
 
@@ -1413,6 +1426,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             columnsPre.get(outfileId).add(bIndent+"h.v_" + colId + ".resize((h.tstop * h.steps_per_ms) + 1)");
 
                             float conv = NRNUtils.getNeuronUnitFactor(lqp.getDimension().getName());
+                            if (lqp.getDimension().getName().equals("conductanceDensity"))
+                            {
+                                conv = conv = NRNUtils.getNeuronUnitFactor("conductanceDensity_hoc");
+                            }
                             String factor = (conv == 1) ? "" : " / " + conv;
 
                             columnsPost0.get(outfileId).add(bIndent+
@@ -2373,12 +2390,12 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
             blockParameter.append(totalCaCurrent + " "+NRNUtils.getNeuronUnit("current")+"\n");
 
-            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = area   : "
+            ratesMethod.append(NeuroMLElements.CONC_MODEL_SURF_AREA + " = (1e-08)*(area)   : "
                                +NeuroMLElements.CONC_MODEL_SURF_AREA+" has units "+NRNUtils.getNeuronUnit("area")
                                +", area (built in to NEURON) is in um^2...\n\n");
 
-            ratesMethod.append(totalCaCurrent + " = -1 * (0.01) * i"+ion+" * " + NeuroMLElements.CONC_MODEL_SURF_AREA
-                    + " :   "+totalCaCurrent+" has units "+NRNUtils.getNeuronUnit("current")+" ; i"+ion+" (built in to NEURON) has units (mA/cm2)...\n\n");
+            ratesMethod.append(totalCaCurrent + " = (1e6) * (-1 * i"+ion+" * " + NeuroMLElements.CONC_MODEL_SURF_AREA
+                    + ") :   "+totalCaCurrent+" has units "+NRNUtils.getNeuronUnit("current")+" ; i"+ion+" (built in to NEURON) has units (mA/cm2)...\n\n");
 
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_CONC + "\n");
             blockNeuron.append("GLOBAL " + NeuroMLElements.CONC_MODEL_INIT_EXT_CONC + "\n");
@@ -3325,7 +3342,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else if(Arrays.asList(NRNUtils.NON_NRN_STATE_VARS).contains(sv.getName()))
                 {
-                    blockAssigned.append(svName +bounds + " "+ dim + "                    : Not a state variable as far as Neuron's concerned..."+"\n");
+                    blockAssigned.append(svName +bounds + " "+ dim + "                      : Not a state variable as far as Neuron's concerned..."+"\n");
                 }
                 else
                 {

@@ -51,8 +51,8 @@ public class NRNUtils implements UnitConverter
 
     static final int commentOffset = 40;
 
-    static final String LEN_UNIT = "um";
-    static final float LEN_CONVERSION = 1e6f;
+    static final String LEN_UNIT = "cm";
+    static final float LEN_CONVERSION = 1e2f;
 
 
     static final String generalUnits = "\n(nA) = (nanoamp)\n"
@@ -68,6 +68,7 @@ public class NRNUtils implements UnitConverter
         + "(mM) = (millimolar)\n"
         + "(um) = (micrometer)\n"
         + "(umol) = (micromole)\n"
+        + "(pC) = (picocoulomb)\n"
         + "(S) = (siemens)\n";
 
     static final String ghkUnits = ": bypass nrn default faraday const\n" + "FARADAY = 96485.3 (coulomb)\n" + "R = (k-mole) (joule/degC)\n";
@@ -367,13 +368,17 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return "(mA / cm2)";
+            return "(nA / cm2)";
         }
         else if (dimensionName.equals("current_per_time"))
         {
             return "(nA / ms)";
         }
         else if (dimensionName.equals("conductanceDensity"))
+        {
+            return "(uS / cm2)";
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
         {
             return "(S / cm2)";
         }
@@ -403,7 +408,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return "(C / umol)";
+            return "(pC / umol)";
         }
         else if (dimensionName.equals("temperature"))
         {
@@ -415,7 +420,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return "(mM m2 /A /s)";
+            return "(umol / cm / nA / ms)";
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
@@ -503,6 +508,10 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
+            return 1e2f;
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
+        {
             return 1e-4f;
         }
         else if (dimensionName.equals("time"))
@@ -535,7 +544,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return 1e-6f;
+            return 1e6f;
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
@@ -543,7 +552,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return 1f;
+            return 1e-8f;
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
