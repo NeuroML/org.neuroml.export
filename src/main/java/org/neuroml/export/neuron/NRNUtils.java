@@ -37,7 +37,7 @@ public class NRNUtils implements UnitConverter
     final static String V_CURRENT_SUFFIX = "_I";
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
-    final static String V_COPY_PREFIX = "copy_";
+    //final static String V_COPY_PREFIX = "copy_";
 
     final static String[] NON_NRN_STATE_VARS
         = new String[]{"weightFactor","isi","nextIsi","lastSpikeTime","nextSpikeTemp","nextSpike"};
@@ -51,6 +51,10 @@ public class NRNUtils implements UnitConverter
 
     static final int commentOffset = 40;
 
+    static final String LEN_UNIT = "cm";
+    static final float LEN_CONVERSION = 1e2f;
+
+
     static final String generalUnits = "\n(nA) = (nanoamp)\n"
         + "(uA) = (microamp)\n"
         + "(mA) = (milliamp)\n"
@@ -58,11 +62,13 @@ public class NRNUtils implements UnitConverter
         + "(mV) = (millivolt)\n"
         + "(mS) = (millisiemens)\n"
         + "(uS) = (microsiemens)\n"
+        + "(nF) = (nanofarad)\n"
         + "(molar) = (1/liter)\n"
         + "(kHz) = (kilohertz)\n"
         + "(mM) = (millimolar)\n"
         + "(um) = (micrometer)\n"
         + "(umol) = (micromole)\n"
+        + "(pC) = (picocoulomb)\n"
         + "(S) = (siemens)\n";
 
     static final String ghkUnits = ": bypass nrn default faraday const\n" + "FARADAY = 96485.3 (coulomb)\n" + "R = (k-mole) (joule/degC)\n";
@@ -342,7 +348,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return "(microfarads)";
+            return "(nF)";
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -362,7 +368,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return "(mA / cm2)";
+            return "(nA / cm2)";
         }
         else if (dimensionName.equals("current_per_time"))
         {
@@ -370,19 +376,23 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
+            return "(uS / cm2)";
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
+        {
             return "(S / cm2)";
         }
         else if (dimensionName.equals("length"))
         {
-            return "(um)";
+            return "("+LEN_UNIT+")";
         }
         else if (dimensionName.equals("area"))
         {
-            return "(um2)";
+            return "("+LEN_UNIT+"2)";
         }
         else if (dimensionName.equals("volume"))
         {
-            return "(um3)";
+            return "("+LEN_UNIT+"3)";
         }
         else if (dimensionName.equals("resistivity"))
         {
@@ -398,7 +408,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return "(C / umol)";
+            return "(pC / umol)";
         }
         else if (dimensionName.equals("temperature"))
         {
@@ -406,11 +416,11 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return "(millijoule / K / umol)";
+            return "(femtojoule / K / umol)";
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return "(mM m2 /A /s)";
+            return "(umol / cm / nA / ms)";
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
@@ -474,7 +484,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return 1e6f;
+            return 1e9f;
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -498,6 +508,10 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
+            return 1e2f;
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
+        {
             return 1e-4f;
         }
         else if (dimensionName.equals("time"))
@@ -506,15 +520,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("length"))
         {
-            return 1000000f;
+            return LEN_CONVERSION;
         }
         else if (dimensionName.equals("area"))
         {
-            return 1e12f;
+            return LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("volume"))
         {
-            return 1e18f;
+            return LEN_CONVERSION * LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("resistance"))
         {
@@ -530,15 +544,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return 1e-6f;
+            return 1e6f;
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return 0.001f;
+            return 1e9f;
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return 1f;
+            return 1e-8f;
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
@@ -560,6 +574,10 @@ public class NRNUtils implements UnitConverter
         if (unit.equals(""))
         {
             return "(/ms)";
+        }
+        if (dimensionName.equals("voltage"))  // special case... for rate to calculate neuron voltage/current from abstract cell
+        {
+            return "(mV/ms)";
         }
         else
         {
