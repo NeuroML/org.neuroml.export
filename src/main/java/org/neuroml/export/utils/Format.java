@@ -21,6 +21,7 @@ public enum Format
 	PYNN("PyNN", "py"),
 	NETPYNE("NETPYNE", "py"),
 	MOOSE("MOOSE", "py"),
+	EDEN("EDEN", "py"),
 	SVG("SVG", "svg"),
 	NINEML("NineML", "9ml"),
 	SPINEML("SpineML", "spineml"),
@@ -29,9 +30,9 @@ public enum Format
 	XINEML("Xineml", ""),
 	XPP("Xpp", "ode"),
 	PNG("PNG", "png"),
-	VERTEX("VERTEX", "m"),    
+	VERTEX("VERTEX", "m"),
 	JNEUROML("jNeuroML", "xml");
-	
+
 	private final String label;
 	private final String extension;
 
@@ -40,7 +41,7 @@ public enum Format
 		this.label = label;
 		this.extension = extension;
 	}
-	
+
 	public String getExtension()
 	{
         return extension;
@@ -50,13 +51,13 @@ public enum Format
 	{
 		return label;
 	}
-    
+
     @Override
     public String toString()
     {
         return label;
     }
-	
-	
+
+
 
 }

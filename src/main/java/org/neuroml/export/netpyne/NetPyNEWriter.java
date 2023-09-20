@@ -19,6 +19,7 @@ import org.lemsml.jlems.core.type.Component;
 import org.lemsml.jlems.core.type.Lems;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.io.util.FileUtil;
+import org.lemsml.jlems.io.IOUtil;
 import org.neuroml.export.base.ANeuroMLBaseWriter;
 import org.neuroml.export.exceptions.GenerationException;
 import org.neuroml.export.exceptions.ModelFeatureSupportException;
@@ -127,35 +128,55 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
     }
 
 
-    public List<File> generateAndRun(boolean nogui, boolean runNrn, int np) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
+    public List<File> generateAndRun(boolean nogui, boolean runNrn, int np, boolean json) throws LEMSException, GenerationException, NeuroMLException, IOException, ModelFeatureSupportException
     {
         List<File> files = convert();
         this.setNoGui(true);
 
-        if(runNrn)
+        if(runNrn || json)
         {
             E.info("Trying to compile mods in: " + this.getOutputFolder());
             ProcessManager.compileFileWithNeuron(this.getOutputFolder(), false);
 
 
-            String commandToExecute;
+						List<String> commandToExecute = new ArrayList<String>();
+						List<String> runAndOrJson = new ArrayList<String>();
+
+						if (json)
+						{
+								runAndOrJson.add("-json");
+						};
+						if (!runNrn) {runAndOrJson.add("-norun");};
+
             if (np==1)
             {
-                commandToExecute = "python "
-                    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
+                commandToExecute.add("python");
+                commandToExecute.add(new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath());
+								commandToExecute.addAll(runAndOrJson);
             }
             else
             {
                 File neuronHome = findNeuronHome();
-                commandToExecute = "mpiexec -np "+np+" "+ neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator")  +"nrniv -mpi "
-                    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath();
+
+		            commandToExecute.add("mpiexec");
+		            commandToExecute.add("-np");
+		            commandToExecute.add(Integer.toString(np));
+		            commandToExecute.add(neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator")  +"nrniv");
+								commandToExecute.add("-mpi");
+								commandToExecute.add(new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath());
+
+								commandToExecute.addAll(runAndOrJson);
+                //commandToExecute = "mpiexec -np "+np+" "+ neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator")  +"nrniv -mpi "
+                //    + new File(this.getOutputFolder(), this.getOutputFileName()).getCanonicalPath() + runAndOrJson;
             }
 
-            E.info("Going to execute command: " + commandToExecute);
+            E.info("Going to execute thee command: " + commandToExecute);
 
             Runtime rt = Runtime.getRuntime();
-            Process currentProcess = rt.exec(commandToExecute, null, this.getOutputFolder());
-            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NRN Output >>");
+						String[] commandToExecuteArr = new String[ commandToExecute.size() ];
+						commandToExecute.toArray( commandToExecuteArr );
+            Process currentProcess = rt.exec(commandToExecuteArr, null, this.getOutputFolder());
+            ProcessOutputWatcher procOutputMain = new ProcessOutputWatcher(currentProcess.getInputStream(), "NetPyNE Output >>");
             procOutputMain.start();
 
             ProcessOutputWatcher procOutputError = new ProcessOutputWatcher(currentProcess.getErrorStream(), "NRN Error  >>");
@@ -167,6 +188,10 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
             {
                 currentProcess.waitFor();
                 E.info("Exit value for running PyNEURON: " + currentProcess.exitValue());
+								if (currentProcess.exitValue()!=0)
+                {
+                    throw new GenerationException("Exit value for running PyNEURON for NetPyNE: " + currentProcess.exitValue());
+                }
             }
             catch(InterruptedException e)
             {
@@ -193,7 +218,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         Target target = lems.getTarget();
         Component simCpt = target.getComponent();
 
-		addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
+				addComment(mainRunScript, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
         String mainNetworkFile = null;
         String onlyNmlFile = null;
@@ -277,10 +302,18 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
                 context.internalPut("main_network_file", mainNetworkFile);
 
+								String reportFileOrig = (String) context.internalGet(DLemsKeywords.REPORT_FILE.get());
+								if (reportFileOrig!=null)
+								{
+									String reportFile = IOUtil.getCompleteReportFileName(reportFileOrig, "NetPyNE", null);
+									context.internalPut(DLemsKeywords.REPORT_FILE.get(), reportFile);
+								}
+
                 VelocityEngine ve = VelocityUtils.getVelocityEngine();
                 StringWriter sw1 = new StringWriter();
 
                 if (dlemsFile.getName().equals(mainDlemsFile)) {
+
                     ve.evaluate(context, sw1, "LOG", VelocityUtils.getTemplateAsReader(VelocityUtils.netpyneRunTemplateFile));
                     mainRunScript.append(sw1);
 
@@ -293,6 +326,8 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
                     addComment(script, format + " simulator compliant export for:\n\n" + lems.textSummary(false, false) + "\n\n" + Utils.getHeaderComment(format) + "\n");
 
                     String name = (String) context.internalGet(DLemsKeywords.NAME.get());
+
+
                     Component comp = lems.components.getByID(name);
                     //E.info("Component LEMS: " + comp.summary());
                     String suffix = null;
@@ -400,10 +435,11 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
-        lemsFiles.add(new File("../git/GoC_Varied_Inputs/Tests/single_cell/LEMS_sim_test_sim.xml")); 
-		//lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_Spikers.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HH_Simulation.xml"));
+        //lemsFiles.add(new File("../git/GoC_Varied_Inputs/Tests/single_cell/LEMS_sim_test_sim.xml"));
+		    //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/CA1_pyramidal_neuron/FergusonEtAl2014-CA1PyrCell/NeuroML2/LEMS_TwoCells.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex19a_GapJunctionInstances.xml"));
@@ -423,7 +459,7 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_TwoCell.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/cerebellar_granule_cell/GranuleCell/neuroConstruct/generatedNeuroML2/LEMS_GranuleCell.xml"));
-        lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
+      lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/Thalamocortical/NeuroML2/pythonScripts/netbuild/LEMS_Figure7AeLoSS.xml"));*/
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SimpleNet.xml"));
 
@@ -447,7 +483,12 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
 
             //pw.setRegenerateNeuroMLNet(true);
 
-            List<File> files = pw.generateAndRun(true, false, 1);
+						boolean nogui = true;
+						boolean runNrn = true;
+						int np = 1;
+						boolean json = false;
+
+            List<File> files = pw.generateAndRun(nogui, runNrn, np, json);
             for (File f : files)
             {
                 System.out.println("Have created: " + f.getAbsolutePath());

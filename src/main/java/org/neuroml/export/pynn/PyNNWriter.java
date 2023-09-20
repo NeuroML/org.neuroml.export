@@ -273,7 +273,7 @@ public class PyNNWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_Complex.xml"));
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_IClamps.xml"));
         lemsFiles.add(new File("../OpenCortex/examples/LEMS_Deterministic.xml"));
-        //lemsFiles.add(new File("../neuroConstruct/osb/showcase/PyNNShowcase/NeuroML2/LEMS_2007One.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/showcase/PyNNShowcase/NeuroML2/LEMS_2007One.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_SingleAP.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/muscle_model/NeuroML2/LEMS_MuscleStim.xml"));
 
@@ -282,8 +282,8 @@ public class PyNNWriter extends ANeuroMLBaseWriter
             Lems lems = Utils.readLemsNeuroMLFile(lemsFile).getLems();
             PyNNWriter pw = new PyNNWriter(lems, lemsFile.getParentFile(), lemsFile.getName().replaceAll(".xml", "_pynn.py"));
             boolean runNrn = true;
-            //List<File> files = pw.generateAndRun(false, runNrn);
-            List<File> files = pw.convert();
+            List<File> files = pw.generateAndRun(false, runNrn);
+            //List<File> files = pw.convert();
             for (File f : files)
             {
                 System.out.println("Have created: " + f.getAbsolutePath());

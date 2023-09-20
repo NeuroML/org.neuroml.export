@@ -34,13 +34,17 @@ public class ProcessManager
         String nrnEnvVar = System.getenv(NeuronWriter.NEURON_HOME_ENV_VAR);
         String[] knownVersions = new String[]
         {
-            "7.5", "7.4", "7.3", "7.2", "7.1", "6.2", "6.1", "6.0"
+            "8.2.1", "8.2.0", "8.1.0", "8.0.2", "8.0.1", "8.0.0",
+            "7.8.2", "7.8.1", "7.7.1", "7.6.7", "7.5", "7.4", "7.3", "7.2", "7.1",
+            "6.2", "6.1", "6.0"
         };
 
-        if (nrnEnvVar != null)
+        /* If NEURON_HOME is defined, it gets priority */
+        if (nrnEnvVar != null && nrnEnvVar.length()>0)
         {
             options.add(nrnEnvVar);
         }
+        /* If NEURON_HOME is not defined, check all the usual suspects */
         else if (Utils.isWindowsBasedPlatform())
         {
             for (String ver : knownVersions)
@@ -52,6 +56,12 @@ public class ProcessManager
         }
         else if (Utils.isMacBasedPlatform())
         {
+            /* Check folders in PATH */
+            for (String folder: System.getenv("PATH").split(";")) {
+                options.add(folder);
+            }
+
+            /* Other possible folders */
             for (String ver : knownVersions)
             {
                 options.add("/Applications/NEURON-" + ver + "/nrn/powerpc");
@@ -63,6 +73,13 @@ public class ProcessManager
         }
         else if (Utils.isLinuxBasedPlatform())
         {
+
+            /* Check folders in PATH */
+            for (String folder: System.getenv("PATH").split(":")) {
+                options.add(folder);
+            }
+
+            /* Other possible folders */
             options.add("/usr");
             options.add("/usr/local");
             options.add("/usr/local/nrn/x86_64");
@@ -81,10 +98,10 @@ public class ProcessManager
                 return new File(option);
             }
         }
-        
+
         String env = Utils.sysEnvInfo("  ");
 
-        throw new NeuroMLException("Could not find NEURON home directory! Options tried: " + options
+        throw new NeuroMLException("Could not find NEURON home directory! Options tried here: " + options
             + "\nThe NEURON executable which is sought inside this directory is: " + nrnExe + ". \n\n"
             + "Try setting the environment variable " + NeuronWriter.NEURON_HOME_ENV_VAR
             + " to the location of your NEURON installation (up to but not including bin), e.g.\n\n"
@@ -144,7 +161,7 @@ public class ProcessManager
 
                 File modCompileScript = Utils.copyFromJarToTempLocation("/neuron/mknrndll.sh");
 
-                String shFriendlyPath = 
+                String shFriendlyPath =
                     modCompileScript.getAbsolutePath().replaceAll("c:\\\\", "/cygdrive/c/").replaceAll("C:\\\\", "/cygdrive/c/").replaceAll("\\\\", "/");
 
                 if (binExe.indexOf("mingw") > 0)
@@ -201,19 +218,39 @@ public class ProcessManager
                     E.info("Name of file to be created: " + filename2);
                 }
 
+                /* *.so in .libs */
+                filename1 = directoryToExecuteIn + System.getProperty("file.separator") + myArch + System.getProperty("file.separator") + ".libs" + System.getProperty("file.separator") + "libnrnmech.so";
+                filesToBeCreated.add(new File(filename1));
+                E.info("Name of file to be created: " + filename1);
+
+                // In case, e.g. a 32 bit JDK is used on a 64 bit system
+                filename2 = directoryToExecuteIn + System.getProperty("file.separator") + backupArchDir + System.getProperty("file.separator") + ".libs" + System.getProperty("file.separator") + "libnrnmech.so";
+                /* Only add if it does not already exist: prevent duplication */
+                if (!filename1.equals(filename2)){
+                    filesToBeCreated.add(new File(filename2));
+                    E.info("Name of file to be created: " + filename2);
+                }
+
                 /**
                  * @todo Needs checking on Mac/powerpc/i686
                  */
                 if (Utils.isMacBasedPlatform())
                 {
-                    String filename = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename);
-                    filesToBeCreated.add(new File(filename));
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created 1: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
 
-                    filename = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
-                    E.info("Name of file to be created: " + filename);
-                    filesToBeCreated.add(new File(filename));
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + "umac" + System.getProperty("file.separator") + "libnrnmech.la";
+                    E.info("Name of file to be created 2: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
 
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + Utils.getArchSpecificDir() + System.getProperty("file.separator") + "libnrnmech.dylib";
+                    E.info("Name of file to be created 3: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
+
+                    filename1 = directoryToExecuteIn + System.getProperty("file.separator") + "arm64" + System.getProperty("file.separator") + "libnrnmech.dylib";
+                    E.info("Name of file to be created 4: " + filename1);
+                    filesToBeCreated.add(new File(filename1));
                 }
 
                 commandToExecute = neuronHome.getCanonicalPath() + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator") + "nrnivmodl";
@@ -332,8 +369,7 @@ public class ProcessManager
                 {
                     E.info("Compilation failed. Unable to find necessary file(s)." +
                             " Please note that Neuron checks every *.mod file in this file's parent directory\n" +
-                            "(" + modDirectory + ").\n" +
-                            "For more information when this error occurs, enable logging at Settings -> General Properties & Project Defaults -> Logging\n\n" +
+                            "(" + modDirectory + ").\n\n" +
                             linMacWarn);
 
                     /* Print list of files we look for */

@@ -37,9 +37,9 @@ public class NRNUtils implements UnitConverter
     final static String V_CURRENT_SUFFIX = "_I";
     final static String RATE_PREFIX = "rate_";
     final static String REGIME_PREFIX = "regime_";
-    final static String V_COPY_PREFIX = "copy_";
-    
-    final static String[] NON_NRN_STATE_VARS 
+    //final static String V_COPY_PREFIX = "copy_";
+
+    final static String[] NON_NRN_STATE_VARS
         = new String[]{"weightFactor","isi","nextIsi","lastSpikeTime","nextSpikeTemp","nextSpike"};
 
     final static String caConc = "caConc";
@@ -51,6 +51,10 @@ public class NRNUtils implements UnitConverter
 
     static final int commentOffset = 40;
 
+    static final String LEN_UNIT = "cm";
+    static final float LEN_CONVERSION = 1e2f;
+
+
     static final String generalUnits = "\n(nA) = (nanoamp)\n"
         + "(uA) = (microamp)\n"
         + "(mA) = (milliamp)\n"
@@ -58,11 +62,13 @@ public class NRNUtils implements UnitConverter
         + "(mV) = (millivolt)\n"
         + "(mS) = (millisiemens)\n"
         + "(uS) = (microsiemens)\n"
+        + "(nF) = (nanofarad)\n"
         + "(molar) = (1/liter)\n"
         + "(kHz) = (kilohertz)\n"
         + "(mM) = (millimolar)\n"
         + "(um) = (micrometer)\n"
         + "(umol) = (micromole)\n"
+        + "(pC) = (picocoulomb)\n"
         + "(S) = (siemens)\n";
 
     static final String ghkUnits = ": bypass nrn default faraday const\n" + "FARADAY = 96485.3 (coulomb)\n" + "R = (k-mole) (joule/degC)\n";
@@ -82,7 +88,7 @@ public class NRNUtils implements UnitConverter
         + "        }else{\n"
         + "                efun = z/(exp(z) - 1)\n"
         + "        }\n" + "}\n";
-    
+
     static final String ghk2FunctionDefs = "\nFUNCTION ghk2(v(mV), ci(mM), co(mM)) (mV) {\n" +
                 "        LOCAL nu,f\n" +
                 "\n" +
@@ -170,7 +176,7 @@ public class NRNUtils implements UnitConverter
         + ""
         + ""
         + "\n";
-    
+
     static final String heavisideFunctionDefs = "\n: The Heaviside step function\nFUNCTION H(x) {\n"
         + "    \n"
         + "    if (x < 0) { H = 0 }\n"
@@ -203,15 +209,15 @@ public class NRNUtils implements UnitConverter
         return id + suffix;
     }
 
-    protected static String checkCommentLineLength(String comment) 
+    protected static String checkCommentLineLength(String comment)
     {
         int maxLength = 500;
-        if (comment.length()<=maxLength) 
+        if (comment.length()<=maxLength)
             return comment;
         else
             return comment.substring(0,maxLength-3)+"...";
     }
-    
+
     protected static String getStateVarName(String sv)
     {
         if (sv.equals(NRNUtils.NEURON_VOLTAGE))
@@ -228,11 +234,11 @@ public class NRNUtils implements UnitConverter
     {
         return expr.replace("\\.gt\\.", ">").replace("\\.geq\\.", ">=").replace("\\.lt\\.", "<").replace("\\.leq\\.", "<=").replace("\\.and\\.", "&&").replace("\\.neq\\.", "!=");
     }
-    
+
     protected static float getThreshold(Component comp, Lems lems) throws ParseError, ContentError, LEMSException
     {
         float threshold = 0;
-        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) || 
+        if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CAP_CELL) ||
            comp.getComponentType().isOrExtends(NeuroMLElements.BASE_IAF_CELL))
         {
             threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("thresh"), lems);
@@ -241,7 +247,7 @@ public class NRNUtils implements UnitConverter
         {
             if ( (comp.getComponentType().isOrExtends("EIF_cond_alpha_isfa_ista") || comp.getComponentType().isOrExtends("EIF_cond_exp_isfa_ista")))
             {
-                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 ) 
+                if (NRNUtils.convertToNeuronUnits(comp.getStringValue("delta_T"), lems)==0 )
                 {
                     threshold = NRNUtils.convertToNeuronUnits(comp.getStringValue("v_thresh"), lems);
                 }
@@ -342,7 +348,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return "(microfarads)";
+            return "(nF)";
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -362,7 +368,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return "(nA / um2)";
+            return "(nA / cm2)";
         }
         else if (dimensionName.equals("current_per_time"))
         {
@@ -370,19 +376,23 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
-            return "(uS / um2)";
+            return "(uS / cm2)";
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
+        {
+            return "(S / cm2)";
         }
         else if (dimensionName.equals("length"))
         {
-            return "(um)";
+            return "("+LEN_UNIT+")";
         }
         else if (dimensionName.equals("area"))
         {
-            return "(um2)";
+            return "("+LEN_UNIT+"2)";
         }
         else if (dimensionName.equals("volume"))
         {
-            return "(um3)";
+            return "("+LEN_UNIT+"3)";
         }
         else if (dimensionName.equals("resistivity"))
         {
@@ -398,7 +408,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return "(C / umol)";
+            return "(pC / umol)";
         }
         else if (dimensionName.equals("temperature"))
         {
@@ -406,11 +416,11 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return "(millijoule / K / umol)";
+            return "(femtojoule / K / umol)";
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return "(mM m2 /A /s)";
+            return "(umol / cm / nA / ms)";
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
@@ -431,7 +441,7 @@ public class NRNUtils implements UnitConverter
         DimensionalQuantity dq = QuantityReader.parseValue(neuromlQuantity, lems.getUnits());
         return convertToNeuronUnits((float)dq.getDoubleValue(), dq.getDimension().getName());
     }
-    
+
     @Override
     public float convert(float siValue, String dimensionName) throws LEMSException
     {
@@ -443,7 +453,7 @@ public class NRNUtils implements UnitConverter
         BigDecimal factor = new BigDecimal(getNeuronUnitFactor(dimensionName));
         BigDecimal newValB = new BigDecimal(siVal+"");
         newValB = newValB.multiply(factor);
-        
+
         float newVal = newValB.floatValue();
         //System.out.println("f "+factor+" val "+siVal+"  new "+newVal+";  new "+newValB+"; dim "+dimensionName);
         return newVal;
@@ -474,7 +484,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("capacitance"))
         {
-            return 1e6f;
+            return 1e9f;
         }
         else if (dimensionName.equals("specificCapacitance"))
         {
@@ -490,7 +500,7 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("currentDensity"))
         {
-            return 1e-3f;
+            return 0.1f;
         }
         else if (dimensionName.equals("current_per_time"))
         {
@@ -498,7 +508,11 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("conductanceDensity"))
         {
-            return 1e-6f;
+            return 1e2f;
+        }
+        else if (dimensionName.equals("conductanceDensity_hoc"))
+        {
+            return 1e-4f;
         }
         else if (dimensionName.equals("time"))
         {
@@ -506,15 +520,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("length"))
         {
-            return 1000000f;
+            return LEN_CONVERSION;
         }
         else if (dimensionName.equals("area"))
         {
-            return 1e12f;
+            return LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("volume"))
         {
-            return 1e18f;
+            return LEN_CONVERSION * LEN_CONVERSION * LEN_CONVERSION;
         }
         else if (dimensionName.equals("resistance"))
         {
@@ -530,15 +544,15 @@ public class NRNUtils implements UnitConverter
         }
         else if (dimensionName.equals("charge_per_mole"))
         {
-            return 1e-6f;
+            return 1e6f;
         }
         else if (dimensionName.equals("idealGasConstantDims"))
         {
-            return 0.001f;
+            return 1e9f;
         }
         else if (dimensionName.equals("rho_factor"))
         {
-            return 1f;
+            return 1e-8f;
         }
         else if (dimensionName.equals("conductance_per_voltage"))
         {
@@ -561,12 +575,16 @@ public class NRNUtils implements UnitConverter
         {
             return "(/ms)";
         }
+        if (dimensionName.equals("voltage"))  // special case... for rate to calculate neuron voltage/current from abstract cell
+        {
+            return "(mV/ms)";
+        }
         else
         {
             return unit.replaceAll("\\)", "/ms)");
         }
     }
-    
+
     public static boolean isPlottingSavingSynVariables(Component simCpt, boolean nogui)
     {
         boolean ipssv = false;
@@ -626,13 +644,13 @@ public class NRNUtils implements UnitConverter
         }
         return ipssv;
     }
-    
-    
+
+
 	public static void main(String args[]) throws LEMSException
 	{
 		NRNUtils nu = new NRNUtils();
         float f = 2.5e-5f;
-        
+
         System.out.println("Converting "+f+" to "+nu.convert(f, "none"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "none"));
         System.out.println("Converting "+f+" to "+nu.convert(f, "voltage"));
@@ -640,7 +658,7 @@ public class NRNUtils implements UnitConverter
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "voltage"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "time"));
         System.out.println("Converting "+f+" to "+NRNUtils.convertToNeuronUnits(f, "conductance"));
-        
+
 
 	}
 

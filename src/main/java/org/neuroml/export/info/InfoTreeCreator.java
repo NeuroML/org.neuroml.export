@@ -133,11 +133,6 @@ public class InfoTreeCreator
 						cellProps.put("Specific capacitance on group " + sc.getSegmentGroup(), scProps);
 						scProps.put("Segment group", sc.getSegmentGroup());
 					}
-					else if(sc.getSegment() != null)
-					{
-						cellProps.put("Specific capacitance on segment " + sc.getSegment(), scProps);
-						scProps.put("Segment", sc.getSegment());
-					}
 					else
 					{
 						cellProps.put("Specific capacitance", scProps);
@@ -155,11 +150,6 @@ public class InfoTreeCreator
 					{
 						cellProps.put("Resistivity on group " + res.getSegmentGroup(), resProps);
 						resProps.put("Segment group", res.getSegmentGroup());
-					}
-					else if(res.getSegment() != null)
-					{
-						cellProps.put("Resistivity on segment " + res.getSegment(), resProps);
-						resProps.put("Segment", res.getSegment());
 					}
 					else
 					{

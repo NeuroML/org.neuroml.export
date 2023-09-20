@@ -297,91 +297,106 @@ public class JSONCellSerializer
             g.writeEndArray();
 
             g.writeArrayFieldStart("groups");
-            boolean foundAll = false;
+            /* Convert all segment groups.
+             * Note that the "all" segment group/section list id is reserved.
+             * We use it to keep a list of all segments/sections.
+             * A validation step will check to see if the "all" group does have all segments, and throw an error if not.
+             */
             for(SegmentGroup grp : morph.getSegmentGroup())
             {
-                if(!grp.getId().equals("all"))    // I'll calculate this here...
+                /* Do not handle it here, we populate it with all segments later */
+                if(grp.getId().equals("all"))
                 {
-                    if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
+                    continue;
+                }
+                if(!(foundNeuroLexFlags && CellUtils.isUnbranchedNonOverlapping(grp)))
+                {
+                    g.writeStartObject();
+                    g.writeStringField("name", grp.getId());
+
+                    if(!grp.getMember().isEmpty())
                     {
-                        g.writeStartObject();
-                        g.writeStringField("name", grp.getId());
-
-                            if(!grp.getMember().isEmpty())
-                            {
-                                g.writeArrayFieldStart("segments");
-                                for(Member m : grp.getMember())
-                                {
-                                    g.writeString(idsVsNames.get(m.getSegment()));
-                                }
-                                g.writeEndArray();
-                            }
-                            if(!grp.getInclude().isEmpty())
-                            {
-                                g.writeArrayFieldStart("groups");
-                                for(org.neuroml.model.Include inc : grp.getInclude())
-                                {
-                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                                    if(!isSection)
-                                    {
-                                        g.writeString(inc.getSegmentGroup());
-                                    }
-                                }
-                                g.writeEndArray();
-                                g.writeArrayFieldStart("sections");
-                                for(org.neuroml.model.Include inc : grp.getInclude())
-                                {
-                                    boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
-                                    if(isSection)
-                                    {
-                                        g.writeString(inc.getSegmentGroup());
-                                    }
-                                }
-                                g.writeEndArray();
-                            }
-                            // System.out.println("+++ " +grp.getInhomogeneousParameter());
-                            // System.out.println("--  " +ChannelDensity.class.getSimpleName());
-                            if(!grp.getInhomogeneousParameter().isEmpty())
-                            {
-                                g.writeArrayFieldStart("inhomogeneousParameters");
-                                for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
-                                {
-                                    g.writeStartObject();
-                                    g.writeStringField("id", ih.getId());
-                                    g.writeStringField("variable", ih.getVariable());
-                                    inhomogeneousParametersVsVariables.put(ih.getId(), ih.getVariable());
-                                    g.writeStringField("metric", ih.getMetric().value());
-                                    if(ih.getProximal() != null)
-                                    {
-                                        g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
-                                    }
-                                    if(ih.getDistal() != null)
-                                    {
-                                        g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
-                                    }
-                                    g.writeEndObject();
-                                }
-                                g.writeEndArray();
-                            }
-
-                        g.writeEndObject();
+                        g.writeArrayFieldStart("segments");
+                        for(Member m : grp.getMember())
+                        {
+                            g.writeString(idsVsNames.get(m.getSegment()));
+                        }
+                        g.writeEndArray();
                     }
-                }
-            }
-            if(!foundAll)
-            {
-                g.writeStartObject();
-                g.writeStringField("name", "all");
-                g.writeArrayFieldStart("sections");
-                for(Segment seg : morph.getSegment())
-                {
-                    String name = nh.getNrnSectionName(seg);
-                    g.writeString(name);
-                }
-                g.writeEndArray();
-                g.writeEndObject();
+                    if(!grp.getInclude().isEmpty())
+                    {
+                        g.writeArrayFieldStart("groups");
+                        for(org.neuroml.model.Include inc : grp.getInclude())
+                        {
+                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                            if(!isSection)
+                            {
+                                g.writeString(inc.getSegmentGroup());
+                            }
+                        }
+                        g.writeEndArray();
+                        g.writeArrayFieldStart("sections");
+                        for(org.neuroml.model.Include inc : grp.getInclude())
+                        {
+                            boolean isSection = CellUtils.isUnbranchedNonOverlapping(namesVsSegmentGroups.get(inc.getSegmentGroup()));
+                            if(isSection)
+                            {
+                                g.writeString(inc.getSegmentGroup());
+                            }
+                        }
+                        g.writeEndArray();
+                    }
+                    // System.out.println("+++ " +grp.getInhomogeneousParameter());
+                    // System.out.println("--  " +ChannelDensity.class.getSimpleName());
+                    if(!grp.getInhomogeneousParameter().isEmpty())
+                    {
+                        g.writeArrayFieldStart("inhomogeneousParameters");
+                        for(InhomogeneousParameter ih : grp.getInhomogeneousParameter())
+                        {
+                            g.writeStartObject();
+                            g.writeStringField("id", ih.getId());
+                            g.writeStringField("variable", ih.getVariable());
+                            inhomogeneousParametersVsVariables.put(ih.getId(), ih.getVariable());
+                            g.writeStringField("metric", ih.getMetric().value());
+                            if(ih.getProximal() != null)
+                            {
+                                g.writeStringField("proximalTranslationStart", ih.getProximal().getTranslationStart() + "");
+                            }
+                            if(ih.getDistal() != null)
+                            {
+                                g.writeStringField("distalNormalizationEnd", ih.getDistal().getNormalizationEnd() + "");
+                            }
+                            g.writeEndObject();
+                        }
+                        g.writeEndArray();
+                    }
 
+                    g.writeEndObject();
+                }
             }
+
+            /* Create the "all" section list that contains all sections */
+            g.writeStartObject();
+            g.writeStringField("name", "all");
+            g.writeArrayFieldStart("sections");
+
+            ArrayList<String> includedSections = new ArrayList<String>();
+            for(Segment seg : morph.getSegment())
+            {
+                String name = nh.getNrnSectionName(seg);
+                if (includedSections.contains(name)) {
+                    continue;
+                }
+                else {
+                    System.out.println("Adding segment: " + name);
+                    g.writeString(name);
+                    includedSections.add(name);
+                }
+            }
+            g.writeEndArray();
+            g.writeEndObject();
+
+            /* groups */
             g.writeEndArray();
 
             IntracellularProperties ip = null;
