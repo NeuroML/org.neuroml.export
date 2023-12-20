@@ -2128,7 +2128,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     }
-                    else if (channelDensity.getTypeName().equals("channelDensityNernst")){
+                    else if (channelDensity.getTypeName().equals("channelDensityNernst") || channelDensity.getTypeName().equals("channelDensityNonUniformNernst") ){
                         ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
                         writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     }
