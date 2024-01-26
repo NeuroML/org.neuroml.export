@@ -175,7 +175,7 @@ class NetPyNESimulation():
 
             dat_file_$of.name = open('$of.file_name', 'w')
             for i in range(len(col_${of.name}_t)):
-                dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%s\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
+                dat_file_${of.name}.write(#foreach ($oc in $of.output_columns ) '%r\t'%(col_${of.name}_${oc.name}[i]/${oc.neuron_variable_scale}) + #end '\n')
             dat_file_${of.name}.close()
 
         #end
@@ -201,10 +201,10 @@ class NetPyNESimulation():
                 if id in to_record_keys:
         #if ($of.spike_file_format=="ID_TIME")
 
-                    spike_file_${of.name}.write('%i\t%s\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
+                    spike_file_${of.name}.write('%i\t%r\n'%(to_record[id],t/1000.))   # format: $of.spike_file_format
         #else
 
-                    spike_file_${of.name}.write('%s\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
+                    spike_file_${of.name}.write('%r\t%i\n'%(t/1000.,to_record[id]))   # format: $of.spike_file_format
         #end
 
             spike_file_${of.name}.close()
