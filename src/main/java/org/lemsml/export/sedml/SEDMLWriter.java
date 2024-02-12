@@ -28,7 +28,7 @@ public class SEDMLWriter extends AXMLWriter
 {
 
     public static final int SEDML_LEVEL = 1;
-    public static final int SEDML_VERSION = 2;
+    public static final int SEDML_VERSION = 3;
     public static final String PREF_SEDML_SCHEMA = "https://raw.githubusercontent.com/SED-ML/sed-ml/master/schema/level"+SEDML_LEVEL+"/version"+SEDML_VERSION+"/sed-ml-L"+SEDML_LEVEL+"-V"+SEDML_VERSION+".xsd";
 
     public static final String GLOBAL_TIME_SBML = "t";
@@ -217,7 +217,7 @@ public class SEDMLWriter extends AXMLWriter
                 startElement(main, "report", "id=" + reportName);
                 startElement(main, "listOfDataSets");
                         
-                startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time");
+                startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time", "label=time");
 
                 for(Component ocComp : dispOrOutputComp.getAllChildren())
                 {
@@ -227,7 +227,7 @@ public class SEDMLWriter extends AXMLWriter
                         String ocid = ocComp.getID().replace(" ","_");
                         
                         String genId = OUTPUT_PREFIX + ofId + "_" + ocid;
-                        startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId);
+                        startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
                     }
                 }
                 endElement(main, "listOfDataSets");
