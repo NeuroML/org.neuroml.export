@@ -228,10 +228,14 @@ public class DLemsWriter extends ABaseWriter
         if (nrn_cvode == true)
         {
             g.writeStringField(DLemsKeywords.CVODE.get(), "true");
-            g.writeStringField(DLemsKeywords.ABS_TOL.get(), abs_tol);
-            g.writeStringField(DLemsKeywords.REL_TOL.get(), rel_tol);
-
         }
+        else
+        {
+            g.writeStringField(DLemsKeywords.CVODE.get(), "false");
+        }
+        /* set them to something even if not provided by user */
+        g.writeStringField(DLemsKeywords.ABS_TOL.get(), abs_tol);
+        g.writeStringField(DLemsKeywords.REL_TOL.get(), rel_tol);
 
         int seed = DEFAULT_SEED;
         if (simCpt.hasStringValue("seed"))

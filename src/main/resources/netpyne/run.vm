@@ -50,7 +50,7 @@ class NetPyNESimulation():
         # cvode
         if abs_tol is not None:
             self.simConfig.cvode_active = True
-            self.simConfig.cvode_atol = $abs_tol
+            self.simConfig.cvode_atol = abs_tol
         else:
             self.simConfig.cvode_active = False
 
