@@ -28,7 +28,7 @@ public class SEDMLWriter extends AXMLWriter
 {
 
     public static final int SEDML_LEVEL = 1;
-    public static final int SEDML_VERSION = 2;
+    public static final int SEDML_VERSION = 3;
     public static final String PREF_SEDML_SCHEMA = "https://raw.githubusercontent.com/SED-ML/sed-ml/master/schema/level"+SEDML_LEVEL+"/version"+SEDML_VERSION+"/sed-ml-L"+SEDML_LEVEL+"-V"+SEDML_VERSION+".xsd";
 
     public static final String GLOBAL_TIME_SBML = "t";
@@ -36,6 +36,9 @@ public class SEDMLWriter extends AXMLWriter
 
     private String inputFileName = "";
     private Format modelFormat;
+
+    private final String DISPLAY_PREFIX = "DISPLAY__";
+    private final String OUTPUT_PREFIX = "OUTPUT__";
 
     public SEDMLWriter(Lems lems, File outputFolder, String outputFileName, String inputFileName, Format modelFormat) throws ModelFeatureSupportException, NeuroMLException, LEMSException
     {
@@ -143,26 +146,30 @@ public class SEDMLWriter extends AXMLWriter
         endElement(main, "math");
         endElement(main, "dataGenerator");
 
-        for(Component dispComp : simCpt.getAllChildren())
+        for(Component dispOrOutputComp : simCpt.getAllChildren())
         {
-            if(dispComp.getTypeName().equals("Display"))
+            if(dispOrOutputComp.getTypeName().equals("Display") || dispOrOutputComp.getTypeName().equals("OutputFile"))
             {
-                String dispId = dispComp.getID().replace(" ","_");
+                String id = dispOrOutputComp.getID().replace(" ","_");
 
-                for(Component lineComp : dispComp.getAllChildren())
+                for(Component lineOrColumnComp : dispOrOutputComp.getAllChildren())
                 {
-                    if(lineComp.getTypeName().equals("Line"))
+                    if(lineOrColumnComp.getTypeName().equals("Line") || lineOrColumnComp.getTypeName().equals("OutputColumn"))
                     {
-                        // trace=StateMonitor(hhpop,'v',record=[0])
-
-                        String quantity = lineComp.getStringValue("quantity");
+                        String quantity = lineOrColumnComp.getStringValue("quantity");
                         LEMSQuantityPath lqp = new LEMSQuantityPath(quantity);
                         String pop = lqp.getPopulation();
                         String num = lqp.getPopulationIndex() + "";
                         String segid = lqp.getSegmentId()==0 ? "" : ("_"+lqp.getSegmentId());
                         String var = lqp.getVariable();
 
-                        String genId = dispId + "_" + lineComp.getID().replace(" ","_");
+                        String prefix = DISPLAY_PREFIX;
+                        if (lineOrColumnComp.getTypeName().equals("OutputColumn"))
+                        {
+                            prefix = OUTPUT_PREFIX;
+                        }
+
+                        String genId = prefix + id + "_" + lineOrColumnComp.getID().replace(" ","_");
                         String varFull = pop + "_" + num+segid + "_" + var;
 
                         startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
@@ -200,16 +207,41 @@ public class SEDMLWriter extends AXMLWriter
 
         startElement(main, "listOfOutputs");
 
-        for(Component dispComp : simCpt.getAllChildren())
+        for(Component dispOrOutputComp : simCpt.getAllChildren())
         {
-            if(dispComp.getTypeName().equals("Display"))
+            if(dispOrOutputComp.getTypeName().equals("OutputFile"))
             {
-                String dispId = dispComp.getID().replace(" ","_");
+                String reportName = dispOrOutputComp.getStringValue("fileName").replace(".dat","");
+                String ofId = dispOrOutputComp.getID().replace(" ","_");
+                
+                startElement(main, "report", "id=" + reportName);
+                startElement(main, "listOfDataSets");
+                        
+                startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time", "label=time");
+
+                for(Component ocComp : dispOrOutputComp.getAllChildren())
+                {
+                    if(ocComp.getTypeName().equals("OutputColumn"))
+                    {
+                        // <dataSet id="d1" name="time" dataReference="time"/>
+                        String ocid = ocComp.getID().replace(" ","_");
+                        
+                        String genId = OUTPUT_PREFIX + ofId + "_" + ocid;
+                        startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
+                    }
+                }
+                endElement(main, "listOfDataSets");
+
+                endElement(main, "report");
+            }
+            if(dispOrOutputComp.getTypeName().equals("Display"))
+            {
+                String dispId = dispOrOutputComp.getID().replace(" ","_");
 
                 startElement(main, "plot2D", "id=" + dispId);
                 startElement(main, "listOfCurves");
 
-                for(Component lineComp : dispComp.getAllChildren())
+                for(Component lineComp : dispOrOutputComp.getAllChildren())
                 {
                     if(lineComp.getTypeName().equals("Line"))
                     {
@@ -221,7 +253,7 @@ public class SEDMLWriter extends AXMLWriter
 
                         String lcid = lineComp.getID().replace(" ","_");
 
-                        String genId = dispId + "_" + lcid;
+                        String genId = DISPLAY_PREFIX + dispId + "_" + lcid;
                         // String varFull = pop+"_"+num+"_"+var;
                         // <curve id="curve_0" logX="false" logY="false" xDataReference="time" yDataReference="v_1" />
                         startEndElement(main, "curve", "id=curve_" + lcid, "logX=false", "logY=false", "xDataReference=time", "yDataReference=" + genId);
