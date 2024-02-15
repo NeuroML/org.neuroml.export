@@ -1433,7 +1433,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
 
                     //columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t'% py_v_" + timeRef + "[i] ");
-                    columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%e\\t");
+                    columnsPostTraces.get(outfileId).add(bIndent+"    f_" + outfileId + "_f2.write('%r\\t");
                     writingVariables.get(outfileId).add("py_v_" + timeRef + "[i], ");
 
                     ArrayList<String> colIds = new ArrayList<String>();
@@ -1476,7 +1476,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             /*columnsPostTraces.get(outfileId).add(
                                     " + '%e\\t'%(py_v_" + colId + "[i]) ");*/
 
-                            columnsPostTraces.get(outfileId).add("%e\\t");
+                            columnsPostTraces.get(outfileId).add("%r\\t");
                             writingVariables.get(outfileId).add("py_v_" + colId + "[i], ");
 
                         }
