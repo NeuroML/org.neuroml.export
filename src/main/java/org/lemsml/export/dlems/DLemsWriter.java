@@ -31,7 +31,9 @@ import org.lemsml.jlems.core.type.DerivedParameter;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Meta;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.IVisitable;
@@ -202,6 +204,38 @@ public class DLemsWriter extends ABaseWriter
         Component simCpt = target.getComponent();
 
         g.writeStringField(DLemsKeywords.DT.get(), convertTime(simCpt.getParamValue("step")));
+
+        boolean nrn_cvode = false;
+        /* defaults from NEURON */
+        String abs_tol = "None";
+        String rel_tol = "None";
+        LemsCollection<Meta> metas = simCpt.metas;
+        for(Meta m : metas)
+        {
+            HashMap<String, String> attributes = m.getAttributes();
+            if (attributes.getOrDefault("for", "").equals("neuron"))
+            {
+                if (attributes.getOrDefault("method", "").equals("cvode"))
+                {
+                    nrn_cvode = true;
+                    abs_tol = attributes.getOrDefault("abs_tolerance", abs_tol);
+                    rel_tol = attributes.getOrDefault("rel_tolerance", rel_tol);
+                    E.info("CVode with abs_tol="+abs_tol+" , rel_tol="+rel_tol+" selected for NEURON simulation");
+                }
+            }
+
+        }
+        if (nrn_cvode == true)
+        {
+            g.writeStringField(DLemsKeywords.CVODE.get(), "true");
+        }
+        else
+        {
+            g.writeStringField(DLemsKeywords.CVODE.get(), "false");
+        }
+        /* set them to something even if not provided by user */
+        g.writeStringField(DLemsKeywords.ABS_TOL.get(), abs_tol);
+        g.writeStringField(DLemsKeywords.REL_TOL.get(), rel_tol);
 
         int seed = DEFAULT_SEED;
         if (simCpt.hasStringValue("seed"))
