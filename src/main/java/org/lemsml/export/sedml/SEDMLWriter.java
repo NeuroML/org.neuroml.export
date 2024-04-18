@@ -170,7 +170,7 @@ public class SEDMLWriter extends AXMLWriter
                         }
 
                         String genId = prefix + id + "_" + lineOrColumnComp.getID().replace(" ","_");
-                        String varFull = pop + "_" + num+segid + "_" + var;
+                        String varFull = genId + "_" +  pop + "_" + num+segid + "_" + var;
 
                         startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
                         startElement(main, "listOfVariables");
