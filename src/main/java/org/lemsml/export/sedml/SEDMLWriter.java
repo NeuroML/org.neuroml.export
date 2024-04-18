@@ -212,9 +212,10 @@ public class SEDMLWriter extends AXMLWriter
             if(dispOrOutputComp.getTypeName().equals("OutputFile"))
             {
                 String reportName = dispOrOutputComp.getStringValue("fileName").replace(".dat","");
+                String reportId = reportName.replaceAll("[\\W]", "_");
                 String ofId = dispOrOutputComp.getID().replace(" ","_");
                 
-                startElement(main, "report", "id=" + reportName);
+                startElement(main, "report", "id=" + reportId);
                 startElement(main, "listOfDataSets");
                         
                 startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time", "label=time");
