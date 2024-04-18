@@ -218,17 +218,17 @@ public class SEDMLWriter extends AXMLWriter
                 startElement(main, "report", "id=" + reportId);
                 startElement(main, "listOfDataSets");
                         
-                startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time", "label=time");
+                startEndElement(main, "dataSet", "id=" + reportId + "_time", "name=time", "dataReference=time", "label=time");
 
                 for(Component ocComp : dispOrOutputComp.getAllChildren())
                 {
                     if(ocComp.getTypeName().equals("OutputColumn"))
                     {
                         // <dataSet id="d1" name="time" dataReference="time"/>
-                        String ocid = reportId + "_" + ocComp.getID().replace(" ","_");
+                        String ocid = ocComp.getID().replace(" ","_");
                         
                         String genId = OUTPUT_PREFIX + ofId + "_" + ocid;
-                        startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
+                        startEndElement(main, "dataSet", "id=" + reportId + "_" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
                     }
                 }
                 endElement(main, "listOfDataSets");
