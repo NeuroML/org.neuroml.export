@@ -225,7 +225,7 @@ public class SEDMLWriter extends AXMLWriter
                     if(ocComp.getTypeName().equals("OutputColumn"))
                     {
                         // <dataSet id="d1" name="time" dataReference="time"/>
-                        String ocid = ocComp.getID().replace(" ","_");
+                        String ocid = reportId + "_" + ocComp.getID().replace(" ","_");
                         
                         String genId = OUTPUT_PREFIX + ofId + "_" + ocid;
                         startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
