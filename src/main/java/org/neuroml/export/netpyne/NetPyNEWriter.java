@@ -472,6 +472,11 @@ public class NetPyNEWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/olfactorybulb/networks/MiglioreEtAl14_OlfactoryBulb3D/NeuroML2/Channels/test/LEMS_OlfactoryTest_12.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/generic/hodgkin_huxley_tutorial/Tutorial/Source/LEMS_HH_Simulation.xml"));
         //lemsFiles.add(new File("../git/multi/temp/LEMS_ISN_net.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACNet2.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_in.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_out_b_in.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_out_b_out.xml"));
+        //lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_out.xml"));
 
         for (File lemsFile : lemsFiles)
         {

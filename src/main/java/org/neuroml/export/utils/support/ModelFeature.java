@@ -106,7 +106,7 @@ public enum ModelFeature
 
             if(component.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
             {
-                Cell cell = Utils.getCellFromComponent(component);
+                Cell cell = Utils.getCellFromComponent(component, lems);
                 if(cell.getMorphology() != null)
                 {
                     if(cell.getMorphology().getSegment().size() > 1)
@@ -116,29 +116,34 @@ public enum ModelFeature
 
                     if(cell.getBiophysicalProperties() != null)
                     {
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities"))
+                        if (component.quietGetChild("biophysicalProperties")!=null)
                         {
-                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                            if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
-                        {
-                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                            if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
-                        {
-                        	checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                        	if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component population : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("populations"))
-                        {
-                        	addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
-                            System.out.println("cp");
-                            checkForChannels(population.getRefHM().get("ionChannel"), mfs, lems);
+                            Component bp = component.getChild("biophysicalProperties");
+
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensities"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component population : bp.getChild("membraneProperties").getChildrenAL("populations"))
+                            {
+                                addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
+                                System.out.println("cp");
+                                checkForChannels(population.getRefHM().get("ionChannel"), mfs, lems);
+                            }
                         }
                     }
                 }
