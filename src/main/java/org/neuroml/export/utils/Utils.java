@@ -556,7 +556,15 @@ public class Utils
 		if(run)
 		{
 			SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
-			sli.checkConversionSupported(Format.LEMS, sim.getLems());
+			try 
+			{
+				sli.checkConversionSupported(Format.LEMS, sim.getLems());
+			}
+			catch (ModelFeatureSupportException mfse)
+			{
+				E.info(mfse.getMessage());
+				System.exit(-1);
+			}
 			sim.run();
 			IOUtil.saveReportAndTimesFile(sim, lemsFile);
 			E.info("Finished reading, building, running and displaying LEMS model");

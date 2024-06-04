@@ -37,6 +37,7 @@ public enum ModelFeature
     NETWORK_WITH_ANALOG_CONNS_MODEL("Network model with analog/continuously communicating connections between cells"),
     ABSTRACT_CELL_MODEL("Model with abstract (non conductance based) cell(s)"), 
     COND_BASED_CELL_MODEL("Model with conductance based cell(s)"), 
+    EXT_MORPH_BIOPHYS_CELL_MODEL("Model with conductance based cell(s) with morphology and/or biophysicalProperties outside cell element"), 
     MULTICOMPARTMENTAL_CELL_MODEL("Model with multicompartmental cell(s)"), 
     CHANNEL_POPULATIONS_CELL_MODEL("Model with channel populations"), 
     CHANNEL_DENSITY_ON_SEGMENT("Model with channel density specified per segment (aot segmentGroup)"), 
@@ -106,7 +107,17 @@ public enum ModelFeature
 
             if(component.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
             {
+                if (component.quietGetChild("morphology")==null)
+                {
+                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                }
+                if (component.quietGetChild("biophysicalProperties")==null)
+                {
+                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                }
+
                 Cell cell = Utils.getCellFromComponent(component, lems);
+
                 if(cell.getMorphology() != null)
                 {
                     if(cell.getMorphology().getSegment().size() > 1)
