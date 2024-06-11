@@ -13,6 +13,7 @@ import org.neuroml.model.Cell;
 import org.neuroml.model.Segment;
 import org.neuroml.model.SegmentGroup;
 import org.neuroml.model.util.CellUtils;
+import org.neuroml.model.util.NeuroMLException;
 
 /**
  * 
@@ -31,7 +32,7 @@ public class NamingHelper
 		this.cell = cell;
 	}
 
-	public String getNrnSectionName(Segment seg)
+	public String getNrnSectionName(Segment seg) throws NeuroMLException
 	{
 
 		String uniqueId = cell.getId() + ":" + seg.getId();

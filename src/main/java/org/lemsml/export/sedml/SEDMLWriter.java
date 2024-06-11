@@ -170,7 +170,7 @@ public class SEDMLWriter extends AXMLWriter
                         }
 
                         String genId = prefix + id + "_" + lineOrColumnComp.getID().replace(" ","_");
-                        String varFull = pop + "_" + num+segid + "_" + var;
+                        String varFull = genId + "_" +  pop + "_" + num+segid + "_" + var;
 
                         startElement(main, "dataGenerator", "id=" + genId, "name=" + genId);
                         startElement(main, "listOfVariables");
@@ -212,12 +212,13 @@ public class SEDMLWriter extends AXMLWriter
             if(dispOrOutputComp.getTypeName().equals("OutputFile"))
             {
                 String reportName = dispOrOutputComp.getStringValue("fileName").replace(".dat","");
+                String reportId = reportName.replaceAll("[\\W]", "_");
                 String ofId = dispOrOutputComp.getID().replace(" ","_");
                 
-                startElement(main, "report", "id=" + reportName);
+                startElement(main, "report", "id=" + reportId);
                 startElement(main, "listOfDataSets");
                         
-                startEndElement(main, "dataSet", "id=time", "name=time", "dataReference=time", "label=time");
+                startEndElement(main, "dataSet", "id=" + reportId + "_time", "name=time", "dataReference=time", "label=time");
 
                 for(Component ocComp : dispOrOutputComp.getAllChildren())
                 {
@@ -227,7 +228,7 @@ public class SEDMLWriter extends AXMLWriter
                         String ocid = ocComp.getID().replace(" ","_");
                         
                         String genId = OUTPUT_PREFIX + ofId + "_" + ocid;
-                        startEndElement(main, "dataSet", "id=" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
+                        startEndElement(main, "dataSet", "id=" + reportId + "_" + ocid, "name=" + genId, "dataReference=" + genId, "label=" + genId);
                     }
                 }
                 endElement(main, "listOfDataSets");
