@@ -41,6 +41,7 @@ public class SupportLevelInfo
         /* Add info on formats supported in jLEMS */
         addSupportInfo(Format.LEMS, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.HIGH);
+        addSupportInfo(Format.LEMS, ModelFeature.EXT_MORPH_BIOPHYS_CELL_MODEL, SupportLevelInfo.Level.NONE);
         addSupportInfo(Format.LEMS, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.HIGH);
         addSupportInfo(Format.LEMS, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.HIGH);
@@ -135,11 +136,12 @@ public class SupportLevelInfo
                 if(!supp.equals(SUPPORTED))
                 {
                     passed = false;
-                    report.append("Feature not supported in " + format + ": " + mf + "\n    " + myInstance.isSupported(format, mf) + "\n");
+                    report.append("Feature is not supported in " + format + ": " + mf + "\n    " + myInstance.isSupported(format, mf) + "\n");
                 }
             }
             if(!passed)
             {
+                report.insert(0, "Error! Some features of the model are not supported by that simulator.\n\n");
                 report.append("\nInfo on supported features:\n" + myInstance);
                 throw new ModelFeatureSupportException(report.toString());
             }

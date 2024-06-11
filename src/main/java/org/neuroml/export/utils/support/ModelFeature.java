@@ -37,6 +37,7 @@ public enum ModelFeature
     NETWORK_WITH_ANALOG_CONNS_MODEL("Network model with analog/continuously communicating connections between cells"),
     ABSTRACT_CELL_MODEL("Model with abstract (non conductance based) cell(s)"), 
     COND_BASED_CELL_MODEL("Model with conductance based cell(s)"), 
+    EXT_MORPH_BIOPHYS_CELL_MODEL("Model with conductance based cell(s) with morphology and/or biophysicalProperties outside cell element"), 
     MULTICOMPARTMENTAL_CELL_MODEL("Model with multicompartmental cell(s)"), 
     CHANNEL_POPULATIONS_CELL_MODEL("Model with channel populations"), 
     CHANNEL_DENSITY_ON_SEGMENT("Model with channel density specified per segment (aot segmentGroup)"), 
@@ -106,7 +107,17 @@ public enum ModelFeature
 
             if(component.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
             {
-                Cell cell = Utils.getCellFromComponent(component);
+                if (component.quietGetChild("morphology")==null)
+                {
+                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                }
+                if (component.quietGetChild("biophysicalProperties")==null)
+                {
+                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                }
+
+                Cell cell = Utils.getCellFromComponent(component, lems);
+
                 if(cell.getMorphology() != null)
                 {
                     if(cell.getMorphology().getSegment().size() > 1)
@@ -116,29 +127,34 @@ public enum ModelFeature
 
                     if(cell.getBiophysicalProperties() != null)
                     {
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensities"))
+                        if (component.quietGetChild("biophysicalProperties")!=null)
                         {
-                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                            if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
-                        {
-                            checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                            if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component channelDensity : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
-                        {
-                        	checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
-                        	if (channelDensity.hasAttribute("segment"))
-                                addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
-                        }
-                        for(Component population : component.getChild("biophysicalProperties").getChild("membraneProperties").getChildrenAL("populations"))
-                        {
-                        	addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
-                            System.out.println("cp");
-                            checkForChannels(population.getRefHM().get("ionChannel"), mfs, lems);
+                            Component bp = component.getChild("biophysicalProperties");
+
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensities"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensitiesNernst"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component channelDensity : bp.getChild("membraneProperties").getChildrenAL("channelDensitiesGHK"))
+                            {
+                                checkForChannels(channelDensity.getRefHM().get("ionChannel"), mfs, lems);
+                                if (channelDensity.hasAttribute("segment"))
+                                    addIfNotPresent(mfs, CHANNEL_DENSITY_ON_SEGMENT);
+                            }
+                            for(Component population : bp.getChild("membraneProperties").getChildrenAL("populations"))
+                            {
+                                addIfNotPresent(mfs, CHANNEL_POPULATIONS_CELL_MODEL);
+                                System.out.println("cp");
+                                checkForChannels(population.getRefHM().get("ionChannel"), mfs, lems);
+                            }
                         }
                     }
                 }
