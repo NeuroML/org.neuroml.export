@@ -83,7 +83,7 @@ public class JsonSerializerTest extends TestCase {
             Cell cell0 = nmlDoc.getCell().get(0);
             cell0.setNotes(""); // as notes contents doesn't get copied to LEMS
 
-            Cell cell1 = Utils.getCellFromComponent(cellComp);
+            Cell cell1 = Utils.getCellFromComponent(cellComp, lems);
 
             String siCell0 = JSONCellSerializer.cellToJson(cell0, NeuronWriter.SupportedUnits.SI);
             System.out.println("Pure NeuroML: \n"+siCell0);

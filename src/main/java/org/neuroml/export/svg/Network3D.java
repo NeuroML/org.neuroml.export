@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.neuroml.model.util.CellUtils;
+import org.neuroml.model.util.NeuroMLException;
 
 public class Network3D
 {
@@ -19,13 +20,13 @@ public class Network3D
         lines = new ArrayList<Line3D>(100);
     }
 
-    public Network3D(Cell cell)
+    public Network3D(Cell cell) throws NeuroMLException
     {
         this.comment = "Cell: "+cell.getId();
         lines = extractLines(cell, null);
     }
     
-    public void addCell(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor)
+    public void addCell(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor) throws NeuroMLException
     {
         lines.addAll(extractLines(cell, offsetX, offsetY, offsetZ, defaultColor));
     }
@@ -201,13 +202,13 @@ public class Network3D
     }
 
     
-    private ArrayList<Line3D> extractLines(Cell cell, String defaultColor)
+    private ArrayList<Line3D> extractLines(Cell cell, String defaultColor) throws NeuroMLException
     {
         return extractLines(cell, 0, 0, 0, defaultColor);
     }
     
     
-    private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor)
+    private ArrayList<Line3D> extractLines(Cell cell, float offsetX, float offsetY, float offsetZ, String defaultColor) throws NeuroMLException
     {
         ArrayList<Line3D> result = new ArrayList<Line3D>();
 

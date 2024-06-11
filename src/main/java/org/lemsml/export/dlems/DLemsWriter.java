@@ -673,8 +673,21 @@ public class DLemsWriter extends ABaseWriter
             g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
             writeParameters(g, comp);
             g.writeEndObject();
+
+            Component bpComp = comp.quietGetChild("biophysicalProperties");
+            if (bpComp==null)
+            {
+                try{
+                    Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp, true, lems).get(comp.getID());
+                    bpComp = lems.getComponent(cell.getBiophysicalProperties().getId());
+                }
+                catch (NeuroMLException ne)
+                {
+                    throw new ContentError("Unable to parse cell's biophysicalProperties", ne);
+                }
+            }
             
-            for (Component specie: comp.getChild("biophysicalProperties").getChild("intracellularProperties").getChildrenAL("speciesList")) {
+            for (Component specie: bpComp.getChild("intracellularProperties").getChildrenAL("speciesList")) {
                 
                 try{
                     g.writeStringField(specie.getID()+"_initial_internal_conc", ""+Utils.getMagnitudeInSI(specie.getAttributeValue("initialConcentration")));
@@ -682,7 +695,7 @@ public class DLemsWriter extends ABaseWriter
                 }
                 catch (NeuroMLException ne)
                 {
-                    throw new ContentError("Unabel to parse NeuroML", ne);
+                    throw new ContentError("Unable to parse NeuroML", ne);
                 }
             }
             
@@ -894,7 +907,7 @@ public class DLemsWriter extends ABaseWriter
         
         if(!cachedNrnSecNames.get(comp.getID()).containsKey(segId))
         {
-            Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
+            Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp, true, lems).get(comp.getID());
             
             NamingHelper nh = new NamingHelper(cell);
             Segment segment = CellUtils.getSegmentWithId(cell, segId);
@@ -933,7 +946,14 @@ public class DLemsWriter extends ABaseWriter
             Component comp = popIdsVsComponents.get(lqp.getPopulation());
             
             if (comp.getComponentType().isOrExtends("cell")) {
-                for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
+                Component morphComp = comp.quietGetChild("morphology");
+
+                if (morphComp==null) {
+                    morphComp=lems.getComponent(comp.getTextParam("morphology"));
+                }
+
+
+                for (Component seg: morphComp.getChildrenAL("segments")) {
                     if (seg.id.equals(lqp.getSegmentId()+"")) {
                         g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
                         g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());

@@ -30,6 +30,8 @@ import org.neuroml.export.exceptions.ModelFeatureSupportException;
 import org.neuroml.export.utils.support.SupportLevelInfo;
 import org.neuroml.model.Cell;
 import org.neuroml.model.Cell2CaPools;
+import org.neuroml.model.Morphology;
+import org.neuroml.model.BiophysicalProperties;
 import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.Standalone;
 import org.neuroml.model.util.NeuroML2Validator;
@@ -42,7 +44,7 @@ public class Utils
 
 	private static Lems lemsWithNML2CompTypes;
 
-	public static String ORG_NEUROML_EXPORT_VERSION = "1.10.0";
+	public static String ORG_NEUROML_EXPORT_VERSION = "1.10.1";
 
 	public static final String ARCH_I686 = "i686";
 	public static final String ARCH_I386 = "i386";
@@ -401,11 +403,42 @@ public class Utils
 		return nmlDocument;
 	}
 
-	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp) throws LEMSException, NeuroMLException
+	public static LinkedHashMap<String, Standalone> convertLemsComponentToNeuroML(Component comp, boolean fixExternalMorphsBiophys, Lems lems) throws LEMSException, NeuroMLException
 	{
 		NeuroMLDocument nmlDocument = convertLemsComponentToNeuroMLDocument(comp);
 
 		LinkedHashMap<String, Standalone> els = NeuroMLConverter.getAllStandaloneElements(nmlDocument);
+		
+		if (fixExternalMorphsBiophys)
+		{
+			for (Map.Entry<String, Standalone> entry : els.entrySet())
+			{
+				String id = entry.getKey();
+				Standalone e = entry.getValue();
+				if (e instanceof Cell) {
+					Cell cell = (Cell)e;
+
+					if (cell.getMorphologyAttr() != null)
+					{
+						Component morphComp = lems.getComponent(cell.getMorphologyAttr());
+						NeuroMLDocument nmlDocumentMorph = convertLemsComponentToNeuroMLDocument(morphComp);
+						Morphology m = nmlDocumentMorph.getMorphology().get(0);
+						cell.setMorphology(m);
+						cell.setMorphologyAttr(null);
+						els.put(id, cell);
+					}
+					if (cell.getBiophysicalPropertiesAttr() != null)
+					{
+						Component bpComp = lems.getComponent(cell.getBiophysicalPropertiesAttr());
+						NeuroMLDocument nmlDocumentBp = convertLemsComponentToNeuroMLDocument(bpComp);
+						BiophysicalProperties bp = nmlDocumentBp.getBiophysicalProperties().get(0);
+						cell.setBiophysicalProperties(bp);
+						cell.setBiophysicalPropertiesAttr(null);
+						els.put(id, cell);
+					}
+				}
+			}
+		}
 		return els;
 	}
 
@@ -423,9 +456,9 @@ public class Utils
 		}
 	}
 
-	public static Cell getCellFromComponent(Component comp) throws LEMSException, NeuroMLException
+	public static Cell getCellFromComponent(Component comp, Lems lems) throws LEMSException, NeuroMLException
 	{
-		LinkedHashMap<String, Standalone> els = Utils.convertLemsComponentToNeuroML(comp);
+		LinkedHashMap<String, Standalone> els = Utils.convertLemsComponentToNeuroML(comp, true, lems);
 		Cell cell = (Cell) els.values().iterator().next();
         if (cell == null)
         {
@@ -523,7 +556,15 @@ public class Utils
 		if(run)
 		{
 			SupportLevelInfo sli = SupportLevelInfo.getSupportLevelInfo();
-			sli.checkConversionSupported(Format.LEMS, sim.getLems());
+			try 
+			{
+				sli.checkConversionSupported(Format.LEMS, sim.getLems());
+			}
+			catch (ModelFeatureSupportException mfse)
+			{
+				E.info(mfse.getMessage());
+				System.exit(-1);
+			}
 			sim.run();
 			IOUtil.saveReportAndTimesFile(sim, lemsFile);
 			E.info("Finished reading, building, running and displaying LEMS model");

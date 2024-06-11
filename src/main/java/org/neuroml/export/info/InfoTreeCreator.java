@@ -65,7 +65,7 @@ public class InfoTreeCreator
 	{
 		InfoNode infoRoot = new InfoNode();
         
-        LinkedHashMap<String, Standalone> standalones = Utils.convertLemsComponentToNeuroML(component);
+        LinkedHashMap<String, Standalone> standalones = Utils.convertLemsComponentToNeuroML(component, true, null);
 
 		for(Standalone element : standalones.values())
 		{
