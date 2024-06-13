@@ -107,13 +107,16 @@ public enum ModelFeature
 
             if(component.getComponentType().isOrExtends(NeuroMLElements.CELL_COMP_TYPE))
             {
-                if (component.quietGetChild("morphology")==null)
+                if(!component.getComponentType().isOrExtends(NeuroMLElements.CELL_2CA_POOLS_COMP_TYPE))
                 {
-                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
-                }
-                if (component.quietGetChild("biophysicalProperties")==null)
-                {
-                    addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                    if (component.quietGetChild("morphology")==null)
+                    {
+                        addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                    }
+                    if (component.quietGetChild("biophysicalProperties")==null)
+                    {
+                        addIfNotPresent(mfs, EXT_MORPH_BIOPHYS_CELL_MODEL);
+                    }
                 }
 
                 Cell cell = Utils.getCellFromComponent(component, lems);
