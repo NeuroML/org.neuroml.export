@@ -83,6 +83,7 @@ public class ProcessManager
             options.add("/usr");
             options.add("/usr/local");
             options.add("/usr/local/nrn/x86_64");
+            options.add("/srv/conda/envs/notebook/"); // location of neuron when pip installed on Binder... 
         }
 
         for (String option : options)
