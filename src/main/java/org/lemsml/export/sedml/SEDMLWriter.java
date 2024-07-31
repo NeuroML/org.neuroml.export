@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 import org.lemsml.export.base.AXMLWriter;
 import org.lemsml.jlems.core.logging.E;
@@ -67,8 +68,17 @@ public class SEDMLWriter extends AXMLWriter
 
         StringBuilder main = new StringBuilder();
         main.append("<?xml version='1.0' encoding='UTF-8'?>\n");
-        String[] attrs = new String[] { "xmlns=http://sed-ml.org/sed-ml/level"+SEDML_LEVEL+"/version"+SEDML_VERSION, "level="+SEDML_LEVEL, "version="+SEDML_VERSION+"", "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
+        String[] attrs = new String[] { "xmlns=http://sed-ml.org/sed-ml/level"+SEDML_LEVEL+"/version"+SEDML_VERSION, 
+                "level="+SEDML_LEVEL, 
+                "version="+SEDML_VERSION+"", 
+                "xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance",
                 "xsi:schemaLocation=http://sed-ml.org/sed-ml/level"+SEDML_LEVEL+"/version"+SEDML_VERSION+"   " + PREF_SEDML_SCHEMA };
+
+        if(modelFormat == Format.SBML)
+        {
+            attrs = Arrays.copyOf(attrs, attrs.length + 1);
+            attrs[attrs.length-1] = "xmlns:sbml=http://www.sbml.org/sbml/level2/version2";
+        }
 
         startElement(main, "sedML", attrs);
         startElement(main, "notes");
