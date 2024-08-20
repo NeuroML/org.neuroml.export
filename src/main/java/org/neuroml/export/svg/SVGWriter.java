@@ -82,21 +82,27 @@ public class SVGWriter extends ANeuroMLXMLWriter
     {
         StringBuilder core = new StringBuilder();
 
-        Rectangle bounds = render(core, false);
-        
         StringBuilder result = new StringBuilder();
-        //Add header
-        result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
-        //addComment(result, "Total bounds: "+bounds.toString());
-        startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, 
-                                    "version=" + SVG_VERSION, 
-                                    "width="+bounds.width, 
-                                    "height="+bounds.height,
-                                    "viewBox=0 0 "+bounds.width+" "+bounds.height);
+        try {
 
-        result.append(core.toString());
-        
-        endElement(result, "svg");
+            Rectangle bounds = render(core, false);
+            
+            //Add header
+            result.append("<?xml version='1.0' encoding='UTF-8'?>\n");
+            //addComment(result, "Total bounds: "+bounds.toString());
+            startElement(result, "svg", "xmlns=" + SVG_NAMESPACE, 
+                                        "version=" + SVG_VERSION, 
+                                        "width="+bounds.width, 
+                                        "height="+bounds.height,
+                                        "viewBox=0 0 "+bounds.width+" "+bounds.height);
+
+            result.append(core.toString());
+            
+            endElement(result, "svg");
+        }
+        catch (NeuroMLException ne) {
+             throw new GenerationException("Problem generating SVG", ne);
+        }
 
         return result.toString();
     }
@@ -107,7 +113,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         return cells;
     }
 
-    public Rectangle render(StringBuilder result, boolean png) {
+    public Rectangle render(StringBuilder result, boolean png) throws NeuroMLException {
 
         if (nmlDocument.getNetwork().isEmpty()) 
         {
@@ -185,7 +191,7 @@ public class SVGWriter extends ANeuroMLXMLWriter
         }
     }
 
-    public void convertToPng(File pngFile) {
+    public void convertToPng(File pngFile) throws NeuroMLException {
 
         // One quick run to get bounds...
         Rectangle bounds = render(new StringBuilder(), false);

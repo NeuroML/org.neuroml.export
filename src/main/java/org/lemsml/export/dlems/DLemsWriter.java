@@ -31,7 +31,9 @@ import org.lemsml.jlems.core.type.DerivedParameter;
 import org.lemsml.jlems.core.type.Dimension;
 import org.lemsml.jlems.core.type.FinalParam;
 import org.lemsml.jlems.core.type.Lems;
+import org.lemsml.jlems.core.type.LemsCollection;
 import org.lemsml.jlems.core.type.ParamValue;
+import org.lemsml.jlems.core.type.Meta;
 import org.lemsml.jlems.core.type.Target;
 import org.lemsml.jlems.core.type.dynamics.DerivedVariable;
 import org.lemsml.jlems.core.type.dynamics.IVisitable;
@@ -202,6 +204,38 @@ public class DLemsWriter extends ABaseWriter
         Component simCpt = target.getComponent();
 
         g.writeStringField(DLemsKeywords.DT.get(), convertTime(simCpt.getParamValue("step")));
+
+        boolean nrn_cvode = false;
+        /* defaults from NEURON */
+        String abs_tol = "None";
+        String rel_tol = "None";
+        LemsCollection<Meta> metas = simCpt.metas;
+        for(Meta m : metas)
+        {
+            HashMap<String, String> attributes = m.getAttributes();
+            if (attributes.getOrDefault("for", "").equals("neuron"))
+            {
+                if (attributes.getOrDefault("method", "").equals("cvode"))
+                {
+                    nrn_cvode = true;
+                    abs_tol = attributes.getOrDefault("abs_tolerance", abs_tol);
+                    rel_tol = attributes.getOrDefault("rel_tolerance", rel_tol);
+                    E.info("CVode with abs_tol="+abs_tol+" , rel_tol="+rel_tol+" selected for NEURON simulation");
+                }
+            }
+
+        }
+        if (nrn_cvode == true)
+        {
+            g.writeStringField(DLemsKeywords.CVODE.get(), "true");
+        }
+        else
+        {
+            g.writeStringField(DLemsKeywords.CVODE.get(), "false");
+        }
+        /* set them to something even if not provided by user */
+        g.writeStringField(DLemsKeywords.ABS_TOL.get(), abs_tol);
+        g.writeStringField(DLemsKeywords.REL_TOL.get(), rel_tol);
 
         int seed = DEFAULT_SEED;
         if (simCpt.hasStringValue("seed"))
@@ -639,8 +673,21 @@ public class DLemsWriter extends ABaseWriter
             g.writeObjectFieldStart(DLemsKeywords.PARAMETERS.get());
             writeParameters(g, comp);
             g.writeEndObject();
+
+            Component bpComp = comp.quietGetChild("biophysicalProperties");
+            if (bpComp==null)
+            {
+                try{
+                    Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp, true, lems).get(comp.getID());
+                    bpComp = lems.getComponent(cell.getBiophysicalProperties().getId());
+                }
+                catch (NeuroMLException ne)
+                {
+                    throw new ContentError("Unable to parse cell's biophysicalProperties", ne);
+                }
+            }
             
-            for (Component specie: comp.getChild("biophysicalProperties").getChild("intracellularProperties").getChildrenAL("speciesList")) {
+            for (Component specie: bpComp.getChild("intracellularProperties").getChildrenAL("speciesList")) {
                 
                 try{
                     g.writeStringField(specie.getID()+"_initial_internal_conc", ""+Utils.getMagnitudeInSI(specie.getAttributeValue("initialConcentration")));
@@ -648,7 +695,7 @@ public class DLemsWriter extends ABaseWriter
                 }
                 catch (NeuroMLException ne)
                 {
-                    throw new ContentError("Unabel to parse NeuroML", ne);
+                    throw new ContentError("Unable to parse NeuroML", ne);
                 }
             }
             
@@ -860,7 +907,7 @@ public class DLemsWriter extends ABaseWriter
         
         if(!cachedNrnSecNames.get(comp.getID()).containsKey(segId))
         {
-            Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp).get(comp.getID());
+            Cell cell = (Cell)Utils.convertLemsComponentToNeuroML(comp, true, lems).get(comp.getID());
             
             NamingHelper nh = new NamingHelper(cell);
             Segment segment = CellUtils.getSegmentWithId(cell, segId);
@@ -899,7 +946,14 @@ public class DLemsWriter extends ABaseWriter
             Component comp = popIdsVsComponents.get(lqp.getPopulation());
             
             if (comp.getComponentType().isOrExtends("cell")) {
-                for (Component seg: comp.getChild("morphology").getChildrenAL("segments")) {
+                Component morphComp = comp.quietGetChild("morphology");
+
+                if (morphComp==null) {
+                    morphComp=lems.getComponent(comp.getTextParam("morphology"));
+                }
+
+
+                for (Component seg: morphComp.getChildrenAL("segments")) {
                     if (seg.id.equals(lqp.getSegmentId()+"")) {
                         g.writeStringField(DLemsKeywords.SEGMENT_ID.get(), lqp.getSegmentId()+"");
                         g.writeStringField(DLemsKeywords.SEGMENT_NAME.get(), seg.getName());

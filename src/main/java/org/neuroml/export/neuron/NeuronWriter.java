@@ -132,6 +132,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
     {
         sli.addSupportInfo(format, ModelFeature.ABSTRACT_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.COND_BASED_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
+        sli.addSupportInfo(format, ModelFeature.EXT_MORPH_BIOPHYS_CELL_MODEL, SupportLevelInfo.Level.HIGH);
         sli.addSupportInfo(format, ModelFeature.SINGLE_COMP_MODEL, SupportLevelInfo.Level.MEDIUM);
         sli.addSupportInfo(format, ModelFeature.NETWORK_MODEL, SupportLevelInfo.Level.LOW);
         sli.addSupportInfo(format, ModelFeature.MULTI_CELL_MODEL, SupportLevelInfo.Level.MEDIUM);
@@ -2071,7 +2072,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         }
         else
         {
-            cell = Utils.getCellFromComponent(cellComponent);
+            cell = Utils.getCellFromComponent(cellComponent, lems);
             compIdsVsCells.put(cellComponent.getID(), cell);
         }
         return cell;
@@ -2105,7 +2106,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             BiophysicalProperties bp = cell.getBiophysicalProperties();
             ip = bp.getIntracellularProperties();
-            bpComp = cellComponent.getChild("biophysicalProperties");
+            bpComp = cellComponent.quietGetChild("biophysicalProperties");
+            if (bpComp==null)
+            {
+                bpComp = lems.getComponent(bp.getId());
+            }
             mpComp = bpComp.getChild("membraneProperties");
             ipComp = bpComp.getChild("intracellularProperties");
         }
@@ -2128,7 +2133,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                         writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     }
-                    else if (channelDensity.getTypeName().equals("channelDensityNernst")){
+                    else if (channelDensity.getTypeName().equals("channelDensityNernst") || channelDensity.getTypeName().equals("channelDensityNonUniformNernst") ){
                         ChannelConductanceOption option = ChannelConductanceOption.USE_NERNST;
                         writeModFile(channelDensity.getRefHM().get("ionChannel"), option);
                     }
@@ -3936,8 +3941,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
         ArrayList<File> lemsFiles = new ArrayList<File>();
 
-        lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/interneurons/WangBuzsaki1996/NeuroML2/LEMS_ComponentType/LEMS_WangBuzsaki.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/generic/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRoseNML.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/hippocampus/interneurons/WangBuzsaki1996/NeuroML2/LEMS_ComponentType/LEMS_WangBuzsaki.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/generic/HindmarshRose1984/NeuroML2/LEMS_Regular_HindmarshRoseNML.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_Inputs0.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Oscillator.xml"));
 
@@ -3947,14 +3952,14 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex15_CaDynamics.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex15_CaDynamics.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../org.neuroml.export/src/test/resources/examples/LEMS_SpikePass2.xml"));
         /*
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_NoisyCurrentInput.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/showcase/StochasticityShowcase/NeuroML2/LEMS_OUCurrentInput_test.xml"));
         lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_FiveCells.xml"));*/
-        lemsFiles.add(new File("../git/ca1/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
+        //lemsFiles.add(new File("../git/ca1/NeuroML2/channels/test_Cadynamics/NeuroML2/LEMS_test_Ca.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20a_AnalogSynapsesHH.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex20_AnalogSynapses.xml"));
         //lemsFiles.add(new File("../NeuroMLlite/neuromllite/LEMS_Sim_ten_cells_spikes_nest.xml"));
@@ -3976,7 +3981,11 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
-//        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_MediumNet.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACNet2.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_in.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_out_b_in.xml"));
+        lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_out.xml"));
+
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 //
         //lemsFiles.add(new File("../OpenCortex/examples/LEMS_SpikingNet.xml"));
@@ -3995,7 +4004,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex25_MultiComp.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/showcase/NetPyNEShowcase/NeuroML2/LEMS_HybridTut.xml"));
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_L23TraubDemo_1cells_0conns.xml"));
-        lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
+        //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex0_IaF.xml"));
 
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Muscles.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/examples/LEMS_c302_C1_Syns.xml"));
