@@ -1268,20 +1268,31 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         String postPrefix = "";
                         String preArg = "("+preFract+")";
                         String postArg = "("+postFract+")";
+                        String note = "";
 
-                        if(postComponent.getComponentType().getName().toLowerCase().contains("rate"))
+                        if(postComponent.getComponentType().getName().toLowerCase().contains("rate"))  
                         {
                             peerVar = "r";
                             prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
                             postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
                             preArg = "";
                             postArg = "";
+                            note = "Note: assuming peer variable is r as 'rate' in name of postComponent. See NeuronWriter";
+                        }
+                        if(postComponent.getComponentType().getName().toLowerCase().contains("output"))  
+                        {
+                            peerVar = "output";
+                            prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
+                            postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
+                            preArg = "";
+                            postArg = "";
+                            note = "Note: assuming peer variable is output as 'output' in name of postComponent. See NeuronWriter";
                         }
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s - %s\n", preCompObjName, contConnIndex, peerVar, postPrefix, postSecName, peerVar, postArg, preComponent, postComponent));
-                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\")\n\n", postCompObjName, contConnIndex, peerVar, prePrefix, preSecName, peerVar, preArg));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s -> %s\n", preCompObjName, contConnIndex, peerVar, postPrefix, postSecName, peerVar, postArg, preComponent, postComponent));
+                        main.append(String.format(Locale.US, bIndent+"h(\"setpointer %s[%d].%speer, %s%s.%s%s\") # %s\n\n", postCompObjName, contConnIndex, peerVar, prePrefix, preSecName, peerVar, preArg, note));
 
                         contConnIndex++;
                     }
@@ -3952,6 +3963,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebellum/networks/VervaekeEtAl-GolgiCellNetwork/NeuroML2/LEMS_Pacemaking.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex9_FN.xml"));
         lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex5_DetCell.xml"));
+        lemsFiles.add(new File("../neuroConstruct/osb/invertebrate/celegans/c302/examples/parametersweep/LEMS_SimCanonical_X.xml"));
         //lemsFiles.add(new File("../NeuroML2/LEMSexamples/LEMS_NML2_Ex15_CaDynamics.xml"));
         //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/IzhikevichModel/NeuroML2/LEMS_2007One.xml"));
         //lemsFiles.add(new File("../org.neuroml.export/src/test/resources/examples/LEMS_SpikePass2.xml"));
@@ -3981,10 +3993,10 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 //
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Na/LEMS_Na.xml"));
 //        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/multiple/PospischilEtAl2008/NeuroML2/channels/Kd/LEMS_Kd.xml"));
-        lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACNet2.xml"));
-        lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_in.xml"));
-        lemsFiles.add(new File("../git/morphology_include/LEMS_m_out_b_in.xml"));
-        lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_out.xml"));
+        //lemsFiles.add(new File("../neuroConstruct/osb/cerebral_cortex/networks/ACnet2/neuroConstruct/generatedNeuroML2/LEMS_ACNet2.xml"));
+        //lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_in.xml"));
+        //lemsFiles.add(new File("../git/morphology_include/LEMS_m_out_b_in.xml"));
+        //lemsFiles.add(new File("../git/morphology_include/LEMS_m_in_b_out.xml"));
 
 //        lemsFiles.add(new File("../OpenCortex/examples/LEMS_ACNet.xml"));
 //
@@ -4104,7 +4116,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
             List<File> ff = nw.generateAndRun(true, true, true, false);
             for(File f : ff)
             {
-                System.out.println("Generated: " + f.getAbsolutePath());
+                System.out.println("  ---  Generated: " + f.getAbsolutePath());
             }
             testScript += "\necho Testing " + lemsFile.getAbsolutePath() + "\n";
             testScript += "echo\n";
