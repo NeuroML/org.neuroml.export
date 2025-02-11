@@ -597,6 +597,7 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     double diameter = defaultRadius * 2;
 
                     if(popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) ||
+                       (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_MEMB_POT_COMP_TYPE) && popComp.hasParam("C") )  ||
                        popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_PYNN_CELL))
                     {
                         double capTotSI = -1;
@@ -629,15 +630,32 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                             }
                             capTotSI = popComp.getParamValue("cm").getDoubleValue() * 1e-9;
                         }
+                        else if (popComp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_MEMB_POT_COMP_TYPE) && popComp.hasParam("C"))
+                        {
+                            // So is a BASE_CELL_MEMB_POT_COMP_TYPE but still has a capacitance set, e.g. as a DerivedParameter
+                            if (popComp.hasParam("length"))
+                            {
+                                length = popComp.getParamValue("length").getDoubleValue() * 1e6;
+                            }
+                            if (popComp.hasParam("diameter"))
+                            {
+                                diameter = popComp.getParamValue("diameter").getDoubleValue() * 1e6;
+                            }
+                            if (!popComp.getParamValue("C").getDimensionName().equals("capacitance"))
+                            {
+                                    throw new NeuroMLException("Component Type has (derived)parameter C, but this is not a capacitance..?: "+popComp.summary());
+                            };
+                            capTotSI = popComp.getParamValue("C").getDoubleValue();
+                        }
 
                         double area = Math.PI * length * diameter;
                         double specCapNeu = 10e13 * capTotSI / area;
-                        main.append(bIndent+"    h." + instName + "(0.5).cm = " + specCapNeu + "   # Computed from area "+area+"\n");
+                        main.append(bIndent+"    h." + instName + "(0.5).cm = " + specCapNeu + "   # Computed from area "+area+"um2 (len: "+length+"um, diam: "+diameter+"um)\n");
                     }
                     else
                     {
                         // See https://github.com/NeuroML/org.neuroml.export/issues/60
-                        main.append(bIndent+"    h." + instName + "(0.5).cm = 318.31\n");
+                        main.append(bIndent+"    h." + instName + "(0.5).cm = 318.31 # See https://github.com/NeuroML/org.neuroml.export/issues/60\n");
                     }
 
                     main.append(bIndent+"    h." + instName + ".L = " + length + "               # length to use for section in Neuron\n");
@@ -1270,24 +1288,23 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         String postArg = "("+postFract+")";
                         String note = "";
 
-                        if(postComponent.getComponentType().getName().toLowerCase().contains("rate"))  
+                        for (DerivedVariable dv: postComponent.getComponentType().getDynamics().getDerivedVariables())
                         {
-                            peerVar = "r";
-                            prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
-                            postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
-                            preArg = "";
-                            postArg = "";
-                            note = "Note: assuming peer variable is r as 'rate' in name of postComponent. See NeuronWriter";
+                            if (dv.select != null && dv.select.startsWith("peer/"))
+                            {
+                                peerVar = dv.select.substring(5);
+                                if (!peerVar.equals("v"))
+                                {
+                                    //System.out.println("pv: "+peerVar);
+                                    prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
+                                    postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
+                                    preArg = "";
+                                    postArg = "";
+                                    note = "Note: assuming peer variable is "+peerVar+" in postComponent. See NeuronWriter class";
+                                }
+                            }
                         }
-                        if(postComponent.getComponentType().getName().toLowerCase().contains("output"))  
-                        {
-                            peerVar = "output";
-                            prePrefix = "m_"+popIdsVsComps.get(prePop).getID()+"_";
-                            postPrefix = "m_"+popIdsVsComps.get(postPop).getID()+"_";
-                            preArg = "";
-                            postArg = "";
-                            note = "Note: assuming peer variable is output as 'output' in name of postComponent. See NeuronWriter";
-                        }
+
                         /*
                          * TODO: remove hard coded vpeer/v link & figure this out from Component(Type) definition!!
                          */
@@ -2759,7 +2776,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
 
                     ////////////blockBreakpoint.append("\n" + NRNUtils.V_COPY_PREFIX + NRNUtils.NEURON_VOLTAGE + " = " + NRNUtils.NEURON_VOLTAGE);
 
-                    if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE))
+                    if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_CAP_COMP_TYPE) ||
+                       (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_CELL_MEMB_POT_COMP_TYPE) && comp.hasParam("C") ))
                     {
                         blockBreakpoint.append("\ni = " + NRNUtils.getStateVarName(NRNUtils.NEURON_VOLTAGE) + " * C");
                     }

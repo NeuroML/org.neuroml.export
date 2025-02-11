@@ -175,5 +175,10 @@ public class NeuronWriterTest extends TestCase {
         UtilsTest.checkConvertedFiles(outputFiles);
 
     }
+    public static void main(String args[]) throws LEMSException, IOException, GenerationException, NeuroMLException, ModelFeatureSupportException, JAXBException
+    {
+      NeuronWriterTest n = new NeuronWriterTest();
+      n.testSpiketimesEx();
+    }
 
 }
