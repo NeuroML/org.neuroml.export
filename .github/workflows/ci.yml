@@ -37,7 +37,7 @@ jobs:
         export main_repo_branch=${{env.main_repo_branch}}
         if [[ ${main_repo_branch} == "osb_test_master" ]]; then main_repo_branch=master ; fi
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
-        echo Using branch $main_repo_branch (current branch is $GITHUB_REF_NAME)
+        echo "Using branch $main_repo_branch, current branch is $GITHUB_REF_NAME"
 
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
