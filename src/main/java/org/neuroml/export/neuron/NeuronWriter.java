@@ -3443,31 +3443,51 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         {
             LinkedHashMap<String, String> rateNameVsRateExpr = new LinkedHashMap<String, String>();
 
+            /*
+             * First handle "top level" time derivatives on this component. For gate-like
+             * components (BASE_GATE_COMP_TYPE) we inline the derivative expression directly
+             * into the DERIVATIVE block, i.e. x' = (x_inf - x)/tau, so that NEURON can
+             * recognise and apply cnexp. We do not create intermediate rate_* variables
+             * for these gates.
+             */
             for(TimeDerivative td : comp.getComponentType().getDynamics().getTimeDerivatives())
             {
 
-                String rateName = NRNUtils.RATE_PREFIX + prefix + td.getStateVariable().getName();
-                String rateUnits = NRNUtils.getDerivativeUnit(td.getStateVariable().getDimension().getName());
+                String stateVarName = td.getStateVariable().getName();
+                boolean isVoltage = stateVarName.equals(NRNUtils.NEURON_VOLTAGE);
+                boolean isGateState = comp.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE) && !isVoltage;
 
-                blockAssigned.append(rateName + " " + rateUnits + "\n");
-
-                // ratesMethod.append(rateName + " = " +
-                // NRNUtils.checkForStateVarsAndNested(td.getEvaluable().toString(),
-                // comp, paramMappings) + " ? \n");
+                String stateVarToUse = NRNUtils.getStateVarName(stateVarName);
                 String rateExpr = NRNUtils.checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings);
-                rateNameVsRateExpr.put(rateName, rateExpr);
 
-                if(!td.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE))
+                if(!isVoltage)
                 {
+                    String line;
 
-                    String stateVarToUse = NRNUtils.getStateVarName(td.getStateVariable().getName());
+                    if(isGateState)
+                    {
+                        // Inline derivative for gate-style states: x' = (x_inf - x)/tau
+                        line = prefix + stateVarToUse + "' = " + rateExpr;
+                    }
+                    else
+                    {
+                        // Generic case (non-gate/complex models) retains the rate_* pattern
+                        String rateName = NRNUtils.RATE_PREFIX + prefix + stateVarName;
+                        String rateUnits = NRNUtils.getDerivativeUnit(td.getStateVariable().getDimension().getName());
 
-                    String line = prefix + stateVarToUse + "' = " + rateName;
+                        if(blockAssigned.indexOf("\n" + rateName + " " + rateUnits + "\n") < 0)
+                        {
+                            blockAssigned.append("\n" + rateName + " " + rateUnits + "\n");
+                        }
+                        rateNameVsRateExpr.put(rateName, rateExpr);
+
+                        line = prefix + stateVarToUse + "' = " + rateName;
+                    }
 
                     if(comp.getComponentType().isOrExtends(NeuroMLElements.CONC_MODEL_COMP_TYPE) &&
-                        td.getStateVariable().getName().equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
+                        stateVarName.equals(NeuroMLElements.CONC_MODEL_CONC_STATE_VAR))
                     {
-                        line = line + "\n"+ionSpecies+"i = " + td.getStateVariable().getName();
+                        line = line + "\n"+ionSpecies+"i = " + stateVarName;
                     }
 
                     if(!blockDerivative.toString().contains(line))
@@ -3477,11 +3497,25 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 else
                 {
-                    ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n");
+                    // Voltage derivative is always handled via an intermediate rate_*
+                    String rateName = NRNUtils.RATE_PREFIX + prefix + stateVarName;
+                    String rateUnits = NRNUtils.getDerivativeUnit(td.getStateVariable().getDimension().getName());
+                    if(blockAssigned.indexOf("\n" + rateName + " " + rateUnits + "\n") < 0)
+                    {
+                        blockAssigned.append("\n" + rateName + " " + rateUnits + "\n");
+                    }
+                    rateNameVsRateExpr.put(rateName, rateExpr);
+
+                    ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(stateVarName) + " = -1 * " + rateName + "\n");
                 }
 
             }
 
+            /*
+             * Now handle regime-specific contributions. For gate components we again inline
+             * directly into the DERIVATIVE block and do not introduce rate_* variables.
+             * For other components, the existing rate_* aggregation logic is retained.
+             */
             for(Regime regime : comp.getComponentType().getDynamics().getRegimes())
             {
 
@@ -3519,25 +3553,16 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                 }
                 for(TimeDerivative td : regime.getTimeDerivatives())
                 {
-                    String rateName = NRNUtils.RATE_PREFIX + prefix + td.getStateVariable().getName();
-                    String rateUnits = NRNUtils.getDerivativeUnit(td.getStateVariable().getDimension().getName());
-                    if(!rateNameVsRateExpr.containsKey(rateName))
-                    {
-                        rateNameVsRateExpr.put(rateName, "0");
-                    }
+                    String stateVarName = td.getStateVariable().getName();
+                    boolean isVoltage = stateVarName.equals(NRNUtils.NEURON_VOLTAGE);
+                    boolean isGateState = comp.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE) && !isVoltage;
 
-                    String rateExprPart = rateNameVsRateExpr.get(rateName);
-                    if(blockAssigned.indexOf("\n" + rateName + " " + rateUnits + "\n") < 0)
-                    {
-                        blockAssigned.append("\n" + rateName + " " + rateUnits + "\n");
-                    }
-                    rateExprPart = rateExprPart + " + " + NRNUtils.REGIME_PREFIX + regime.getName() + " * (" + NRNUtils.checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings) + ")";
+                    String stateVarToUse = NRNUtils.getStateVarName(stateVarName);
 
-                    rateNameVsRateExpr.put(rateName, rateExprPart);
-
-                    if(!td.getStateVariable().getName().equals(NRNUtils.NEURON_VOLTAGE))
+                    if(isGateState)
                     {
-                        String line = prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + "' = " + rateName;
+                        String rateExpr = NRNUtils.checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings);
+                        String line = prefix + stateVarToUse + "' = " + rateExpr;
 
                         if(!blockDerivative.toString().contains(line))
                         {
@@ -3546,11 +3571,40 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                     }
                     else
                     {
-                        ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(td.getStateVariable().getName()) + " = -1 * " + rateName + "\n"); // //
+                        String rateName = NRNUtils.RATE_PREFIX + prefix + stateVarName;
+                        String rateUnits = NRNUtils.getDerivativeUnit(td.getStateVariable().getDimension().getName());
+                        if(!rateNameVsRateExpr.containsKey(rateName))
+                        {
+                            rateNameVsRateExpr.put(rateName, "0");
+                        }
+
+                        String rateExprPart = rateNameVsRateExpr.get(rateName);
+                        if(blockAssigned.indexOf("\n" + rateName + " " + rateUnits + "\n") < 0)
+                        {
+                            blockAssigned.append("\n" + rateName + " " + rateUnits + "\n");
+                        }
+                        rateExprPart = rateExprPart + " + " + NRNUtils.REGIME_PREFIX + regime.getName() + " * (" + NRNUtils.checkForStateVarsAndNested(td.getValueExpression(), comp, paramMappings) + ")";
+
+                        rateNameVsRateExpr.put(rateName, rateExprPart);
+
+                        if(!isVoltage)
+                        {
+                            String line = prefix + stateVarToUse + "' = " + rateName;
+
+                            if(!blockDerivative.toString().contains(line))
+                            {
+                                blockDerivative.append(line + " \n");
+                            }
+                        }
+                        else
+                        {
+                            ratesMethodFinal.append(prefix + NRNUtils.getStateVarName(stateVarName) + " = -1 * " + rateName + "\n"); // //
+                        }
                     }
                 }
             }
 
+            // Only emit rate_* helper variables for non-gate / complex cases
             for(String rateName : rateNameVsRateExpr.keySet())
             {
                 String rateExpr = rateNameVsRateExpr.get(rateName);
@@ -3600,6 +3654,8 @@ public class NeuronWriter extends ANeuroMLBaseWriter
         if(comp.getComponentType().hasDynamics())
         {
 
+            // For some expressions (e.g. conditional derived vars) we still need a
+            // generic target block: ion channels -> BREAKPOINT, others -> rates().
             StringBuilder blockForEqns = ratesMethod;
             if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE))
             {
@@ -3787,8 +3843,26 @@ public class NeuronWriter extends ANeuroMLBaseWriter
                         block.append(prefix + dv.getName() + " = " + eqn + " ? path based, prefix = "+prefix+"\n\n");
                     }
                 }
-                // blockForEqns.insert(0, block);
-                blockForEqns.append(block);
+
+                /*
+                 * Decide where to place the derived variable equation.
+                 *
+                 *  - For top-level ion channel components we still emit derived variables
+                 *    (e.g. fopen, gion) in the BREAKPOINT block.
+                 *  - For gate components, fcond-style multipliers should be evaluated
+                 *    after SOLVE states, so we also place these in BREAKPOINT instead of
+                 *    in rates().
+                 *  - All other derived variables go into rates().
+                 */
+                if(comp.getComponentType().isOrExtends(NeuroMLElements.BASE_ION_CHANNEL_COMP_TYPE) ||
+                   (comp.getComponentType().isOrExtends(NeuroMLElements.BASE_GATE_COMP_TYPE) && dv.getName().endsWith("fcond")))
+                {
+                    blockBreakpoint.append(block);
+                }
+                else
+                {
+                    ratesMethod.append(block);
+                }
             }
 
             for(ConditionalDerivedVariable cdv : comp.getComponentType().getDynamics().getConditionalDerivedVariables())
