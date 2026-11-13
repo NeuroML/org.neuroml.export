@@ -43,7 +43,8 @@ jobs:
     - name: Install and test
       shell: bash
       env:
-        main_repo_branch: ${{ github.ref_name }}
+        # On pull requests ref_name is "<n>/merge", so use the PR's target branch
+        main_repo_branch: ${{ github.base_ref || github.ref_name }}
       run: |
         if [[ ${main_repo_branch} == "osb_test_master" ]]; then main_repo_branch=master ; fi
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
