@@ -49,28 +49,29 @@ jobs:
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
         echo "Using branch $main_repo_branch, current branch is $GITHUB_REF_NAME"
 
+        # Dependencies are built without tests: they are tested in their own repos' CI
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/NeuroML/NeuroML2.git
         cd NeuroML2
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/LEMS/jLEMS.git
         cd jLEMS
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/NeuroML/org.neuroml.model.git
         cd org.neuroml.model
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         # Install this package and test with Maven
