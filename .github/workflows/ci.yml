@@ -9,98 +9,70 @@ on:
   pull_request:
     branches:  [ master, development, experimental, osb*, test* ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_and_test:
 
     runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        java: [ '8', '11', '17', '19', '21', '25' ]
+        java: [ '8', '11', '17', '21', '25' ]
         runs-on: [ubuntu-latest, macos-15-intel, windows-latest] # Note macos-15-intel, not latest/14, due to hdf5 install issue
 
 
     name: Test on Java ${{ matrix.Java }} on ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up JDK ${{ matrix.Java }}
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
         java-version: ${{ matrix.Java }}
         distribution: 'temurin'
 
-    - name: Install and test (non Win)
+    # Use bash on all platforms (Git Bash on Windows) so that the script stops at
+    # the first failing command. The default PowerShell shell only reports the
+    # exit code of the last command.
+    - name: Install and test
+      shell: bash
       env:
-        main_repo_branch: ${GITHUB_REF_NAME}
-      if: ${{ ! contains(matrix.runs-on, 'windows') }}
+        # On pull requests ref_name is "<n>/merge", so use the PR's target branch
+        main_repo_branch: ${{ github.base_ref || github.ref_name }}
       run: |
-        export main_repo_branch=${{env.main_repo_branch}}
         if [[ ${main_repo_branch} == "osb_test_master" ]]; then main_repo_branch=master ; fi
         if [[ ${main_repo_branch} != "master" && ${main_repo_branch} != "development" && ${main_repo_branch} != "experimental" && ${main_repo_branch} != *"osb"* ]]; then main_repo_branch=development ; fi
         echo "Using branch $main_repo_branch, current branch is $GITHUB_REF_NAME"
 
+        # Dependencies are built without tests: they are tested in their own repos' CI
         git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
         cd org.neuroml.model.injectingplugin
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/NeuroML/NeuroML2.git
         cd NeuroML2
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/LEMS/jLEMS.git
         cd jLEMS
         git checkout $main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         git clone https://github.com/NeuroML/org.neuroml.model.git
         cd org.neuroml.model
         git checkout $main_repo_branch
-        mvn install
-        cd ..
-
-        # Install this package and test with Maven
-        pwd
-        mvn install
-        mvn dependency:tree
-
-    - name: Install and test (Win)
-      if: ${{ contains(matrix.runs-on, 'windows') }}
-      run: |
-        # Install org.neuroml.model.injectingplugin
-
-        $env:main_repo_branch=$env:GITHUB_REF_NAME
-        if ( $env:main_repo_branch -ne "master" -and $env:main_repo_branch -ne "development" -and $env:main_repo_branch -ne "experimental" -and $env:main_repo_branch -notlike '*osb*' ) { $env:main_repo_branch="development" }
-        echo "Using branch $env:main_repo_branch..."
-
-        git clone https://github.com/NeuroML/org.neuroml.model.injectingplugin.git
-        cd org.neuroml.model.injectingplugin
-        git checkout $env:main_repo_branch
-        mvn install
-        cd ..
-
-        # Install NeuroML2
-        echo Using branch $env:GITHUB_REF_NAME
-        git clone https://github.com/NeuroML/NeuroML2.git
-        cd NeuroML2
-        git checkout $env:main_repo_branch
-        mvn install
-        cd ..
-
-        git clone https://github.com/LEMS/jLEMS.git
-        cd jLEMS
-        git checkout $env:main_repo_branch
-        mvn install
-        cd ..
-
-        git clone https://github.com/NeuroML/org.neuroml.model.git
-        cd org.neuroml.model
-        git checkout $env:main_repo_branch
-        mvn install
+        mvn install -DskipTests
         cd ..
 
         # Install this package and test with Maven
